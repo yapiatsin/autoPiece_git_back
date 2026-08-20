@@ -1,0 +1,199 @@
+<style>
+.proforma-attente-grid {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -0.5rem;
+}
+.proforma-attente-card-wrap {
+    padding: 0.5rem;
+    width: 100%;
+}
+@media (min-width: 576px) {
+    .proforma-attente-card-wrap { width: 50%; }
+}
+@media (min-width: 768px) {
+    .proforma-attente-card-wrap { width: 33.333%; }
+}
+@media (min-width: 992px) {
+    .proforma-attente-card-wrap { width: 25%; }
+}
+@media (min-width: 1200px) {
+    .proforma-attente-card-wrap { width: 20%; }
+}
+.proforma-attente-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: 16px;
+    border: 1px solid #fed7aa;
+    background: linear-gradient(165deg, #ffffff 0%, #fff7ed 55%, #ffffff 100%);
+    box-shadow: 0 2px 8px rgba(154, 52, 18, 0.08);
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    padding: 0;
+    color: inherit;
+}
+a.proforma-attente-card,
+button.proforma-attente-card {
+    text-decoration: none;
+}
+.proforma-attente-card:hover {
+    transform: translateY(-3px);
+    border-color: #fb923c;
+    box-shadow: 0 10px 22px rgba(234, 88, 12, 0.16);
+    text-decoration: none;
+    color: inherit;
+}
+.proforma-attente-card:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.35);
+}
+.proforma-attente-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    background: linear-gradient(90deg, #fff7ed, #ffffff);
+    border-bottom: 1px solid #ffedd5;
+}
+.proforma-attente-card__ticket {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #9a3412;
+    letter-spacing: 0.02em;
+}
+.proforma-attente-card__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: #ffedd5;
+    color: #c2410c;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+.proforma-attente-card__visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 88px;
+    margin: 0.85rem 0.9rem 0.35rem;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #fff9f5 100%);
+    border: 1px solid #ffedd5;
+}
+.proforma-attente-card__visual i {
+    font-size: 2.5rem;
+    color: #fdba74;
+}
+.proforma-attente-card__body {
+    padding: 0.55rem 0.9rem 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    flex: 1;
+}
+.proforma-attente-card__client {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.3em;
+}
+.proforma-attente-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+.proforma-attente-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #fff9f5 0%, #ffe9e9 100%);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+.proforma-attente-card__footer-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #9a3412;
+}
+.proforma-attente-card__total {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #9a3412;
+    white-space: nowrap;
+}
+.proforma-attente-empty {
+    width: 100%;
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: #94a3b8;
+}
+.proforma-attente-empty i {
+    font-size: 2.25rem;
+    color: #fdba74;
+    display: block;
+    margin-bottom: 0.65rem;
+}
+</style>
+
+{% for panier in paniers_proforma %}
+<div class="proforma-attente-card-wrap">
+    <button type="button"
+            class="proforma-attente-card"
+            onclick="afficherDetailProforma('{{ panier.ticket }}')"
+            title="Voir la proforma {{ panier.ticket }}">
+        <div class="proforma-attente-card__head">
+            <span class="proforma-attente-card__ticket">N° {{ panier.ticket }}</span>
+            <span class="proforma-attente-card__badge">
+                <i class="fa fa-clock-o" aria-hidden="true"></i> Attente
+            </span>
+        </div>
+        <div class="proforma-attente-card__visual">
+            <i class="icon-doc" aria-hidden="true"></i>
+        </div>
+        <div class="proforma-attente-card__body">
+            <div class="proforma-attente-card__client">
+                {{ panier.nom_client|default:"Client non renseigné" }}
+            </div>
+            <div class="proforma-attente-card__meta">
+                <i class="fa fa-calendar" aria-hidden="true"></i>
+                <span>{{ panier.date_creation|date:"d/m/Y" }}</span>
+                {% if panier.local_entrepot %}
+                <span aria-hidden="true">·</span>
+                <span>{{ panier.local_entrepot.nom }}</span>
+                {% endif %}
+            </div>
+            <div class="proforma-attente-card__footer">
+                <span class="proforma-attente-card__footer-label">Total</span>
+                <span class="proforma-attente-card__total">{{ panier.total|floatformat:0 }} FCFA</span>
+            </div>
+        </div>
+    </button>
+</div>
+{% empty %}
+<div class="proforma-attente-empty">
+    <i class="icon-doc" aria-hidden="true"></i>
+    <p class="mb-0">Aucune proforma en attente.</p>
+</div>
+{% endfor %}

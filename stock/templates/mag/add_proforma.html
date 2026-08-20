@@ -1,0 +1,382 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE — Créer proforma{% endblock title %}
+{% block page_title %}
+{% endblock page_title %}
+{% block page %}{% endblock page %}
+
+{% block main_content %}
+    <div class="col-md-8 col-lg-8 p-2 mt-0 panier-page-col">
+        <div class="card panier-page-card panier-page-card--catalog">
+            <div class="body panier-catalog-search">
+                <label class="sr-only" for="searchInput">Rechercher une pièce</label>
+                <div class="piece-catalog-search" id="adv-search" role="search">
+                    <span class="piece-catalog-search__icon" aria-hidden="true">
+                        <i class="fa fa-search"></i>
+                    </span>
+                    <input type="search"
+                           name="q"
+                           class="form-control piece-catalog-search__input"
+                           placeholder="Rechercher une pièce, référence…"
+                           id="searchInput"
+                           autocomplete="off" />
+                    <button type="button"
+                            class="piece-catalog-search__reset"
+                            onclick="resetSearch()"
+                            title="Réinitialiser la recherche"
+                            aria-label="Réinitialiser la recherche">
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="body" style="background-color: #ffe9e95c;">
+                {% include 'mag/partials/_categorie_filter_chips.html' %}
+                <div class="cwidget-scroll">
+                    <ul class="chat-widget m-r-5 clearfix" style='border-radius:18px; height: 450px;'>
+                        <div class="row clearfix piece-catalog-row" id="result-articles">
+                            {% include 'mag/partials/_article_proforma_list.html' with articles=articles %}
+                        </div>
+                    </ul>
+                </div>
+            </div>
+            <div class="body">
+                <p class="mb-0" id="result-count">Résultat ({{ articles|length }})</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-4 p-2 mt-0 panier-page-col">
+        <div class="card panier-page-card panier-page-card--basket">
+            <div class="panier-basket-header">
+                <div class="panier-basket-header__main">
+                    <span class="panier-basket-header__icon" aria-hidden="true">
+                        <i class="fa fa-file-text-o"></i>
+                    </span>
+                    <div class="panier-basket-header__text">
+                        <h2 class="panier-basket-header__title">Proforma</h2>
+                        <p class="panier-basket-header__subtitle">Articles sélectionnés</p>
+                    </div>
+                </div>
+                <div class="panier-basket-header__badge" title="Nombre d'articles">
+                    <span class="panier-basket-header__badge-label">Articles</span>
+                    <span id="panier-quantite-total" class="panier-basket-header__badge-value">{% if items %}{{ total_quantite }}{% else %}0{% endif %}</span>
+                </div>
+            </div>
+            <div class="body panier-page-card-body">
+                <form method="post" role="form" id="quickForm" class="panier-basket-form" action="{% url 'valider_proforma' %}">
+                    {% csrf_token %}
+                    <div class="panier-basket-scroll">
+                        <div class="panier-basket-empty" id="panier-basket-empty"{% if items %} style="display: none;"{% endif %}>
+                            <span class="panier-basket-empty__icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>
+                            <p class="panier-basket-empty__title">Proforma vide</p>
+                            <p class="panier-basket-empty__hint">Ajoutez des pièces depuis le catalogue à gauche.</p>
+                        </div>
+                        <ul class="panier-basket-list" id="panier-items-list"{% if not items %} style="display: none;"{% endif %}>
+                            {% if items %}
+                                {% for item in items %}
+                                    {% include 'mag/partials/_panier_proforma_item.html' with item=item %}
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <div class="panier-checkout">
+                        <div class="panier-recap-card">
+                            <div class="panier-recap-row">
+                                <span class="panier-recap-label">Coût total</span>
+                                <span class="panier-recap-value"><span id="panier-total">{{ total }}</span> Fcfa</span>
+                            </div>
+                            <div class="panier-recap-row">
+                                <span class="panier-recap-label">Remise</span>
+                                <span class="panier-recap-value"><span id="affiche-remise">0</span> %</span>
+                            </div>
+                            <div class="panier-recap-row panier-recap-row--total">
+                                <span class="panier-recap-label">À payer</span>
+                                <span class="panier-recap-value panier-recap-value--payer">
+                                    <span id="affiche-montant-a-payer">{{ total_apres_remise }}</span> Fcfa
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="panier-remise-field">
+                            <label class="panier-remise-label" for="input-nom-client">Client / Société</label>
+                            <div class="panier-remise-input-wrap">
+                                <span class="panier-remise-input-icon" aria-hidden="true"><i class="fa fa-user"></i></span>
+                                <input type="text"
+                                       class="form-control panier-remise-input"
+                                       id="input-nom-client"
+                                       name="nom_client"
+                                       placeholder="Nom du client"
+                                       required
+                                       autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div class="panier-remise-field">
+                            <label class="panier-remise-label" for="input-remise">Remise (montant)</label>
+                            <div class="panier-remise-input-wrap">
+                                <span class="panier-remise-input-icon" aria-hidden="true"><i class="fa fa-tag"></i></span>
+                                <input type="text"
+                                       class="form-control panier-remise-input"
+                                       id="input-remise"
+                                       name="remiser"
+                                       placeholder="0.00"
+                                       inputmode="decimal"
+                                       autocomplete="off">
+                                <span class="panier-remise-input-suffix">Fcfa</span>
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                                id="panier-btn-valider"
+                                class="panier-btn-valider{% if items %} panier-btn-valider--active{% endif %}"
+                                {% if not items %}disabled{% endif %}>
+                            <i class="fa {% if items %}fa-check-circle{% else %}fa-file-text-o{% endif %}" aria-hidden="true"></i>
+                            <span>{% if items %}Valider la proforma{% else %}Proforma vide{% endif %}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        const _PROFORMA_URL_ADD    = "{% url 'ajax_add_panier_proforma'    999999 %}";
+        const _PROFORMA_URL_REMOVE = "{% url 'ajax_remove_panier_proforma' 999999 %}";
+        const _PROFORMA_URL_DELETE = "{% url 'ajax_delete_panier_proforma' 999999 %}";
+
+        function _proformaUrl(pk, action) {
+            const tpl = action === 'increment' ? _PROFORMA_URL_ADD
+                      : action === 'decrement' ? _PROFORMA_URL_REMOVE
+                      : action === 'delete'    ? _PROFORMA_URL_DELETE
+                      : /* add */               _PROFORMA_URL_ADD;
+            return tpl.replace('999999', pk);
+        }
+
+        function getCsrf() {
+            const name = 'csrftoken';
+            const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+            return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        function togglePanierEmptyState(qty) {
+            const empty = document.getElementById('panier-basket-empty');
+            const list = document.getElementById('panier-items-list');
+            const hasItems = Number(qty) > 0;
+            if (empty) empty.style.display = hasItems ? 'none' : 'flex';
+            if (list) list.style.display = hasItems ? 'flex' : 'none';
+        }
+
+        function scrollPanierVersBas() {
+            const scroll = document.querySelector('.panier-page-card--basket .panier-basket-scroll');
+            if (scroll) {
+                requestAnimationFrame(function () {
+                    scroll.scrollTop = scroll.scrollHeight;
+                });
+            }
+        }
+
+        function updateBoutonValider(newTotal) {
+            const btn = document.getElementById('panier-btn-valider');
+            if (!btn) return;
+            const icon = btn.querySelector('i');
+            const label = btn.querySelector('span');
+            if (newTotal > 0) {
+                btn.disabled = false;
+                btn.classList.add('panier-btn-valider--active');
+                if (icon) icon.className = 'fa fa-check-circle';
+                if (label) label.textContent = 'Valider la proforma';
+            } else {
+                btn.disabled = true;
+                btn.classList.remove('panier-btn-valider--active');
+                if (icon) icon.className = 'fa fa-file-text-o';
+                if (label) label.textContent = 'Proforma vide';
+            }
+        }
+
+        function panierProformaAction(pk, action) {
+            fetch(_proformaUrl(pk, action), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrf(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    toastr.warning(data.message || "Opération impossible.");
+                    return;
+                }
+
+                if (action === 'add') {
+                    if (data.created) {
+                        const container = document.getElementById('panier-items-list');
+                        container.insertAdjacentHTML('beforeend', data.card_html);
+                        toastr.success("Article ajouté au panier.");
+                    } else {
+                        const qEl = document.getElementById(`quantite-${pk}`);
+                        const tEl = document.getElementById(`quantite-total-piece-${pk}`);
+                        if (qEl) qEl.textContent = data.quantite;
+                        if (tEl) tEl.textContent = data.prix_total_piece.toFixed(2);
+                        toastr.info("Quantité mise à jour.");
+                    }
+                } else if (action === 'increment') {
+                    const qEl = document.getElementById(`quantite-${pk}`);
+                    const tEl = document.getElementById(`quantite-total-piece-${pk}`);
+                    if (qEl) qEl.textContent = data.quantite;
+                    if (tEl) tEl.textContent = data.prix_total_piece.toFixed(2);
+                } else if (action === 'decrement') {
+                    if (data.quantite > 0) {
+                        const qEl = document.getElementById(`quantite-${pk}`);
+                        const tEl = document.getElementById(`quantite-total-piece-${pk}`);
+                        if (qEl) qEl.textContent = data.quantite;
+                        if (tEl) tEl.textContent = data.prix_total_piece.toFixed(2);
+                    } else {
+                        const card = document.getElementById(`article-card-${pk}`);
+                        if (card) card.remove();
+                    }
+                    if (data.panier_empty) _viderAffichagePanier();
+                } else if (action === 'delete') {
+                    const card = document.getElementById(`article-card-${pk}`);
+                    if (card) card.remove();
+                    if (data.panier_empty) {
+                        _viderAffichagePanier();
+                        toastr.success("Le panier proforma a été vidé.");
+                    } else {
+                        toastr.success("Article supprimé du panier.");
+                    }
+                }
+
+                document.getElementById('panier-quantite-total').textContent = data.total_quantite;
+                togglePanierEmptyState(data.total_quantite);
+                updateTotal(data.total);
+                if (action === 'add' || action === 'increment') {
+                    scrollPanierVersBas();
+                }
+            })
+            .catch(() => toastr.error("Erreur réseau. Veuillez réessayer."));
+        }
+
+        function _viderAffichagePanier() {
+            document.getElementById('panier-items-list').innerHTML = '';
+            document.getElementById('panier-total').textContent = '0.00';
+            document.getElementById('affiche-remise').textContent = '0';
+            document.getElementById('affiche-montant-a-payer').textContent = '0.00';
+            document.getElementById('panier-quantite-total').textContent = '0';
+            togglePanierEmptyState(0);
+            updateBoutonValider(0);
+        }
+
+        function updateTotal(newTotal) {
+            const panierTotalEl = document.getElementById('panier-total');
+            panierTotalEl.textContent = newTotal.toFixed(2);
+            total = newTotal;
+            if (typeof calculerEtAfficher === 'function') calculerEtAfficher();
+            updateBoutonValider(newTotal);
+        }
+    </script>
+    <script>
+        let currentQuery = "";
+        let currentCategorie = "";
+        function updateArticleList() {
+            $.ajax({
+                url: "{% url 'ajax_search_articles_proforma' %}",
+                data: {
+                    q: currentQuery,
+                    categorie: currentCategorie
+                },
+                dataType: "json",
+                success: function (data) {
+                    $('#result-articles').html(data.html);
+                    const count = $('#result-articles').children().length;
+                    $('#result-count').text(`Résultat (${count})`);
+                },
+                error: function () {
+                    $('#result-articles').html("<div class='col-12'><p class='piece-catalog-empty text-danger mb-0'>Erreur de chargement.</p></div>");
+                    $('#result-count').text("Résultat (0)");
+                }
+            });
+        }
+        $(document).ready(function() {
+            $('#searchInput').on('input', function () {
+                currentQuery = $(this).val();
+                updateArticleList();
+            });
+            $('#searchInput').closest('form').on('submit', function (e) {
+                e.preventDefault();
+                currentQuery = $('#searchInput').val();
+                updateArticleList();
+            });
+        });
+        function filterByCategorie(categorieId) {
+            currentCategorie = categorieId || "";
+            document.querySelectorAll('.piece-cat-chip').forEach(function (chip) {
+                var id = chip.getAttribute('data-categorie') || "";
+                chip.classList.toggle('is-active', id === currentCategorie);
+            });
+            updateArticleList();
+        }
+        function resetSearch() {
+            currentQuery = "";
+            currentCategorie = "";
+            document.getElementById('searchInput').value = "";
+            document.querySelectorAll('.piece-cat-chip').forEach(function (chip) {
+                var id = chip.getAttribute('data-categorie') || "";
+                chip.classList.toggle('is-active', id === "");
+            });
+            updateArticleList();
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const inputRemise = document.getElementById('input-remise');
+        const afficheRemise = document.getElementById('affiche-remise');
+        const afficheMontantAPayer = document.getElementById('affiche-montant-a-payer');
+        const panierTotalEl = document.getElementById('panier-total');
+        const form = document.getElementById('quickForm');
+
+        total = parseFloat(panierTotalEl.textContent.replace(',', '.')) || 0;
+        function remiseEnPourcent(montantRemise, totalBrut) {
+            if (!totalBrut || totalBrut <= 0 || !montantRemise || montantRemise <= 0) return '0';
+            return ((montantRemise / totalBrut) * 100).toFixed(2);
+        }
+
+        window.calculerEtAfficher = function () {
+            let remiseStr = inputRemise.value.trim().replace(',', '.');
+            let remise = parseFloat(remiseStr);
+            if (isNaN(remise) || remise < 0) remise = 0;
+            else if (remise > total) remise = total;
+
+            let montantApresRemise = total - remise;
+            afficheRemise.textContent = remiseEnPourcent(remise, total);
+            afficheMontantAPayer.textContent = montantApresRemise.toFixed(2);
+            return montantApresRemise;
+        };
+
+        inputRemise.addEventListener('input', calculerEtAfficher);
+        form.addEventListener('submit', function(e) {
+            calculerEtAfficher();
+            const nomClient = document.getElementById('input-nom-client').value.trim();
+            if (!nomClient) {
+                e.preventDefault();
+                alert('Veuillez renseigner le nom du client.');
+                document.getElementById('input-nom-client').focus();
+                return;
+            }
+            if (total <= 0) {
+                e.preventDefault();
+                alert('La proforma est vide.');
+            }
+        });
+        if (total === 0) {
+                afficheMontantAPayer.textContent = '0.00';
+                updateBoutonValider(0);
+                togglePanierEmptyState(0);
+            } else {
+                calculerEtAfficher();
+                togglePanierEmptyState(document.getElementById('panier-quantite-total').textContent);
+            }
+        });
+    </script>
+{% endblock main_content %}

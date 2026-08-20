@@ -1,0 +1,17 @@
+{# Toolbar filtre live — à placer dans un parent x-data="magTableFilter()" #}
+<div class="mag-table-toolbar">
+    <div class="mag-table-search-wrap">
+        <i class="fa fa-search" aria-hidden="true"></i>
+        <input type="search"
+               class="mag-table-search"
+               placeholder="{{ search_placeholder|default:'Rechercher dans le tableau…' }}"
+               x-model="query"
+               @input="filter()"
+               @keydown.escape="clear()"
+               autocomplete="off">
+    </div>
+    <div class="mag-table-count">
+        <strong x-text="visibleCount"></strong> / <span x-text="totalCount"></span> résultat(s)
+    </div>
+</div>
+<p class="mag-table-empty" data-mag-table-empty>Aucune ligne ne correspond à votre recherche.</p>

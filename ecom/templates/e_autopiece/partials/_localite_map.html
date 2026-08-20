@@ -1,0 +1,7 @@
+{% load static i18n %}
+<div id="ecom-map" class="ecom-localite-map" style="height:420px;border-radius:12px;background:#f3f4f6;width:100%;"></div>
+<form method="post" action="{% url 'ecom_select_local' %}" class="d-none" id="ecom-local-form">
+    {% csrf_token %}
+    <input type="hidden" name="local_id" id="ecom-local-id"
+        value="{% if local_selectionne %}{{ local_selectionne.code }}{% endif %}">
+</form>

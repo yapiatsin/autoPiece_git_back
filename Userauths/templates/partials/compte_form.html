@@ -1,0 +1,48 @@
+<form id="compteUpdateform" method="post" action="{% url 'update_compte' object.id %}">
+    {% csrf_token %}
+    <div class="modal-body">
+        <section class="cm-section mb-0">
+            <h3 class="cm-section__title">
+                <i class="fa fa-user-circle-o"></i> Information du compte
+            </h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="cm-field">
+                        <label for="{{ form.username.id_for_label }}">Nom utilisateur</label>
+                        {{ form.username }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cm-field">
+                        <label for="{{ form.email.id_for_label }}">Email</label>
+                        {{ form.email }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cm-field">
+                        <label for="{{ form.role.id_for_label }}">Rôle</label>
+                        {{ form.role }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cm-field">
+                        <label for="{{ form.genre.id_for_label }}">Genre</label>
+                        {{ form.genre }}
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="cm-field mb-0">
+                        <label for="{{ form.contact.id_for_label }}">Contact</label>
+                        {{ form.contact }}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-cm-cancel" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-cm-save">
+            <i class="fa fa-check"></i> Enregistrer
+        </button>
+    </div>
+</form>

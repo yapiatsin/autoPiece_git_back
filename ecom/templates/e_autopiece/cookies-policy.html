@@ -1,0 +1,106 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Politique cookies" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+{% block content %}
+<div class="rts-navigation-area-breadcrumb">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="navigator-breadcrumb-wrapper">
+                    <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+                    <i class="fa-regular fa-chevron-right"></i>
+                    <a class="current" href="{% url 'ecom_cookies_policy' %}">{% trans "Politique cookies" %}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="section-seperator">
+    <div class="container">
+        <hr class="section-seperator">
+    </div>
+</div>
+
+<div class="rts-pricavy-policy-area rts-section-gap">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="container-privacy-policy ecom-legal-content">
+                    <h1 class="title mb--40">{% trans "Politique cookies — Auto-Pièce" %}</h1>
+                    <p class="disc ecom-legal-meta">{% trans "Dernière mise à jour : 15 juillet 2026" %}</p>
+                    <p class="disc">
+                        {% blocktrans %}La présente politique décrit la manière dont Auto-Pièce utilise des cookies et technologies similaires lorsque vous visitez notre boutique en ligne, créez un compte, ajoutez des pièces à votre panier ou suivez une commande. Elle s’applique aux pages du site Auto-Pièce accessibles depuis la Côte d’Ivoire et vise à vous informer de façon claire et transparente.{% endblocktrans %}
+                    </p>
+                    <p class="disc">
+                        {% blocktrans %}Un cookie est un petit fichier texte déposé sur votre appareil (ordinateur, tablette ou téléphone) lors de votre navigation. Il permet notamment de mémoriser vos préférences, de sécuriser votre session et d’améliorer votre expérience d’achat de pièces automobiles.{% endblocktrans %}
+                    </p>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Types de cookies utilisés" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}<strong>Cookies essentiels :</strong> indispensables au fonctionnement du site (authentification, panier, choix de localité / entrepôt, sécurité CSRF). Sans eux, certaines étapes de commande ne peuvent pas fonctionner correctement.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}<strong>Cookies de préférence :</strong> mémorisent vos choix (langue d’affichage, localité sélectionnée, affichage du guide de commande) afin d’éviter de vous redemander les mêmes informations à chaque visite.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}<strong>Cookies de mesure d’audience (le cas échéant) :</strong> nous aident à comprendre comment le catalogue et les pages produit sont utilisés, dans le seul but d’améliorer le service Auto-Pièce. Ces cookies ne sont déposés que si la mesure d’audience est active.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Finalités pour Auto-Pièce" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Maintenir votre panier et votre session lorsque vous consultez des pièces compatibles avec votre véhicule.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Associer votre commande en ligne à la bonne localité ou au bon entrepôt partenaire pour la livraison ou le retrait.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Sécuriser l’accès à votre espace client et limiter les abus (tentatives de connexion frauduleuses, sessions expirées).{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Mesurer la performance du site (pages les plus consultées, parcours d’achat) afin d’améliorer le catalogue et le support.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Durée de conservation" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Les cookies de session sont généralement effacés à la fermeture du navigateur.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Les cookies de préférence peuvent être conservés jusqu’à 12 mois, sauf suppression anticipée par vos soins.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Les données liées à une commande restent soumises à notre politique de confidentialité et aux obligations légales applicables.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Vos choix" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Vous pouvez configurer votre navigateur pour refuser ou supprimer les cookies. Si vous refusez les cookies essentiels, certaines fonctions (panier, compte, validation de commande) peuvent être indisponibles.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Pour toute question relative aux cookies Auto-Pièce, contactez-nous à <a href="mailto:contact@autopiece.ci">contact@autopiece.ci</a> ou via la page Support.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                        <p class="disc mt--30">
+                            {% blocktrans %}En poursuivant votre navigation sur Auto-Pièce après avoir pris connaissance de cette politique, vous acceptez l’usage des cookies nécessaires au fonctionnement du service, dans les conditions décrites ci-dessus.{% endblocktrans %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

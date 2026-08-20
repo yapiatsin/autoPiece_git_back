@@ -1,0 +1,13 @@
+<div class="modal-body">
+    <p>Êtes-vous sûr de vouloir supprimer la catégorie <strong>"{{ object.categorie }}"</strong> ?</p>
+    <p class="text-danger"><small>Cette action est irréversible. Les permissions associées ne seront pas supprimées mais perdront leur catégorie.</small></p>
+    <p><strong>Nombre de permissions associées:</strong> {{ object.cat_permis.count }}</p>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+    <form id="deleteCategoryForm" method="post" style="display: inline;" data-category-id="{{ object.pk }}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger">Supprimer</button>
+    </form>
+</div>
+

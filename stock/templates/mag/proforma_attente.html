@@ -1,0 +1,158 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Auto-Pièce — Proformas en attente{% endblock title %}
+{% block page_title %}Proformas en attente{% endblock page_title %}
+{% block page %}Proformas en attente{% endblock page %}
+
+{% block extra_head %}
+{% include "mag/partials/_dashboard_kpi_styles.html" %}
+{% endblock extra_head %}
+
+{% block main_content %}
+<div class="col-lg-12 p-2 mt-2">
+    <div class="card">
+        <div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:12px;">
+            <div class="piece-catalog-search" id="adv-search" role="search" style="min-width:260px; max-width:720px; flex:1;">
+                <span class="piece-catalog-search__icon" aria-hidden="true">
+                    <i class="fa fa-search"></i>
+                </span>
+                <input type="search"
+                       name="q"
+                       class="form-control piece-catalog-search__input"
+                       placeholder="N° proforma ou nom client…"
+                       id="searchInput"
+                       autocomplete="off" />
+                <button type="button"
+                        class="piece-catalog-search__reset"
+                        onclick="resetSearch()"
+                        title="Réinitialiser la recherche"
+                        aria-label="Réinitialiser la recherche">
+                    <i class="fa fa-refresh" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+        <div class="body" style="background: linear-gradient(180deg, #fff7ed 0%, #ffffff 28%); min-height: 420px;">
+            <div id="result-proformas" class="proforma-attente-grid">
+                {% include 'mag/partials/_proforma_attente.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-proforma" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails de la proforma</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-proforma-body">
+                <p class="text-muted text-center mb-0">Chargement…</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+var currentQuery = '';
+
+function updateProformaList(){
+    $.ajax({
+        url: '{% url "ajax_search_proformas" %}',
+        data: { q: currentQuery },
+        dataType: 'json',
+        success: function (data) {
+            $('#result-proformas').html(data.html);
+            $('#result-count').text('(' + data.count + ')');
+            $('#kpi-proforma-count').text(data.count);
+        },
+        error: function () {
+            $('#result-proformas').html(
+                '<div class="proforma-attente-empty"><p class="mb-0 text-danger">Erreur de chargement.</p></div>'
+            );
+            $('#result-count').text('(0)');
+            $('#kpi-proforma-count').text('0');
+        }
+    });
+}
+
+$(document).ready(function () {
+    $('#searchInput').on('input', function () {
+        currentQuery = $(this).val();
+        updateProformaList();
+    });
+});
+
+function resetSearch() {
+    currentQuery = '';
+    document.getElementById('searchInput').value = '';
+    updateProformaList();
+}
+
+function afficherDetailProforma(ticketId) {
+    $('#modal-proforma-body').html('<p class="text-muted text-center mb-0">Chargement…</p>');
+    $('#modal-proforma').modal('show');
+    $.ajax({
+        url: '{% url "ajax_detail_proforma" ticket_id="__TID__" %}'.replace('__TID__', encodeURIComponent(ticketId)),
+        type: 'GET',
+        success: function (response) {
+            $('#modal-proforma-body').html(response.html);
+        },
+        error: function () {
+            $('#modal-proforma-body').html(
+                '<p class="text-danger text-center mb-0">Erreur lors du chargement des détails.</p>'
+            );
+        }
+    });
+}
+
+function validerProforma(ticketId) {
+    if (!confirm('Êtes-vous sûr de vouloir valider cette proforma ?')) {
+        return;
+    }
+    $.ajax({
+        url: '{% url "valider_panier_proforma" ticket_id="__TID__" %}'.replace('__TID__', encodeURIComponent(ticketId)),
+        type: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function (response) {
+            if (response.success) {
+                alert(response.message);
+                $('#modal-proforma').modal('hide');
+                updateProformaList();
+            } else {
+                alert(response.message || 'Erreur lors de la validation.');
+            }
+        },
+        error: function () {
+            alert('Erreur lors de la validation de la proforma.');
+        }
+    });
+}
+
+function imprimerProforma(ticketId) {
+    var url = '{% url "imprimer_proforma_pdf" ticket_id="__TID__" %}'.replace('__TID__', encodeURIComponent(ticketId));
+    window.open(url + '?print=1', '_blank', 'width=920,height=720');
+}
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,259 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% block title %}AUTO-PIECE{% endblock title %}
+{% block page_title %}Categorie "{{ categorie.categorie }}"{% endblock page_title %}
+{% block breadcrumb %}
+<li class="breadcrumb-item text-success"><a href="{% url 'add_categorie' %}"><i class="icon-arrow-left text-success"></i> Retour aux categories</a></li>
+<li class="breadcrumb-item active">{% block page %}Pièces{% endblock page %}</li>
+{% endblock breadcrumb %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-form-modal.css' %}">
+{% endblock extra_head %}
+
+{% block page_action_buttons %}
+{% if categorie %}
+<a href="{% url 'download_modele_pieces_excel' categorie.pk %}" class="btn btn-outline-info" title="Télécharger le modèle Excel">
+    <i class="fa fa-download"></i> Modèle Excel
+</a>
+<form method="post" enctype="multipart/form-data" class="d-inline-flex align-items-center flex-wrap" id="importPiecesForm">
+    {% csrf_token %}
+    <label class="mb-0 mr-2 small text-muted" for="excel_file">Import :</label>
+    <input type="file" name="excel_file" id="excel_file" accept=".xls,.xlsx" class="form-control form-control-sm mr-1" style="max-width:200px;" required>
+    <button type="submit" class="btn btn-outline-success btn-sm"><i class="fa fa-upload"></i> Importer</button>
+</form>
+{% endif %}
+{% endblock page_action_buttons %}
+
+{% block main_content %}
+    <div class="modal fade mag-form-modal" id="addinf" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="title">Nouvelle pièce</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="basic-form" method="post" novalidate enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mf-info">
+                            Catégorie : <strong>{{ categorie.categorie }}</strong>
+                        </div>
+
+                        <section class="mf-section">
+                            <h3 class="mf-section__title">
+                                <i class="fa fa-cube"></i> Identification
+                            </h3>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mf-field">
+                                        <label>N° pièce</label>
+                                        {{ form.numero_piece }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mf-field">
+                                        <label>Désignation</label>
+                                        {{ form.designation }}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mf-field mb-0">
+                                        <label>Image <span class="text-muted font-weight-normal">(facultatif)</span></label>
+                                        {{ form.image }}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="mf-section mb-0">
+                            <h3 class="mf-section__title">
+                                <i class="fa fa-tags"></i> Prix &amp; stock
+                            </h3>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mf-field">
+                                        <label>Prix d'achat</label>
+                                        {{ form.prix_achat }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mf-field">
+                                        <label>Prix de vente</label>
+                                        {{ form.prix_unitaire }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mf-field">
+                                        <label>Seuil</label>
+                                        {{ form.seuil }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mf-field">
+                                        <label>Emplacement</label>
+                                        {{ form.emplacement }}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <p class="mf-hint mb-0">Le stock initial est enregistré via « Entrée en stock » après création de la fiche catalogue.</p>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card" style="overflow-y: auto">
+            <div class="mobile-left">
+                <a class="btn btn-primary toggle-email-nav collapsed" data-toggle="collapse" href="#email-nav" role="button" aria-expanded="false" aria-controls="email-nav">
+                    <span class="btn-label"><i class="la la-bars"></i></span>
+                    Menu
+                </a>
+            </div>
+            <div class="mail-inbox">
+                <div class="mail-left collapse" id="email-nav">
+                    <div class="mail-compose m-b-20">
+                        <a href="" class="btn btn-outline-danger btn-block" data-toggle="modal" data-target="#addinf">Nouvelle pièce <i class="fa fa-edit"></i></a>
+                    </div>
+                    <div class="mail-side">
+                        <ul class="nav">
+                            <li class="active text-secondary"><a href="{% url "stock" %}"><i class="icon-star text-warning"></i>Mon stock<span class="badge badge-primary float-right"> All </span></a></li>
+                            {% for c in categories %}
+                                <li class="active">
+                                    <a href="{% url "add_piece" c.pk %}"><i class="icon-star"></i>{{c.categorie}}<span class="badge badge-primary float-right text-success">+</span></a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="mail-right">
+                    <div class="header d-flex align-center">
+                        <h2>Liste des pièces de {{categorie.categorie}} </h2>
+                        <form class="ml-auto">
+                            <div class="input-group">
+                                <div class="input-group-append" >
+                                    <span class="input-group-text" id="search-mail" style="height:100px;width:200px;{% if categorie.image.url %}background-image: url('{{ categorie.image.url }}'); background-size: cover;{% endif %}"></span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="body">
+                        <div class="mag-table-shell" x-data="magTableFilter()">
+                            {% include "mag/partials/_alpine_table_toolbar.html" %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mag-data-table">
+                                <thead>
+                                    <tr class='text-info'>
+                                        <th>N°#</th>
+                                        <th>N°Pièce</th>
+                                        <th>Designation</th>
+                                        <th>Prix Achat</th>
+                                        <th>Prix Vente</th>
+                                        <th class="text-center">Quantite stock</th>
+                                        <th>seuil</th>
+                                        <th>Emplacement</th>
+                                        <th>Auteur</th>
+                                        <th>Date</th>
+                                        <th class="text-center">Action</th>
+                                        <th class="text-center">Sortie</th>
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                    <tr class='text-info'>
+                                        <th>N°#</th>
+                                        <th>N°Pièce</th>
+                                        <th>Designation</th>
+                                        <th>Prix Achat</th>
+                                        <th>Prix Vente</th>
+                                        <th class="text-center">Quantite stock</th>
+                                        <th>Seuil</th>
+                                        <th>Emplacement</th>
+                                        <th>Auteur</th>
+                                        <th>Date</th>
+                                        <th class="text-center">Action</th>
+                                        <th class="text-center">Sortie</th>
+                                    </tr>
+                                </tfoot>
+                                <tbody>
+                                    {% if pieces %}
+                                        {% for d in pieces %}
+                                            <tr>
+                                                <th><a title="cliquer pour modifier">{{forloop.counter}}</a></th>
+                                                <th><a title="cliquer pour modifier">{{d.numero_piece}}</a></th>
+                                                <th>
+                                                    {{d.designation}}
+                                                </th>
+                                                <th>{{d.prix_achat}}</th>
+                                                <th class="text-center">{{d.prix_unitaire}}</th>
+                                                <th class="text-center"><span class="badge badge-{{ d.color_status }}" aria-hidden="true">{{d.quantite_disponible}}</span></th>
+                                                <th>{{d.seuil}}</th>
+                                                <th>{{d.emplacement}}</th>
+                                                <th>{{d.utilisateur.username}}</th>
+                                                <th>{{d.date_creation|date:"d-m-y"}}</th>
+                                                <th class="text-center">
+                                                    <a href="javascript:void(0);" data-toggle="modal" data-target="#entreStockModal{{ d.pk }}" title="Cliquer pour mettre a jour le stock"><i class="icon-plus text-success"></i></a> -
+                                                    <a href="javascript:void(0);" data-toggle="modal" data-target="#editPieceModal{{ d.pk }}" title="Cliquer pour modifier la pièce"><i class="icon-note text-warning"></i></a> -
+        
+                                                    <a href="{% url "info_piece" d.pk %}" title="Cliquer pour voir les entrées en stock"><i class="icon-eye text-info"></i></a> -
+                                                    <a href="{% url "piece_delete" d.pk %}" onclick="return confirm('Etes-vous sûre de vouloir supprimer la pièce de {{ d.numero_piece }} - {{ d.designation }} - {{ d.categorie.categorie }} ? Toutes les informations liées seront supprimées.')"><i class="icon-trash text-danger"></i></a>
+                                                </th>
+                                                <th class="text-center">
+                                                    {% if peut_toggle_sortie_catalogue %}
+                                                    <label class="toggle-switch" title="Vente catalogue (toutes localités)">
+                                                        <input type="checkbox"
+                                                            class="toggle-checkbox"
+                                                            data-active-url="{% url 'activate_sortie' d.pk %}"
+                                                            data-deactive-url="{% url 'deactivate_sortie' d.pk %}"
+                                                            data-piece-label="{{ d.numero_piece }} — {{ d.designation }}"
+                                                            {% if d.active_sortie %}checked{% endif %}>
+                                                        <span class="toggle-switch-slider {% if d.active_sortie %}bg-success{% else %}bg-danger{% endif %}"></span>
+                                                    </label>
+                                                    {% elif peut_toggle_sortie_local %}
+                                                    <label class="toggle-switch" title="Vente dans votre localité">
+                                                        <input type="checkbox"
+                                                            class="toggle-checkbox"
+                                                            data-active-url="{% url 'activate_sortie_local' d.pk %}"
+                                                            data-deactive-url="{% url 'deactivate_sortie_local' d.pk %}"
+                                                            data-piece-label="{{ d.numero_piece }} — {{ d.designation }}"
+                                                            {% if d.active_sortie_local|default:True %}checked{% endif %}>
+                                                        <span class="toggle-switch-slider {% if d.active_sortie_local|default:True %}bg-success{% else %}bg-danger{% endif %}"></span>
+                                                    </label>
+                                                    {% else %}
+                                                    <span class="text-muted">—</span>
+                                                    {% endif %}
+                                                </th>
+                                            </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if pieces %}
+        {% for d in pieces %}
+            {% include "mag/partials/entre_stock.html" with piece=d entre_stock_form=entre_stock_form %}
+            {% include "mag/partials/_edit_piece.html" with piece=d edit_piece_form=edit_piece_form fournisseurs=fournisseurs categories=categories %}
+        {% endfor %}
+    {% endif %}
+
+    {% include "mag/partials/_modal_archive_motif.html" %}
+    {% include "mag/partials/_archive_toggle_js.html" %}
+
+{% endblock main_content %}
+

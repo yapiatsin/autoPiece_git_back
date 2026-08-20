@@ -1,0 +1,249 @@
+{# Modal de connexion d'imprimante USB — inclus dans appbases.html #}
+<div class="modal fade" id="printerModal" tabindex="-1" role="dialog" aria-labelledby="printerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius:18px;">
+            <div class="modal-header bg-primary text-white" style="border-top-left-radius:18px; border-top-right-radius:18px;">
+                <h5 class="modal-title" id="printerModalLabel">
+                    <i class="fa fa-print"></i> Connexion d'imprimante USB
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                {# Statut initial #}
+                <div id="printer-status-empty" class="text-center p-3">
+                    <i class="fa fa-usb text-muted" style="font-size:48px;"></i>
+                    <p class="mt-2 text-muted mb-0">Aucune imprimante connectée</p>
+                    <small class="text-muted">Branchez une imprimante USB puis cliquez sur « Détecter ».</small>
+                    <p class="text-muted small mt-2 mb-0">
+                        <i class="fa fa-info-circle"></i>
+                        Zadig : choisissez <strong>WinUSB</strong> (pas « USB Serial CDC ») pour l'Epson TM-T20III.
+                    </p>
+                </div>
+
+                {# Statut détection en cours #}
+                <div id="printer-status-loading" class="text-center p-3" style="display:none;">
+                    <i class="fa fa-spinner fa-spin text-info" style="font-size:48px;"></i>
+                    <p class="mt-2 mb-0">Détection en cours…</p>
+                </div>
+
+                {# Statut connectée — détails de l'imprimante #}
+                <div id="printer-status-connected" style="display:none;">
+                    <div class="alert alert-success d-flex align-items-center" role="alert" style="border-radius:12px;">
+                        <i class="fa fa-check-circle mr-2" style="font-size:24px;"></i>
+                        <strong class="ml-2">Imprimante connectée</strong>
+                    </div>
+                    <table class="table table-sm table-bordered mb-0">
+                        <tbody>
+                            <tr><th style="width:35%;">Fabricant</th><td id="printer-info-manufacturer">—</td></tr>
+                            <tr><th>Produit</th><td id="printer-info-product">—</td></tr>
+                            <tr><th>VID</th><td id="printer-info-vid">—</td></tr>
+                            <tr><th>PID</th><td id="printer-info-pid">—</td></tr>
+                            <tr><th>N° de série</th><td id="printer-info-serial">—</td></tr>
+                            <tr><th>Bus / Adresse</th><td id="printer-info-bus">—</td></tr>
+                        </tbody>
+                    </table>
+                    <div id="printer-multiple-warning" class="alert alert-info mt-2 mb-0 p-2" style="display:none; font-size:13px;">
+                        <i class="fa fa-info-circle"></i>
+                        <span id="printer-multiple-text"></span>
+                        <select id="printer-select" class="form-control form-control-sm mt-2"></select>
+                    </div>
+                </div>
+
+                {# Statut erreur #}
+                <div id="printer-status-error" class="alert alert-danger" style="display:none; border-radius:12px;">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <span id="printer-error-message"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Fermer
+                </button>
+                <button type="button" class="btn btn-info" id="btn-detect-printer">
+                    <i class="fa fa-search"></i> Détecter
+                </button>
+                <button type="button" class="btn btn-success" id="btn-test-print" disabled>
+                    <i class="fa fa-print"></i> Imprimer (test)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const PRINTER_SCAN_URL = "{% url 'printer_scan' %}";
+    const PRINTER_CONNECT_URL = "{% url 'printer_connect' %}";
+    const PRINTER_TEST_URL = "{% url 'printer_test' %}";
+
+    let detectedPrinters = [];
+    let selectedPrinter = null;
+
+    function $id(id) { return document.getElementById(id); }
+
+    function showState(state) {
+        ['empty', 'loading', 'connected', 'error'].forEach(s => {
+            const el = $id('printer-status-' + s);
+            if (el) el.style.display = (s === state) ? '' : 'none';
+        });
+    }
+
+    function fillPrinterDetails(p) {
+        $id('printer-info-manufacturer').textContent = p.manufacturer || '—';
+        $id('printer-info-product').textContent = p.product || '—';
+        $id('printer-info-vid').textContent = p.vid_hex + ' (' + p.vid + ')';
+        $id('printer-info-pid').textContent = p.pid_hex + ' (' + p.pid + ')';
+        $id('printer-info-serial').textContent = p.serial || '—';
+        $id('printer-info-bus').textContent = (p.bus ?? '—') + ' / ' + (p.address ?? '—');
+        $id('btn-test-print').disabled = false;
+    }
+
+    function getCsrf() {
+        const m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? m[1] : '';
+    }
+
+    function savePrinter(p) {
+        if (!p) return Promise.resolve();
+        const fd = new FormData();
+        fd.append('vid', p.vid);
+        fd.append('pid', p.pid);
+        return fetch(PRINTER_CONNECT_URL, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCsrf() },
+            body: fd,
+        }).then(r => r.json()).catch(() => ({}));
+    }
+
+    function detect() {
+        showState('loading');
+        $id('btn-test-print').disabled = true;
+        $id('btn-detect-printer').disabled = true;
+
+        fetch(PRINTER_SCAN_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json().then(data => ({ ok: r.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok || !data.success) {
+                    $id('printer-error-message').textContent = data.error || "Erreur lors du scan USB.";
+                    showState('error');
+                    return;
+                }
+                detectedPrinters = data.printers || [];
+                if (detectedPrinters.length === 0) {
+                    showState('empty');
+                    if (typeof toastr !== 'undefined') toastr.warning("Aucune imprimante USB détectée.");
+                    return;
+                }
+                if (data.saved_printer && detectedPrinters.length === 0) {
+                    selectedPrinter = data.saved_printer;
+                    fillPrinterDetails(selectedPrinter);
+                    showState('connected');
+                    if (typeof toastr !== 'undefined') {
+                        toastr.info("Imprimante mémorisée (non branchée) : " + (selectedPrinter.product || selectedPrinter.vid_hex));
+                    }
+                    return;
+                }
+
+                const pick = (list) => {
+                    if (data.saved_printer) {
+                        const saved = list.find(x =>
+                            x.vid === data.saved_printer.vid && x.pid === data.saved_printer.pid);
+                        if (saved) return saved;
+                    }
+                    return list[0];
+                };
+                selectedPrinter = pick(detectedPrinters);
+                fillPrinterDetails(selectedPrinter);
+
+                const warn = $id('printer-multiple-warning');
+                const select = $id('printer-select');
+                if (detectedPrinters.length > 1) {
+                    $id('printer-multiple-text').textContent =
+                        detectedPrinters.length + " imprimantes détectées. Sélectionnez celle à utiliser :";
+                    select.innerHTML = detectedPrinters.map((p, i) =>
+                        `<option value="${i}">${(p.product || 'Imprimante')} (${p.vid_hex}/${p.pid_hex})</option>`
+                    ).join('');
+                    const idx = detectedPrinters.findIndex(x =>
+                        x.vid === selectedPrinter.vid && x.pid === selectedPrinter.pid);
+                    if (idx >= 0) select.value = String(idx);
+                    warn.style.display = '';
+                } else {
+                    warn.style.display = 'none';
+                }
+                showState('connected');
+                savePrinter(selectedPrinter).then(res => {
+                    if (typeof toastr !== 'undefined') {
+                        const msg = (res && res.success)
+                            ? "Imprimante enregistrée pour les reçus automatiques."
+                            : ("Imprimante : " + (selectedPrinter.product || selectedPrinter.vid_hex));
+                        toastr.success(msg);
+                    }
+                });
+            })
+            .catch(err => {
+                $id('printer-error-message').textContent = "Erreur réseau lors du scan.";
+                showState('error');
+            })
+            .finally(() => {
+                $id('btn-detect-printer').disabled = false;
+            });
+    }
+
+    function testPrint() {
+        if (!selectedPrinter) return;
+        const btn = $id('btn-test-print');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Impression…';
+
+        const fd = new FormData();
+        fd.append('vid', selectedPrinter.vid);
+        fd.append('pid', selectedPrinter.pid);
+
+        fetch(PRINTER_TEST_URL, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCsrf() },
+            body: fd,
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && data.success) {
+                if (typeof toastr !== 'undefined') toastr.success(data.message || "Page de test envoyée.");
+            } else {
+                if (typeof toastr !== 'undefined') toastr.error(data.error || "Erreur d'impression.");
+            }
+        })
+        .catch(() => {
+            if (typeof toastr !== 'undefined') toastr.error("Erreur réseau lors du test d'impression.");
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const btnDetect = $id('btn-detect-printer');
+        const btnTest = $id('btn-test-print');
+        const select = $id('printer-select');
+        if (btnDetect) btnDetect.addEventListener('click', detect);
+        if (btnTest) btnTest.addEventListener('click', testPrint);
+        if (select) select.addEventListener('change', function () {
+            selectedPrinter = detectedPrinters[parseInt(this.value, 10)] || detectedPrinters[0];
+            fillPrinterDetails(selectedPrinter);
+            savePrinter(selectedPrinter);
+        });
+
+        // Reset à chaque ouverture du modal
+        $('#printerModal').on('show.bs.modal', function () {
+            detectedPrinters = [];
+            selectedPrinter = null;
+            $id('btn-test-print').disabled = true;
+            $id('printer-multiple-warning').style.display = 'none';
+            showState('empty');
+        });
+    });
+})();
+</script>

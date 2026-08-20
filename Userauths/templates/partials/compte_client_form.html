@@ -1,0 +1,48 @@
+<form id="compteClientUpdateform" method="post" action="{% url 'update_compte_client' object.id %}">
+    {% csrf_token %}
+    <div class="row clearfix">
+        <div class="col-md-12 form-group">
+            <input type="text" value="Information du compte client" class="form-control text-center" disabled>
+        </div>
+        <div class="col-6">
+            <label>Nom utilisateur</label>
+            <div class="form-group">
+                {{ form.username }}
+            </div>
+        </div>
+        <div class="col-6">
+            <label>Email</label>
+            <div class="form-group">
+                {{ form.email }}
+            </div>
+        </div>
+        <div class="col-6">
+            <label>Prénom</label>
+            <div class="form-group">
+                {{ form.first_name }}
+            </div>
+        </div>
+        <div class="col-6">
+            <label>Nom</label>
+            <div class="form-group">
+                {{ form.last_name }}
+            </div>
+        </div>
+        <div class="col-6">
+            <label>Genre</label>
+            <div class="form-group">
+                {{ form.genre }}
+            </div>
+        </div>
+        <div class="col-6">
+            <label>Contact</label>
+            <div class="form-group">
+                {{ form.contact }}
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-outline-success">Enregistrer</button>
+    </div>
+</form>

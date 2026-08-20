@@ -1,0 +1,132 @@
+"""
+Utilitaires pour la gestion des permissions personnalisées.
+"""
+from django.urls import resolve
+
+# Chemins système jamais soumis à CustomPermission
+ALWAYS_EXEMPT_PATH_PREFIXES = (
+    '/admin/',
+    '/static/',
+    '/media/',
+    '/__debug__/',
+    '/api/',
+    '/i18n/',
+)
+
+# Auth publique + compte personnel (Userauths urls L5–18) — jamais CustomPermission
+EXEMPT_URL_NAMES = frozenset({
+    'pbholdingsite',
+    'connexion',
+    'register',
+    'activate-account',
+    'resend-activation',
+    'deconnexion',
+    'forgot',
+    'otp',
+    'request_email',
+    'verify_otp',
+    'password_change',
+    'password_change_done',
+    'change_password',
+})
+
+# Comptes staff/clients mag + permissions + localités (Userauths urls L19–50)
+PROTECTED_USERAUTHS_URL_NAMES = frozenset({
+    'add_compte',
+    'export_comptes_excel',
+    'compte_client',
+    'export_comptes_clients_excel',
+    'detail_compte_client',
+    'fiche_client_pdf',
+    'update_compte_client',
+    'del_compte_client',
+    'update_compte',
+    'update_permissions',
+    'active_compte',
+    'deactive_compte',
+    'del_compte',
+    'list_permissions',
+    'create_permission',
+    'update_permission',
+    'delete_permission',
+    'import_permissions_excel',
+    'export_permissions_excel',
+    'list_perm_categories',
+    'create_perm_category',
+    'update_perm_category',
+    'delete_perm_category',
+    'add_localite',
+    'update_localite',
+    'delete_localite',
+})
+
+STOCK_PATH_PREFIX = '/stocks/'
+
+
+def get_permission_name_from_url(request):
+    """
+    Récupère le nom de permission depuis l'URL de la requête
+    (name dans urls.py).
+    """
+    try:
+        resolver_match = resolve(request.path_info)
+        return resolver_match.url_name
+    except Exception:
+        return None
+
+
+def user_has_permission(user, permission_url):
+    """Vérifie si un utilisateur a une permission spécifique."""
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return user.custom_permissions.filter(url=permission_url).exists()
+
+
+def _path_has_exempt_prefix(path):
+    return any(path.startswith(prefix) for prefix in ALWAYS_EXEMPT_PATH_PREFIXES)
+
+
+def is_stock_path(request):
+    """True si la requête cible le module magasin (/stocks/)."""
+    return request.path.startswith(STOCK_PATH_PREFIX)
+
+
+def is_protected_userauths_url(url_name):
+    return bool(url_name) and url_name in PROTECTED_USERAUTHS_URL_NAMES
+
+
+def is_permission_check_exempt(request, url_name=None):
+    """
+    True si CustomPermission ne doit pas s'appliquer
+    (chemins système, URL auth/profil, etc.).
+    """
+    if _path_has_exempt_prefix(request.path):
+        return True
+    if url_name is None:
+        url_name = get_permission_name_from_url(request)
+    if url_name and url_name in EXEMPT_URL_NAMES:
+        return True
+    return False
+
+
+def should_enforce_custom_permission(request, url_name=None):
+    """
+    True uniquement pour le périmètre protégé :
+    - toutes les URLs nommées sous /stocks/
+    - URLs Userauths comptes / permissions / localités
+    """
+    if url_name is None:
+        url_name = get_permission_name_from_url(request)
+
+    if is_permission_check_exempt(request, url_name):
+        return False
+
+    if is_stock_path(request):
+        return bool(url_name)
+
+    if is_protected_userauths_url(url_name):
+        return True
+
+    return False

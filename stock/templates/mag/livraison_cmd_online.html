@@ -1,0 +1,235 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+
+{% block title %}AUTO-PIECE{% endblock title %}
+{% block page_title %}Livraisons en ligne{% endblock page_title %}
+{% block page %}Livraisons en ligne{% endblock page %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'e_assets/css/ecom-piece-card.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
+{% block main_content %}
+{% include "mag/partials/_periode_filter_modal.html" %}
+{% include "mag/partials/_dashboard_kpi_styles.html" %}
+
+<div class="col-lg-12 p-2 mt-2">
+    {% include "mag/partials/_kpi_row_livraison_cmd_online.html" %}
+</div>
+
+<div class="col-lg-12 p-2 mt-2">
+    <div class="card">
+        <div class="header d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2 class="mb-0">
+                    {{ commandes|length }} livraison{% if commandes|length != 1 %}s{% endif %} assignée{% if commandes|length != 1 %}s{% endif %}
+                    {% if filtre_resume %}
+                    <small class="text-muted font-weight-normal">· {{ filtre_resume }}</small>
+                    {% endif %}
+                </h2>
+                <p class="text-muted mb-0 mt-2" style="font-size:0.9rem;">
+                    {% if peut_agir_livreur %}
+                    Vos statistiques portent uniquement sur les commandes qui vous sont assignées.
+                    {% endif %}
+                    Encaissement : cliquez d’abord sur <strong>Payer</strong>
+                    (décrémente le stock), puis sur <strong>Livrer</strong>.
+                </p>
+            </div>
+            {% if local %}
+            <span class="badge badge-primary">{{ local.nom }}</span>
+            {% elif can_choose_localite %}
+            <span class="badge badge-secondary">Toutes les localités</span>
+            {% elif peut_agir_livreur %}
+            <span class="badge badge-outline-info">Mes assignations</span>
+            {% endif %}
+        </div>
+        <div class="body">
+            <div class="mag-table-shell" x-data="magTableFilter()">
+                {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher n°, client, localité…" %}
+                <div class="table-responsive">
+                    <table class="table table-hover mag-data-table">
+                        <thead>
+                            <tr>
+                                <th>N°#</th>
+                                <th>N° commande</th>
+                                <th>Client</th>
+                                <th>Localité</th>
+                                <th>Adresse livraison</th>
+                                <th>Mode</th>
+                                <th>Total</th>
+                                <th>Statut</th>
+                                <th>Paiement</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>N°#</th>
+                                <th>N° commande</th>
+                                <th>Client</th>
+                                <th>Localité</th>
+                                <th>Adresse livraison</th>
+                                <th>Mode</th>
+                                <th>Total</th>
+                                <th>Statut</th>
+                                <th>Paiement</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            {% for cmd in commandes %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><strong>{{ cmd.numero_commande }}</strong></td>
+                                <td>{{ cmd.panier.utilisateur.username|default:cmd.panier.nom_client|default:"—" }}</td>
+                                <td>{{ cmd.panier.local_entrepot.nom|default:"—" }}</td>
+                                <td>
+                                    {% if cmd.panier.mode_reception == 'livraison' %}
+                                    <small>
+                                        {% if cmd.panier.livraison_ville %}{{ cmd.panier.livraison_ville.nom }}{% endif %}
+                                        {% if cmd.panier.livraison_commune %} — {{ cmd.panier.livraison_commune.nom }}{% endif %}
+                                        {% if cmd.panier.adresse_domicile %}<br>{{ cmd.panier.adresse_domicile }}{% endif %}
+                                        {% if cmd.panier.telephone_livraison %}<br>Tél. {{ cmd.panier.telephone_livraison }}{% endif %}
+                                        {% if cmd.panier.instruction_livraison %}<br><em>{{ cmd.panier.instruction_livraison }}</em>{% endif %}
+                                    </small>
+                                    {% else %}
+                                    <span class="text-muted">Retrait</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ cmd.panier.get_mode_reception_display|default:"—" }}</td>
+                                <td>{{ cmd.total|floatformat:0 }} FCFA</td>
+                                <td>
+                                    {% if cmd.statut_commande == 'en_attente' %}
+                                    <span class="badge badge-warning">{{ cmd.get_statut_commande_display }}</span>
+                                    {% elif cmd.statut_commande == 'valider' %}
+                                    <span class="badge badge-outline-info">{{ cmd.get_statut_commande_display }}</span>
+                                    {% elif cmd.statut_commande == 'livrer' %}
+                                    <span class="badge badge-success">{{ cmd.get_statut_commande_display }}</span>
+                                    {% elif cmd.statut_commande == 'annuler' %}
+                                    <span class="badge badge-danger">{{ cmd.get_statut_commande_display }}</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">{{ cmd.get_statut_commande_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if cmd.statut_commande == 'annuler' %}
+                                    <span class="badge badge-secondary">—</span>
+                                    {% elif cmd.paye %}
+                                    <span class="badge badge-success">Payée</span>
+                                    {% else %}
+                                    <span class="badge badge-danger">Impayée</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-inline-flex flex-column align-items-stretch" style="gap:6px; min-width:110px;">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-info btn-block"
+                                                onclick="afficherDetailLivraisonCmd('{{ cmd.pk }}')">
+                                            Détail
+                                        </button>
+                                        {% if cmd.statut_commande == 'annuler' %}
+                                        <span class="badge badge-danger">Annulée</span>
+                                        <button type="button" class="btn btn-sm btn-primary btn-block" disabled title="Commande annulée">
+                                            Payer
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-success btn-block" disabled title="Commande annulée">
+                                            Livrer
+                                        </button>
+                                        {% elif peut_agir_livreur and cmd.livreur_id == request.user.pk %}
+                                            {% if not cmd.paye %}
+                                            <form method="post" action="{% url 'ecom_livraison_cmd_payer' cmd.pk %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-primary btn-block"
+                                                        onclick="return confirm('Confirmer le paiement et décrémenter le stock ?');">
+                                                    Payer
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-sm btn-success btn-block" disabled title="Payez d’abord la commande">
+                                                Livrer
+                                            </button>
+                                            {% elif cmd.statut_commande != 'livrer' %}
+                                            <span class="badge badge-success">Payée</span>
+                                            <form method="post" action="{% url 'ecom_livraison_cmd_livrer' cmd.pk %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-success btn-block"
+                                                        onclick="return confirm('Confirmer la livraison ?');">
+                                                    Livrer
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <span class="text-success small font-weight-bold">Livrée</span>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if cmd.livreur %}
+                                            <small class="text-muted">{{ cmd.livreur.get_full_name|default:cmd.livreur.username }}</small>
+                                            {% endif %}
+                                            {% if cmd.statut_commande == 'livrer' %}
+                                            <span class="text-success small">Livrée</span>
+                                            {% elif cmd.paye %}
+                                            <span class="badge badge-success">Payée</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-4">Aucune livraison pour cette période.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-livraison-cmd-detail" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-livraison-cmd-detail-title">Détails livraison</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-livraison-cmd-detail-body">
+                <p class="text-muted text-center mb-0">Chargement…</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+<script>
+function afficherDetailLivraisonCmd(commandeId) {
+    var $modal = $('#modal-livraison-cmd-detail');
+    var $body = $('#modal-livraison-cmd-detail-body');
+    var $title = $('#modal-livraison-cmd-detail-title');
+    $body.html('<p class="text-muted text-center mb-0">Chargement…</p>');
+    $title.text('Détails livraison');
+    $modal.modal('show');
+    $.ajax({
+        url: '{% url "livraison_cmd_detail" commande_id="__CMD_ID__" %}'.replace('__CMD_ID__', encodeURIComponent(commandeId)),
+        type: 'GET',
+        success: function (response) {
+            if (response.title) {
+                $title.text(response.title);
+            }
+            $body.html(response.html);
+        },
+        error: function () {
+            $body.html('<p class="text-danger text-center mb-0">Impossible de charger les détails.</p>');
+        }
+    });
+}
+</script>
+{% include "mag/partials/_pusher_cmd_ligne_js.html" with page_mode="livraison" %}
+{% endblock extra_js %}

@@ -1,0 +1,268 @@
+/* Page d'accueil P&B Holdingsite */
+.pb-home {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 3rem;
+}
+
+.pb-home h1 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 1rem;
+}
+
+.pb-home__intro {
+    color: #5a6778;
+    font-size: 1rem;
+    line-height: 1.65;
+    max-width: 36rem;
+    margin: 0 auto 0.5rem;
+}
+
+.pb-home__intro a {
+    color: #0d8ecf;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.pb-home__intro a:hover {
+    text-decoration: underline;
+}
+
+.pb-home__divider {
+    color: #8896a6;
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    margin: 1.75rem 0 1.5rem;
+}
+
+/* Flash messages — mini modals (même style que ecom) */
+.ecom-flash-stack {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: min(420px, calc(100vw - 24px));
+    pointer-events: none;
+}
+
+.ecom-flash-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+    animation: ecomFlashIn 0.28s ease;
+    text-align: left;
+}
+
+.ecom-flash-toast.is-leaving {
+    animation: ecomFlashOut 0.3s ease forwards;
+}
+
+.ecom-flash-toast-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.ecom-flash-toast-text {
+    flex: 1;
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.ecom-flash-toast-close {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: -4px -4px 0 0;
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.ecom-flash-toast-close:hover {
+    color: #111827;
+    background: rgba(15, 23, 42, 0.06);
+}
+
+.ecom-flash-toast--success {
+    background: #f0fdf4;
+    border-color: #86efac;
+}
+
+.ecom-flash-toast--success .ecom-flash-toast-icon {
+    color: #16a34a;
+}
+
+.ecom-flash-toast--error,
+.ecom-flash-toast--danger {
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+.ecom-flash-toast--error .ecom-flash-toast-icon,
+.ecom-flash-toast--danger .ecom-flash-toast-icon {
+    color: #dc2626;
+}
+
+.ecom-flash-toast--warning {
+    background: #fffbeb;
+    border-color: #fcd34d;
+}
+
+.ecom-flash-toast--warning .ecom-flash-toast-icon {
+    color: #d97706;
+}
+
+.ecom-flash-toast--info {
+    background: #eff6ff;
+    border-color: #93c5fd;
+}
+
+.ecom-flash-toast--info .ecom-flash-toast-icon {
+    color: #2563eb;
+}
+
+@keyframes ecomFlashIn {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ecomFlashOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+@media (max-width: 575px) {
+    .ecom-flash-stack {
+        top: 8px;
+        width: calc(100vw - 16px);
+    }
+
+    .ecom-flash-toast {
+        padding: 12px;
+    }
+
+    .ecom-flash-toast-text {
+        font-size: 0.95rem;
+    }
+}
+
+.platform-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.platform-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 200px;
+    min-height: 220px;
+    padding: 1.5rem 1.25rem 1.25rem;
+    text-decoration: none !important;
+    color: #2d3748;
+    background: linear-gradient(160deg, rgba(182, 228, 247, 0.55) 0%, rgba(214, 240, 252, 0.35) 100%);
+    border: 1px solid rgba(13, 142, 207, 0.12);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(13, 142, 207, 0.08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.platform-card:hover,
+.platform-card:focus {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(13, 142, 207, 0.18);
+    border-color: rgba(13, 142, 207, 0.28);
+    color: #1a365d;
+    outline: none;
+}
+
+.platform-card__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.65);
+    border-radius: 14px;
+    padding: 0.75rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.platform-card__icon img {
+    max-width: 100%;
+    max-height: 88px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.platform-card__label {
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .platform-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .platform-card {
+        width: min(100%, 260px);
+    }
+
+    .platform-card__label {
+        white-space: normal;
+    }
+}

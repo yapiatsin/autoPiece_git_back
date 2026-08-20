@@ -1,0 +1,117 @@
+{% load static i18n %}
+{# Carte pièce horizontale — détail localité (maquette Auto-Pièce) #}
+<div class="{{ col_class|default:'col-lg-4 col-md-6 col-12' }}">
+    <div class="single-shopping-card-one ecom-vendor-piece-card h-100{% if localite_code and quantite|default:0 == 0 %} is-out-of-stock{% endif %}{% if wishlist_card %} is-wishlist-card{% endif %}">
+        {% if wishlist_card and user.is_authenticated %}
+        <form method="post" action="{% url 'ecom_favori_remove' piece.pk %}" class="ecom-wishlist-remove-form m-0"
+            onclick="event.stopPropagation();">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url|default:request.path }}">
+            <button type="submit" class="ecom-wishlist-remove-btn" title="{% trans 'Retirer des favoris' %}" aria-label="{% trans 'Retirer des favoris' %}">
+                <i class="fa-solid fa-heart"></i>
+            </button>
+        </form>
+        {% endif %}
+        <div class="image-and-action-area-wrapper ecom-vendor-piece-media">
+            <a href="{{ piece.get_absolute_url }}" class="thumbnail-preview">
+                {% if quantite|default:0 > 0 %}
+                <div class="badge">
+                    <span>{{ quantite }}<br>{% trans "stock" %}</span>
+                    <i class="fa-solid fa-bookmark"></i>
+                </div>
+                {% endif %}
+                {% include 'e_autopiece/partials/_piece_image.html' %}
+            </a>
+            <div class="action-share-option{% if wishlist_card %} d-none{% endif %}">
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'ecom_favori_toggle' piece.pk %}" class="ecom-favori-form m-0"
+                    onclick="event.stopPropagation();">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit"
+                        class="single-action openuptip border-0 p-0{% if piece.pk in ecom_favoris_ids %} is-favori{% endif %}"
+                        data-flow="up" title="{% trans 'Favoris' %}">
+                        <i class="fa-solid fa-heart"></i>
+                    </button>
+                </form>
+                {% else %}
+                <a href="{% url 'connexion' %}?next={{ request.path }}" class="single-action openuptip" data-flow="up" title="{% trans 'Favoris' %}">
+                    <i class="fa-solid fa-heart"></i>
+                </a>
+                {% endif %}
+                <a href="{{ piece.get_absolute_url }}" class="single-action openuptip" data-flow="up" title="{% trans 'Voir la fiche' %}">
+                    <i class="fa-solid fa-eye"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="body-content">
+            {% if piece.categorie %}
+            <a href="{% url 'ecom_shop' %}?categorie={{ piece.categorie_id }}{% if localite_code %}&localite={{ localite_code }}{% endif %}"
+                class="ecom-vendor-piece-category">
+                {{ piece.categorie.categorie }}
+            </a>
+            {% endif %}
+
+            <a href="{{ piece.get_absolute_url }}">
+                <h4 class="title">{{ piece.designation }}</h4>
+            </a>
+
+            <span class="availability">
+                {% if localite_nom %}{{ localite_nom }} — {% endif %}{{ piece.numero_piece }}
+            </span>
+
+            <p class="ecom-vendor-stock-line">
+                {% if quantite|default:0 > 0 %}
+                <span class="is-ok">{% blocktrans with qty=quantite %}Quantité disponible : {{ qty }}{% endblocktrans %}</span>
+                {% else %}
+                <span class="is-out">{% trans "Rupture de stock" %}</span>
+                {% endif %}
+            </p>
+
+            <div class="price-area">
+                <span class="current">{{ prix_affiche|floatformat:0 }} FCFA</span>
+                {% if piece.prix_unitaire and piece.prix_unitaire != prix_affiche %}
+                <div class="previous">{{ piece.prix_unitaire|floatformat:0 }} FCFA</div>
+                {% endif %}
+            </div>
+
+            {% if user.is_authenticated and localite_code and quantite|default:0 > 0 %}
+            <form method="post" action="{% url 'ecom_add_to_cart' piece.pk %}" class="ecom-vendor-add-form cart-counter-action">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next_url|default:request.path }}">
+                <input type="hidden" name="local_id" value="{{ localite_code }}">
+                <input type="hidden" name="quantite" value="1">
+                <button type="submit" class="rts-btn btn-primary border-only radious-sm with-icon w-100">
+                    <div class="btn-text">{% trans "Ajouter" %}</div>
+                    <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                    <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                </button>
+            </form>
+            {% elif not user.is_authenticated %}
+            <div class="cart-counter-action">
+                <a href="{% url 'connexion' %}?next={{ request.path }}" class="rts-btn btn-primary border-only radious-sm with-icon w-100">
+                    <div class="btn-text">{% trans "Ajouter" %}</div>
+                    <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                    <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                </a>
+            </div>
+            {% elif localite_code and quantite|default:0 == 0 %}
+            <div class="cart-counter-action">
+                <span class="rts-btn btn-primary border-only radious-sm with-icon opacity-50 pe-none w-100">
+                    <div class="btn-text">{% trans "Rupture" %}</div>
+                    <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                </span>
+            </div>
+            {% else %}
+            <div class="cart-counter-action">
+                <a href="{% url 'ecom_localites' %}" class="rts-btn btn-primary border-only radious-sm with-icon w-100">
+                    <div class="btn-text">{% trans "Ajouter" %}</div>
+                    <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                    <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

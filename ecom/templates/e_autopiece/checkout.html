@@ -1,0 +1,392 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "Commande" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+
+{% block content %}
+<div class="rts-navigation-area-breadcrumb">
+    <div class="container">
+        <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-regular fa-chevron-right"></i>
+            <a href="{% url 'ecom_cart' %}">{% trans "Panier" %}</a>
+            <i class="fa-regular fa-chevron-right"></i>
+            <a class="current" href="{% url 'ecom_checkout' %}">{% trans "Commande" %}</a>
+        </div>
+    </div>
+</div>
+
+<div class="checkout-area rts-section-gap ecom-checkout-page"
+     id="ecomCheckoutRoot"
+     data-sous-total="{{ sous_total }}"
+     data-villes-url="{% url 'ecom_ajax_villes_livraison' %}"
+     data-communes-url="{% url 'ecom_ajax_communes_livraison' %}"
+     data-frais-url="{% url 'ecom_ajax_frais_livraison' %}">
+    <div class="container">
+        <h1 class="ecom-checkout-title">{% trans "Finaliser la commande" %}</h1>
+        <p class="ecom-checkout-steps">
+            <span>{% trans "Informations" %}</span>
+            <i class="fa-regular fa-chevron-right"></i>
+            <span class="is-active">{% trans "Livraison & paiement" %}</span>
+        </p>
+
+        <form method="post" action="{% url 'ecom_confirm_order' %}" id="ecomCheckoutForm" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="moyen_paiement" value="espece">
+
+            <div class="row ecom-checkout-layout justify-content-center">
+                <div class="col-lg-7 order-2 order-lg-1 mt_md--30 mt_sm--30 ecom-checkout-main">
+                    <div class="ecom-checkout-card ecom-checkout-review">
+                        <h3 class="ecom-checkout-card-title">{% trans "Récapitulatif client" %}</h3>
+                        <div class="ecom-checkout-review-row">
+                            <span class="label">{% trans "Contact" %}</span>
+                            <span class="value">{{ client_email }}</span>
+                        </div>
+                        <div class="ecom-checkout-review-row">
+                            <span class="label">{% trans "Agence stock" %}</span>
+                            <span class="value">{{ local.nom }}</span>
+                        </div>
+                        <div class="ecom-checkout-review-row">
+                            <span class="label">{% trans "Client" %}</span>
+                            <span class="value">{{ client_nom }}</span>
+                        </div>
+                    </div>
+
+                    <div class="rts-billing-details-area ecom-checkout-card mt--30">
+                        <h3 class="title">{% trans "Mode de réception" %}</h3>
+                        <div class="ecom-checkout-modes">
+                            {% for value, label in mode_reception_choices %}
+                            <label class="ecom-checkout-mode">
+                                <input type="radio" name="mode_reception" value="{{ value }}"
+                                       {% if value == 'livraison' %}checked{% endif %}
+                                       data-checkout-mode>
+                                <span>{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="rts-billing-details-area ecom-checkout-card mt--30" id="ecomCheckoutShipping" data-shipping-block>
+                        <h3 class="title">{% trans "Adresse de livraison" %}</h3>
+                        <p class="ecom-checkout-hint">{% trans "Précisez où livrer votre commande." %}</p>
+
+                        <div class="row ecom-checkout-geo-bootstrap">
+                            <div class="col-lg-4 col-md-4 col-sm-12">
+                                <div class="single-input">
+                                    <label for="id_pays">{% trans "Pays" %}*</label>
+                                    <select id="id_pays" name="livraison_pays" class="ecom-checkout-select wide" required data-checkout-pays>
+                                        {% for p in pays_list %}
+                                        <option value="{{ p.pk }}" {% if pays_defaut and p.pk == pays_defaut.pk %}selected{% endif %}>{{ p.nom }}</option>
+                                        {% empty %}
+                                        <option value="">{% trans "Aucun pays disponible" %}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-4 col-sm-12">
+                                <div class="single-input">
+                                    <label for="id_ville">{% trans "Ville" %}*</label>
+                                    <select id="id_ville" name="livraison_ville" class="ecom-checkout-select wide" required data-checkout-ville>
+                                        {% for v in villes_list %}
+                                        <option value="{{ v.pk }}" data-frais="{{ v.frais_livraison }}"
+                                            {% if ville_defaut and v.pk == ville_defaut.pk %}selected{% endif %}>{{ v.nom }}
+                                        </option>
+                                        {% empty %}
+                                        <option value="">{% trans "Aucune ville" %}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-4 col-sm-12">
+                                <div class="single-input">
+                                    <label for="id_commune">{% trans "Commune" %}*</label>
+                                    <select id="id_commune" name="livraison_commune" class="ecom-checkout-select wide" required data-checkout-commune>
+                                        <option value="">{% trans "-- Sélectionner --" %}</option>
+                                        {% for c in communes_list %}
+                                        <option value="{{ c.pk }}">{{ c.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="single-input">
+                            <label for="id_adresse">{% trans "Adresse du domicile" %}*</label>
+                            <input id="id_adresse" type="text" name="adresse_domicile"
+                                   value="{{ adresse_defaut }}"
+                                   placeholder="{% trans 'Rue, quartier, repère…' %}" required>
+                        </div>
+                        <div class="single-input">
+                            <label for="id_tel">{% trans "Téléphone de livraison" %}*</label>
+                            <input id="id_tel" type="text" name="telephone_livraison"
+                                   value="{{ telephone_defaut }}"
+                                   placeholder="{% trans 'Ex: 0700000000' %}" required>
+                        </div>
+                        <div class="single-input">
+                            <label for="id_notes">{% trans "Instructions livreur" %}</label>
+                            <textarea id="id_notes" name="instruction_livraison"
+                                      placeholder="{% trans 'Code portail, étage, indications…' %}"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="ecom-checkout-card mt--30">
+                        <h3 class="ecom-checkout-card-title">{% trans "Paiement" %}</h3>
+                        <p class="ecom-checkout-hint">{% trans "Toutes les transactions sont sécurisées. Pour le moment : paiement en espèces à la livraison ou au retrait." %}</p>
+                        <ul class="ecom-checkout-payments">
+                            <li class="is-active">
+                                <label>
+                                    <input type="radio" name="paiement_ui" value="espece" checked>
+                                    <span>{% trans "Espèces à la livraison / au retrait" %}</span>
+                                </label>
+                            </li>
+                            <li class="is-disabled">
+                                <label>
+                                    <input type="radio" disabled>
+                                    <span>{% trans "Carte bancaire" %} <em>{% trans "Bientôt" %}</em></span>
+                                </label>
+                            </li>
+                            <li class="is-disabled">
+                                <label>
+                                    <input type="radio" disabled>
+                                    <span>PayPal <em>{% trans "Bientôt" %}</em></span>
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 order-1 order-lg-2 ecom-checkout-aside">
+                    <div class="ecom-checkout-aside-sticky">
+                        <h3 class="title-checkout">{% trans "Votre commande" %}</h3>
+                        <div class="right-card-sidebar-checkout ecom-checkout-sidebar">
+                            <div class="top-wrapper">
+                                <div class="product">{% trans "Produits" %}</div>
+                                <div class="price">{% trans "Prix" %}</div>
+                            </div>
+                            {% for item in items %}
+                            <div class="single-shop-list">
+                                <div class="left-area">
+                                    <span class="thumbnail">
+                                        {% if item.piece.image %}
+                                        <img src="{{ item.piece.image.url }}" alt="{{ item.piece.designation }}">
+                                        {% else %}
+                                        <img src="{% static 'e_assets/images/shop/01.png' %}" alt="">
+                                        {% endif %}
+                                    </span>
+                                    <span class="title">
+                                        {{ item.piece.designation }}
+                                        <small>× {{ item.quantite }}</small>
+                                    </span>
+                                </div>
+                                <span class="price">{{ item.prix_total|floatformat:0 }} FCFA</span>
+                            </div>
+                            {% endfor %}
+
+                            <div class="single-shop-list">
+                                <div class="left-area"><span>{% trans "Sous-total" %}</span></div>
+                                <span class="price" data-checkout-sous-total>{{ sous_total|floatformat:0 }} FCFA</span>
+                            </div>
+                            <div class="single-shop-list">
+                                <div class="left-area"><span>{% trans "Livraison" %}</span></div>
+                                <span class="price" data-checkout-frais>
+                                    {% if frais_livraison %}{{ frais_livraison|floatformat:0 }} FCFA{% else %}{% trans "Gratuit" %}{% endif %}
+                                </span>
+                            </div>
+                            <div class="single-shop-list ecom-checkout-total-row">
+                                <div class="left-area"><span>{% trans "Total" %}</span></div>
+                                <span class="price" data-checkout-total>{{ total|floatformat:0 }} FCFA</span>
+                            </div>
+
+                            <div class="cottom-cart-right-area">
+                                <p class="mb--20">
+                                    {% blocktrans %}Vos données personnelles sont utilisées pour traiter la commande et améliorer votre expérience, conformément à notre{% endblocktrans %}
+                                    <a href="{% url 'ecom_privacy_policy' %}">{% trans "politique de confidentialité" %}</a>.
+                                </p>
+                                <div class="single-category mb--30">
+                                    <input id="accepte_cgv" type="checkbox" name="accepte_cgv" value="1" required>
+                                    <label for="accepte_cgv">
+                                        {% trans "J’ai lu et j’accepte les" %}
+                                        <a href="{% url 'ecom_terms_condition' %}">{% trans "conditions générales" %}</a> *
+                                    </label>
+                                </div>
+                                <button type="submit" class="rts-btn btn-primary w-100">{% trans "Valider ma commande" %}</button>
+                                <p class="ecom-checkout-seuil text-muted small mt-3 mb-0">
+                                    {% blocktrans with seuil=free_shipping_threshold|floatformat:0 %}Livraison gratuite à partir de {{ seuil }} FCFA.{% endblocktrans %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const root = document.getElementById('ecomCheckoutRoot');
+    if (!root) return;
+    const sousTotal = parseFloat(root.dataset.sousTotal || '0') || 0;
+    const villesUrl = root.dataset.villesUrl;
+    const communesUrl = root.dataset.communesUrl;
+    const fraisUrl = root.dataset.fraisUrl;
+    const paysSelect = root.querySelector('[data-checkout-pays]');
+    const villeSelect = root.querySelector('[data-checkout-ville]');
+    const communeSelect = root.querySelector('[data-checkout-commune]');
+    const shippingBlock = root.querySelector('[data-shipping-block]');
+    const fraisEl = root.querySelector('[data-checkout-frais]');
+    const totalEl = root.querySelector('[data-checkout-total]');
+    const selectPlaceholder = '{% trans "-- Sélectionner --" %}';
+
+    function fmt(n) {
+        return Math.round(n).toLocaleString('fr-FR') + ' FCFA';
+    }
+
+    function selectedMode() {
+        const el = root.querySelector('[data-checkout-mode]:checked');
+        return el ? el.value : 'livraison';
+    }
+
+    function refreshNiceSelect(select) {
+        if (!(window.jQuery && jQuery.fn.niceSelect) || !select) return;
+        const $el = jQuery(select);
+        if ($el.next().hasClass('nice-select')) {
+            $el.niceSelect('update');
+        } else {
+            $el.niceSelect();
+        }
+    }
+
+    function setShippingRequired(required) {
+        [paysSelect, villeSelect, communeSelect].forEach(function (el) {
+            if (!el) return;
+            el.required = required;
+            el.disabled = !required;
+            if (window.jQuery) {
+                const $el = jQuery(el);
+                const $ns = $el.next('.nice-select');
+                if ($ns.length) {
+                    $ns.toggleClass('disabled', !required);
+                    if (!required) $ns.removeClass('open');
+                }
+            }
+        });
+        const adresse = document.getElementById('id_adresse');
+        const tel = document.getElementById('id_tel');
+        if (adresse) { adresse.required = required; adresse.disabled = !required; }
+        if (tel) { tel.required = required; tel.disabled = !required; }
+        if (shippingBlock) shippingBlock.style.display = required ? '' : 'none';
+    }
+
+    function fillSelect(select, items, emptyLabel, selectedId) {
+        if (!select) return;
+        select.innerHTML = '';
+        if (emptyLabel) {
+            const opt0 = document.createElement('option');
+            opt0.value = '';
+            opt0.textContent = emptyLabel;
+            select.appendChild(opt0);
+        }
+        items.forEach(function (item) {
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.nom;
+            if (item.frais != null) opt.dataset.frais = item.frais;
+            if (selectedId && String(item.id) === String(selectedId)) opt.selected = true;
+            select.appendChild(opt);
+        });
+        refreshNiceSelect(select);
+    }
+
+    function refreshFrais() {
+        const mode = selectedMode();
+        if (mode !== 'livraison') {
+            if (fraisEl) fraisEl.textContent = '{% trans "Gratuit" %}';
+            if (totalEl) totalEl.textContent = fmt(sousTotal);
+            return;
+        }
+        const villeId = villeSelect && villeSelect.value;
+        if (!villeId) {
+            if (fraisEl) fraisEl.textContent = '—';
+            if (totalEl) totalEl.textContent = fmt(sousTotal);
+            return;
+        }
+        const url = fraisUrl + '?ville_id=' + encodeURIComponent(villeId)
+            + '&sous_total=' + encodeURIComponent(sousTotal)
+            + '&mode_reception=' + encodeURIComponent(mode);
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (fraisEl) {
+                    fraisEl.textContent = data.gratuit || !data.frais
+                        ? '{% trans "Gratuit" %}'
+                        : fmt(data.frais);
+                }
+                if (totalEl) totalEl.textContent = fmt(sousTotal + (data.frais || 0));
+            })
+            .catch(function () {});
+    }
+
+    function loadCommunes(villeId, keepEmpty) {
+        if (!communeSelect) return;
+        if (!villeId) {
+            fillSelect(communeSelect, [], selectPlaceholder);
+            return;
+        }
+        fetch(communesUrl + '?ville_id=' + encodeURIComponent(villeId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                fillSelect(communeSelect, data.results || [], selectPlaceholder);
+            });
+    }
+
+    function loadVilles(paysId) {
+        if (!villeSelect) return;
+        fetch(villesUrl + '?pays_id=' + encodeURIComponent(paysId || ''), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                const results = data.results || [];
+                fillSelect(villeSelect, results, results.length ? null : '{% trans "Aucune ville" %}');
+                if (results.length) {
+                    villeSelect.value = String(results[0].id);
+                    refreshNiceSelect(villeSelect);
+                    loadCommunes(results[0].id);
+                } else {
+                    fillSelect(communeSelect, [], selectPlaceholder);
+                }
+                refreshFrais();
+            });
+    }
+
+    root.querySelectorAll('[data-checkout-mode]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            const livraison = selectedMode() === 'livraison';
+            setShippingRequired(livraison);
+            refreshFrais();
+        });
+    });
+
+    if (paysSelect) {
+        paysSelect.addEventListener('change', function () {
+            loadVilles(paysSelect.value);
+        });
+    }
+    if (villeSelect) {
+        villeSelect.addEventListener('change', function () {
+            loadCommunes(villeSelect.value);
+            refreshFrais();
+        });
+    }
+
+    [paysSelect, villeSelect, communeSelect].forEach(refreshNiceSelect);
+    setShippingRequired(selectedMode() === 'livraison');
+    refreshFrais();
+})();
+</script>
+{% endblock extra_js %}

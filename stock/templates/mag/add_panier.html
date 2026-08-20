@@ -1,0 +1,380 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE{% endblock title %}
+{% block page %}Panier{% endblock page %}
+{% block page_title %}Créer un panier{% endblock page_title %}
+{% block main_content %}
+    <div class="col-md-8 col-lg-8 p-2 mt-4 panier-page-col">
+        <div class="card panier-page-card panier-page-card--catalog">
+            <div class="body panier-catalog-search">
+                <label class="sr-only" for="searchInput">Rechercher une pièce</label>
+                <div class="piece-catalog-search" id="adv-search" role="search">
+                    <span class="piece-catalog-search__icon" aria-hidden="true">
+                        <i class="fa fa-search"></i>
+                    </span>
+                    <input type="search"
+                           name="q"
+                           class="form-control piece-catalog-search__input"
+                           placeholder="Rechercher une pièce, référence…"
+                           id="searchInput"
+                           autocomplete="off" />
+                    <button type="button"
+                            class="piece-catalog-search__reset"
+                            onclick="resetSearch()"
+                            title="Réinitialiser la recherche"
+                            aria-label="Réinitialiser la recherche">
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="body" style="background-color: #ffe9e95c;">
+                {% include 'mag/partials/_categorie_filter_chips.html' %}
+                <div class="cwidget-scroll">
+                    <ul class="chat-widget m-r-5 clearfix" style='border-radius:18px; height: 450px;'>
+                        <div class="row clearfix piece-catalog-row" id="result-articles">
+                            {% include 'mag/partials/_article_list.html' with articles=articles %}
+                        </div>
+                    </ul>
+                </div>
+            </div>
+            <div class="body">
+                <p class="mb-0" id="result-count">Résultat ({{ articles|length }})</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4 p-2 mt-4 panier-page-col">
+        <div class="card panier-page-card panier-page-card--basket">
+            <div class="panier-basket-header">
+                <div class="panier-basket-header__main">
+                    <span class="panier-basket-header__icon" aria-hidden="true">
+                        <i class="fa fa-shopping-basket"></i>
+                    </span>
+                    <div class="panier-basket-header__text">
+                        <h2 class="panier-basket-header__title">Mon panier</h2>
+                        <p class="panier-basket-header__subtitle">Articles sélectionnés</p>
+                    </div>
+                </div>
+                <div class="panier-basket-header__badge" title="Nombre d'articles">
+                    <span class="panier-basket-header__badge-label">Articles</span>
+                    <span id="panier-quantite-total" class="panier-basket-header__badge-value">{% if items %}{{ total_quantite }}{% else %}0{% endif %}</span>
+                </div>
+            </div>
+            <div class="body panier-page-card-body">
+                <form method="post" role="form" id="quickForm" class="panier-basket-form" action="{% url 'valid_panier' %}">
+                    {% csrf_token %}
+                    <div class="panier-basket-scroll">
+                        <div class="panier-basket-empty" id="panier-basket-empty"{% if items %} style="display: none;"{% endif %}>
+                            <span class="panier-basket-empty__icon" aria-hidden="true"><i class="fa fa-shopping-cart"></i></span>
+                            <p class="panier-basket-empty__title">Panier vide</p>
+                            <p class="panier-basket-empty__hint">Ajoutez des pièces depuis le catalogue à gauche.</p>
+                        </div>
+                        <ul class="panier-basket-list" id="panier-items-list"{% if not items %} style="display: none;"{% endif %}>
+                            {% include 'mag/partials/_panier_items_full.html' %}
+                        </ul>
+                    </div>
+
+                    <div class="panier-checkout">
+                        <div class="panier-recap-card">
+                            <div class="panier-recap-row">
+                                <span class="panier-recap-label">Coût total</span>
+                                <span class="panier-recap-value"><span id="panier-total">{{ total }}</span> Fcfa</span>
+                            </div>
+                            <div class="panier-recap-row">
+                                <span class="panier-recap-label">Remise</span>
+                                <span class="panier-recap-value"><span id="affiche-remise">0</span> %</span>
+                            </div>
+                            <div class="panier-recap-row panier-recap-row--total">
+                                <span class="panier-recap-label">À payer</span>
+                                <span class="panier-recap-value panier-recap-value--payer">
+                                    <span id="affiche-montant-a-payer">{{ total_apres_remise }}</span> Fcfa
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="panier-remise-field">
+                            <label class="panier-remise-label" for="input-remise">Remise (montant)</label>
+                            <div class="panier-remise-input-wrap">
+                                <span class="panier-remise-input-icon" aria-hidden="true"><i class="fa fa-tag"></i></span>
+                                <input type="text"
+                                       class="form-control panier-remise-input"
+                                       id="input-remise"
+                                       name="remiser"
+                                       placeholder="0.00"
+                                       inputmode="decimal"
+                                       autocomplete="off">
+                                <span class="panier-remise-input-suffix">Fcfa</span>
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                                id="panier-btn-valider"
+                                class="panier-btn-valider{% if items %} panier-btn-valider--active{% endif %}"
+                                {% if not items %}disabled{% endif %}>
+                            <i class="fa {% if items %}fa-check-circle{% else %}fa-shopping-cart{% endif %}" aria-hidden="true"></i>
+                            <span>{% if items %}Valider le panier{% else %}Panier vide{% endif %}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        const AJAX_PANIER_ACCUEIL_STATE_URL = "{% url 'ajax_panier_accueil_state' %}";
+
+        function togglePanierEmptyState(qty) {
+            const empty = document.getElementById('panier-basket-empty');
+            const list = document.getElementById('panier-items-list');
+            const hasItems = Number(qty) > 0;
+            if (empty) empty.style.display = hasItems ? 'none' : 'flex';
+            if (list) list.style.display = hasItems ? 'flex' : 'none';
+        }
+
+        function scrollPanierVersBas() {
+            const scroll = document.querySelector('.panier-page-card--basket .panier-basket-scroll');
+            if (scroll) {
+                requestAnimationFrame(function () {
+                    scroll.scrollTop = scroll.scrollHeight;
+                });
+            }
+        }
+
+        function updateBoutonValider(newTotal) {
+            const btn = document.getElementById('panier-btn-valider');
+            if (!btn) return;
+            const icon = btn.querySelector('i');
+            const label = btn.querySelector('span');
+            if (newTotal > 0) {
+                btn.disabled = false;
+                btn.classList.add('panier-btn-valider--active');
+                if (icon) icon.className = 'fa fa-check-circle';
+                if (label) label.textContent = 'Valider le panier';
+            } else {
+                btn.disabled = true;
+                btn.classList.remove('panier-btn-valider--active');
+                if (icon) icon.className = 'fa fa-shopping-cart';
+                if (label) label.textContent = 'Panier vide';
+            }
+        }
+
+        function syncPanierAccueilAffichage() {
+            fetch(AJAX_PANIER_ACCUEIL_STATE_URL, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(r => r.json())
+            .then(function (data) {
+                if (!data.success) return;
+                if (data.panier_html !== undefined) {
+                    $('#panier-items-list').html(data.panier_html);
+                }
+                if (data.total_quantite !== undefined) {
+                    $('#panier-quantite-total').text(data.total_quantite);
+                    togglePanierEmptyState(data.total_quantite);
+                }
+                if (data.total !== undefined && typeof updateTotal === 'function') {
+                    updateTotal(parseFloat(data.total));
+                } else if (data.total !== undefined) {
+                    const el = document.getElementById('panier-total');
+                    if (el) el.textContent = parseFloat(data.total).toFixed(2);
+                }
+            })
+            .catch(function () {});
+        }
+
+        document.addEventListener('DOMContentLoaded', syncPanierAccueilAffichage);
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                syncPanierAccueilAffichage();
+            }
+        });
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) syncPanierAccueilAffichage();
+        });
+    </script>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const PANIER_ACTION_URL = "{% url 'panier_action' 0 %}".replace(/0\/?$/, '');
+
+        function panierAction(pieceId, action) {
+            const url = `${PANIER_ACTION_URL}${pieceId}/`;
+            $.ajax({
+                url: url,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                data: { action: action },
+                success: function(response) {
+                    if (!response.success) {
+                        const msg = response.message || "Action impossible.";
+                        if (typeof toastr !== 'undefined') {
+                            toastr.warning(msg);
+                        } else {
+                            alert(msg);
+                        }
+                        if (response.panier_html !== undefined) {
+                            refreshPanier(response);
+                        }
+                        return;
+                    }
+                    refreshPanier(response);
+                    if (action === 'delete' && response.panier_empty) {
+                        if (typeof toastr !== 'undefined') toastr.success("Le panier a été supprimé.");
+                    } else if (action === 'delete') {
+                        if (typeof toastr !== 'undefined') toastr.success("Article supprimé du panier.");
+                    }
+                },
+                error: function(xhr) {
+                    let msg = "Erreur réseau lors de la mise à jour du panier.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(msg);
+                    } else {
+                        alert(msg);
+                    }
+                }
+            });
+        }
+
+        function refreshPanier(response) {
+            if (response.panier_html !== undefined) {
+                $('#panier-items-list').html(response.panier_html);
+            }
+            if (response.total_quantite !== undefined) {
+                $('#panier-quantite-total').text(response.total_quantite);
+                togglePanierEmptyState(response.total_quantite);
+            }
+            if (response.total !== undefined) {
+                updateTotal(response.total);
+            }
+            scrollPanierVersBas();
+        }
+
+        function ajouterAuPanier(pieceId)  { panierAction(pieceId, 'increment'); }
+        function retirerDuPanier(pieceId)  { panierAction(pieceId, 'decrement'); }
+        function supprimerDuPanier(pieceId) { panierAction(pieceId, 'delete'); }
+
+        function updateTotal(newTotal) {
+            const panierTotalEl = document.getElementById('panier-total');
+            panierTotalEl.textContent = newTotal.toFixed(2);
+            total = newTotal;
+            if (typeof calculerEtAfficher === 'function') {
+                calculerEtAfficher();
+            }
+            updateBoutonValider(newTotal);
+            togglePanierEmptyState(newTotal > 0 ? document.getElementById('panier-quantite-total').textContent : 0);
+        }
+    </script>
+    <script>
+        let currentQuery = "";
+        let currentCategorie = "";
+        function updateArticleList() {
+            $.ajax({
+                url: "{% url 'ajax_search_articles' %}",
+                data: {
+                    q: currentQuery,
+                    categorie: currentCategorie
+                },
+                dataType: "json",
+                success: function (data) {
+                    $('#result-articles').html(data.html);
+                    const count = $('#result-articles').children().length;
+                    $('#result-count').text(`Résultat (${count})`);
+                },
+                error: function () {
+                    $('#result-articles').html("<div class='col-12'><p class='piece-catalog-empty text-danger mb-0'>Erreur de chargement.</p></div>");
+                    $('#result-count').text("Résultat (0)");
+                }
+            });
+        }
+        $(document).ready(function() {
+            $('#searchInput').on('input', function () {
+                currentQuery = $(this).val();
+                updateArticleList();
+            });
+            $('#searchInput').closest('form').on('submit', function (e) {
+                e.preventDefault();
+                currentQuery = $('#searchInput').val();
+                updateArticleList();
+            });
+        });
+        function filterByCategorie(categorieId) {
+            currentCategorie = categorieId || "";
+            document.querySelectorAll('.piece-cat-chip').forEach(function (chip) {
+                var id = chip.getAttribute('data-categorie') || "";
+                chip.classList.toggle('is-active', id === currentCategorie);
+            });
+            updateArticleList();
+        }
+        function resetSearch() {
+            currentQuery = "";
+            currentCategorie = "";
+            document.getElementById('searchInput').value = "";
+            document.querySelectorAll('.piece-cat-chip').forEach(function (chip) {
+                var id = chip.getAttribute('data-categorie') || "";
+                chip.classList.toggle('is-active', id === "");
+            });
+            updateArticleList();
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const inputRemise = document.getElementById('input-remise');
+        const afficheRemise = document.getElementById('affiche-remise');
+        const afficheMontantAPayer = document.getElementById('affiche-montant-a-payer');
+        const panierTotalEl = document.getElementById('panier-total');
+        const form = document.getElementById('quickForm');
+
+        total = parseFloat(panierTotalEl.textContent.replace(',', '.')) || 0;
+        function remiseEnPourcent(montantRemise, totalBrut) {
+            if (!totalBrut || totalBrut <= 0 || !montantRemise || montantRemise <= 0) return '0';
+            return ((montantRemise / totalBrut) * 100).toFixed(2);
+        }
+
+        window.calculerEtAfficher = function () {
+            let remiseStr = inputRemise.value.trim().replace(',', '.');
+            let remise = parseFloat(remiseStr);
+            if (isNaN(remise) || remise < 0) remise = 0;
+            else if (remise > total) remise = total;
+
+            let montantApresRemise = total - remise;
+            afficheRemise.textContent = remiseEnPourcent(remise, total);
+            afficheMontantAPayer.textContent = montantApresRemise.toFixed(2);
+            return montantApresRemise;
+        };
+
+        inputRemise.addEventListener('input', calculerEtAfficher);
+        form.addEventListener('submit', function(e) {
+            calculerEtAfficher();
+            if (total <= 0) {
+                e.preventDefault();
+                alert('Le panier est vide.');
+            }
+        });
+        if (total === 0) {
+                afficheMontantAPayer.textContent = '0.00';
+                updateBoutonValider(0);
+                togglePanierEmptyState(0);
+            } else {
+                calculerEtAfficher();
+                togglePanierEmptyState(document.getElementById('panier-quantite-total').textContent);
+            }
+        });
+    </script>
+{% endblock main_content %}

@@ -1,0 +1,77 @@
+{% load static i18n %}
+<div class="single-shopping-card-one discount-offer ecom-piece-card h-100">
+    <a href="{{ piece.get_absolute_url }}" class="thumbnail-preview">
+        {% if quantite and quantite > 0 %}
+        <div class="badge">
+            <span>{{ quantite }}<br>{% trans "stock" %}</span>
+            <i class="fa-solid fa-bookmark"></i>
+        </div>
+        {% elif piece.stock_total %}
+        <div class="badge">
+            <span>{{ piece.stock_total }}<br>{% trans "total" %}</span>
+            <i class="fa-solid fa-bookmark"></i>
+        </div>
+        {% endif %}
+        {% if piece.image %}
+        <img src="{{ piece.image.url }}" alt="{{ piece.designation }}">
+        {% else %}
+        <div class="ecom-piece-placeholder" aria-hidden="true"><i class="fa-solid fa-gears"></i></div>
+        {% endif %}
+    </a>
+    <div class="body-content">
+        <div class="title-area-left">
+            {% if piece.categorie %}
+            <a href="{% url 'ecom_shop' %}?categorie={{ piece.categorie_id }}" class="ecom-piece-category">
+                {{ piece.categorie.categorie }}
+            </a>
+            {% endif %}
+            <a href="{{ piece.get_absolute_url }}">
+                <h4 class="title">{{ piece.designation }}</h4>
+            </a>
+            {% if localite_nom %}
+            <span class="availability">{{ localite_nom }} — {{ piece.numero_piece }}</span>
+            {% elif show_all_stocks %}
+            <span class="availability">
+                {% for stock in piece.stocks_disponibles %}
+                {{ stock.local_entrepot.nom }}: {{ stock.quantite_disponible }}{% if not forloop.last %} · {% endif %}
+                {% endfor %}
+            </span>
+            {% else %}
+            <span class="availability">{{ piece.numero_piece }}</span>
+            {% endif %}
+            <div class="price-area">
+                <span class="current">{{ prix_affiche|floatformat:0 }} FCFA</span>
+                {% if piece.prix_unitaire and piece.prix_unitaire != prix_affiche %}
+                <div class="previous">{{ piece.prix_unitaire|floatformat:0 }} FCFA</div>
+                {% endif %}
+            </div>
+            <div class="cart-counter-action">
+                {% if user.is_authenticated and localite_code and quantite %}
+                <form method="post" action="{% url 'ecom_add_to_cart' piece.pk %}" class="cart-counter-action ecom-add-cart-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next_url|default:request.path }}">
+                    <div class="quantity-edit">
+                        <input type="text" name="quantite" class="input" value="1" data-max="{{ quantite }}" inputmode="numeric" autocomplete="off">
+                        <div class="button-wrapper-action">
+                            <button type="button" class="button qty-minus"><i class="fa-solid fa-chevron-down"></i></button>
+                            <button type="button" class="button plus qty-plus">+<i class="fa-solid fa-chevron-up"></i></button>
+                        </div>
+                    </div>
+                    <button type="submit" class="rts-btn btn-primary border-only radious-sm with-icon">
+                        <div class="btn-text">{% trans "Ajouter" %}</div>
+                        <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                        <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                    </button>
+                </form>
+                {% elif not user.is_authenticated %}
+                <a href="{% url 'connexion' %}?next={{ request.path }}" class="rts-btn btn-primary border-only radious-sm with-icon">
+                    <div class="btn-text">{% trans "Ajouter" %}</div>
+                    <div class="arrow-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                </a>
+                {% else %}
+                <p class="small text-muted mb-0">{% trans "Sélectionnez une localité pour commander." %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

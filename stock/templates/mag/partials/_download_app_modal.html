@@ -1,0 +1,38 @@
+{% load static %}
+{# Modal Download App (même contenu que base_ecom) — Bootstrap 4 #}
+<div class="modal fade ecom-app-download-modal" id="ecomDownloadAppModal" tabindex="-1"
+     role="dialog" aria-labelledby="ecomDownloadAppModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content ecom-app-download-content">
+            <button type="button" class="ecom-app-download-close" data-dismiss="modal" aria-label="Fermer">
+                <i class="fa fa-times" aria-hidden="true"></i>
+            </button>
+            <div class="ecom-app-download-visual">
+                <img src="{% static 'back_modal0.png' %}"
+                     alt="Application Auto-Pièce"
+                     class="ecom-app-download-img"
+                     loading="lazy">
+            </div>
+            <div class="ecom-app-download-body">
+                <p class="ecom-app-download-eyebrow">Application mobile</p>
+                <h2 class="ecom-app-download-title" id="ecomDownloadAppModalLabel">
+                    Téléchargez Auto-Pièce
+                </h2>
+                <p class="ecom-app-download-text">
+                    Emportez votre garage partout. Commandez vos pièces, suivez vos livraisons et retrouvez vos favoris sur iOS et Android.
+                </p>
+                <div class="ecom-app-download-stores">
+                    <a href="#" class="ecom-app-store-link" aria-label="Télécharger sur l’App Store">
+                        <img src="{% static 'appstore.png' %}" alt="App Store" width="160" height="48" loading="lazy">
+                    </a>
+                    <a href="#" class="ecom-app-store-link" aria-label="Télécharger sur Google Play">
+                        <img src="{% static 'googleplay.png' %}" alt="Google Play" width="160" height="48" loading="lazy">
+                    </a>
+                </div>
+                <p class="ecom-app-download-note">
+                    Disponible bientôt sur les stores — restez connectés.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

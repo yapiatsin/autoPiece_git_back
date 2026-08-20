@@ -1,0 +1,142 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Politique de confidentialité" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+{% block content %}
+<div class="rts-navigation-area-breadcrumb">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="navigator-breadcrumb-wrapper">
+                    <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+                    <i class="fa-regular fa-chevron-right"></i>
+                    <a class="current" href="{% url 'ecom_privacy_policy' %}">{% trans "Confidentialité" %}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="section-seperator">
+    <div class="container">
+        <hr class="section-seperator">
+    </div>
+</div>
+
+<div class="rts-pricavy-policy-area rts-section-gap">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="container-privacy-policy ecom-legal-content">
+                    <h1 class="title mb--40">{% trans "Politique de confidentialité — Auto-Pièce" %}</h1>
+                    <p class="disc ecom-legal-meta">{% trans "Dernière mise à jour : 15 juillet 2026" %}</p>
+                    <p class="disc">
+                        {% blocktrans %}Auto-Pièce attache une grande importance à la protection des données personnelles de ses clients, prospects et utilisateurs du site e-commerce. La présente politique explique quelles informations nous collectons, pourquoi nous les traitons, combien de temps nous les conservons et quels sont vos droits.{% endblocktrans %}
+                    </p>
+                    <p class="disc">
+                        {% blocktrans %}Notre activité porte sur la vente et la distribution de pièces automobiles, en magasin et en ligne, avec possibilité de commande à distance, d’affectation à une localité / un entrepôt, de livraison ou de retrait, et de suivi de commande depuis votre espace client.{% endblocktrans %}
+                    </p>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Responsable du traitement" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}<strong>Auto-Pièce</strong> — site e-commerce et réseaux de distribution partenaires.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Contact : <a href="mailto:contact@autopiece.ci">contact@autopiece.ci</a> — support disponible également via la page Contact / Support du site.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Données collectées" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}<strong>Données d’identité et de contact :</strong> nom, prénom, adresse e-mail, numéro de téléphone, identifiant de compte.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}<strong>Données de commande :</strong> pièces commandées, quantités, montants, mode de réception (livraison / retrait), localité, statut de paiement et de livraison, historique de commandes.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}<strong>Données de profil :</strong> adresse, ville, préférences éventuelles, photo de profil si vous en ajoutez une.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}<strong>Données techniques :</strong> logs de connexion, adresse IP, type de navigateur, cookies nécessaires au fonctionnement du site (voir notre politique cookies).{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Finalités du traitement" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Créer et gérer votre compte client Auto-Pièce.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Traiter vos commandes en ligne, préparer les pièces en magasin / entrepôt, assurer la livraison ou le retrait et le suivi.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Vous contacter en cas de rupture, d’indisponibilité, de retard de livraison ou de besoin de confirmation.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Sécuriser le site, lutter contre la fraude et améliorer la qualité du service.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Respecter nos obligations légales et comptables liées à la vente de biens.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Destinataires et partage" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Le personnel habilité d’Auto-Pièce (accueil, caisse, entrepôt, livreurs, support) selon le besoin du traitement de votre commande.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Les prestataires techniques nécessaires au fonctionnement du site (hébergement, e-mail transactionnel), dans le cadre de contrats garantissant la confidentialité.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Nous ne vendons pas vos données personnelles à des tiers à des fins commerciales.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Durée de conservation" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Données de compte : pendant la durée d’utilisation du compte, puis archivage ou suppression selon les exigences légales.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Données de commande et de facturation : conservation pendant la durée exigée par la réglementation commerciale et fiscale applicable.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Logs techniques : conservation limitée au besoin de sécurité et de diagnostic.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "Vos droits" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Vous pouvez demander l’accès, la rectification ou la mise à jour de vos informations depuis votre espace compte ou en nous contactant.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Vous pouvez demander la suppression de votre compte, sous réserve des obligations de conservation liées aux commandes déjà passées.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Pour exercer vos droits : <a href="mailto:contact@autopiece.ci">contact@autopiece.ci</a> ou page Contact — Auto-Pièce s’engage à répondre dans un délai raisonnable.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                        <p class="disc mt--30">
+                            {% blocktrans %}Cette politique peut être mise à jour pour refléter l’évolution du service Auto-Pièce. La date indiquée en tête de page indique la dernière révision. Nous vous invitons à la consulter régulièrement.{% endblocktrans %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

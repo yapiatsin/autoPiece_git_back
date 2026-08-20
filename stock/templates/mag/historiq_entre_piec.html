@@ -1,0 +1,185 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE — Historique des entrées{% endblock title %}
+{% block page_title %}Historique des entrées — {{ piece.designation }} ({{ piece.numero_piece }}){% endblock page_title %}
+{% block page %}Historique des entrées{% endblock page %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
+<li class="breadcrumb-item active">Historique des entrées</li>
+{% endblock breadcrumb %}
+
+{% block main_content %}
+    {% include "mag/partials/_periode_filter_modal.html" %}
+    {% include "mag/partials/_dashboard_kpi_styles.html" %}
+    <div class="row dashboard-kpi-row w-100 mx-0">
+        <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
+            <div class="card top_widget dashboard-kpi dashboard-kpi--entry">
+                <div class="body">
+                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-archive"></i></span></div>
+                    <div class="content">
+                        <div class="text mb-1 text-uppercase">Total entrées en stock (pièce)</div>
+                        <h4 class="number mb-0">{{ total_entre_piece }} <span class="kpi-value-muted">Val {{ valeur_entre_piece }} frs</span></h4>
+                        <small class="text-muted">{{ moisact }} — {{ annee }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
+            <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
+                <div class="body">
+                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-money"></i></span></div>
+                    <div class="content">
+                        <div class="text mb-1 text-uppercase">Pièces vendues (cette pièce)</div>
+                        <h4 class="number mb-0">{{ nb_piece_vendu }} <span class="kpi-value-muted">Val {{ val_piece_vendu }} frs</span></h4>
+                        <small class="text-muted">{{ moisact }} — {{ annee }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
+            <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
+                <div class="body">
+                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-cubes"></i></span></div>
+                    <div class="content">
+                        <div class="text mb-1 text-uppercase">Stock actuel de la pièce</div>
+                        <h4 class="number mb-0">{{ count_piece }} <span class="kpi-value-muted">Val {{ valeur_piece }} frs</span></h4>
+                        <small class="text-muted">{{ annee }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card" style="overflow-y: auto">
+            <div class="mobile-left">
+                <a class="btn btn-primary toggle-email-nav" data-toggle="collapse" href="#email-nav" role="button" aria-expanded="true" aria-controls="email-nav">
+                    <span class="btn-label"><i class="la la-bars"></i></span>
+                    Menu
+                </a>
+            </div>
+            <div class="mail-inbox">
+                <div class="mail-left collapse show" id="email-nav">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="icon-magnifier"></i></span>
+                        </div>
+                        <input type="text" class="form-control" id="pieceSearch" placeholder="Rechercher une pièce...">
+                    </div>
+                    <div class="mail-side">
+                        <ul class="nav" id="piecesList">
+                            <li class="active text-secondary">
+                                <a href="{% url "stock" %}">
+                                    <i class="icon-star"></i>
+                                    Mon stock
+                                    <span class="badge badge-primary float-right"> {{ count_medoc }} </span>
+                                </a>
+                            </li>
+                            {% for p in pieces_categorie %}
+                                <li class="piece-item {% if p.pk == piece.pk %}active{% endif %}">
+                                    <a href="{% url "info_piece" p.pk %}" class="mail-detail-expand">
+                                        <i class="icon-star text-warning"></i>
+                                        {{ p.designation }} ({{ p.numero_piece }})
+                                        <span class="badge badge-info float-right">{{ p.quantite_disponible }}</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="mail-right">
+                    <div class="header">
+                        <h2>Entrées de stock pour {{ piece.designation }} ({{ piece.numero_piece }})</h2>
+                    </div>
+                    <div class="body">
+                        <div class="mag-table-shell" x-data="magTableFilter()">
+                            {% include "mag/partials/_alpine_table_toolbar.html" %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mag-data-table">
+                                <thead>
+                                    <tr class='text'>
+                                        <th>N°#</th>
+                                        <th>Date</th>
+                                        <th>Quantité ajoutée</th>
+                                        <th>Prix d'achat</th>
+                                        <th>Total</th>
+                                        <th>Provenance</th>
+                                        <th>Fournisseur</th>
+                                        <th>Ajouté par</th>
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                    <tr class='text'>
+                                        <th>N°#</th>
+                                        <th>Date</th>
+                                        <th>Quantité ajoutée</th>
+                                        <th>Prix d'achat</th>
+                                        <th>Total</th>
+                                        <th>Provenance</th>
+                                        <th>Fournisseur</th>
+                                        <th>Ajouté par</th>
+                                    </tr>
+                                </tfoot>
+                                <tbody>
+                                    {% for e in entrees_piece %}
+                                        <tr>
+                                            <th>{{ forloop.counter }}</th>
+                                            <th>{{ e.date_creation|date:"d-m-Y" }}</th>
+                                            <th>{{ e.quantitajout }}</th>
+                                            <th>{{ e.prix_achat }} frs</th>
+                                            <th>{{ e.quantitajout|mul:e.prix_achat|floatformat:2 }} frs</th>
+                                            <th>
+                                                {% if e.origine_type == 'transfert_local' and e.origine_local %}
+                                                <span class="badge badge-info">Agence {{ e.origine_local.nom }}</span>
+                                                {% else %}
+                                                <span class="badge badge-secondary">Fournisseur</span>
+                                                {% endif %}
+                                            </th>
+                                            <th>{{ e.fournisseur.nom|default:"-" }}</th>
+                                            <th>{{ e.utilisateur.username|default:"-" }}</th>
+                                        </tr>
+                                    {% empty %}
+                                        <tr class="mag-table-skip-filter">
+                                            <td colspan="7" class="text-center text-muted p-3">
+                                                Aucune entrée de stock pour cette pièce.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Filtre dynamique des pièces dans le menu de gauche
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('pieceSearch');
+            const piecesList = document.getElementById('piecesList');
+            if (!searchInput || !piecesList) {
+                return;
+            }
+            searchInput.addEventListener('input', function () {
+                const query = this.value.toLowerCase();
+                const items = piecesList.querySelectorAll('li.piece-item');
+                items.forEach(function (item) {
+                    const text = item.textContent.toLowerCase();
+                    if (text.includes(query)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

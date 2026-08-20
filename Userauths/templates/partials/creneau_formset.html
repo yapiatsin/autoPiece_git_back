@@ -1,0 +1,80 @@
+{% load i18n %}
+{# Formset optionnel des créneaux — bouton « Ajouter » pour une nouvelle ligne #}
+<div class="ecom-creneau-formset" data-ecom-creneau-formset>
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">{% trans "Créneaux de disponibilité" %} <small class="text-muted">({% trans "optionnel" %})</small></h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" data-ecom-creneau-add>
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            {% trans "Ajouter" %}
+        </button>
+    </div>
+    {{ creneau_formset.management_form }}
+    {% if creneau_formset.non_form_errors %}
+    <div class="alert alert-danger">{{ creneau_formset.non_form_errors }}</div>
+    {% endif %}
+    <div class="ecom-creneau-rows" data-ecom-creneau-rows>
+        {% for form in creneau_formset %}
+        <div class="ecom-creneau-row border rounded p-3 mb-2{% if form.instance.pk %} ecom-creneau-row--existing{% endif %}"
+             data-ecom-creneau-row>
+            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">{{ form.jour.label }}</label>
+                    {{ form.jour }}
+                    {% if form.jour.errors %}<div class="text-danger small">{{ form.jour.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.heure_ouverture.label }}</label>
+                    {{ form.heure_ouverture }}
+                    {% if form.heure_ouverture.errors %}<div class="text-danger small">{{ form.heure_ouverture.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.heure_fermeture.label }}</label>
+                    {{ form.heure_fermeture }}
+                    {% if form.heure_fermeture.errors %}<div class="text-danger small">{{ form.heure_fermeture.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-2">
+                    {% if form.DELETE %}
+                    <div class="form-check mt-2">
+                        {{ form.DELETE }}
+                        <label class="form-check-label" for="{{ form.DELETE.id_for_label }}">{% trans "Supprimer" %}</label>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% if form.non_field_errors %}
+            <div class="text-danger small mt-1">{{ form.non_field_errors }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    <template data-ecom-creneau-empty>
+        <div class="ecom-creneau-row border rounded p-3 mb-2" data-ecom-creneau-row>
+            {% with form=creneau_formset.empty_form %}
+            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">{{ form.jour.label }}</label>
+                    {{ form.jour }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.heure_ouverture.label }}</label>
+                    {{ form.heure_ouverture }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ form.heure_fermeture.label }}</label>
+                    {{ form.heure_fermeture }}
+                </div>
+                <div class="col-md-2">
+                    {% if form.DELETE %}
+                    <div class="form-check mt-2">
+                        {{ form.DELETE }}
+                        <label class="form-check-label">{% trans "Supprimer" %}</label>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+        </div>
+    </template>
+</div>

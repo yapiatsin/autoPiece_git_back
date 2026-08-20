@@ -1,0 +1,141 @@
+{% load custom_filters %}
+<div class="panier-basket-header">
+    <div class="panier-basket-header__main">
+        <span class="panier-basket-header__icon" aria-hidden="true">
+            <i class="fa fa-money"></i>
+        </span>
+        <div class="panier-basket-header__text">
+            <h2 class="panier-basket-header__title">
+                {% if ticket %}Ticket {{ ticket.numero }}{% else %}Caisse{% endif %}
+            </h2>
+            <p class="panier-basket-header__subtitle">
+                {% if commande %}Encaissement en cours{% else %}Sélectionnez un panier à gauche{% endif %}
+            </p>
+        </div>
+    </div>
+    <div class="panier-basket-header__badge" title="Nombre d'articles">
+        <span class="panier-basket-header__badge-label">Articles</span>
+        <span id="panier-quantite-total" class="panier-basket-header__badge-value">{{ panier_items|length }}</span>
+    </div>
+</div>
+<div class="body panier-page-card-body">
+    <form method="post" id="form-valider-panier" class="panier-basket-form"
+          {% if ticket %}action="{% url 'valid_pay_article' ticket.numero %}"{% endif %}
+          {% if commande %}data-total-marchandises="{{ commande.total }}"{% endif %}>
+        {% csrf_token %}
+
+        <div class="panier-basket-scroll" id="panier-contenu">
+            <div class="panier-basket-empty" id="caisse-basket-empty"{% if panier_items %} style="display: none;"{% endif %}>
+                <span class="panier-basket-empty__icon" aria-hidden="true"><i class="fa fa-shopping-basket"></i></span>
+                <p class="panier-basket-empty__title">Aucun panier sélectionné</p>
+                <p class="panier-basket-empty__hint">Cliquez sur un ticket en attente pour charger les articles et encaisser.</p>
+            </div>
+            <ul class="panier-basket-list" id="caisse-items-list"{% if not panier_items %} style="display: none;"{% endif %}>
+                {% for item in panier_items %}
+                <li class="caisse-basket-item">
+                    <div class="caisse-basket-item__thumb" aria-hidden="true">
+                        {% if item.piece.image %}
+                            <img src="{{ item.piece.image.url }}" alt="">
+                        {% else %}
+                            <i class="fa fa-cog"></i>
+                        {% endif %}
+                    </div>
+                    <div class="caisse-basket-item__info">
+                        <p class="caisse-basket-item__name">{{ item.piece.designation }}</p>
+                        <p class="caisse-basket-item__qty">Qté {{ item.quantite }}</p>
+                    </div>
+                    <span class="caisse-basket-item__price">{{ item.prix_total }} F</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="panier-checkout">
+            <div class="panier-recap-card">
+                <div class="panier-recap-row">
+                    <span class="panier-recap-label">Coût total</span>
+                    <span class="panier-recap-value"><span id="panier-total">{% if commande %}{{ commande.total_sans_remise }}{% else %}0{% endif %}</span> Fcfa</span>
+                </div>
+                <div class="panier-recap-row">
+                    <span class="panier-recap-label">Remise</span>
+                    <span class="panier-recap-value"><span id="affiche-remise">{% if commande %}{{ commande.remise|floatformat:2 }}{% else %}0.00{% endif %}</span> Fcfa</span>
+                </div>
+                {% if tva_active %}
+                <div class="panier-recap-row" id="ligne-tva" style="display: none;">
+                    <span class="panier-recap-label">TVA ({{ taux_tva|floatformat:0 }} %)</span>
+                    <span class="panier-recap-value"><span id="affiche-tva">0</span> Fcfa</span>
+                </div>
+                {% endif %}
+                <div class="panier-recap-row" id="ligne-timbre" style="display: none;">
+                    <span class="panier-recap-label">Timbre fiscal</span>
+                    <span class="panier-recap-value"><span id="affiche-timbre">0</span> Fcfa</span>
+                </div>
+                <div class="panier-recap-row panier-recap-row--total">
+                    <span class="panier-recap-label">À payer</span>
+                    <span class="panier-recap-value panier-recap-value--payer">
+                        <span id="affiche-montant-a-payer" {% if commande %}data-total-base="{{ commande.total }}"{% endif %}>{% if commande %}{{ commande.total }}{% else %}0{% endif %}</span> Fcfa
+                    </span>
+                </div>
+                <div class="panier-recap-row">
+                    <span class="panier-recap-label">Reste</span>
+                    <span class="panier-recap-value"><span id="affiche-montant-reste">0</span> Fcfa</span>
+                </div>
+            </div>
+
+            <div class="panier-remise-field">
+                <label class="panier-remise-label" for="moyen-paiement-select">Moyen de paiement</label>
+                <div class="panier-remise-input-wrap">
+                    <span class="panier-remise-input-icon" aria-hidden="true"><i class="fa fa-credit-card"></i></span>
+                    <select name="moyen_paiement" id="moyen-paiement-select" class="form-control panier-remise-input"
+                            {% if not commande %}disabled{% else %}required{% endif %}>
+                        {% for mp in moyens_paiement %}
+                            <option value="{{ mp.id }}">{{ mp.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            {% if tva_active %}
+            <div class="panier-remise-field" id="groupe-tva">
+                <div class="custom-control custom-checkbox mb-0">
+                    <input type="checkbox" class="custom-control-input" id="appliquer-tva"
+                           name="appliquer_tva" value="1"{% if not commande %} disabled{% endif %}>
+                    <label class="custom-control-label panier-remise-label mb-0" for="appliquer-tva">
+                        Appliquer TVA ({{ taux_tva|floatformat:0 }} %)
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="panier-remise-field">
+                <label class="panier-remise-label" for="montant">Montant versé</label>
+                <div class="panier-remise-input-wrap">
+                    <span class="panier-remise-input-icon" aria-hidden="true"><i class="fa fa-money"></i></span>
+                    <input type="number" name="montant" id="montant" value="0"
+                           class="form-control panier-remise-input" placeholder="0.00" min="0" step="0.01"
+                           {% if commande %}required{% else %}disabled{% endif %}>
+                    <span class="panier-remise-input-suffix">Fcfa</span>
+                </div>
+            </div>
+
+            <div class="caisse-actions">
+                <button type="button"
+                        onclick="resetCaissePanel()"
+                        id="btn-annuler-panier"
+                        class="panier-btn-valider caisse-btn-annuler"
+                        title="Annuler la sélection">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                    <span>Annuler</span>
+                </button>
+                <button type="submit"
+                        id="btn-valider-panier"
+                        class="panier-btn-valider{% if commande %} panier-btn-valider--active{% endif %}"
+                        {% if not commande %}disabled{% endif %}>
+                    <i class="fa {% if commande %}fa-check-circle{% else %}fa-shopping-basket{% endif %}" aria-hidden="true"></i>
+                    <span>{% if commande %}Valider le paiement{% else %}Sélection requise{% endif %}</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% include 'mag/partials/_panier_paiement_styles.html' %}

@@ -1,0 +1,75 @@
+{% load i18n %}
+{# Guide commande — s’ouvre automatiquement sur l’accueil #}
+<div class="modal fade ecom-order-guide-modal" id="ecomOrderGuideModal" tabindex="-1"
+     aria-labelledby="ecomOrderGuideModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content ecom-order-guide-content">
+            <button type="button" class="ecom-order-guide-skip" data-bs-dismiss="modal">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                {% trans "J’ai compris" %}
+            </button>
+            <div class="ecom-order-guide-body">
+                <p class="ecom-order-guide-eyebrow">{% trans "Guide rapide" %}</p>
+                <h2 class="ecom-order-guide-title" id="ecomOrderGuideModalLabel">
+                    {% if user.is_authenticated %}
+                        {% blocktrans with name=user.get_full_name|default:user.username %}Bienvenue {{ name }} — comment commander ?{% endblocktrans %}
+                    {% else %}
+                        {% trans "Comment passer une commande ?" %}
+                    {% endif %}
+                </h2>
+                <p class="ecom-order-guide-intro">
+                    {% if user.is_authenticated %}
+                        {% trans "Vous êtes connecté. Suivez ces étapes pour commander vos pièces Auto-Pièce." %}
+                    {% else %}
+                        {% trans "Parcourez le catalogue librement. Pour finaliser une commande, connectez-vous puis suivez ces étapes." %}
+                    {% endif %}
+                </p>
+                <ol class="ecom-order-guide-steps">
+                    <li>
+                        <span class="ecom-order-guide-step-num" aria-hidden="true">1</span>
+                        <div>
+                            <strong>{% trans "Choisissez votre localité" %}</strong>
+                            <p>{% trans "Sur l’accueil, sélectionnez l’agence la plus proche pour voir le stock disponible près de chez vous." %}</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="ecom-order-guide-step-num" aria-hidden="true">2</span>
+                        <div>
+                            <strong>{% trans "Trouvez vos pièces" %}</strong>
+                            <p>{% trans "Allez dans Boutique, filtrez par catégorie ou recherchez la référence dont vous avez besoin." %}</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="ecom-order-guide-step-num" aria-hidden="true">3</span>
+                        <div>
+                            <strong>{% trans "Ajoutez au panier" %}</strong>
+                            <p>{% trans "Sur chaque fiche pièce, indiquez la quantité puis cliquez sur « Ajouter au panier »." %}</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="ecom-order-guide-step-num" aria-hidden="true">4</span>
+                        <div>
+                            <strong>{% trans "Validez votre commande" %}</strong>
+                            <p>{% trans "Ouvrez le panier, vérifiez le récapitulatif, puis cliquez sur « Passer commande » pour finaliser." %}</p>
+                        </div>
+                    </li>
+                </ol>
+                <div class="ecom-order-guide-actions">
+                    <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary radious-sm">
+                        {% trans "Voir la boutique" %}
+                    </a>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'connexion' %}?next={% url 'ecom_index' %}" class="rts-btn btn-primary border-only radious-sm ecom-order-guide-actions-end">
+                        {% trans "Se connecter" %}
+                    </a>
+                    {% else %}
+                    <a href="{% url 'ecom_cart' %}" class="rts-btn btn-primary border-only radious-sm ecom-order-guide-actions-end">
+                        <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+                        {% trans "Mon panier" %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

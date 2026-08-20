@@ -1,0 +1,355 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Boutique" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-grid-sidebar{% endblock body_class %}
+{% block content %}
+{% include 'e_autopiece/partials/_shop_grid_products.html' %}
+{% include 'e_autopiece/partials/_vues_recentes.html' %}
+{% endblock content %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var shopUrl = '{% url "ecom_shop" %}';
+    var busy = false;
+    var priceTimer = null;
+    var fetchController = null;
+
+    function bindShopQtyControl(wrap) {
+        var input = wrap.querySelector('.input');
+        var minus = wrap.querySelector('.qty-minus');
+        var plus = wrap.querySelector('.qty-plus');
+        if (!input || !minus || !plus) return;
+        var max = parseInt(input.getAttribute('data-max') || '99', 10);
+
+        function stopThemeHandler(event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }
+
+        function setQty(next) {
+            var v = parseInt(String(next), 10);
+            if (isNaN(v) || v < 1) v = 1;
+            if (v > max) v = max;
+            input.value = String(v);
+        }
+
+        minus.addEventListener('click', function (event) {
+            stopThemeHandler(event);
+            setQty(parseInt(input.value || '1', 10) - 1);
+        }, true);
+
+        plus.addEventListener('click', function (event) {
+            stopThemeHandler(event);
+            setQty(parseInt(input.value || '1', 10) + 1);
+        }, true);
+
+        input.addEventListener('change', function () {
+            setQty(input.value);
+        });
+    }
+
+    function bindQtyControls() {
+        document.querySelectorAll('.ecom-add-cart-form .quantity-edit').forEach(bindShopQtyControl);
+    }
+
+    function getFilterForm() {
+        return document.getElementById('ecom-shop-filter-form');
+    }
+
+    function syncTopFromSidebar() {
+        var form = getFilterForm();
+        var topForm = document.getElementById('ecom-shop-top-selects');
+        if (!form || !topForm) return;
+
+        var checkedCats = Array.prototype.map.call(
+            form.querySelectorAll('input[name="categorie"]:checked'),
+            function (el) { return el.value; }
+        );
+        var catSelect = topForm.querySelector('select[name="categorie"]');
+        if (catSelect) {
+            catSelect.value = checkedCats.length === 1 ? checkedCats[0] : '';
+        }
+
+        var checkedLoc = form.querySelector('input[name="localite"]:checked');
+        var locSelect = topForm.querySelector('select[name="localite"]');
+        if (locSelect) {
+            locSelect.value = checkedLoc ? checkedLoc.value : '';
+        }
+
+        var sortSel = document.querySelector('#ecom-shop-sort-form select[name="sort"]');
+        var sortHidden = topForm.querySelector('input[name="sort"]');
+        if (sortSel && sortHidden) sortHidden.value = sortSel.value;
+    }
+
+    function syncSidebarFromTop() {
+        var form = getFilterForm();
+        var topForm = document.getElementById('ecom-shop-top-selects');
+        if (!form || !topForm) return;
+
+        var catSelect = topForm.querySelector('select[name="categorie"]');
+        var catVal = catSelect ? catSelect.value : '';
+        form.querySelectorAll('input[name="categorie"]').forEach(function (cb) {
+            cb.checked = catVal ? cb.value === catVal : false;
+        });
+
+        var locSelect = topForm.querySelector('select[name="localite"]');
+        var locVal = locSelect ? locSelect.value : '';
+        form.querySelectorAll('input[name="localite"]').forEach(function (rb) {
+            rb.checked = locVal ? rb.value === locVal : false;
+        });
+    }
+
+    function buildShopQuery(page) {
+        var params = new URLSearchParams();
+        var form = getFilterForm();
+        if (form) {
+            new FormData(form).forEach(function (value, key) {
+                if (value !== '' && value != null) params.append(key, value);
+            });
+        }
+        var sortSel = document.querySelector('#ecom-shop-sort-form select[name="sort"]');
+        if (sortSel && sortSel.value) {
+            params.set('sort', sortSel.value);
+        }
+        if (page && page > 1) {
+            params.set('page', String(page));
+        } else {
+            params.delete('page');
+        }
+        return params;
+    }
+
+    function setLoading(isLoading) {
+        var root = document.getElementById('ecom-shop-results');
+        if (root) root.classList.toggle('is-loading', !!isLoading);
+    }
+
+    function applyShopHtml(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var nextResults = doc.getElementById('ecom-shop-results');
+        var root = document.getElementById('ecom-shop-results');
+        if (!nextResults || !root) return false;
+        root.innerHTML = nextResults.innerHTML;
+
+        var nextFilter = doc.getElementById('ecom-shop-filter-form');
+        var filterForm = getFilterForm();
+        if (nextFilter && filterForm) {
+            filterForm.innerHTML = nextFilter.innerHTML;
+            var priceRoot = filterForm.querySelector('[data-ecom-price-filter]');
+            if (priceRoot) priceRoot.removeAttribute('data-ecom-bound');
+        }
+
+        syncTopFromSidebar();
+        bindQtyControls();
+        initPriceRangeFilter();
+        return true;
+    }
+
+    function fetchShop(params, pushState) {
+        var query = params.toString();
+        var url = shopUrl + (query ? ('?' + query) : '');
+        if (busy && fetchController) {
+            fetchController.abort();
+        }
+        busy = true;
+        setLoading(true);
+        fetchController = new AbortController();
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
+            signal: fetchController.signal,
+            credentials: 'same-origin',
+        })
+            .then(function (response) {
+                if (!response.ok) throw new Error('shop filter failed');
+                return response.text();
+            })
+            .then(function (html) {
+                applyShopHtml(html);
+                if (pushState) {
+                    history.pushState({ shopFilter: true }, '', url);
+                }
+            })
+            .catch(function (err) {
+                if (err && err.name === 'AbortError') return;
+                window.location.href = url;
+            })
+            .finally(function () {
+                busy = false;
+                setLoading(false);
+            });
+    }
+
+    function runFilter(options) {
+        options = options || {};
+        if (options.fromTop) syncSidebarFromTop();
+        else syncTopFromSidebar();
+        var params = buildShopQuery(options.page || null);
+        fetchShop(params, options.pushState !== false);
+    }
+
+    function submitClosestFormAjax(el, opts) {
+        opts = opts || {};
+        var form = el && el.closest ? el.closest('form') : null;
+        if (!form) return;
+        if (form.id === 'ecom-shop-top-selects') {
+            runFilter({ fromTop: true });
+            return;
+        }
+        if (form.id === 'ecom-shop-sort-form') {
+            runFilter({});
+            return;
+        }
+        if (form.id === 'ecom-shop-filter-form') {
+            runFilter({});
+            return;
+        }
+        form.submit();
+    }
+
+    var selectSel = '.ecom-auto-filter-form select.ecom-auto-filter-input, .ecom-shop-sort-form select.ecom-auto-filter-input';
+    /* nice-select déclenche jQuery .trigger("change") — addEventListener natif ne le reçoit pas */
+    if (window.jQuery) {
+        jQuery(document)
+            .off('change.ecomShopFilter', selectSel)
+            .on('change.ecomShopFilter', selectSel, function () {
+                submitClosestFormAjax(this);
+            });
+    } else {
+        document.querySelectorAll(selectSel).forEach(function (el) {
+            el.addEventListener('change', function () {
+                submitClosestFormAjax(el);
+            });
+        });
+    }
+
+    document.addEventListener('change', function (event) {
+        var el = event.target;
+        if (!el || !el.matches) return;
+        if (el.matches('#ecom-shop-filter-form input.ecom-auto-filter-input[type="checkbox"], #ecom-shop-filter-form input.ecom-auto-filter-input[type="radio"]')) {
+            runFilter({});
+        }
+        if (el.matches('#ecom-shop-filter-form input.ecom-auto-filter-input[type="number"]')) {
+            runFilter({});
+        }
+    });
+
+    document.addEventListener('input', function (event) {
+        var el = event.target;
+        if (!el || !el.matches) return;
+        if (el.matches('#ecom-shop-filter-form input.ecom-auto-filter-input[type="number"]')) {
+            clearTimeout(priceTimer);
+            priceTimer = setTimeout(function () {
+                runFilter({});
+            }, 700);
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        var pageLink = event.target.closest && event.target.closest('#ecom-shop-results .ecom-shop-pagination a.ecom-page-btn');
+        if (pageLink) {
+            event.preventDefault();
+            var href = pageLink.getAttribute('href') || '';
+            var page = 1;
+            try {
+                var u = new URL(href, window.location.origin);
+                page = parseInt(u.searchParams.get('page') || '1', 10) || 1;
+            } catch (e) {}
+            runFilter({ page: page });
+            return;
+        }
+    });
+
+    window.addEventListener('popstate', function () {
+        fetchShop(new URLSearchParams(window.location.search), false);
+    });
+
+    function initPriceRangeFilter() {
+        var root = document.querySelector('[data-ecom-price-filter]');
+        if (!root || root.getAttribute('data-ecom-bound') === '1') return;
+        root.setAttribute('data-ecom-bound', '1');
+
+        var minBound = parseInt(root.getAttribute('data-min') || '0', 10);
+        var maxBound = parseInt(root.getAttribute('data-max') || '500000', 10);
+        var rangeEl = root.querySelector('[data-ecom-price-range]');
+        var sliderMin = root.querySelector('.ecom-price-slider-min');
+        var sliderMax = root.querySelector('.ecom-price-slider-max');
+        var inputMin = root.querySelector('[data-ecom-price-min-input]');
+        var inputMax = root.querySelector('[data-ecom-price-max-input]');
+        if (!sliderMin || !sliderMax || !inputMin || !inputMax || !rangeEl) return;
+
+        var submitTimer = null;
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function updateRangeBar(minVal, maxVal) {
+            var span = maxBound - minBound || 1;
+            var left = ((minVal - minBound) / span) * 100;
+            var right = ((maxVal - minBound) / span) * 100;
+            rangeEl.style.left = left + '%';
+            rangeEl.style.width = Math.max(right - left, 0) + '%';
+        }
+
+        function syncFromSliders(shouldSubmit) {
+            var minVal = parseInt(sliderMin.value, 10);
+            var maxVal = parseInt(sliderMax.value, 10);
+            if (minVal > maxVal) {
+                if (sliderMin === document.activeElement) {
+                    maxVal = minVal;
+                    sliderMax.value = String(maxVal);
+                } else {
+                    minVal = maxVal;
+                    sliderMin.value = String(minVal);
+                }
+            }
+            inputMin.value = minVal <= minBound ? '' : String(minVal);
+            inputMax.value = maxVal >= maxBound ? '' : String(maxVal);
+            updateRangeBar(minVal, maxVal);
+            if (shouldSubmit) {
+                clearTimeout(submitTimer);
+                submitTimer = setTimeout(function () {
+                    runFilter({});
+                }, 450);
+            }
+        }
+
+        function syncFromInputs(shouldSubmit) {
+            var minVal = parseInt(inputMin.value || String(minBound), 10);
+            var maxVal = parseInt(inputMax.value || String(maxBound), 10);
+            if (isNaN(minVal)) minVal = minBound;
+            if (isNaN(maxVal)) maxVal = maxBound;
+            minVal = clamp(minVal, minBound, maxBound);
+            maxVal = clamp(maxVal, minBound, maxBound);
+            if (minVal > maxVal) {
+                var tmp = minVal;
+                minVal = maxVal;
+                maxVal = tmp;
+            }
+            sliderMin.value = String(minVal);
+            sliderMax.value = String(maxVal);
+            updateRangeBar(minVal, maxVal);
+            if (shouldSubmit) {
+                clearTimeout(submitTimer);
+                submitTimer = setTimeout(function () {
+                    runFilter({});
+                }, 450);
+            }
+        }
+
+        sliderMin.addEventListener('input', function () { syncFromSliders(false); });
+        sliderMax.addEventListener('input', function () { syncFromSliders(false); });
+        sliderMin.addEventListener('change', function () { syncFromSliders(true); });
+        sliderMax.addEventListener('change', function () { syncFromSliders(true); });
+        inputMin.addEventListener('input', function () { syncFromInputs(false); });
+        inputMax.addEventListener('input', function () { syncFromInputs(false); });
+
+        syncFromInputs(false);
+    }
+
+    bindQtyControls();
+    initPriceRangeFilter();
+});
+</script>
+{% endblock extra_js %}

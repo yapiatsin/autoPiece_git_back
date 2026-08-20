@@ -1,0 +1,9 @@
+<div class="periode-filter-toolbar">
+    {% if filtre_resume %}
+    <span class="badge badge-periode-resume">{{ filtre_resume }}</span>
+    {% endif %}
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#{{ filter_modal_id }}" title="Filtrer">
+        <i class="fa fa-filter"></i> Filtre
+    </button>
+    <a href="{{ filter_reset_url }}" class="btn btn-outline-secondary btn-sm" title="Réinitialiser"><i class="fa fa-refresh"></i></a>
+</div>

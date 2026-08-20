@@ -1,0 +1,239 @@
+<style>
+    .panier-order-card {
+        border-radius: 14px;
+        border: 1px solid #e8e8e8;
+        background: #fff;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        margin-bottom: 0 !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    }
+    .panier-order-card:hover {
+        border-color: #ff8c00;
+        box-shadow: 0 8px 22px rgba(255, 140, 0, 0.12);
+        transform: translateY(-2px);
+    }
+    .panier-order-card--active {
+        border-color: #ff8c00;
+        box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.2), 0 8px 22px rgba(255, 140, 0, 0.14);
+    }
+    .panier-order-body {
+        padding: 1rem 1.1rem 0.9rem;
+    }
+    .panier-order-divider {
+        border: none;
+        border-top: 1px solid #eee;
+        margin: 0.75rem 0;
+    }
+    .panier-order-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+    .panier-order-title-block {
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+    }
+    .panier-order-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #2d2a2c;
+        margin: 0;
+        line-height: 1.3;
+    }
+    .panier-order-date {
+        display: block;
+        font-size: 0.72rem;
+        color: #9a9a9a;
+        margin-top: 0.2rem;
+        font-weight: 500;
+    }
+    .panier-order-print {
+        flex-shrink: 0;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: none;
+        color: #fff;
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        box-shadow: 0 3px 10px rgba(52, 152, 219, 0.35);
+    }
+    .panier-order-print:hover {
+        color: #fff;
+        filter: brightness(1.06);
+    }
+    .panier-order-client {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #2d2a2c;
+        margin: 0;
+    }
+    .panier-order-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.75rem;
+        margin-top: 0.35rem;
+        font-size: 0.75rem;
+        color: #7a7a7a;
+    }
+    .panier-order-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .panier-order-meta .fa {
+        color: #ff8c00;
+        font-size: 0.7rem;
+    }
+    .panier-order-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: #666;
+        padding: 0.15rem 0;
+    }
+    .panier-order-info-row strong {
+        color: #2d2a2c;
+        font-weight: 700;
+    }
+    .panier-order-section-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #2d2a2c;
+        margin: 0 0 0.55rem;
+    }
+    .panier-order-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+    .panier-order-link:hover {
+        text-decoration: none;
+        color: inherit;
+    }
+    .panier-order-menu {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .panier-order-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.45rem 0;
+    }
+    .panier-order-menu-item + .panier-order-menu-item {
+        border-top: 1px solid #f5f5f5;
+    }
+    .panier-order-thumb {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 140, 0, 0.35);
+        background: #fff9f3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .panier-order-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .panier-order-thumb .fa {
+        font-size: 1.15rem;
+        color: #ccc;
+    }
+    .panier-order-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .panier-order-item-name {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #2d2a2c;
+        margin: 0;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .panier-order-item-qty {
+        font-size: 0.72rem;
+        color: #9a9a9a;
+        margin: 0.1rem 0 0;
+    }
+    .panier-order-item-price {
+        flex-shrink: 0;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #ff8c00;
+        white-space: nowrap;
+    }
+    .panier-order-more {
+        font-size: 0.72rem;
+        color: #9a9a9a;
+        text-align: center;
+        margin: 0.35rem 0 0;
+        font-style: italic;
+    }
+    .panier-order-total-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #2d2a2c;
+    }
+    .panier-order-total-value {
+        font-size: 1.05rem;
+        color: #ff8c00;
+    }
+    .panier-order-status {
+        display: block;
+        width: 100%;
+        margin-top: 0.85rem;
+        padding: 0.65rem 0.75rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-align: center;
+        border: 1.5px solid;
+        background: #fff;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    .panier-order-link:hover .panier-order-status--wait {
+        background: #fff8f0;
+    }
+    .panier-order-status--wait {
+        border-color: #ff8c00;
+        color: #e67e00;
+    }
+    .panier-order-status--proforma {
+        border-color: #03a9f4;
+        color: #0288d1;
+    }
+    .panier-order-link:hover .panier-order-status--proforma {
+        background: #f0f9ff;
+    }
+    .panier-order-empty {
+        padding: 2.5rem 1rem;
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+    .caisse-pending-list .panier-order-col {
+        margin-bottom: 0.5rem;
+    }
+</style>

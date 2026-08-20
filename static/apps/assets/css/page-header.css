@@ -1,0 +1,152 @@
+:root {
+    /* Aligné sur la boutique ecom (base_ecom / style.css) */
+    --dash-primary: #f97316;
+    --dash-primary-light: #fb923c;
+    --dash-primary-dark: #dc2626;
+    --dash-accent-bg: #fff7ed;
+    --dash-filter-bg: linear-gradient(135deg, #f97316 0%, #ea580c 55%, #dc2626 100%);
+}
+
+.app-page-header {
+    margin-bottom: 1rem;
+    padding: 0.35rem 0 0.5rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.app-page-header__grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+}
+
+.app-page-header__info {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.app-page-header__title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2d2a2c;
+    margin: 0 0 0.35rem;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+}
+
+.app-page-header__breadcrumb .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font-size: 0.82rem;
+    flex-wrap: wrap;
+}
+
+.app-page-header__breadcrumb .breadcrumb-item a {
+    color: var(--dash-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.app-page-header__breadcrumb .breadcrumb-item a:hover {
+    text-decoration: underline;
+}
+
+.app-page-header__breadcrumb .breadcrumb-item.active {
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+.app-page-header__breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    color: #fdba74;
+}
+
+.app-page-header__toolbar {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-left: auto;
+}
+
+.page-header-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    width: 100%;
+    min-height: 2.25rem;
+}
+
+.periode-filter-toolbar {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.4rem;
+}
+
+.badge-periode-resume {
+    background: #fff7ed;
+    color: var(--dash-primary);
+    border: 1px solid #fed7aa;
+    font-weight: 500;
+    font-size: 0.78rem;
+    white-space: normal;
+    text-align: left;
+    max-width: min(100%, 480px);
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    line-height: 1.35;
+}
+
+.page-header-actions .btn-outline-secondary.btn-sm {
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-color: #d8dde3;
+    color: #5a6570;
+    background: #fff;
+}
+
+.page-header-actions .btn-outline-secondary.btn-sm:hover,
+.page-header-actions .btn-outline-secondary.btn-sm:focus {
+    background: #f5f7f9;
+    border-color: #c5ccd4;
+    color: #3d4650;
+}
+
+/* Variante AdminLTE (templates perfect) */
+.app-page-header--perfect {
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+}
+
+.app-page-header--perfect .app-page-header__title {
+    font-size: 1.2rem;
+    color: #06497c;
+}
+
+@media (max-width: 767px) {
+    .app-page-header {
+        padding: 0.75rem 0.85rem;
+    }
+    .app-page-header__grid {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .app-page-header__toolbar {
+        margin-left: 0;
+    }
+    .page-header-actions,
+    .periode-filter-toolbar {
+        justify-content: flex-start;
+    }
+    .badge-periode-resume {
+        max-width: 100%;
+    }
+}

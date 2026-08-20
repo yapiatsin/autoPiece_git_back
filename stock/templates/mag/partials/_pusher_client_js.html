@@ -1,0 +1,21 @@
+{% comment %}Charge Pusher JS et expose window.magPusher (clé publique uniquement).{% endcomment %}
+{% if PUSHER_KEY %}
+<script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+<script>
+(function () {
+    if (typeof Pusher === 'undefined') {
+        console.warn('Pusher JS indisponible');
+        return;
+    }
+    if (window.magPusher) return;
+    Pusher.logToConsole = false;
+    window.magPusher = new Pusher('{{ PUSHER_KEY|escapejs }}', {
+        cluster: '{{ PUSHER_CLUSTER|default:"eu"|escapejs }}'
+    });
+})();
+</script>
+{% else %}
+<script>
+console.warn('Pusher non configuré (PUSHER_KEY manquant)');
+</script>
+{% endif %}

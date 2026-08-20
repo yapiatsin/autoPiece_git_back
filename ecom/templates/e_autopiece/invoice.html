@@ -1,0 +1,107 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+
+{% block title %}{{ print_title }} — Auto-Pièce{% endblock title %}
+{% block body_class %}invoice-3 ecom-invoice-body{% endblock body_class %}
+
+{% block header %}
+<div class="no-print ecom-invoice-screen-chrome">
+{{ block.super }}
+</div>
+{% endblock header %}
+
+{% block footer %}
+<div class="no-print ecom-invoice-screen-chrome">
+{{ block.super }}
+</div>
+{% endblock footer %}
+
+{% block overlays %}
+<div class="no-print ecom-invoice-screen-chrome">
+{{ block.super }}
+</div>
+{% endblock overlays %}
+
+{% block content %}
+<div class="rts-navigation-area-breadcrumb bg_light-1 no-print">
+    <div class="container">
+        <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_account' %}">{% trans "Mon compte" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span class="current">{% trans "Facture" %}</span>
+        </div>
+    </div>
+</div>
+
+<div class="rts-invoice-style-one ecom-invoice-page">
+    <div class="container-2">
+        <div class="row">
+            <div class="col-lg-12">
+                {% include "e_autopiece/partials/_invoice_card_body.html" with invoice_card_id="ecomInvoicePrintArea" %}
+                <div class="buttons-area-invoice ecom-invoice-actions no-print mb--30">
+                    <button type="button" class="rts-btn btn-primary radious-sm" onclick="imprimerFactureEcom()">
+                        {% trans "Imprimer" %}
+                    </button>
+                    <button type="button"
+                            class="rts-btn btn-primary border-only radious-sm"
+                            onclick="enregistrerFacturePdf()">
+                        {% trans "Enregistrer PDF" %}
+                    </button>
+                    <a href="{% url 'ecom_mes_commandes' %}"
+                       class="rts-btn btn-primary border-only radious-sm">
+                        {% trans "Mes commandes" %}
+                    </a>
+                    <p class="ecom-invoice-print-hint">
+                        {% trans "Astuce : dans la boîte d’impression, choisissez « Enregistrer au format PDF » comme destination." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var titreImpression = "{{ print_title|escapejs }}";
+    var nomFichierPdf = "{{ pdf_filename|escapejs }}";
+
+    function preparerImpression() {
+        if (titreImpression) document.title = titreImpression;
+        if (nomFichierPdf) document.documentElement.setAttribute('data-pdf-filename', nomFichierPdf);
+        document.body.classList.add('ecom-invoice-printing');
+        document.documentElement.classList.add('ecom-invoice-printing');
+    }
+
+    function nettoyerImpression() {
+        document.body.classList.remove('ecom-invoice-printing');
+        document.documentElement.classList.remove('ecom-invoice-printing');
+    }
+
+    function lancerImpression() {
+        preparerImpression();
+        var done = false;
+        function fin() {
+            if (done) return;
+            done = true;
+            nettoyerImpression();
+            window.removeEventListener('afterprint', fin);
+        }
+        window.addEventListener('afterprint', fin);
+        // Fallback navigateurs sans afterprint fiable
+        setTimeout(fin, 1500);
+        window.print();
+    }
+
+    window.imprimerFactureEcom = lancerImpression;
+    window.enregistrerFacturePdf = lancerImpression;
+
+    {% if auto_print %}
+    window.addEventListener('load', function () {
+        setTimeout(lancerImpression, 350);
+    });
+    {% endif %}
+})();
+</script>
+{% endblock extra_js %}

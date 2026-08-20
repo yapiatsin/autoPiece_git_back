@@ -1,0 +1,629 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% block title %}Dashboard AUTO-PIECE{% endblock title %}
+{% block page_title %}Tableau de bords{% endblock page_title %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href=""><i class="fa fa-chart-pie"></i> Tableau de bord</a></li>
+<li class="breadcrumb-item active">{% block page %}Tableau de bord{% endblock page %}</li>
+{% endblock breadcrumb %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/dashboard.css' %}">
+{% endblock extra_head %}
+
+{% block main_content %}
+{% include "mag/partials/_dashboard_kpi_styles.html" %}
+
+<div class="dashboard-page">
+    <div class="modal fade" id="dashboardFilterModal" tabindex="-1" role="dialog" aria-labelledby="dashboardFilterModalLabel">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="dashboardFilterModalLabel">FILTRE</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span>&times;</span></button>
+                </div>
+                <form method="get" id="dashboard-filter-form">
+                    <div class="modal-body">
+                        <label class="font-weight-bold text-muted small text-uppercase">Période</label>
+                        <div class="row mb-3">
+                            <div class="col-6 col-md-4 mb-2">
+                                <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'aujourdhui' or periode_active == 'jour' %}active{% endif %}">
+                                    <input type="radio" name="periode" value="aujourdhui" class="d-none" {% if periode_active == 'aujourdhui' or periode_active == 'jour' %}checked{% endif %}>
+                                    <small>Aujourd'hui</small>
+                                </label>
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'semaine' %}active{% endif %}">
+                                    <input type="radio" name="periode" value="semaine" class="d-none" {% if periode_active == 'semaine' %}checked{% endif %}>
+                                    <small>Cette semaine</small>
+                                </label>
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'mois' %}active{% endif %}">
+                                    <input type="radio" name="periode" value="mois" class="d-none" {% if periode_active == 'mois' %}checked{% endif %}>
+                                    <small>Ce mois</small>
+                                </label>
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'annee' %}active{% endif %}">
+                                    <input type="radio" name="periode" value="annee" class="d-none" {% if periode_active == 'annee' %}checked{% endif %}>
+                                    <small>Cette année</small>
+                                </label>
+                            </div>
+                            <div class="col-6 col-md-4 mb-2">
+                                <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'personnalise' %}active{% endif %}">
+                                    <input type="radio" name="periode" value="personnalise" class="d-none" id="periodePersoRadio" {% if periode_active == 'personnalise' %}checked{% endif %}>
+                                    <small>Personnalisé</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="row mb-3 {% if periode_active == 'personnalise' %}show{% endif %}" id="filtrePersonnaliseFields-dashboardFilterModal">
+                            <div class="col-6">
+                                <label>Date début</label>
+                                {{ form.date_debut }}
+                            </div>
+                            <div class="col-6">
+                                <label>Date fin</label>
+                                {{ form.date_fin }}
+                            </div>
+                        </div>
+                        {% if can_choose_localite %}
+                        <div class="form-group">
+                            <label>Localité</label>
+                            {{ form.localite }}
+                        </div>
+                        {% endif %}
+                        <div class="form-group">
+                            <label>Catégorie</label>
+                            {{ form.categorie }}
+                        </div>
+                        {% if is_admin_like %}
+                        <div class="form-group">
+                            <label>Caissier(ère)</label>
+                            {{ form.caissier }}
+                        </div>
+                        {% endif %}
+                        <div class="form-group mb-0">
+                            <label>Moyen de paiement</label>
+                            {{ form.moyen_paiement }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{% url 'tbord' %}" class="btn btn-outline-secondary">Réinitialiser</a>
+                        <button type="submit" class="btn btn-success">Appliquer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% include "mag/partials/_kpi_row_stock.html" %}
+
+    <div class="container-fluid px-0">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+        (function () {
+            if (typeof Chart === 'undefined') return;
+            var legendLabels = Chart.defaults.plugins.legend.labels;
+            legendLabels.usePointStyle = true;
+            legendLabels.pointStyle = 'circle';
+            legendLabels.boxWidth = 10;
+            legendLabels.boxHeight = 10;
+            if ('pointStyleWidth' in legendLabels) {
+                legendLabels.pointStyleWidth = 10;
+            }
+            window.dashPaletteBorder = [
+                '#f97316',
+                '#facc15',
+                '#ec4899',
+                '#38bdf8',
+                '#a3e635',
+                '#fb7185',
+                '#a78bfa',
+                '#22d3ee',
+                '#f43f5e',
+                '#4ade80',
+                '#e879f9',
+                '#fbbf24',
+            ];
+            window.dashOutlinedDataset = function (count) {
+                var colors = [];
+                var palette = window.dashPaletteBorder;
+                for (var i = 0; i < count; i++) {
+                    colors.push(palette[i % palette.length]);
+                }
+                return {
+                    backgroundColor: colors.map(function (c) {
+                        return dashColorWithAlpha(c, 0.45);
+                    }),
+                    borderColor: colors,
+                    borderWidth: 2,
+                    hoverBackgroundColor: colors.map(function (c) {
+                        return dashColorWithAlpha(c, 0.7);
+                    }),
+                };
+            };
+            window.dashColorWithAlpha = function (color, alpha) {
+                if (color.indexOf('rgba') === 0) {
+                    return color.replace(/,\s*[\d.]+\)$/, ', ' + alpha + ')');
+                }
+                if (color.indexOf('rgb(') === 0) {
+                    return color.replace('rgb(', 'rgba(').replace(')', ', ' + alpha + ')');
+                }
+                var hex = color.replace('#', '');
+                if (hex.length === 3) {
+                    hex = hex.split('').map(function (ch) { return ch + ch; }).join('');
+                }
+                var r = parseInt(hex.slice(0, 2), 16);
+                var g = parseInt(hex.slice(2, 4), 16);
+                var b = parseInt(hex.slice(4, 6), 16);
+                return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
+            };
+            window.dashLegendBorderColors = function (chart) {
+                var data = chart.data;
+                var dataset = data.datasets[0];
+                if (!data.labels || !data.labels.length || !dataset) {
+                    return [];
+                }
+                var borders = dataset.borderColor;
+                return data.labels.map(function (label, i) {
+                    var hidden = false;
+                    if (typeof chart.getDataVisibility === 'function') {
+                        hidden = !chart.getDataVisibility(i);
+                    } else {
+                        var meta = chart.getDatasetMeta(0);
+                        if (meta && meta.data && meta.data[i]) {
+                            hidden = meta.data[i].hidden === true;
+                        }
+                    }
+                    return {
+                        text: String(label),
+                        fillStyle: borders[i],
+                        strokeStyle: borders[i],
+                        lineWidth: 2,
+                        hidden: hidden,
+                        index: i,
+                        datasetIndex: 0
+                    };
+                });
+            };
+            window.dashHasData = function (arr) {
+                return arr && arr.some(function (v) { return Number(v) > 0; });
+            };
+            window.dashShowChartEmpty = function (canvasId, emptyId) {
+                var canvas = document.getElementById(canvasId);
+                var empty = document.getElementById(emptyId);
+                if (canvas && canvas.parentNode) {
+                    canvas.style.display = 'none';
+                }
+                if (empty) {
+                    empty.hidden = false;
+                }
+            };
+            window.dashRadarHasData = function (datasets) {
+                if (!datasets || !datasets.length) return false;
+                return datasets.some(function (ds) {
+                    return ds.data && ds.data.some(function (v) { return Number(v) > 0; });
+                });
+            };
+            window.dashLineChartOptions = function (overrides) {
+                var base = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { left: 0, right: 2, top: 0, bottom: 0 } },
+                    animation: { duration: 800, easing: 'easeInOutQuart' },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'rgba(18, 71, 114, 0.84)', maxTicksLimit: 7, padding: 4 },
+                            grid: { color: 'rgba(163, 206, 241, 0.28)' }
+                        },
+                        x: {
+                            ticks: { color: 'rgba(18, 71, 114, 0.84)', maxRotation: 0, autoSkip: true, maxTicksLimit: 15, padding: 2 },
+                            grid: { color: 'rgba(163, 206, 241, 0.12)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                color: 'rgba(54, 53, 53, 0.66)',
+                                boxWidth: 8,
+                                padding: 6
+                            }
+                        }
+                    }
+                };
+                if (!overrides) return base;
+                return Object.assign({}, base, overrides);
+            };
+        })();
+        </script>
+
+        <div class="row clearfix dashboard-rows-equal dashboard-section">
+            <div class="col-lg-3 col-md-12">
+                <div class="card dashboard-card dashboard-card--list">
+                    <div class="header"><h2>Etat des commandes</h2></div>
+                    <div class="body dash-panel-fill">
+                        <div class="dash-list-scroll dash-list-stretch">
+                            <div class="dash-list-item">
+                                <span class="dash-list-icon dash-cmd-icon--wait"><i class="icon-clock"></i></span>
+                                <span class="font-weight-bold">En attente</span>
+                                <span class="badge badge-outline-attente">{{ cmd_attente }}</span>
+                            </div>
+                            <div class="dash-list-item">
+                                <span class="dash-list-icon dash-cmd-icon--paid"><i class="icon-wallet"></i></span>
+                                <span class="font-weight-bold">Payée</span>
+                                <span class="badge badge-success">{{ cmd_payee }}</span>
+                            </div>
+                            <div class="dash-list-item">
+                                <span class="dash-list-icon dash-cmd-icon--ship"><i class="icon-basket"></i></span>
+                                <span class="font-weight-bold">À livrer</span>
+                                <span class="badge badge-outline-livrer">{{ cmd_a_livrer }}</span>
+                            </div>
+                            <div class="dash-list-item">
+                                <span class="dash-list-icon dash-cmd-icon--done"><i class="fa fa-truck"></i></span>
+                                <span class="font-weight-bold">Livrée</span>
+                                <span class="badge badge-outline-info">{{ cmd_livrer }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-12">
+                <div class="card dashboard-card dashboard-card--chart">
+                    <div class="header"><h2>Evolution des ventes en semaine</h2></div>
+                    <div class="body dash-panel-fill">
+                        <div class="chart dash-chart-wrap">
+                            <canvas id="weekChart"></canvas>
+                            <div class="dash-empty-state" id="weekChartEmpty" hidden>
+                                <i class="fa fa-area-chart"></i>
+                                <span>Aucune vente enregistrée sur la période.</span>
+                            </div>
+                        </div>
+                        <script>
+                            const ventesWeek = {{ datasets_json|safe }};
+                            const labelWeek = {{ jours_semaine|safe }};
+                            if (ventesWeek && ventesWeek.length > 0 && labelWeek && labelWeek.length > 0) {
+                                const ctxWeek = document.getElementById('weekChart').getContext('2d');
+                                const radarColors = [
+                                    { bg: 'rgba(249, 115, 22, 0.28)', border: '#f97316', point: '#f97316' },
+                                    { bg: 'rgba(250, 204, 21, 0.28)', border: '#facc15', point: '#facc15' },
+                                    { bg: 'rgba(236, 72, 153, 0.28)', border: '#ec4899', point: '#ec4899' },
+                                    { bg: 'rgba(56, 189, 248, 0.28)', border: '#38bdf8', point: '#38bdf8' },
+                                    { bg: 'rgba(163, 230, 53, 0.28)', border: '#a3e635', point: '#a3e635' },
+                                    { bg: 'rgba(251, 113, 133, 0.28)', border: '#fb7185', point: '#fb7185' },
+                                    { bg: 'rgba(167, 139, 250, 0.28)', border: '#a78bfa', point: '#a78bfa' },
+                                    { bg: 'rgba(34, 211, 238, 0.28)', border: '#22d3ee', point: '#22d3ee' },
+                                ];
+                                new Chart(ctxWeek, {
+                                    type: 'radar',
+                                    data: {
+                                        labels: labelWeek,
+                                        datasets: ventesWeek.map(function (dataset, index) {
+                                            var c = radarColors[index % radarColors.length];
+                                            return {
+                                                label: dataset.label,
+                                                data: dataset.data,
+                                                fill: true,
+                                                backgroundColor: c.bg,
+                                                borderColor: c.border,
+                                                pointBackgroundColor: c.point,
+                                                borderWidth: 2,
+                                            };
+                                        })
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        layout: { padding: 4 },
+                                        plugins: {
+                                            legend: {
+                                                display: ventesWeek.length > 1,
+                                                position: 'right',
+                                                labels: { usePointStyle: true, pointStyle: 'circle', padding: 8, boxWidth: 8 }
+                                            }
+                                        },
+                                        scales: {
+                                            r: {
+                                                beginAtZero: true,
+                                                grid: { color: 'rgba(163, 206, 241, 0.35)' },
+                                                angleLines: { color: 'rgba(163, 206, 241, 0.35)' },
+                                                pointLabels: { color: 'rgba(54, 53, 53, 0.7)', font: { size: 10 } },
+                                                ticks: { display: false }
+                                            }
+                                        },
+                                        elements: { line: { borderWidth: 2 } }
+                                    }
+                                });
+                            } else {
+                                dashShowChartEmpty('weekChart', 'weekChartEmpty');
+                            }
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-12">
+                <div class="card dashboard-card dashboard-card--chart-wide">
+                    <div class="header">
+                        <h2>Évolution des ventes {% if chart_mode == 'daily' %}par jour{% else %}par mois{% endif %}</h2>
+                    </div>
+                    <div class="body dash-panel-fill">
+                        <div class="chart dash-chart-wrap dash-chart-wrap--wide">
+                            <canvas id="annualChart"></canvas>
+                        </div>
+                        <script>
+                            let datatotalcmde = {{ valeur_mensuelle_data|safe }};
+                            const chartLabelsAnnual = {{ chart_labels|safe }};
+                            if (chartLabelsAnnual && chartLabelsAnnual.length > 0) {
+                                const ctxAnnual = document.getElementById('annualChart').getContext('2d');
+                                const gradientAnnual = ctxAnnual.createLinearGradient(0, 0, 0, 280);
+                                gradientAnnual.addColorStop(0, 'rgba(236, 72, 153, 0.45)');
+                                gradientAnnual.addColorStop(1, 'rgba(236, 72, 153, 0.02)');
+                                new Chart(ctxAnnual, {
+                                    type: 'line',
+                                    data: {
+                                        labels: chartLabelsAnnual,
+                                        datasets: [{
+                                            label: 'Valeur des ventes',
+                                            data: datatotalcmde,
+                                            borderWidth: 2,
+                                            borderColor: 'rgba(236, 72, 153, 0.95)',
+                                            backgroundColor: gradientAnnual,
+                                            pointBackgroundColor: 'rgba(236, 72, 153, 1)',
+                                            pointBorderColor: '#fff',
+                                            tension: 0.35,
+                                            fill: true,
+                                            pointRadius: chartLabelsAnnual.length > 20 ? 2 : 3,
+                                            pointHoverRadius: 5,
+                                        }]
+                                    },
+                                    options: dashLineChartOptions()
+                                });
+                            }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row clearfix dashboard-rows-equal dashboard-section">
+            <div class="col-lg-3 col-md-12">
+                <div class="card dashboard-card dashboard-card--list">
+                    <div class="header"><h2>Pièces plus vendues</h2></div>
+                    <div class="body dash-panel-fill">
+                        <div class="dash-list-scroll dash-list-trophy">
+                            {% for t in top_vent_piece %}
+                            <div class="dash-list-item">
+                                <span class="dash-list-icon"><i class="fa fa-trophy"></i></span>
+                                <div class="flex-grow-1 min-width-0">
+                                    <div class="font-weight-bold text-truncate">{{ t.piece__designation }}</div>
+                                    <small class="text-muted">Quantité {{ t.quantite_vendue }}</small>
+                                </div>
+                                <span class="badge badge-primary">{{ t.cout_total|floatformat:0 }} frs</span>
+                            </div>
+                            {% empty %}
+                            <div class="dash-list-empty">
+                                <i class="fa fa-shopping-bag"></i>
+                                <span>Aucune vente sur la période.</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-12">
+                <div class="card dashboard-card dashboard-card--chart">
+                    <div class="header"><h2>Vente par catégorie</h2></div>
+                    <div class="body dash-panel-fill">
+                        <div class="chart dash-chart-wrap">
+                            <canvas id="categoryChart"></canvas>
+                            <div class="dash-empty-state" id="categoryChartEmpty" hidden>
+                                <i class="fa fa-pie-chart"></i>
+                                <span>Aucune vente par catégorie sur la période.</span>
+                            </div>
+                        </div>
+                        <script>
+                            const venteParCat = {{ vente_par_categorie_json|safe }};
+                            const venteParCatTotal = venteParCat.reduce(function (s, v) { return s + v.value; }, 0);
+                            if (venteParCat.length > 0 && venteParCatTotal > 0) {
+                                const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+                                const catOutlined = dashOutlinedDataset(venteParCat.length);
+                                new Chart(ctxCategory, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: venteParCat.map(function (v) { return v.label; }),
+                                        datasets: [{
+                                            data: venteParCat.map(function (v) { return v.value; }),
+                                            backgroundColor: catOutlined.backgroundColor,
+                                            borderColor: catOutlined.borderColor,
+                                            borderWidth: 3,
+                                            borderAlign: 'inner',
+                                            hoverBackgroundColor: catOutlined.hoverBackgroundColor,
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        layout: { padding: 2 },
+                                        cutout: '55%',
+                                        plugins: {
+                                            legend: {
+                                                display: true,
+                                                position: 'right',
+                                                labels: {
+                                                    usePointStyle: true,
+                                                    pointStyle: 'circle',
+                                                    color: 'rgba(54, 53, 53, 0.75)',
+                                                    padding: 10,
+                                                    boxWidth: 8,
+                                                    generateLabels: dashLegendBorderColors
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            } else {
+                                dashShowChartEmpty('categoryChart', 'categoryChartEmpty');
+                            }
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-12">
+                <div class="card dashboard-card dashboard-card--chart-wide">
+                    <div class="header">
+                        <h2>Quantité de pièces vendues {% if chart_mode == 'daily' %}par jour{% else %}par mois{% endif %}</h2>
+                    </div>
+                    <div class="body dash-panel-fill">
+                        <div class="chart dash-chart-wrap dash-chart-wrap--wide">
+                            <canvas id="qteAnnualChart"></canvas>
+                        </div>
+                        <script>
+                            let datanbpieces = {{ nb_piece_data|safe }};
+                            const chartLabelsQte = {{ chart_labels|safe }};
+                            if (chartLabelsQte && chartLabelsQte.length > 0) {
+                                const ctxQteAnnual = document.getElementById('qteAnnualChart').getContext('2d');
+                                const gradientQteAnnual = ctxQteAnnual.createLinearGradient(0, 0, 0, 280);
+                                gradientQteAnnual.addColorStop(0, 'rgba(52, 152, 219, 0.5)');
+                                gradientQteAnnual.addColorStop(1, 'rgba(52, 152, 219, 0.02)');
+                                new Chart(ctxQteAnnual, {
+                                    type: 'line',
+                                    data: {
+                                        labels: chartLabelsQte,
+                                        datasets: [{
+                                            label: 'Nombre de pièces vendues',
+                                            data: datanbpieces,
+                                            borderWidth: 2,
+                                            borderColor: 'rgba(52, 152, 219, 0.9)',
+                                            backgroundColor: gradientQteAnnual,
+                                            tension: 0.35,
+                                            fill: true,
+                                            pointRadius: chartLabelsQte.length > 20 ? 2 : 3,
+                                        }]
+                                    },
+                                    options: dashLineChartOptions()
+                                });
+                            }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row clearfix dashboard-rows-equal dashboard-section">
+            <div class="col-lg-4 col-md-12">
+                <div class="card dashboard-card dashboard-card--list">
+                    <div class="header"><h2>Pièces en rupture / sous seuil</h2></div>
+                    <div class="body dash-panel-fill">
+                        <div class="dash-list-scroll dash-list-alert{% if liste_piece_alerte|length > 5 %} dash-list-alert-scroll{% endif %}">
+                            {% for piece in liste_piece_alerte %}
+                            <div class="dash-list-item">
+                                <span class="dash-list-icon"><i class="fa fa-exclamation-triangle"></i></span>
+                                <div class="flex-grow-1 min-width-0">
+                                    <div class="font-weight-bold text-truncate">{{ piece.designation }}</div>
+                                    <small class="text-muted">{{ piece.numero_piece }}</small>
+                                </div>
+                                <span class="badge badge-danger">{{ piece.quantite_disponible|default:0 }}</span>
+                                <span class="badge badge-secondary">Seuil {% if piece.seuil_affiche %}{{ piece.seuil_affiche }}{% else %}{{ piece.seuil }}{% endif %}</span>
+                            </div>
+                            {% empty %}
+                            <div class="dash-list-empty">
+                                <i class="fa fa-check-circle"></i>
+                                <span>Aucune rupture détectée.</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-12">
+                <div class="card dashboard-card dashboard-card--list">
+                    <div class="header"><h2>Tickets et Proformas</h2></div>
+                    <div class="body dash-panel-fill">
+                        <div class="dash-list-scroll dash-list-stretch">
+                            <div class="dash-list-item">
+                                <span class="dash-list-icon dash-ticket-icon--receipt"><i class="icon-printer"></i></span>
+                                <span class="font-weight-bold">Reçu</span>
+                                <span class="badge badge-primary">{{ total_tickets_used }}</span>
+                            </div>
+                            <div class="dash-list-item">
+                                <span class="dash-list-icon dash-ticket-icon--pending"><i class="icon-doc"></i></span>
+                                <span class="font-weight-bold">Proforma en attente</span>
+                                <span class="badge badge-outline-proforma">{{ proforma_genere }}</span>
+                            </div>
+                            <div class="dash-list-item">
+                                <span class="dash-list-icon dash-ticket-icon--valid"><i class="icon-doc"></i></span>
+                                <span class="font-weight-bold">Proforma validée</span>
+                                <span class="badge badge-success">{{ proforma_valide }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-12">
+                <div class="card dashboard-card dashboard-card--chart">
+                    <div class="header"><h2>Quantité par catégorie en stock</h2></div>
+                    <div class="body dash-panel-fill">
+                        <div class="chart dash-chart-wrap">
+                            <canvas id="stockCategoryChart"></canvas>
+                            <div class="dash-empty-state" id="stockCategoryChartEmpty" hidden>
+                                <i class="fa fa-cubes"></i>
+                                <span>Aucune donnée de stock par catégorie.</span>
+                            </div>
+                        </div>
+                        <script>
+                            const qteStockCat = {{ qte_stock_cat_json|safe }};
+                            if (qteStockCat.length > 0) {
+                                const ctxStockCat = document.getElementById('stockCategoryChart').getContext('2d');
+                                const stockOutlined = dashOutlinedDataset(qteStockCat.length);
+                                new Chart(ctxStockCat, {
+                                    type: 'bar',
+                                    data: {
+                                        labels: qteStockCat.map(function (q) { return q.label; }),
+                                        datasets: [{
+                                            label: 'Quantité en stock',
+                                            data: qteStockCat.map(function (q) { return q.value; }),
+                                            backgroundColor: stockOutlined.backgroundColor,
+                                            borderColor: stockOutlined.borderColor,
+                                            borderWidth: 2,
+                                            borderRadius: 6,
+                                            hoverBackgroundColor: stockOutlined.hoverBackgroundColor,
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        layout: { padding: { left: 0, right: 0, top: 0, bottom: 0 } },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                ticks: { color: 'rgba(18, 71, 114, 0.84)', maxTicksLimit: 7, padding: 4 },
+                                                grid: { color: 'rgba(163, 206, 241, 0.28)' }
+                                            },
+                                            x: {
+                                                ticks: { color: 'rgba(18, 71, 114, 0.84)' },
+                                                grid: { display: false }
+                                            }
+                                        },
+                                        plugins: { legend: { display: false } }
+                                    }
+                                });
+                            } else {
+                                dashShowChartEmpty('stockCategoryChart', 'stockCategoryChartEmpty');
+                            }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

@@ -1,0 +1,72 @@
+{% load static i18n %}
+<div class="category-sub-menu card-number-show ecom-header-mini-cart" onclick="event.stopPropagation();">
+    <h5 class="shopping-cart-number">
+        {% blocktrans with count=ecom_cart_count|default:0 %}Panier ({{ count }}){% endblocktrans %}
+    </h5>
+    {% if ecom_cart_items %}
+        {% for row in ecom_cart_items %}
+        <div class="cart-item-1{% if forloop.first %} border-top{% endif %}">
+            <div class="img-name">
+                <div class="thumbanil">
+                    {% if row.piece.image %}
+                    <img src="{{ row.piece.image.url }}" alt="{{ row.piece.designation }}">
+                    {% else %}
+                    <div class="ecom-piece-placeholder" aria-hidden="true"><i class="fa-solid fa-gears"></i></div>
+                    {% endif %}
+                </div>
+                <div class="details">
+                    <a href="{{ row.piece.get_absolute_url }}">
+                        <h5 class="title">{{ row.piece.designation }}</h5>
+                    </a>
+                    <div class="number">
+                        {{ row.quantite }} <i class="fa-solid fa-x"></i>
+                        <span>{{ row.prix_unitaire|floatformat:0 }} FCFA</span>
+                    </div>
+                </div>
+            </div>
+            <form method="post" action="{% url 'ecom_cart_remove' row.id %}" class="ecom-mini-cart-remove m-0"
+                onclick="event.stopPropagation();">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ ecom_cart_next_url }}">
+                <button type="submit" class="close-c1 border-0 bg-transparent p-0" title="{% trans 'Retirer' %}">
+                    <i class="fa-solid fa-x"></i>
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+        <div class="sub-total-cart-balance">
+            <div class="bottom-content-deals mt--10">
+                <div class="top">
+                    <span>{% trans "Sous-total :" %}</span>
+                    <span class="number-c">{{ ecom_cart_subtotal|floatformat:0 }} FCFA</span>
+                </div>
+                {% if ecom_shipping_remaining > 0 %}
+                <div class="single-progress-area-incard">
+                    <div class="progress">
+                        <div class="progress-bar wow fadeInLeft" role="progressbar"
+                            style="width: {{ ecom_shipping_progress }}%"
+                            aria-valuenow="{{ ecom_shipping_progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <p>
+                    {% trans "Encore" %}
+                    <span>{{ ecom_shipping_remaining|floatformat:0 }} FCFA</span>
+                    {% trans "pour la" %}
+                    <span>{% trans "livraison gratuite" %}</span>
+                </p>
+                {% endif %}
+            </div>
+            <div class="button-wrapper d-flex align-items-center justify-content-between">
+                <a href="{% url 'ecom_cart' %}" class="rts-btn btn-primary">{% trans "Voir le panier" %}</a>
+                <a href="{% url 'ecom_checkout' %}" class="rts-btn btn-primary border-only">{% trans "Commander" %}</a>
+            </div>
+        </div>
+    {% else %}
+        <p class="px-3 py-4 text-muted mb-0">{% trans "Votre panier est vide." %}</p>
+        <div class="sub-total-cart-balance">
+            <div class="button-wrapper d-flex align-items-center justify-content-between px-3 pb-3">
+                <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary w-100">{% trans "Voir la boutique" %}</a>
+            </div>
+        </div>
+    {% endif %}
+</div>

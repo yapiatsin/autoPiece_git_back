@@ -1,0 +1,187 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+
+msgid "About"
+msgstr "A propos"
+
+msgid "About Company"
+msgstr "A propos de l'entreprise"
+
+msgid "About Us"
+msgstr "A propos"
+
+msgid "Account"
+msgstr "Compte"
+
+msgid "Biscuits & Snacks"
+msgstr "Biscuits & En-cas"
+
+msgid "Blog"
+msgstr "Blog"
+
+msgid "Breads & Bakery"
+msgstr "Pains & Boulangerie"
+
+msgid "Breakfast & Dairy"
+msgstr "Petit-dejeuner & Laitages"
+
+msgid "Cancellation & Returns"
+msgstr "Annulation & Retours"
+
+msgid "Careers"
+msgstr "Carrieres"
+
+msgid "Categories"
+msgstr "Categories"
+
+msgid "Category"
+msgstr "Categorie"
+
+msgid "CheckOut"
+msgstr "Commander"
+
+msgid "Chips & Snacks"
+msgstr "Chips & En-cas"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Contact Us"
+msgstr "Nous contacter"
+
+msgid "Delivery Information"
+msgstr "Informations de livraison"
+
+msgid "Download App"
+msgstr "Telecharger l'application"
+
+msgid "FAQ"
+msgstr "FAQ"
+
+msgid "Follow Us:"
+msgstr "Suivez-nous :"
+
+msgid "Free Shipping"
+msgstr "Livraison gratuite"
+
+msgid "Frozen Foods"
+msgstr "Produits surgeles"
+
+msgid "Get 30% Discount Now"
+msgstr "Obtenez 30% de reduction"
+
+msgid "Grocery & Staples"
+msgstr "Epicerie & Essentiels"
+
+msgid "Home"
+msgstr "Accueil"
+
+msgid "Information"
+msgstr "Informations"
+
+msgid "Meats & Seafood"
+msgstr "Viandes & Fruits de mer"
+
+msgid "Medical Healthcare"
+msgstr "Sante & Medical"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "My Account"
+msgstr "Mon compte"
+
+msgid "My Cart"
+msgstr "Mon panier"
+
+msgid "Need help? Call Us:"
+msgstr "Besoin d'aide ? Appelez-nous :"
+
+msgid "Nest Stories"
+msgstr "Actualites"
+
+msgid "Other Items"
+msgstr "Autres articles"
+
+msgid "Our Newsletter"
+msgstr "Notre newsletter"
+
+msgid "Our Stores"
+msgstr "Nos magasins"
+
+msgid "Pages"
+msgstr "Pages"
+
+msgid "Payment Accepts:"
+msgstr "Paiements acceptes :"
+
+msgid "Payments"
+msgstr "Paiements"
+
+msgid "Privacy Policy"
+msgstr "Politique de confidentialite"
+
+msgid "Report Infringement"
+msgstr "Signaler un abus"
+
+msgid "Sale"
+msgstr "Promo"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Search for products, categories or brands"
+msgstr "Rechercher des produits, categories ou marques"
+
+msgid "Search..."
+msgstr "Rechercher..."
+
+msgid "Service Close"
+msgstr "Ferme"
+
+msgid "Shipping"
+msgstr "Livraison"
+
+msgid "Shop"
+msgstr "Boutique"
+
+msgid "Shop Categories"
+msgstr "Categories de la boutique"
+
+msgid "Sign In"
+msgstr "Se connecter"
+
+msgid "Sign Up"
+msgstr "S'inscrire"
+
+msgid "Sub Total:"
+msgstr "Sous-total :"
+
+msgid "Subscribe"
+msgstr "S'abonner"
+
+msgid "Support Center"
+msgstr "Centre d'assistance"
+
+msgid "Terms & Conditions"
+msgstr "Conditions generales"
+
+msgid "Track Order"
+msgstr "Suivre la commande"
+
+msgid "Trending Products"
+msgstr "Produits tendance"
+
+msgid "Useful Links"
+msgstr "Liens utiles"
+
+msgid "Vendors"
+msgstr "Vendeurs"
+
+msgid "View Cart"
+msgstr "Voir le panier"
+
+msgid "Wishlist"
+msgstr "Favoris"

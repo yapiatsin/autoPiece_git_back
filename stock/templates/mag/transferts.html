@@ -1,0 +1,492 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% block title %}Demandes de transfert{% endblock %}
+{% block page_title %}Transferts inter-localités{% endblock %}
+{% block page %}Demandes entre agences{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/transferts.css' %}">
+{% endblock extra_head %}
+
+{% block page_action_buttons %}
+    {% if is_chef_agence and localite_user %}
+    <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#modalNouvelleDemande">
+        <i class="fa fa-plus"></i> Nouvelle demande
+    </button>
+    {% endif %}
+{% endblock page_action_buttons %}
+
+{% block main_content %}
+    {% include "mag/partials/_periode_filter_modal.html" %}
+{% load custom_filters %}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+        <h5 class="mb-0">Demandes de transfert</h5>
+    </div>
+    <div class="card-body">
+        <div class="mag-table-shell" x-data="magTableFilter()">
+            {% include "mag/partials/_alpine_table_toolbar.html" %}
+            <div class="table-responsive">
+                <table class="table table-hover mag-data-table mb-0" id="table-demandes">
+                <thead>
+                    <tr>
+                        <th>N° demande</th>
+                        <th>Demandeur → Donneur</th>
+                        <th>Lignes</th>
+                        <th>Statut</th>
+                        <th>Bon donneur</th>
+                        <th>Bon livraison</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in demandes %}
+                        <tr data-demande-id="{{ d.pk }}"
+                            data-statut="{{ d.statut }}"
+                            data-local-donneur="{{ d.local_donneur_id }}"
+                            data-local-demandeur="{{ d.local_demandeur_id }}"
+                            data-numero="{{ d.numero_demande }}"
+                            data-bon-donneur="{{ d.numero_bon_donneur|default:'' }}">
+                            <td><strong>{{ d.numero_demande }}</strong></td>
+                            <td>{{ d.local_demandeur.nom }} → {{ d.local_donneur.nom }}</td>
+                            <td>{{ d.nb_lignes }} pièce(s)</td>
+                            <td><span class="badge badge-statut-{{ d|statut_demande_slug:request.user }}">{{ d|statut_demande_affichage:request.user }}</span></td>
+                            <td>
+                                {% if d.numero_bon_donneur %}<code>{{ d.numero_bon_donneur }}</code>{% else %}<span class="text-muted">—</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if d.bon_livraison %}
+                                    <a href="{% url 'imprimer_bon_livraison' d.bon_livraison.pk %}?print=1" target="_blank" class="btn btn-sm btn-outline-secondary" title="Bon de livraison">
+                                        <i class="fa fa-truck"></i> {{ d.bon_livraison.numero_bon_livraison }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ d.date_demande|date:"d/m/Y H:i" }}</td>
+                            <td class="text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline-info btn-detail-demande" data-id="{{ d.pk }}" title="Détail">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <a href="{% url 'imprimer_demande_transfert' d.pk %}?print=1" target="_blank" class="btn btn-sm btn-outline-dark" title="Imprimer">
+                                    <i class="fa fa-print"></i>
+                                </a>
+                                {% if d.statut == 'en_attente' and localite_user and d.local_demandeur_id == localite_user.pk %}
+                                <form method="post" action="{% url 'annuler_demande_demandeur' d.pk %}" class="d-inline" onsubmit="return confirm('Annuler cette demande ?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-warning">Annuler</button>
+                                </form>
+                                {% endif %}
+                                {% if d.statut == 'en_attente' and localite_user and d.local_donneur_id == localite_user.pk %}
+                                <button type="button" class="btn btn-sm btn-success btn-valider-donneur"
+                                    data-id="{{ d.pk }}" data-numero="{{ d.numero_demande }}">Valider</button>
+                                <form method="post" action="{% url 'annuler_demande_donneur' d.pk %}" class="d-inline" onsubmit="return confirm('Refuser cette demande ?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger">Refuser</button>
+                                </form>
+                                {% endif %}
+                                {% if d.statut == 'validee' and localite_user and d.local_demandeur_id == localite_user.pk and d.bon_livraison and d.bon_livraison.statut == 'livre' %}
+                                <button type="button" class="btn btn-sm btn-primary btn-recevoir-demande"
+                                    data-id="{{ d.pk }}" data-numero="{{ d.numero_demande }}">Reçu</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr class="mag-table-skip-filter">
+                            <td colspan="8" class="text-center text-muted py-4">Aucune demande sur la période.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+</div>
+
+{% if is_chef_agence and localite_user %}
+<div class="modal fade" id="modalNouvelleDemande" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title mb-0"><i class="fa fa-paper-plane mr-1"></i> Nouvelle demande de transfert</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span>&times;</span></button>
+            </div>
+            <form method="post" action="{% url 'creer_demande_transfert' %}" id="form-nouvelle-demande">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="transfert-form-doc">
+                        <table class="detail-header-bar" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td width="55%">
+                                    <div class="detail-brand-name">P&amp;B AUTO-PIECE</div>
+                                    <div class="detail-brand-sub">Transfert inter-agences — Nouvelle demande</div>
+                                </td>
+                                <td width="45%" class="detail-header-meta">
+                                    Votre agence<br>
+                                    <strong>{{ localite_user.nom }}</strong>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div class="detail-body-pad">
+                            <h1 class="detail-doc-title">NOUVELLE DEMANDE DE TRANSFERT</h1>
+
+                            <div class="form-notice-box">
+                                Le stock ne bouge qu'après validation du donneur et confirmation de réception avec le bon de commande.
+                            </div>
+
+                            <table class="form-fields-grid" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td>
+                                        <label>Agence donneuse <span class="text-danger">*</span></label>
+                                        <select name="local_donneur" class="form-control" required>
+                                            <option value="">— Choisir —</option>
+                                            {% for loc in localites_dest %}
+                                            <option value="{{ loc.pk }}">{{ loc.nom }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <label>Motif</label>
+                                        <input type="text" name="motif" class="form-control" placeholder="Réapprovisionnement…">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <label>N° bon de commande (à la réception)</label>
+                                        <input type="text" class="form-control" disabled placeholder="Saisi après validation, au clic « Reçu »">
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <h2 class="detail-section-title">PIÈCES DEMANDÉES</h2>
+
+                            <table class="pieces-lines-head-table" cellpadding="0" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th class="col-piece">N° pièce</th>
+                                        <th class="col-qte">Qté</th>
+                                        <th class="col-action"></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <div class="pieces-lines-block" id="lignes-pieces-container">
+                                <div class="ligne-piece-row" data-ligne="0">
+                                    <div class="col-piece-field">
+                                        <label>N° pièce <span class="text-danger">*</span></label>
+                                        <input type="text" name="numero_piece[]" class="form-control" required placeholder="Référence">
+                                    </div>
+                                    <div class="col-qte-field">
+                                        <label>Quantité <span class="text-danger">*</span></label>
+                                        <input type="number" name="quantite[]" class="form-control" min="1" required value="1">
+                                    </div>
+                                    <div class="col-action-field">
+                                        <button type="button" class="btn btn-outline-danger btn-sm btn-remove-ligne d-none" title="Supprimer la ligne">×</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-add-ligne" id="btn-add-ligne">
+                                <i class="fa fa-plus"></i> Ajouter une ligne
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">Fermer</button>
+                    <button type="submit" class="btn btn-success btn-sm">Envoyer la demande</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="modal fade" id="modalDetailDemande" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title mb-0">Détail de la demande</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="detail-demande-body">
+                <p class="text-muted text-center py-4">Chargement…</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalValiderDonneur" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title mb-0">Valider la demande — bon de commande</h6>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <form method="post" id="form-valider-donneur" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="small text-muted">N° demande : <strong id="valider-numero-demande"></strong></p>
+                    <div class="form-group">
+                        <label>Numéro de bon de commande <span class="text-danger">*</span></label>
+                        <input type="text" name="numero_bon_donneur" class="form-control" required placeholder="Bon émis par votre agence">
+                    </div>
+                    <div class="form-group">
+                        <label>Livreur <span class="text-danger">*</span></label>
+                        <select name="livreur_id" id="valider-livreur" class="form-control" required>
+                            <option value="">— Choisir un livreur —</option>
+                        </select>
+                    </div>
+                    <div id="valider-cout-preview" class="alert alert-light small d-none mb-2">
+                        <div>Distance estimée : <strong id="valider-distance">—</strong> km</div>
+                        <div>Coût de base : <strong id="valider-cout-base">—</strong> F</div>
+                        <span id="valider-coords-warning" class="text-warning d-none">Coordonnées GPS manquantes — distance à 0, ajustez manuellement si besoin.</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Ajustement coût (F)</label>
+                        <input type="number" step="0.01" name="cout_ajustement" id="valider-cout-ajust" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Motif ajustement</label>
+                        <input type="text" name="motif_ajustement" id="valider-motif-ajust" class="form-control" placeholder="Obligatoire si ajustement ≠ 0">
+                    </div>
+                    <p class="small mb-2">Coût total livraison : <strong id="valider-cout-total">—</strong> F</p>
+                    <div class="form-group">
+                        <label>Observations livraison</label>
+                        <textarea name="observations_livraison" class="form-control" rows="2" placeholder="Optionnel"></textarea>
+                    </div>
+                    <hr>
+                    <div id="valider-liste-pieces" class="small"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success">Valider la demande</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalRecevoirDemande" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title mb-0"><i class="fa fa-check-circle mr-1"></i> Confirmer la réception</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span>&times;</span></button>
+            </div>
+            <form method="post" id="form-recevoir-demande" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="transfert-form-doc">
+                        <table class="detail-header-bar" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td width="55%">
+                                    <div class="detail-brand-name">P&amp;B AUTO-PIECE</div>
+                                    <div class="detail-brand-sub">Transfert inter-agences — Réception</div>
+                                </td>
+                                <td width="45%" class="detail-header-meta">
+                                    N° demande<br>
+                                    <strong id="recevoir-numero-demande">—</strong>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div class="detail-body-pad">
+                            <h1 class="detail-doc-title">CONFIRMER LA RÉCEPTION</h1>
+
+                            <div class="form-notice-box">
+                                Saisissez le <strong>même numéro de bon</strong> que celui communiqué par l'agence donneuse pour mettre à jour le stock.
+                            </div>
+
+                            <table class="form-fields-grid" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td colspan="2">
+                                        <label>N° bon de commande <span class="text-danger">*</span></label>
+                                        <input type="text" name="numero_bon_commande" class="form-control" required autocomplete="off" placeholder="Numéro communiqué par le donneur">
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success btn-sm">Confirmer — mettre à jour le stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+<script>
+    (function () {
+        const userLocalPk = '{{ user_local_pk|escapejs }}';
+        const detailUrlTpl = '{% url "ajax_detail_demande_transfert" 0 %}'.replace('/0/', '/__ID__/');
+        const validerUrlTpl = '{% url "valider_demande_donneur" 0 %}'.replace('/0/', '/__ID__/');
+        const recevoirUrlTpl = '{% url "recevoir_demande_transfert" 0 %}'.replace('/0/', '/__ID__/');
+        const livreursUrlTpl = '{% url "ajax_livreurs_localite" "00000000-0000-0000-0000-000000000000" %}'.replace('00000000-0000-0000-0000-000000000000', '__LOCAL__');
+        let validerCoutBase = 0;
+
+        function updateCoutTotalPreview() {
+            const ajustEl = document.getElementById('valider-cout-ajust');
+            const totalEl = document.getElementById('valider-cout-total');
+            if (!totalEl) return;
+            const ajust = parseFloat(ajustEl && ajustEl.value ? ajustEl.value : 0) || 0;
+            totalEl.textContent = Math.round(validerCoutBase + ajust).toLocaleString('fr-FR');
+        }
+
+        function loadLivreursEtCout(localPk, demandeId) {
+            const select = document.getElementById('valider-livreur');
+            const preview = document.getElementById('valider-cout-preview');
+            if (!select || !localPk) return;
+            select.innerHTML = '<option value="">— Chargement… —</option>';
+            fetch(livreursUrlTpl.replace('__LOCAL__', localPk) + '?demande_id=' + demandeId)
+                .then(r => r.json())
+                .then(data => {
+                    select.innerHTML = '<option value="">— Choisir un livreur —</option>';
+                    if (data.success && data.livreurs.length) {
+                        data.livreurs.forEach(function (l) {
+                            const opt = document.createElement('option');
+                            opt.value = l.pk;
+                            const nom = ((l.first_name || '') + ' ' + (l.last_name || '')).trim();
+                            opt.textContent = nom ? nom + ' (' + l.username + ')' : l.username;
+                            select.appendChild(opt);
+                        });
+                    } else {
+                        select.innerHTML = '<option value="">Aucun livreur disponible</option>';
+                    }
+                    if (data.cout) {
+                        validerCoutBase = data.cout.cout_base || 0;
+                        document.getElementById('valider-distance').textContent = data.cout.distance_km;
+                        document.getElementById('valider-cout-base').textContent = Math.round(validerCoutBase).toLocaleString('fr-FR');
+                        document.getElementById('valider-coords-warning').classList.toggle('d-none', !!data.cout.coords_ok);
+                        preview.classList.remove('d-none');
+                        updateCoutTotalPreview();
+                    } else {
+                        preview.classList.add('d-none');
+                        validerCoutBase = 0;
+                    }
+                });
+        }
+
+        const ajustInput = document.getElementById('valider-cout-ajust');
+        if (ajustInput) {
+            ajustInput.addEventListener('input', updateCoutTotalPreview);
+        }
+
+        function loadDetail(id) {
+            $('#detail-demande-body').html('<p class="text-muted text-center py-4">Chargement…</p>');
+            $('#modalDetailDemande').modal('show');
+            fetch(detailUrlTpl.replace('__ID__', id))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        $('#detail-demande-body').html(data.html);
+                    } else {
+                        $('#detail-demande-body').html('<p class="text-danger">' + (data.error || 'Erreur') + '</p>');
+                    }
+                });
+        }
+
+        document.querySelectorAll('.btn-detail-demande').forEach(btn => {
+            btn.addEventListener('click', function () { loadDetail(this.dataset.id); });
+        });
+
+        document.querySelectorAll('.btn-valider-donneur').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.dataset.id;
+                const row = this.closest('tr');
+                const localDonneur = row ? row.dataset.localDonneur : '';
+                document.getElementById('valider-numero-demande').textContent = this.dataset.numero;
+                document.getElementById('form-valider-donneur').action = validerUrlTpl.replace('__ID__', id);
+                $('#valider-liste-pieces').html('<p class="text-muted">Chargement…</p>');
+                $('#modalValiderDonneur').modal('show');
+                loadLivreursEtCout(localDonneur, id);
+                fetch(detailUrlTpl.replace('__ID__', id))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) $('#valider-liste-pieces').html(data.html);
+                        else $('#valider-liste-pieces').html('<p class="text-danger">Impossible de charger les lignes.</p>');
+                    });
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-recevoir-demande');
+            if (!btn) return;
+            document.getElementById('recevoir-numero-demande').textContent = btn.dataset.numero;
+            document.getElementById('form-recevoir-demande').action = recevoirUrlTpl.replace('__ID__', btn.dataset.id);
+            $('#modalRecevoirDemande').modal('show');
+        });
+
+        const container = document.getElementById('lignes-pieces-container');
+        const btnAdd = document.getElementById('btn-add-ligne');
+        if (container && btnAdd) {
+            let ligneIdx = 1;
+            btnAdd.addEventListener('click', function () {
+                const first = container.querySelector('.ligne-piece-row');
+                const clone = first.cloneNode(true);
+                clone.dataset.ligne = ligneIdx++;
+                clone.querySelectorAll('input').forEach(inp => {
+                    if (inp.name === 'quantite[]') inp.value = '1';
+                    else inp.value = '';
+                });
+                clone.querySelector('.btn-remove-ligne').classList.remove('d-none');
+                container.appendChild(clone);
+                updateRemoveButtons();
+            });
+            function updateRemoveButtons() {
+                const rows = container.querySelectorAll('.ligne-piece-row');
+                rows.forEach((row, i) => {
+                    const btn = row.querySelector('.btn-remove-ligne');
+                    if (btn) btn.classList.toggle('d-none', rows.length <= 1);
+                    btn.onclick = function () {
+                        if (rows.length > 1) row.remove();
+                        updateRemoveButtons();
+                    };
+                });
+            }
+            updateRemoveButtons();
+        }
+
+        function shouldReloadForPusher(payload) {
+            if (!payload || !userLocalPk) return true;
+            const loc = String(userLocalPk);
+            return String(payload.local_donneur_id) === loc || String(payload.local_demandeur_id) === loc;
+        }
+
+        function pollRefresh() {
+            if (typeof loadNotifications === 'function') loadNotifications();
+        }
+
+        function bindTransfertChannel() {
+            if (!window.magPusher) return false;
+            const channel = window.magPusher.subscribe('magasin-transfert');
+            channel.bind('demande', function (payload) {
+                try {
+                    if (shouldReloadForPusher(payload)) {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.info('Demande ' + (payload.numero_demande || '') + ' — ' + (payload.event || ''), 'Transfert');
+                        }
+                        pollRefresh();
+                        setTimeout(function () { location.reload(); }, 1200);
+                    }
+                } catch (e) { /* ignore */ }
+            });
+            return true;
+        }
+        if (!bindTransfertChannel()) {
+            setTimeout(bindTransfertChannel, 300);
+        }
+        setInterval(pollRefresh, 15000);
+    })();
+</script>
+{% endblock extra_js %}

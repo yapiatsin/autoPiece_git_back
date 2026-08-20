@@ -1,0 +1,19 @@
+{# Filtres catégories — catalogue panier / proforma #}
+<nav class="piece-cat-filters" aria-label="Filtrer par catégorie">
+    <button type="button"
+            class="piece-cat-chip is-active"
+            data-categorie=""
+            onclick="filterByCategorie('')">
+        <i class="fa fa-th-large" aria-hidden="true"></i>
+        <span>Toutes</span>
+    </button>
+    {% for cat in categories %}
+    <button type="button"
+            class="piece-cat-chip"
+            data-categorie="{{ cat.id }}"
+            onclick="filterByCategorie('{{ cat.id }}')"
+            title="{{ cat.categorie }}">
+        <span>{{ cat.categorie }}</span>
+    </button>
+    {% endfor %}
+</nav>

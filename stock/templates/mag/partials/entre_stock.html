@@ -1,0 +1,100 @@
+<div class="modal fade mag-form-modal" id="entreStockModal{{ piece.pk }}" tabindex="-1" role="dialog" aria-labelledby="entreStockModalLabel{{ piece.pk }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title" id="entreStockModalLabel{{ piece.pk }}">Entrée en stock</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="entreStockForm{{ piece.pk }}" method="post" action="{% url 'entrestock' piece.pk %}" novalidate>
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mf-piece-info" aria-label="Informations sur la pièce">
+                        <p class="mf-piece-info__title">
+                            <span class="mf-piece-info__ref">{{ piece.numero_piece }}</span>
+                            — {{ piece.designation }}
+                        </p>
+                        <div class="mf-piece-info__grid">
+                            <div class="mf-piece-info__item">
+                                <span class="mf-piece-info__label">Stock actuel</span>
+                                <span class="mf-piece-info__value">
+                                    <span class="badge badge-{{ piece.color_status }} badge-pill px-2">{{ piece.quantite_disponible|default:0 }}</span>
+                                </span>
+                            </div>
+                            <div class="mf-piece-info__item">
+                                <span class="mf-piece-info__label">Seuil</span>
+                                <span class="mf-piece-info__value">{{ piece.seuil_affiche|default:piece.seuil }}</span>
+                            </div>
+                            <div class="mf-piece-info__item">
+                                <span class="mf-piece-info__label">Prix achat</span>
+                                <span class="mf-piece-info__value mf-piece-info__value--accent">{{ piece.prix_achat|floatformat:0 }}</span>
+                            </div>
+                            <div class="mf-piece-info__item">
+                                <span class="mf-piece-info__label">Prix vente catalogue</span>
+                                <span class="mf-piece-info__value mf-piece-info__value--ok">{{ piece.prix_unitaire|floatformat:0 }}</span>
+                            </div>
+                            <div class="mf-piece-info__item">
+                                <span class="mf-piece-info__label">Prix vente local</span>
+                                <span class="mf-piece-info__value mf-piece-info__value--accent">
+                                    {% if piece.prix_unitaire_local_valeur is not None %}
+                                        {{ piece.prix_unitaire_local_valeur|floatformat:0 }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="mf-piece-info__item">
+                                <span class="mf-piece-info__label">Catégorie</span>
+                                <span class="mf-piece-info__value">{{ piece.categorie.categorie }}</span>
+                            </div>
+                            <div class="mf-piece-info__item">
+                                <span class="mf-piece-info__label">Emplacement</span>
+                                <span class="mf-piece-info__value">{{ piece.emplacement|default:"—" }}</span>
+                            </div>
+                            <div class="mf-piece-info__item">
+                                <span class="mf-piece-info__label">Date création</span>
+                                <span class="mf-piece-info__value">{{ piece.date_creation|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="mf-piece-info__item">
+                                <span class="mf-piece-info__label">Utilisateur</span>
+                                <span class="mf-piece-info__value">{% if piece.utilisateur %}{{ piece.utilisateur.username }}{% else %}—{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <section class="mf-section mb-0">
+                        <h3 class="mf-section__title">
+                            <i class="fa fa-plus-circle"></i> Nouvelle entrée
+                        </h3>
+                        <div class="mf-field">
+                            <label>Quantité à ajouter <span class="mf-req">*</span></label>
+                            {{ entre_stock_form.quantitajout }}
+                            {% if entre_stock_form.quantitajout.errors %}
+                                <div class="text-danger">{{ entre_stock_form.quantitajout.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mf-field">
+                            <label>Prix d'achat <span class="mf-req">*</span></label>
+                            {{ entre_stock_form.prix_achat }}
+                            {% if entre_stock_form.prix_achat.errors %}
+                                <div class="text-danger">{{ entre_stock_form.prix_achat.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mf-field mb-0">
+                            <label>Fournisseur</label>
+                            {{ entre_stock_form.fournisseur }}
+                            {% if entre_stock_form.fournisseur.errors %}
+                                <div class="text-danger">{{ entre_stock_form.fournisseur.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </section>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

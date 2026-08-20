@@ -1,0 +1,43 @@
+{% comment %} partials/_article_proforma_list.html — grille catalogue pièces (proforma) {% endcomment %}
+
+{% for a in articles %}
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-3 mb-3 d-flex piece-catalog-col">
+        <a href="javascript:void(0);"
+           class="piece-catalog-link w-100"
+           onclick="panierProformaAction({{ a.pk }}, 'add')"
+           title="Ajouter à la proforma — {{ a.designation|truncatechars:50 }}">
+            <div class="card piece-catalog-card w-100">
+                <div class="body piece-catalog-body">
+                    <div class="piece-catalog-top">
+                        <span class="piece-catalog-stock text-{{ a.color_status }}">
+                            <i class="fa fa-cubes" aria-hidden="true"></i>
+                            Stock <strong>{{ a.quantite_disponible }}</strong>
+                        </span>
+                        <span class="piece-catalog-add-hint" aria-hidden="true">
+                            <i class="fa fa-plus"></i>
+                        </span>
+                    </div>
+                    <div class="piece-catalog-visual">
+                        {% if a.image %}
+                            <img src="{{ a.image.url }}" alt="{{ a.designation }}">
+                        {% else %}
+                            <span class="icon-settings piece-catalog-visual__placeholder" aria-hidden="true"></span>
+                        {% endif %}
+                    </div>
+                    <h6 class="piece-catalog-title">{{ a.designation }}</h6>
+                    <div class="piece-catalog-footer">
+                        <span class="piece-catalog-cat" title="{{ a.categorie }}">{{ a.categorie }}</span>
+                        <span class="piece-catalog-price">{{ a.prix_affiche|default:a.prix_unitaire|floatformat:0 }} F</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+{% empty %}
+    <div class="col-12">
+        <p class="piece-catalog-empty mb-0">
+            <i class="fa fa-search" aria-hidden="true"></i>
+            Aucune pièce trouvée.
+        </p>
+    </div>
+{% endfor %}

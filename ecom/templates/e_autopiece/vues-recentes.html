@@ -1,0 +1,24 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Vus récemment" %} — Auto-Pièce{% endblock title %}
+{% block content %}
+<div class="rts-navigation-area-breadcrumb">
+    <div class="container">
+        <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span class="current">{% trans "Vus récemment" %}</span>
+        </div>
+    </div>
+</div>
+{% include 'e_autopiece/partials/_vues_recentes.html' with vues_recentes_rows=vues_recentes_rows show_voir_plus=False %}
+{% if not vues_recentes_rows %}
+<div class="rts-section-gap">
+    <div class="container">
+        <h2 class="title-left mb-3">{% trans "Vus récemment" %}</h2>
+        <p class="text-muted">{% trans "Vous n'avez pas encore consulté de pièces." %}</p>
+        <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary mt-2">{% trans "Parcourir la boutique" %}</a>
+    </div>
+</div>
+{% endif %}
+{% endblock content %}

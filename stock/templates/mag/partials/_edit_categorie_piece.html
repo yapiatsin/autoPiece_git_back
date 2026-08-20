@@ -1,0 +1,53 @@
+<div class="modal fade mag-form-modal" id="editCategorieModal{{ categorie.pk }}" tabindex="-1" role="dialog" aria-labelledby="editCategorieModalLabel{{ categorie.pk }}" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title" id="editCategorieModalLabel{{ categorie.pk }}">Modifier la catégorie</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editCategorieForm{{ categorie.pk }}" method="post" action="{% url 'update_categorie' categorie.pk %}" novalidate enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <section class="mf-section mb-0">
+                        <h3 class="mf-section__title">
+                            <i class="fa fa-tags"></i> {{ categorie.categorie }}
+                        </h3>
+                        <div class="mf-field">
+                            <label>Catégorie <span class="mf-req">*</span></label>
+                            <input type="text" name="categorie" value="{{ categorie.categorie }}" class="form-control" placeholder="Nom de la catégorie" required>
+                            {% if edit_form.categorie.errors %}
+                                <div class="text-danger">{{ edit_form.categorie.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mf-field">
+                            <label>Description</label>
+                            <textarea name="description" class="form-control" placeholder="Description..." rows="3">{{ categorie.description }}</textarea>
+                            {% if edit_form.description.errors %}
+                                <div class="text-danger">{{ edit_form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mf-field mb-0">
+                            <label>Image</label>
+                            {% if categorie.image %}
+                                <p class="mb-2">
+                                    <img src="{{ categorie.image.url }}" alt="" style="max-height: 72px; max-width: 100%; border-radius: 8px;">
+                                </p>
+                            {% endif %}
+                            <input type="file" name="image" class="form-control" accept="image/*">
+                            <span class="mf-hint">Laisser vide pour conserver l’image actuelle.</span>
+                            {% if edit_form.image.errors %}
+                                <div class="text-danger">{{ edit_form.image.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </section>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

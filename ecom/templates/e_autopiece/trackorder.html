@@ -1,0 +1,135 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+
+{% block title %}Mes commandes — Auto-Pièce{% endblock title %}
+
+{% block extra_css %}
+<script defer src="{% static 'apps/assets/js/mag-table-filter.js' %}"></script>
+{% endblock extra_css %}
+
+{% block content %}
+    <div class="rts-navigation-area-breadcrumb bg_light-1 no-print">
+        <div class="container">
+            <div class="navigator-breadcrumb-wrapper">
+                <a href="{% url 'ecom_account' %}">{% trans "Mon compte" %}</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span class="current">{% trans "Mes commandes" %}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="rts-section-gap bg_light-1 ecom-orders-page">
+        <div class="container">
+            <div class="ecom-orders-header">
+                <h2 class="ecom-orders-title">{% trans "Mes commandes en ligne" %}</h2>
+                {% if commandes %}
+                <p class="ecom-orders-subtitle">
+                    {% blocktrans count counter=commandes|length %}{{ counter }} commande{% plural %}{{ counter }} commandes{% endblocktrans %}
+                </p>
+                {% endif %}
+            </div>
+
+            {% if commandes %}
+            <div class="ecom-orders-shell" x-data="magTableFilter()">
+                <div class="ecom-orders-toolbar">
+                    <div class="ecom-orders-search-wrap">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <input type="search"
+                            class="ecom-orders-search"
+                            placeholder="{% trans 'Rechercher dans le tableau…' %}"
+                            x-model="query"
+                            @input="filter()"
+                            @keydown.escape="clear()"
+                            autocomplete="off">
+                    </div>
+                    <div class="ecom-orders-count">
+                        <strong x-text="visibleCount"></strong> / <span x-text="totalCount"></span> {% trans "résultat(s)" %}
+                    </div>
+                </div>
+                <p class="ecom-orders-empty" data-mag-table-empty>
+                    {% trans "Aucune ligne ne correspond à votre recherche." %}
+                </p>
+
+                <div class="table-responsive ecom-orders-table-wrap" tabindex="0" role="region" aria-label="{% trans 'Tableau des commandes — faites glisser horizontalement' %}">
+                    <table class="table align-middle mb-0 ecom-orders-table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "N° commande" %}</th>
+                                <th>{% trans "Localité" %}</th>
+                                <th>{% trans "Total" %}</th>
+                                <th>{% trans "Statut" %}</th>
+                                <th>{% trans "Réception" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cmd in commandes %}
+                            <tr>
+                                <td>
+                                    <span class="ecom-orders-numero">{{ cmd.numero_commande }}</span>
+                                </td>
+                                <td>{{ cmd.panier.local_entrepot.nom|default:"—" }}</td>
+                                <td class="ecom-orders-total">{{ cmd.total|floatformat:0 }} FCFA</td>
+                                <td>
+                                    <span class="ecom-orders-badge ecom-orders-badge--{{ cmd.statut_commande }}">
+                                        {{ cmd.get_statut_commande_display }}
+                                    </span>
+                                    {% if cmd.client_confirme_reception %}
+                                    <span class="ecom-orders-badge ecom-orders-badge--recu">{% trans "Reçu" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ cmd.panier.get_mode_reception_display|default:"—" }}</td>
+                                <td>
+                                    {% if cmd.statut_commande == 'livrer' and not cmd.client_confirme_reception %}
+                                    <form method="post" action="{% url 'ecom_confirmer_reception' cmd.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="rts-btn btn-primary border-only radious-sm with-icon ecom-orders-action-btn">
+                                            <div class="btn-text">{% trans "J'ai reçu" %}</div>
+                                            <div class="arrow-icon"><i class="fa-solid fa-check"></i></div>
+                                            <div class="arrow-icon"><i class="fa-solid fa-check"></i></div>
+                                        </button>
+                                    </form>
+                                    {% elif cmd.client_confirme_reception %}
+                                    <span class="ecom-orders-confirmed">
+                                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                        {% trans "Confirmé" %}
+                                    </span>
+                                    {% elif cmd.statut_commande == 'annuler' %}
+                                    <span class="ecom-orders-cancelled">
+                                        <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                                        {% trans "Annulée" %}
+                                    </span>
+                                    {% elif cmd.statut_commande == 'en_attente' or cmd.statut_commande == 'valider' %}
+                                    {% if not cmd.paye %}
+                                    <form method="post" action="{% url 'ecom_annuler_commande' cmd.pk %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{% url 'ecom_mes_commandes' %}">
+                                        <button type="submit" class="rts-btn btn-primary border-only radious-sm with-icon ecom-orders-action-btn ecom-orders-cancel-btn"
+                                                onclick="return confirm('{% filter escapejs %}{% trans "Confirmer l'annulation de cette commande ?" %}{% endfilter %}');">
+                                            <div class="btn-text">{% trans "Annuler" %}</div>
+                                            <div class="arrow-icon"><i class="fa-solid fa-xmark"></i></div>
+                                            <div class="arrow-icon"><i class="fa-solid fa-xmark"></i></div>
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="ecom-orders-dash">—</span>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="ecom-orders-dash">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="ecom-orders-empty-state">
+                <p class="text-muted mb-3">{% trans "Aucune commande pour le moment." %}</p>
+                <a href="{% url 'ecom_index' %}" class="rts-btn btn-primary">{% trans "Voir le catalogue" %}</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}

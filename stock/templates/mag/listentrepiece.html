@@ -1,0 +1,172 @@
+{% extends "app/appbase.html" %}
+<title>{% block title %} Mon espace santé {% endblock title %}</title>
+{% block header %}
+<div class="row">
+    <div class="col-lg-6 col-md-6 col-sm-12">
+        <h2>{% block page_title %}Mon espace santé{% endblock page_title %} </h2>
+        <ul class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url "esp_san" %}"><i class="fa fa-home"> </i> Tableau de bord</a></li>
+            <li class="breadcrumb-item active"> {% block page %}Liste des entrées{% endblock page %}</li>
+        </ul>
+    </div>
+    <div class="col-lg-6 col-md-6 col-sm-12">
+        <div class="d-flex flex-row-reverse">
+            <div class="page_action">
+                {% block page_action %}
+                    <button type="button" class="btn btn-outline-warning"><i class="fa fa-download"></i> Telecharger le report</button>
+                    <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addinf"><i class="fa fa-plus-circle"></i></button>
+                    <button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#addcontact"><i class="fa fa-calendar"></i></button>
+                {% endblock page_action %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock header %} 
+{% block main_content %}
+<div class="modal fade" id="addinf" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title" id="defaultModalLabel">Créer un dossier medical</h6>
+            </div>
+            <div class="modal-body">
+                <form id="basic-form" method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row clearfix">
+                        <div class="col-md-12 form-group"><input type="text" value="Information du compte" class="form-control text-center" disabled></div>
+                            <div class="col-6">
+                                <label>Login</label>
+                                <div class="form-group">                                    
+                                    {{user_form.username}}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label>Email</label>
+                                <div class="form-group">                                    
+                                    {{user_form.email}}
+                                </div>
+                            </div>
+                        <div class="col-md-12 form-group"><input type="text" value="Information du profil" class="form-control text-center" disabled></div>
+                            <div class="col-6">
+                                <label>Nom</label>
+                                <div class="form-group">                                    
+                                    {{dossier_form.nom}}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label>Prenoms</label>
+                                <div class="form-group">                                    
+                                    {{dossier_form.prenoms}}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label>Date de naissance</label>
+                                <div class="form-group">                                    
+                                    {{dossier_form.date_naissance}}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label>Groupe sanguin</label>
+                                <div class="form-group">                                    
+                                    {{dossier_form.groupe_sanguin}}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label>Genre</label>
+                                <div class="form-group">                                    
+                                    {{dossier_form.genre}}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label>Profession</label>
+                                <div class="form-group">                                    
+                                    {{dossier_form.profession}}
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label>Contact</label>
+                                <div class="form-group">                                    
+                                    {{dossier_form.contact}}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label>Diabétique</label>
+                                <div class="form-group">                                    
+                                    {{dossier_form.diabetique}}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label>Fume la cigarette</label>
+                                <div class="form-group">                                    
+                                    {{dossier_form.fume}}
+                                </div>
+                            </div> 
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-outline-success" >Enrégistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="col-lg-12">
+    <div class="card">
+        <div class="header text-info">
+            <h2 class="text-info">Entrée en stock
+            </h2>
+        </div>
+        <div class="body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover dataTable js-exportable">
+                    <thead>
+                        <tr class='text-info'>
+                            <th>Designation</th>
+                            <th>Categorie</th>
+                            <th>Quantite dispo</th>
+                            <th>Seuil</th>
+                            <th>Quanté ajoutée</th>
+                            <th>Fournisseurs</th>
+                            <th>Saisir par</th>
+                            <th>Date</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr class='text-info'>
+                            <th>Designation</th>
+                            <th>Categorie</th>
+                            <th>Quantite dispo</th>
+                            <th>Seuil</th>
+                            <th>Quanté ajoutée</th>
+                            <th>Fournisseurs</th>
+                            <th>Saisir par</th>
+                            <th>Date</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        {% for d in entremedicament %}
+                            <tr>
+                                <th><a href="{% url "det_dossier" d.pk %}">{{d.medicament.designation}}</a></th>
+                                <th>{{d.medicament.category.categorie}}</th>
+                                <th>{{d.medicament.quantite_disponible}}</th>
+                                <th>{{d.medicament.seuil}}</th>
+                                <th>{{d.quantite}}</th>
+                                <th>{{d.fournisseur}}</th>
+                                <th>{{d.utilisateur.username}}</th>
+                                <th>{{d.date|date:"d-m-y H:m:s"}}</th>
+                                <th class="text-center">
+                                    <a href="{% url "delentre_medoc" d.pk %}"><i class="icon-trash text-danger"></i></a>
+                                </th>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}

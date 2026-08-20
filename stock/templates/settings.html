@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Liste des utilisateurs{% endblock %}
+
+{% block main_content %}
+<button class="app-sidebar-mobile-backdrop" data-toggle-target=".app" data-toggle-class="app-sidebar-mobile-toggled"></button>
+
+<div id="content" class="app-content p-0">
+
+<div class="profile">
+
+<div class="profile-sidebar">
+<div class="desktop-sticky-top small">
+<i class="fa fa-5x fa-user-circle" ></i> <u class="text-theme" style="text-decoration: none;">{{user.username|upper}}</u>
+<h4 class="mb-0"></h4>
+
+<hr class="my-4" />
+<a href="{% url 'user_create' %}" class="btn btn-outline-light" style="border-radius: 10px;"><i class='fa fa-reply'></i></a>
+</div>
+</div>
+
+<div class="profile-content">
+<div class="row">
+<div class="col-xl-8">
+<ul class="profile-tab nav nav-tabs nav-tabs-v2 mb-3">
+	
+</ul>
+
+<div class="tab-content p-0">
+<div class="tab-pane fade show active" id="profile-post">
+<div class="card mb-3">
+
+<div class="card-body">
+<div class="d-flex align-items-center">
+<div class="flex-fill ps-2">
+<div class="position-relative d-flex align-items-center">
+<input type="text" class="form-control text-center text-theme" value='Nom utilisateur: {{user.username}}' disabled>
+<div class="position-absolute end-0 text-center">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+
+<div class="card mb-3">
+<div class="card-body">
+<div class="d-flex align-items-center">
+<div class="flex-fill ps-2">
+<div class="position-relative d-flex align-items-center">
+    <input type="text" class="form-control text-center text-theme" value='Noms: {{user.first_name}}' disabled >
+<div class="position-absolute end-0 text-center">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <div class="flex-fill ps-2">
+                <div class="position-relative d-flex align-items-center">
+                    <input type="text" class="form-control text-center text-theme" value="Prenoms: {{user.last_name}}" />
+                    <div class="position-absolute end-0 text-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card mb-3">
+<div class="card-body">
+<div class="d-flex align-items-center mb-3">
+<div class="flex-fill ps-3">
+</div>
+</div>
+<div class="profile-img-list mb-1"></div>
+<div class="row mb-n3 pb-1">
+<div class="col">
+</div>
+</div>
+</div>
+
+<div class="card-body">
+<div class="d-flex align-items-center">
+<div class="flex-fill ps-2">
+<div class="position-relative d-flex align-items-center">
+<input type="text" class="form-control text-center text-theme" value="Email: {{user.email}}" />
+<div class="position-absolute end-0 text-center">
+
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="tab-pane fade" id="profile-followers">
+<div class="card">
+<div class="card-body d-flex align-items-center">
+<img src="assets/img/user/user.jpg" alt width="36" />
+<div class="flex-fill px-3">
+<div><a href="#" class="text-white fw-semibold text-decoration-none">Ethel Wilkes</a></div>
+<div class="text-white text-opacity-50 small">North Raundspic</div>
+</div>
+<a href="#" class="btn btn-sm btn-outline-theme">Follow</a>
+</div>
+<div class="card-body d-flex align-items-center">
+<img src="assets/img/user/user-2.jpg" alt width="36" />
+<div class="flex-fill px-3">
+<div><a href="#" class="text-white fw-semibold text-decoration-none">Shanaya Hansen</a></div>
+<div class="text-white text-opacity-50 small">North Raundspic</div>
+</div>
+<a href="#" class="btn btn-sm btn-outline-theme">Follow</a>
+</div>
+<div class="card-body d-flex align-items-center">
+<img src="assets/img/user/user-3.jpg" alt width="36" />
+<div class="flex-fill px-3">
+<div><a href="#" class="text-white fw-semibold text-decoration-none">James Allman</a></div>
+<div class="text-white text-opacity-50 small">North Raundspic</div>
+</div>
+<a href="#" class="btn btn-sm btn-outline-theme">Follow</a>
+</div>
+<div class="card-body d-flex align-items-center">
+<img src="assets/img/user/user-4.jpg" alt width="36" />
+<div class="flex-fill px-3">
+<div><a href="#" class="text-white fw-semibold text-decoration-none">Marie Welsh</a></div>
+<div class="text-white text-opacity-50 small">Crencheporford</div>
+</div>
+<a href="#" class="btn btn-sm btn-outline-theme">Follow</a>
+</div>
+<div class="card-body d-flex align-items-center">
+<img src="assets/img/user/user-5.jpg" alt width="36" />
+<div class="flex-fill px-3">
+<div><a href="#" class="text-white fw-semibold text-decoration-none">Lamar Kirkland</a></div>
+<div class="text-white text-opacity-50 small">Prince Ewoodswan</div>
+</div>
+<a href="#" class="btn btn-sm btn-outline-theme">Follow</a>
+</div>
+<div class="card-body d-flex align-items-center">
+
+
+
+</div>
+<div class="card-body d-flex align-items-center">
+<img src="assets/img/user/user-10.jpg" alt width="36" />
+<div class="flex-fill px-3">
+<div><a href="#" class="text-white fw-semibold text-decoration-none">Roshni Fernandez</a></div>
+<div class="text-white text-opacity-50 small">Mount Lerdo</div>
+</div>
+
+</div>
+</div>
+</div>
+
+
+<div class="tab-pane fade" id="profile-media">
+<div class="card">
+<div class="card-header">MAY 20</div>
+<div class="card-body p-0">
+
+</div>
+<div class="card-header">MAY 16</div>
+
+</div>
+<div class="text-center p-3"><a href="#" class="text-body text-decoration-none">Show more <b class="caret"></b></a></div>
+</div>
+
+
+<div class="tab-pane fade" id="profile-video">
+<div class="card mb-3">
+<div class="card-header">COLLECTIONS #1</div>
+<div class="card-body p-0">
+<div class="row gx-1">
+
+
+</div>
+</div>
+<div class="card-header">COLLECTIONS #2</div>
+<div class="card-body p-0">
+<div class="row gx-1">
+
+<div class="col-md-4 col-6 mb-1">
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+<div class="col-xl-4">
+<div class="desktop-sticky-top d-none d-lg-block">
+<div class="fw-500 px-0 d-flex text-white my-3">
+<span class="flex-fill">Profile</span>
+</div>
+<div class="card mb-3">
+
+<div class="card-body px-3 py-2">
+<div><small class="text-white text-opacity-50 text-theme"> {{user.profile.role}}</small></div>
+</div>
+
+
+<div class="row gx-0">
+<div class="card-body p-0">
+<a href="{% url "user_create" %}" class="list-group-item list-group-action text-center px-3 py-2">
+<i class='fa fa-reply'></i> Retour  
+</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<a href="#" data-toggle="scroll-to-top" class="btn-scroll-top fade">
+<iconify-icon icon="material-symbols-light:keyboard-arrow-up"></iconify-icon>
+</a>
+
+{% endblock %}

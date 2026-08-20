@@ -1,0 +1,417 @@
+{% extends 'perfect/baslog.html' %} 
+{% load static %} 
+{% block title %}Liste des pièces{% endblock title %} 
+{% block page_title %}Liste des pièces{% endblock page_title %}
+{% block page %}Détail pièce{% endblock page %}
+{% block main_content %}
+
+<div class="col-md-12">
+    <div class="row">
+        {% block aside %}
+            <div class="col-md-3">
+                {% block aside_content %}
+                    <div class="card p-1 mt-4" style="font-size:12px; backdrop-filter: blur(15px); background-color:rgba(255, 255, 255, 0);--webkit-backdrop-filter: blur(15px);">
+                        <div class="col-md-12">
+                            <div class="card-header text-danger">
+                                <h5 class="card-title" style='font-size:12px; font-weight:700;'>LISTE PIECE </h5>
+                            </div>
+                            <div class="row text-secondary" style="box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); border-radius:8px; background-color: rgba(255, 255, 255, 0.71)">
+                                <div class="card-body table-responsive p-1" style="font-size:12px; backdrop-filter: blur(8px); --webkit-backdrop-filter: blur(8px); height: 89%; background-color:rgba(255, 255, 255, 0)">
+                                    <table id="example1" class="table table-head-fixed text-nowrap" style="backdrop-filter: blur(8px);--webkit-backdrop-filter: blur(8px);">
+                                        <thead>
+                                            <tr style="color: rgb(121, 121, 121)">
+                                                <th>N°PIECE</th>
+                                                <th>LIBELLE</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for p in pieces %}
+                                            <tr class="text-secondary">
+                                                <td><a href="{% url "info_piece" p.pk %}">{{p.designation}}</a> </td>
+                                                <td>{{p.type_voiture.type_voiture}}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                {% endblock aside_content %}
+            </div>
+        {% endblock aside %}
+
+        <div class="col-md-9">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style="display: flex; align-items: center;">
+                                                                    <div style="font-size: 12px;" class="text-cyan">Aujourd'hui
+                                                                        {{nb_vente_day}}
+                                                                        <a href="{ url 'list_recet' %}" style="left:0px;"><i class="fa fa-arrow-circle-right text-danger" style=" font-size:15px;position:absolute; top:13px; right: -4px"></i></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style="display: flex; align-items: center;">
+                                                                    <div style="font-size: 12px;" class="text-cyan">Vente 
+                                                                        {{vente_day}} 
+                                                                    </div>
+                                                                    <a href="{ url 'list_recet' %}" style="left:0px;"><i class="fa fa-arrow-circle-right text-danger" style=" font-size:15px;position:absolute; top:13px; right: -4px"></i></a>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style="display: flex; align-items: center;">
+                                                                    <div style="font-size: 12px;" class="text-cyan">{{libelle_mois_en_cours}}  Nombre:
+                                                                        {{nb_vente_mens}}
+                                                                        <a href="{ url 'list_recet' %}" style="left:0px;"><i class="fa fa-arrow-circle-right text-danger" style=" font-size:15px;position:absolute; top:13px; right: -4px"></i></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style="display: flex; align-items: center;">
+                                                                    <div style="font-size: 12px;" class="text-cyan">Total
+                                                                        {{vente_mens}}
+                                                                        <a href="{ url 'list_recet' %}" style="left:0px;"><i class="fa fa-arrow-circle-right text-danger" style=" font-size:15px;position:absolute; top:13px; right: -4px"></i></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style=" align-items: center;">
+                                                                    <div style="font-size: 12px;color: #06497C">
+                                                                        {% block plus %}
+                                                                            
+                                                                        {% endblock plus %}
+                                                                        {% block calendar %}
+                                                                            <a href="#" class="text-cyan" data-toggle="modal" data-target="#modal-sm2">
+                                                                                <i class="fa fa-calendar mr-0" style="font-size: 15px; margin-left: 30px; top:0px"></i>
+                                                                            </a>
+                                                                        {% endblock calendar %}
+                                                                        <a href="#" class="text-cyan" data-widget="control-sidebar" data-slide="true">
+                                                                            <i class="fa fa-user-circle" style="font-size: 16px; margin-left: 40px;"></i>
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row p-0">
+                        <div class="col-md-12">
+                            <div class="row p-0">
+                                <div class="col-md-4" style="border-radius: 8px;height: 100%; width: 50%; ">
+                                    <div class="card-header text-danger">
+                                        <h5 class="card-title" style='font-size:12px; font-weight:700;'>DETAIL</h5>
+                                    </div>
+                                    <div class="card-body p-2" style="border-radius: 8px;height: 100%; width: 100%; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1); background-color:rgba(255, 255, 255, 0.8)">
+                                        <div class="col-md-12 p-0">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;">Categorie</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">{{ piece.type_voiture.type_voiture }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 p-1">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;">N°Pièce</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">{{ piece.numero_piece }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 p-1">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;">Désignation</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">{{ piece.designation }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 p-1">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;"> Prix d'achat</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">{{ piece.prix_achat }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 p-1">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;"> Prix de vente</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">{{ piece.prix_unitaire }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 p-1">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;"> Quantité</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">{{ piece.quantite }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 p-1">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;"> Seuil</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">{{ piece.seuil }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 p-1">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;"> Fournisseur</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">{{ piece.fournisseur }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 p-1">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;"> Emplacement</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">{{ piece.emplacement }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 p-1">
+                                            <div style="margin-left: 0px; font-size:12px">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div><i class="fa fa" style="font-size:14px;"> Alerte</i></div>
+                                                    <div id="remise" class="text-end mb-0 ms-auto">
+                                                        {% if piece.quantite > piece.seuil %}
+                                                            <i class="fa fa text-success" style="font-size:14px;">
+                                                                <a class="fa fa-square" style="font-size:14px;"></a>
+                                                            </i>
+                                                        {% elif piece.quantite == piece.seuil %}
+                                                            <i class="fa fa text-warning" style="font-size:14px;">
+                                                                <a class="fa fa-square" style="font-size:14px;"></a>
+                                                            </i>
+                                                        {% else %}
+                                                            <i class="fa fa text-danger" style="font-size:14px;">
+                                                                <a class="fa fa-square" style="font-size:14px;"></a>
+                                                            </i>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-8" style="border-radius: 8px;height: 200px; width: 50%;">
+                                    <div class="row p-0">
+                                        <div class="col-md-12">
+                                            <div class="card-body p-1" style="border-radius: 8px;height: 190px; width: 100%; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1); background-color:rgba(255, 255, 255, 0.8)">
+                                                <div class="chart">
+                                                    <canvas id="barCharts" style="min-height: 170px; height: 190px; max-height: 190px; max-width: 100%;"></canvas>
+                                                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                                                </div>
+                                                <script>
+                                                    const cty = document.getElementById('barCharts').getContext('2d');
+                                                    // Définition des gradients
+                                                    const gradientvisvtc = cty.createLinearGradient(0, 0, 0, 400);
+                                                    gradientvisvtc.addColorStop(0, 'rgb(228, 1, 1)');
+                                                    gradientvisvtc.addColorStop(1, 'rgb(255, 180, 94, .2)');
+                                                    const chart = new Chart(cty, {
+                                                        type: 'bar',
+                                                        data: {
+                                                            labels: {{labels|safe}},
+                                                            datasets: [{
+                                                                label: 'Nombre de vente de {{piece.designation}}',
+                                                                data: {{nb_piec_data}},
+                                                                borderWidth: 2,
+                                                                borderColor: gradientvisvtc,
+                                                                tension: 0.4,
+                                                                fill: true,
+                                                                backgroundColor: gradientvisvtc,
+                                                            },  ]
+                                                        },
+                                                        options: {
+                                                            responsive: true,
+                                                            animation: {
+                                                                duration: 1500,
+                                                                easing: 'easeInOutQuart',
+                                                            },
+                                                            scales: {
+                                                                y: {
+                                                                    beginAtZero: true,
+                                                                    ticks: {
+                                                                        color: 'rgba(18, 71, 114, 0.84)'
+                                                                    },
+                                                                    grid: {
+                                                                        color: 'rgba(163, 206, 241, 0.28)'
+                                                                    }
+                                                                },
+                                                                x: {
+                                                                    ticks: {
+                                                                        color: 'rgba(18, 71, 114, 0.84)'
+                                                                    },
+                                                                    grid: {
+                                                                        color: 'rgba(163, 206, 241, 0.28)'
+                                                                    }
+                                                                }
+                                                            },
+                                                            plugins: {
+                                                                legend: {
+                                                                    labels: {
+                                                                        color: 'rgba(29, 29, 29, 0.66)'
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    });
+                                                </script>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 mt-3">
+                                            <div class="card-body p-1" style="border-radius: 8px;height: 100%; width: 100%; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1); background-color:rgba(255, 255, 255, 0.8)">
+                                                <div class="chart">
+                                                    <canvas id="barChartsO" style="min-height: 195px; height: 100%; max-height: 220px; max-width: 100%;"></canvas>
+                                                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                                                </div>
+                                                <script>
+                                                    const ctyp = document.getElementById('barChartsO').getContext('2d');
+        
+                                                    const gradientvisvtco = ctyp.createLinearGradient(0, 0, 0, 400);
+                                                    gradientvisvtco.addColorStop(0, 'rgb(228, 1, 1)');
+                                                    gradientvisvtco.addColorStop(1, 'rgb(228, 1,.2)');
+                                                    // Données initiales
+                                                    let dataAltoO = {{vent_piec_data}};
+                                                    // Création du graphique
+                                                    const chartr = new Chart(ctyp, {
+                                                        type: 'line',
+                                                        data: {
+                                                            labels: {{labels|safe}},
+                                                            datasets: [{
+                                                                label: 'Alto',
+                                                                data: [...dataAltoO],
+                                                                borderWidth: 2,
+                                                                borderColor: gradientvisvtco,
+                                                                tension: 0.4,
+                                                                fill: true,
+                                                                //backgroundColor: gradientvisvtco,
+                                                            }, ]
+                                                        },
+                                                        options: {
+                                                            responsive: true,
+                                                            animation: {
+                                                                duration: 1500,
+                                                                easing: 'easeInOutQuart',
+                                                            },
+                                                            scales: {
+                                                                y: {
+                                                                    beginAtZero: true,
+                                                                    ticks: {
+                                                                        color: 'rgba(18, 71, 114, 0.84)'
+                                                                    },
+                                                                    grid: {
+                                                                        color: 'rgba(163, 206, 241, 0.28)'
+                                                                    }
+                                                                },
+                                                                x: {
+                                                                    ticks: {
+                                                                        color: 'rgba(18, 71, 114, 0.84)'
+                                                                    },
+                                                                    grid: {
+                                                                        color: 'rgba(163, 206, 241, 0.28)'
+                                                                    }
+                                                                }
+                                                            },
+                                                            plugins: {
+                                                                legend: {
+                                                                    labels: {
+                                                                        color: 'rgba(54, 53, 53, 0.66)'
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    });
+                                                </script>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}

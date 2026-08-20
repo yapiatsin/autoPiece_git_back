@@ -1,0 +1,238 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE — Fournisseurs{% endblock title %}
+{% block page_title %}Fournisseurs{% endblock page_title %}
+{% block page %}Fournisseurs{% endblock page %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-form-modal.css' %}">
+{% endblock extra_head %}
+
+{% block page_action_buttons %}
+    <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addFournisseurModal">
+        Nouveau fournisseur <i class="fa fa-plus"></i>
+    </button>
+{% endblock page_action_buttons %}
+
+{% block main_content %}
+    {% include "mag/partials/_periode_filter_modal.html" %}
+
+    <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget">
+            <div class="body">
+                <div class="icon"><i class="fa fa-users text-primary"></i> </div>
+                <div class="content">
+                    <div class="text mb-2 text-uppercase">Total fournisseurs</div>
+                    <h4 class="number mb-0">
+                        {{ fourn_list|length }}
+                    </h4>
+                    <small class="text-muted">{{moisact}} - {{annee}}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget">
+            <div class="body">
+                <div class="icon"><i class="fa fa-shopping-cart text-secondary"></i> </div>
+                <div class="content">
+                    <div class="text mb-2 text-uppercase">Pièces fournies (mois)</div>
+                    <h4 class="number mb-0">
+                        {{ total_entre_piece }}
+                        <span class="font-15 text-muted">Val {{ valeur_entre_piece|floatformat:2 }} frs</span>
+                    </h4>
+                    <small class="text-muted">{{moisact}} - {{annee}}</small>
+                </div>
+            </div>
+        </div>
+    </div>          
+    <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget">
+            <div class="body">
+                <div class="icon"><i class="icon-layers text-success"></i> </div>
+                <div class="content">
+                    <div class="text mb-2 text-uppercase">Pièces fournies (année)</div>
+                    <h4 class="number mb-0">
+                        {{ count_piece }}
+                        <span class="font-15 text-muted">Val {{ valeur_piece|floatformat:2 }} frs</span>
+                    </h4>
+                    <small class="text-muted">{{annee}}</small>
+                </div>
+            </div>
+        </div>
+    </div> 
+
+    <!-- Modal pour créer un nouveau fournisseur -->
+    <div class="modal fade mag-form-modal" id="addFournisseurModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="title" id="defaultModalLabel">Nouveau fournisseur</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="post" action="{% url 'nouveau_fournisseur' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <section class="mf-section mb-0">
+                            <h3 class="mf-section__title">
+                                <i class="fa fa-truck"></i> Coordonnées
+                            </h3>
+                            <div class="mf-field">
+                                <label>Nom <span class="mf-req">*</span></label>
+                                {{ form.nom }}
+                                {% if form.nom.errors %}
+                                    <div class="text-danger">{{ form.nom.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mf-field mb-0">
+                                <label>Contact</label>
+                                {{ form.contact }}
+                                {% if form.contact.errors %}
+                                    <div class="text-danger">{{ form.contact.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals pour modifier les fournisseurs -->
+    {% for fourn in fourn_list %}
+        <div class="modal fade mag-form-modal" id="editFournisseurModal{{ fourn.pk }}" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="title">Modifier fournisseur</h6>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form method="post" action="{% url 'update_fournisseur' fourn.pk %}">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <section class="mf-section mb-0">
+                                <h3 class="mf-section__title">
+                                    <i class="fa fa-truck"></i> {{ fourn.nom }}
+                                </h3>
+                                <div class="mf-field">
+                                    <label>Nom <span class="mf-req">*</span></label>
+                                    <input type="text" name="nom" value="{{ fourn.nom }}" class="form-control" required>
+                                </div>
+                                <div class="mf-field mb-0">
+                                    <label>Contact</label>
+                                    <input type="text" name="contact" value="{{ fourn.contact }}" class="form-control">
+                                </div>
+                            </section>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Modifier</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <div class="col-lg-12 mt-4">
+        <div class="card">
+            <div class="header">
+                <h2>Liste des fournisseurs - Statistiques du mois en cours ({{moisact}} {{annee}})</h2>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                        <thead>
+                            <tr class='text'>
+                                <th>N°#</th>
+                                <th>Fournisseur</th>
+                                <th>Contact</th>
+                                {% for cat in all_categories %}
+                                    <th class="text-center">{{ cat }}</th>
+                                {% endfor %}
+                                <th class="text-center">Total Qté</th>
+                                <th class="text-center">Total Valeur</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr class='text'>
+                                <th>N°#</th>
+                                <th>Fournisseur</th>
+                                <th>Contact</th>
+                                {% for cat in all_categories %}
+                                    <th class="text-center">{{ cat }}</th>
+                                {% endfor %}
+                                <th class="text-center">Total Qté</th>
+                                <th class="text-center">Total Valeur</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            {% for data in fourniss_data %}
+                                <tr>
+                                    <th>{{ forloop.counter }}</th>
+                                    <th>{{ data.f.nom }}</th>
+                                    <th>{{ data.f.contact|default:"-" }}</th>
+                                    {% for cat in all_categories %}
+                                        <td class="text-center">
+                                            {% with stats=data.categories_dict|get_item:cat %}
+                                                {% if stats.qte > 0 %}
+                                                    <span class="badge badge-info">{{ stats.qte }}</span>
+                                                    <br>
+                                                    <small class="text-muted">{{ stats.valeur|floatformat:2 }} frs</small>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                    {% endfor %}
+                                    <td class="text-center">
+                                        <strong>{{ data.quant_piec }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <strong class="text-success">{{ data.val_piec|floatformat:2 }} frs</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="javascript:void(0);" data-toggle="modal" data-target="#editFournisseurModal{{ data.f.pk }}" title="Modifier">
+                                            <i class="icon-note text-warning"></i>
+                                        </a>
+                                        &nbsp;|&nbsp;
+                                        <a href="{% url 'fourniss' data.f.pk %}" 
+                                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer le fournisseur {{ data.f.nom }} ?')" 
+                                           title="Supprimer">
+                                            <i class="icon-trash text-danger"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="{{ total_cols }}" class="text-center text-muted p-3">
+                                        Aucun fournisseur enregistré.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

@@ -1,0 +1,1 @@
+var handleToastsInit=function(){$('[data-init="toast"]').toast("show")},handleToastToggle=function(){$(document).on("click",'[data-toggle="toast"]',(function(t){t.preventDefault();var a=$(this).attr("data-target");$(a).toast("show")}))};$(document).ready((function(){handleToastsInit(),handleToastToggle()}));

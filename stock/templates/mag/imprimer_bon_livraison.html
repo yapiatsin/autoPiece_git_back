@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ print_title }}</title>
+    <style type="text/css">
+        @page {
+            size: A4;
+            margin: 12mm;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f1ea;
+            color: #2c2c2c;
+            font-size: 10pt;
+        }
+        .page {
+            max-width: 210mm;
+            margin: 0 auto;
+            box-shadow: 0 0 12px rgba(0,0,0,.08);
+            background: #ffffff;
+        }
+        .header-bar {
+            background-color: #1e3d34;
+            color: #ffffff;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .header-bar td {
+            padding: 14px 24px;
+            vertical-align: middle;
+            color: #ffffff;
+        }
+        .brand-name {
+            font-size: 16pt;
+            font-weight: bold;
+        }
+        .brand-sub {
+            font-size: 7pt;
+            margin-top: 4px;
+        }
+        .header-contact {
+            text-align: right;
+            font-size: 8pt;
+            line-height: 1.5;
+        }
+        .body-pad { padding: 18px 24px 24px; }
+        .doc-title {
+            text-align: center;
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1e3d34;
+            margin: 0 0 16px;
+            letter-spacing: 0.02em;
+        }
+        .info-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+        }
+        .info-grid td {
+            width: 50%;
+            border: 1px solid #c8c8c8;
+            padding: 8px 10px;
+            font-size: 9.5pt;
+            vertical-align: middle;
+        }
+        .info-grid .lbl {
+            font-weight: bold;
+            margin-right: 4px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+        }
+        .items-table th {
+            background-color: #e8efe6;
+            border: 1px solid #c8c8c8;
+            padding: 7px 8px;
+            font-size: 8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #2c2c2c;
+            text-align: center;
+        }
+        .items-table td {
+            border: 1px solid #c8c8c8;
+            padding: 7px 8px;
+            font-size: 9pt;
+        }
+        .items-table .col-piece { width: 18%; }
+        .items-table .col-qte { width: 12%; }
+        .text-center { text-align: center; }
+        .summary-box {
+            border: 1px solid #c8c8c8;
+            padding: 14px 16px 28px;
+            font-size: 9.5pt;
+            line-height: 1.85;
+        }
+        .summary-box .val {
+            font-weight: bold;
+        }
+        .toolbar {
+            text-align: center;
+            padding: 12px;
+            background: #eeeeee;
+        }
+        .toolbar button {
+            padding: 8px 20px;
+            margin: 0 6px;
+            cursor: pointer;
+            border: 1px solid #1e3d34;
+            background: #1e3d34;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .toolbar .btn-secondary {
+            background: #fff;
+            color: #1e3d34;
+        }
+        .print-hint {
+            font-size: 12px;
+            color: #555;
+            margin-top: 8px;
+            max-width: 520px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media print {
+            body { background: #fff !important; }
+            .page { box-shadow: none; max-width: none; width: 100%; }
+            .toolbar, .print-hint { display: none !important; }
+            .items-table .empty-row { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button type="button" onclick="imprimerSansEntetes()">Imprimer</button>
+        <button type="button" class="btn-secondary" onclick="window.close()">Fermer</button>
+        <p class="print-hint">
+            Impression HTML : décocher « En-têtes et pieds de page » dans la boîte de dialogue.
+        </p>
+    </div>
+
+    <div class="page">
+        <table class="header-bar" cellpadding="0" cellspacing="0">
+            <tr>
+                <td width="55%">
+                    <div class="brand-name">P&amp;B AUTO-PIECE</div>
+                    <div class="brand-sub">Transfert inter-agences — Bon de livraison</div>
+                </td>
+                <td width="45%" class="header-contact">
+                    N° {{ bon.numero_bon_livraison }}<br>
+                    {{ bon.date_creation|date:"d/m/Y H:i" }}
+                </td>
+            </tr>
+        </table>
+
+        <div class="body-pad">
+            <h1 class="doc-title">BON DE LIVRAISON</h1>
+
+            <table class="info-grid" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td>
+                        <span class="lbl">N° demande</span>
+                        {{ demande.numero_demande }}
+                    </td>
+                    <td>
+                        <span class="lbl">Destinataire</span>
+                        {{ demande.local_demandeur.nom }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="lbl">Expéditeur</span>
+                        {{ demande.local_donneur.nom }}
+                    </td>
+                    <td>
+                        <span class="lbl">Livreur</span>
+                        {{ bon.livreur.get_full_name|default:bon.livreur.username }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="lbl">Bon commande</span>
+                        {{ demande.numero_bon_donneur|default:"—" }}
+                    </td>
+                    <td>
+                        <span class="lbl">Statut</span>
+                        {{ bon.get_statut_display }}
+                    </td>
+                </tr>
+            </table>
+
+            <table class="items-table" cellpadding="0" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th class="col-piece">N° pièce</th>
+                        <th>Désignation</th>
+                        <th class="col-qte">Qté</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ligne in lignes %}
+                    <tr>
+                        <td>{{ ligne.piece.numero_piece }}</td>
+                        <td>{{ ligne.piece.designation }}</td>
+                        <td class="text-center">{{ ligne.quantite }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% for i in empty_rows %}
+                    <tr class="empty-row">
+                        <td>&nbsp;</td><td></td><td></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="summary-box">
+                <div>
+                    Distance estimée :
+                    <span class="val">{{ bon.distance_km|floatformat:2 }} km</span>
+                </div>
+                <div>
+                    Coût calculé :
+                    <span class="val">{{ bon.cout_base|floatformat:0 }} F</span>
+                </div>
+                {% if bon.cout_ajustement %}
+                <div>
+                    Ajustement{% if bon.motif_ajustement %} ({{ bon.motif_ajustement }}){% endif %} :
+                    <span class="val">{{ bon.cout_ajustement|floatformat:0 }} F</span>
+                </div>
+                {% endif %}
+                <div>
+                    Coût total livraison :
+                    <span class="val">{{ bon.cout_total|floatformat:0 }} F</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var titreImpression = '{{ print_title|escapejs }}';
+        document.title = titreImpression;
+        function imprimerSansEntetes() {
+            document.title = titreImpression;
+            window.print();
+        }
+        window.imprimerSansEntetes = imprimerSansEntetes;
+        {% if auto_print %}
+        window.addEventListener('load', function () {
+            setTimeout(imprimerSansEntetes, 300);
+        });
+        {% endif %}
+    })();
+    </script>
+</body>
+</html>

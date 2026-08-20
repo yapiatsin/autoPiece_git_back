@@ -1,0 +1,1 @@
+var handleInitHighlightJs=function(){$(".hljs-container pre code").each((function(t,h){var n=$(this).attr("data-url");n?$.ajax({url:n,dataType:"html",success:function(t){t&&$(h).html(t),hljs.highlightElement(h)},error:function(t){hljs.highlightElement(h)}}):hljs.highlightElement(h)}))};$(document).ready((function(){handleInitHighlightJs()}));

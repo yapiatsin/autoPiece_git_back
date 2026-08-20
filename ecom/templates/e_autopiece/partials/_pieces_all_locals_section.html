@@ -1,0 +1,22 @@
+{% load static i18n %}
+<div class="weekly-best-selling-area rts-section-gap bg_light-1">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="title-area-between">
+                    <h2 class="title-left">{% trans "Stock par localité" %}</h2>
+                    <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary border-only">{% trans "Voir toute la boutique" %}</a>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4">
+            {% for piece in pieces_all %}
+            {% include 'e_autopiece/partials/_piece_card.html' with col_class='col-xxl-2 col-xl-3 col-lg-4 col-md-4 col-sm-6 col-12' next_url=shop_next_url %}
+            {% empty %}
+            <div class="col-12">
+                <p class="text-muted">{% trans "Aucune pièce en stock dans les localités." %}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

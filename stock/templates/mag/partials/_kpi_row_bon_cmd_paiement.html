@@ -1,0 +1,50 @@
+<div class="row dashboard-kpi-row w-100 mx-0">
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--revenue">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-file-text-o"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Bons émis (période)</div>
+                    <h4 class="number mb-0">{{ nb_bons }}</h4>
+                    <small class="text-muted">{{ filtre_resume }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--entry">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-calendar-check-o"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Bons aujourd'hui</div>
+                    <h4 class="number mb-0">{{ nb_bons_jour }}</h4>
+                    <small class="text-muted">{{ today|date:"d/m/Y" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-money"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Montants payés</div>
+                    <h4 class="number mb-0">{{ total_montant_paye }} <span class="kpi-value-muted">Fcfa</span></h4>
+                    <small class="text-muted">Période filtrée</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-shopping-cart"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Total commandes</div>
+                    <h4 class="number mb-0">{{ total_commandes }} <span class="kpi-value-muted">Fcfa</span></h4>
+                    <small class="text-muted">Période filtrée</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

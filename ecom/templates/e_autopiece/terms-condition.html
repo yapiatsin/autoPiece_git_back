@@ -1,0 +1,154 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Conditions générales" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+{% block content %}
+<div class="rts-navigation-area-breadcrumb">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="navigator-breadcrumb-wrapper">
+                    <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+                    <i class="fa-regular fa-chevron-right"></i>
+                    <a class="current" href="{% url 'ecom_terms_condition' %}">{% trans "Conditions générales" %}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="section-seperator">
+    <div class="container">
+        <hr class="section-seperator">
+    </div>
+</div>
+
+<div class="rts-pricavy-policy-area rts-section-gap">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="container-privacy-policy ecom-legal-content">
+                    <h1 class="title mb--40">{% trans "Conditions générales de vente — Auto-Pièce" %}</h1>
+                    <p class="disc ecom-legal-meta">{% trans "Dernière mise à jour : 15 juillet 2026" %}</p>
+                    <p class="disc">
+                        {% blocktrans %}Les présentes conditions générales de vente (CGV) régissent les commandes passées sur la boutique en ligne Auto-Pièce ainsi que les ventes réalisées via nos points de distribution partenaires. En validant une commande, vous reconnaissez avoir pris connaissance de ces conditions et les accepter.{% endblocktrans %}
+                    </p>
+                    <p class="disc">
+                        {% blocktrans %}Auto-Pièce commercialise des pièces et accessoires automobiles destinés à un usage conforme aux spécifications constructeur et aux pratiques professionnelles de l’entretien automobile. Les prix, disponibilités et délais peuvent varier selon la localité et le stock de l’entrepôt concerné.{% endblocktrans %}
+                    </p>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "1. Objet et champ d’application" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Les CGV s’appliquent à toute commande effectuée sur le site Auto-Pièce, qu’il s’agisse d’un retrait en magasin / entrepôt ou d’une livraison à domicile ou sur un point convenu.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Elles complètent les informations présentes sur les fiches produits (référence, désignation, compatibilité indiquée, prix affiché).{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "2. Compte client et commandes" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Certaines fonctionnalités (historique, confirmation de réception, favoris) nécessitent un compte Auto-Pièce actif.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Vous êtes responsable de l’exactitude des informations fournies (identité, contact, adresse de livraison) et du caractère confidentiel de vos identifiants.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Une commande en ligne n’est définitive qu’après validation selon le processus affiché (panier, localité, mode de réception, confirmation). Auto-Pièce peut refuser ou annuler une commande en cas d’indisponibilité, d’erreur manifeste de prix ou de suspicion de fraude.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "3. Prix, paiement et facturation" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Les prix sont indiqués en francs CFA (FCFA), sauf mention contraire, et peuvent être mis à jour à tout moment avant validation de la commande.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Le paiement s’effectue selon les modes proposés au moment de la commande (paiement en ligne ou à la livraison / au magasin, selon disponibilité et localité).{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}La commande peut demeurer en attente tant que le règlement n’est pas confirmé. Un reçu ou un justificatif peut être fourni conformément aux pratiques du point de vente.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "4. Stock, disponibilité et localité" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Les stocks sont gérés par localité / entrepôt. Une pièce affichée comme disponible peut devenir indisponible entre la consultation et la validation ; dans ce cas, Auto-Pièce vous en informe et propose une alternative ou un remboursement / annulation selon le cas.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Le choix de la localité influence les prix éventuels, les délais et le mode de livraison. Vérifiez toujours la localité avant de valider votre panier.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "5. Livraison et retrait" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}<strong>Retrait :</strong> vous récupérez la commande au point indiqué après notification de disponibilité.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}<strong>Livraison :</strong> un livreur peut être affecté à votre commande ; les délais sont donnés à titre indicatif et dépendent de la zone et de la disponibilité.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}À la réception, vérifiez l’état des colis et la conformité des pièces. Signalez immédiatement toute anomalie au livreur ou au support Auto-Pièce.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "6. Compatibilité des pièces" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Les informations de compatibilité fournies sur le site le sont de bonne foi. Il vous appartient de vérifier l’adéquation de la pièce à votre véhicule (référence constructeur, année, motorisation) avant montage.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Auto-Pièce ne saurait être tenu responsable d’un montage incorrect ou d’une utilisation non conforme aux préconisations constructeur.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "7. Retours, échanges et réclamations" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Toute demande de retour ou d’échange doit être formulée dans les meilleurs délais auprès du support ou du magasin concerné, avec le numéro de commande et les justificatifs nécessaires.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Les pièces utilisées, montées, endommagées ou non dans leur emballage d’origine peuvent être refusées au retour, sauf défaut avéré reconnu.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Réclamations : <a href="mailto:contact@autopiece.ci">contact@autopiece.ci</a> ou page Support / Contact.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="section-list mt--40">
+                        <h2 class="title">{% trans "8. Responsabilité et droit applicable" %}</h2>
+                        <ul>
+                            <li>
+                                <p>{% blocktrans %}Auto-Pièce met en œuvre les moyens raisonnables pour assurer la disponibilité du site et l’exactitude des informations. Des interruptions (maintenance, force majeure) peuvent survenir.{% endblocktrans %}</p>
+                            </li>
+                            <li>
+                                <p>{% blocktrans %}Les présentes CGV sont régies par le droit applicable en Côte d’Ivoire. Tout litige sera prioritairement traité à l’amiable, puis devant les juridictions compétentes.{% endblocktrans %}</p>
+                            </li>
+                        </ul>
+                        <p class="disc mt--30">
+                            {% blocktrans %}Pour toute question sur vos commandes ou ces conditions, l’équipe Auto-Pièce reste à votre disposition via le support client et la page Contact du site.{% endblocktrans %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

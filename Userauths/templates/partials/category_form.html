@@ -1,0 +1,25 @@
+<div class="modal-body">
+    <form id="categoryForm" method="post" novalidate>
+        {% csrf_token %}
+        <div class="row clearfix">
+            <div class="col-md-12 form-group">
+                <label>Nom de la Catégorie *</label>
+                {{ form.categorie }}
+                {% if form.categorie.errors %}
+                <div class="text-danger">{{ form.categorie.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-outline-success">Enregistrer</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#categoryForm').data('object-id', {% if object %}{{ object.pk }}{% else %}null{% endif %});
+    });
+</script>
+

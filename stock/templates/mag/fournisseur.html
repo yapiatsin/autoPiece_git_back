@@ -1,0 +1,183 @@
+{% extends "app/appbase.html" %}
+<title>{% block title %} Mon espace santé {% endblock title %}</title>
+
+{% block header %}
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <h2>{% block page_title %}Mon espace santé{% endblock page_title %} </h2>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url "esp_san" %}"> <i class="fa fa-home"></i>Tableau de bord</a></li>
+                <li class="breadcrumb-item active"> {% block page %}Fournisseurs{% endblock page %}</li>
+            </ul>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="d-flex flex-row-reverse">
+                <div class="page_action">
+                    {% block page_action %}
+                        <button type="button" class="btn btn-outline-danger"><i class="fa fa-download"></i> Telecharger le report</button>
+                        <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#addcontact"><i class="fa fa-calendar"></i></button>
+                    {% endblock page_action %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock header %}
+
+{% block main_content %}
+
+    <div class="modal fade" id="addinf" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <input type="text" value="NOUVEAU FOURNISSEUR" class="form-control text-center" disabled>
+                </div>
+                <div class="modal-body">
+                    <form id="basic-form" method="post" novalidate enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row clearfix">
+                            <div class="col-md-12 form-group"></div>
+                                <div class="col-12">
+                                    <label>Logo fournisseur</label>
+                                    <div class="form-group">                                    
+                                        {{form.image}}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label>Nom</label>
+                                    <div class="form-group">                                    
+                                        {{form.nom}}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label>Contact</label>
+                                    <div class="form-group">                                    
+                                        {{form.contact}}
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-outline-success" >Enrégistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="mobile-left">
+                <a class="btn btn-primary toggle-email-nav collapsed" data-toggle="collapse" href="#email-nav" role="button" aria-expanded="false" aria-controls="email-nav">
+                    <span class="btn-label"><i class="la la-bars"></i></span>
+                    Menu
+                </a>
+            </div>
+            <div class="mail-inbox">
+                <div class="mail-left collapse" id="email-nav">
+                    <div class="mail-compose m-b-20">
+                        <a href="app-compose.html" class="btn btn-outline-danger btn-block" data-toggle="modal" data-target="#addinf">Nouveau fournisseur <i class="fa fa-edit"></i></a>
+                    </div>
+                    <div class="mail-side">
+                        <ul class="nav">
+                            {% for c in categorie %}
+                                <li class="active"><a href="javascript:void(0);"><i class="icon-star"></i>{{c.categorie}}<span class="badge badge-primary float-right"> 6 </span></a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="mail-right">
+                    <div class="header d-flex align-center">
+                        <h2>Liste des fournisseurs</h2>
+                        <form class="ml-auto">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Rechercher une categorie" aria-label="Search Mail" aria-describedby="search-mail">
+                                <div class="input-group-append">
+                                    <button class="input-group-text" id="search-mail"><i class="icon-magnifier"></i></button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="mail-list">
+                        <ul class="list-unstyled">
+                            {% for c in fournis %}
+                                <li class="clearfix">
+                                    <div class="mail-detail-left">
+                                        <img style="height:45px;width:45px;" src="{{ c.image.url }}" alt="">
+                                    </div>
+                                    <div class="mail-detail-right">
+                                        <h6 class="sub"><a href="javascript:void(0);" class="mail-detail-expand">{{c.nom}}</a></h6>
+                                        <p class="dep"><span class="m-r-10">{{c.contact}}</span></p>
+                                        <span class="time">Enregistré le {{c.date_creation|date:"d-m-y"}}</span>
+                                    </div>
+                                    <div class="hover-action">
+                                        <a class="btn btn-danger mr-2" href="{% url "delfourn" c.pk %}" onclick="return confirm('Etes-vous sûre de vouloir supprimer le fournisseur {{c.nom}} - {{c.contact}}?, car si vous supprimer toutes les informations liées seront supprimées')"><i class="fa fa-trash-o"></i></a>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="mail-detail-full" id="mail-detail-open" style="display: none;">
+                        <div class="mail-action clearfix">
+                            <div class="pull-left">
+                                <div class="fancy-checkbox d-inline-block">
+                                    <label>
+                                        <input class="select-all" type="checkbox" name="checkbox">
+                                        <span></span>
+                                    </label>
+                                </div>
+                                <div class="btn-group">
+                                    <a href="javascript:void(0);" class="btn btn-outline-secondary btn-sm hidden-sm">Refresh</a>
+                                    <a href="javascript:void(0);" class="btn btn-outline-secondary btn-sm hidden-sm">Archive</a>
+                                    <a href="javascript:void(0);" class="btn btn-outline-secondary btn-sm">Trash</a>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tags</button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="javascript:void(0);">Tag 1</a>
+                                        <a class="dropdown-item" href="javascript:void(0);">Tag 2</a>
+                                        <a class="dropdown-item" href="javascript:void(0);">Tag 3</a>
+                                    </div>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More</button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="javascript:void(0);">Mark as read</a>
+                                        <a class="dropdown-item" href="javascript:void(0);">Mark as unread</a>
+                                        <a class="dropdown-item" href="javascript:void(0);">Spam</a>
+                                        <div role="separator" class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="javascript:void(0);">Delete</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pull-right ml-auto">
+                                <a href="javascript:void(0);" class="mail-back btn btn-outline-secondary btn-sm"><i class="fa fa-close"></i></a>
+                            </div>
+                        </div>
+                        <div class="detail-header">
+                            <div class="media">
+                                <div class="float-left">
+                                    <div class="mr-3"><img src="assets/images/sm/avatar1.jpg" alt=""></div>
+                                </div>
+                                <div class="media-body">
+                                    <p class="mb-0"><strong class="text-muted m-r-5">From:</strong><a class="text-default" href="javascript:void(0);">info@thememakker.com</a> <span class="text-muted text-sm float-right">12:48, 23.06.2018</span></p>
+                                    <p class="mb-0"><strong class="text-muted m-r-5">To:</strong>Me <small class="text-muted float-right"><i class="zmdi zmdi-attachment m-r-5"></i>(2 files, 89.2 KB)</small></p>
+                                    <p class="mb-0"><strong class="text-muted m-r-5">CC:</strong><a class="text-default" href="javascript:void(0);">mail@thememakker.com</a></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mail-cnt">
+                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.</p>
+                            <p>printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrnturies, but also the leap into electronic typesetting, remaining essentially unchanged.</p>
+                            <hr>
+                            <strong>Click here to</strong>
+                            <a href="app-compose.html">Reply</a> or
+                            <a href="app-compose.html">Forward</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main_content %}
+

@@ -1,0 +1,50 @@
+<div class="row dashboard-kpi-row w-100 mx-0">
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--revenue">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-list-alt"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Total commande</div>
+                    <h4 class="number mb-0">{{ tot_panier_day }}</h4>
+                    <small class="text-muted">{{ Date|date:"d-m-Y" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--entry">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-clock-o"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Commandes en attente</div>
+                    <h4 class="number mb-0">{{ tot_en_at }}</h4>
+                    <small class="text-muted">{{ Date|date:"d-m-Y" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-truck"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Commandes livrées</div>
+                    <h4 class="number mb-0">{{ tot_livre }}</h4>
+                    <small class="text-muted">{{ Date|date:"d-m-Y" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-calendar"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Commandes mensuelles livrées</div>
+                    <h4 class="number mb-0">{{ tot_mens_livre }}</h4>
+                    <small class="text-muted">{{ mois }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

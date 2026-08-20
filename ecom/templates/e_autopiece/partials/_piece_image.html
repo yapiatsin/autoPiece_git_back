@@ -1,0 +1,8 @@
+{% load static %}
+{% if piece.image %}
+<img src="{{ piece.image.url }}" alt="{{ piece.designation }}">
+{% else %}
+<div class="ecom-piece-placeholder" aria-hidden="true">
+    <i class="fa-solid fa-gears"></i>
+</div>
+{% endif %}

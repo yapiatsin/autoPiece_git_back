@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+        .info-section {
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .total-section {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .total-section p {
+            margin: 5px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AUTO-PIECE</h1>
+        <p>Vente de pièces détachées</p>
+        <h2>PROFORMA #{{ panier.ticket }}</h2>
+    </div>
+    
+    <div class="info-section">
+        <div class="info-row">
+            <div>
+                <strong>Date:</strong> {{ panier.date_creation|date:"d/m/Y" }}
+            </div>
+            <div>
+                {% if commande %}
+                <strong>Commande:</strong> {{ commande.numero_commande }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="info-row">
+            <div>
+                <strong>Client:</strong> {{ panier.nom_client|default:"Non renseigné" }}
+            </div>
+            <div>
+                {% if panier.utilisateur %}
+                <strong>Créé par:</strong> {{ panier.utilisateur.username }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Désignation</th>
+                <th>Catégorie</th>
+                <th>Quantité</th>
+                <th>Prix unitaire</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in panier_items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.piece.designation }}</td>
+                <td>{{ item.piece.categorie.categorie }}</td>
+                <td>{{ item.quantite }}</td>
+                <td>{{ item.piece.prix_unitaire|floatformat:2 }} FRS</td>
+                <td>{{ item.prix_total|floatformat:2 }} FRS</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="total-section">
+        <p><strong>Sous-total:</strong> {{ total|floatformat:2 }} FRS</p>
+        <p><strong>Remise:</strong> {{ remise_pourcent }}</p>
+        <h3><strong>TOTAL: {{ total_apres_remise|floatformat:2 }} FRS</strong></h3>
+    </div>
+    
+    <div class="footer">
+        <p>Cette proforma est valable pour une durée limitée. Les prix sont sujets à modification sans préavis.</p>
+        <p>Merci de votre confiance!</p>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,568 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Mon compte" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+{% block content %}
+<div class="rts-navigation-area-breadcrumb bg_light-1">
+    <div class="container">
+        <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span class="current">{% trans "Mon compte" %}</span>
+        </div>
+    </div>
+</div>
+
+<div class="account-tab-area-start rts-section-gap">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3">
+                <nav class="ecom-account-nav" aria-label="{% trans 'Menu mon compte' %}" data-ecom-account-tabs>
+                    <p class="ecom-account-nav-title">{% trans "Mon compte" %}</p>
+                    <ul class="ecom-account-nav-list">
+                        <li>
+                            <a href="?tab=dashboard&mois={{ mois_achats }}&annee={{ annee_achats }}" data-tab="dashboard" class="ecom-account-nav-link{% if active_tab == 'dashboard' %} is-active{% endif %}">
+                                <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                                <span>{% trans "Tableau de bord" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="?tab=orders&mois={{ mois_achats }}&annee={{ annee_achats }}" data-tab="orders" class="ecom-account-nav-link{% if active_tab == 'orders' %} is-active{% endif %}">
+                                <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+                                <span>{% trans "Mes commandes" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'ecom_wishlist' %}" class="ecom-account-nav-link">
+                                <i class="fa-solid fa-heart" aria-hidden="true"></i>
+                                <span>{% trans "Mes favoris" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'ecom_vues_recentes' %}" class="ecom-account-nav-link">
+                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                <span>{% trans "Vues récentes" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="?tab=address" data-tab="address" class="ecom-account-nav-link{% if active_tab == 'address' %} is-active{% endif %}">
+                                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                <span>{% trans "Mon adresse" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="?tab=details" data-tab="details" class="ecom-account-nav-link{% if active_tab == 'details' %} is-active{% endif %}">
+                                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                                <span>{% trans "Détails du compte" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="?tab=password" data-tab="password" class="ecom-account-nav-link{% if active_tab == 'password' %} is-active{% endif %}">
+                                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                                <span>{% trans "Mot de passe" %}</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <a href="{% url 'deconnexion' %}" class="ecom-account-nav-logout">
+                        <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                        <span>{% trans "Déconnexion" %}</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="col-lg-9 pl--50 pl_md--10 pl_sm--10 pt_md--30 pt_sm--30">
+                <div class="ecom-account-panels">
+                <div data-account-panel="dashboard" class="dashboard-account-area ecom-account-panel{% if active_tab != 'dashboard' %} d-none{% endif %}">
+                    <div class="ecom-account-dash-top">
+                        <div class="ecom-account-dash-intro">
+                            <h2 class="title">
+                                {% trans "Bonjour" %}
+                                {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %} !
+                                <a href="{% url 'deconnexion' %}">{% trans "Déconnexion" %}</a>
+                            </h2>
+                            <p class="disc">
+                                {% trans "Depuis votre espace client, consultez vos commandes, gérez votre adresse de livraison, mettez à jour votre profil et modifiez votre mot de passe." %}
+                            </p>
+                        </div>
+                        <form method="get" class="ecom-account-period-filter" action="{% url 'ecom_account' %}">
+                            <input type="hidden" name="tab" value="dashboard">
+                            <span class="ecom-account-period-icon" aria-hidden="true">
+                                <i class="fa-solid fa-calendar-days"></i>
+                            </span>
+                            <div class="ecom-account-period-field">
+                                <label class="visually-hidden" for="ecomAccountMonthFilter">{% trans "Mois" %}</label>
+                                <select
+                                    id="ecomAccountMonthFilter"
+                                    class="ecom-account-period-select"
+                                    name="mois"
+                                    aria-label="{% trans 'Mois' %}"
+                                    onchange="this.form.submit()">
+                                    {% for num, label in mois_labels %}
+                                    <option value="{{ num }}" {% if num == mois_achats %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <i class="fa-solid fa-chevron-down ecom-account-period-chevron" aria-hidden="true"></i>
+                            </div>
+                            <div class="ecom-account-period-field ecom-account-period-field--year">
+                                <label class="visually-hidden" for="ecomAccountYearFilter">{% trans "Année" %}</label>
+                                <select
+                                    id="ecomAccountYearFilter"
+                                    class="ecom-account-period-select ecom-account-period-select--year"
+                                    name="annee"
+                                    aria-label="{% trans 'Année' %}"
+                                    onchange="this.form.submit()">
+                                    {% for y in annees_disponibles %}
+                                    <option value="{{ y }}" {% if y == annee_achats %}selected{% endif %}>{{ y }}</option>
+                                    {% endfor %}
+                                </select>
+                                <i class="fa-solid fa-chevron-down ecom-account-period-chevron" aria-hidden="true"></i>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="row g-3 ecom-account-stats">
+                        <div class="col-md-6 col-xl-3">
+                            <div class="ecom-account-stat-card ecom-account-stat-card--purchases">
+                                <span class="ecom-account-stat-icon"><i class="fa-solid fa-wallet"></i></span>
+                                <div class="ecom-account-stat-purchases-body">
+                                    <p class="ecom-account-stat-label">{% trans "Total des achats" %}</p>
+                                    <p class="ecom-account-stat-value ecom-account-stat-value--money">
+                                        {{ total_achats_periode|floatformat:0 }} FCFA
+                                    </p>
+                                    <p class="ecom-account-stat-meta">
+                                        {% blocktrans count counter=nb_commandes_periode with month=mois_achats_label year=annee_achats %}{{ counter }} commande en {{ month }} {{ year }}{% plural %}{{ counter }} commandes en {{ month }} {{ year }}{% endblocktrans %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-3">
+                            <div class="ecom-account-stat-card">
+                                <span class="ecom-account-stat-icon"><i class="fa-solid fa-box"></i></span>
+                                <div>
+                                    <p class="ecom-account-stat-label">{% trans "Commandes" %}</p>
+                                    <p class="ecom-account-stat-value">{{ stats_commandes }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-3">
+                            <div class="ecom-account-stat-card">
+                                <span class="ecom-account-stat-icon"><i class="fa-solid fa-heart"></i></span>
+                                <div>
+                                    <p class="ecom-account-stat-label">{% trans "Favoris" %}</p>
+                                    <p class="ecom-account-stat-value">{{ stats_favoris }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-3">
+                            <div class="ecom-account-stat-card">
+                                <span class="ecom-account-stat-icon"><i class="fa-solid fa-eye"></i></span>
+                                <div>
+                                    <p class="ecom-account-stat-label">{% trans "Vues récentes" %}</p>
+                                    <p class="ecom-account-stat-value">{{ stats_vues }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if commandes_recentes %}
+                        <div class="order-table-account mt-5">
+                            <div class="h2 title">{% trans "Commandes récentes" %}</div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "Commande" %}</th>
+                                            <th>{% trans "Date" %}</th>
+                                            <th>{% trans "Statut" %}</th>
+                                            <th>{% trans "Total" %}</th>
+                                            <th>{% trans "Actions" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for cmd in commandes_recentes %}
+                                        <tr>
+                                            <td>{{ cmd.numero_commande }}</td>
+                                            <td>{{ cmd.date_creation|date:"d/m/Y" }}</td>
+                                            <td>{{ cmd.get_statut_commande_display }}</td>
+                                            <td>{{ cmd.total|floatformat:0 }} FCFA</td>
+                                            <td><a href="{% url 'ecom_invoice' cmd.pk %}" class="btn-small d-block">{% trans "Facture" %}</a></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div data-account-panel="orders" class="order-table-account ecom-account-panel{% if active_tab != 'orders' %} d-none{% endif %}">
+                    <div class="ecom-account-orders-top">
+                        <div class="ecom-account-orders-heading">
+                            <h2 class="ecom-account-orders-title">{% trans "Mes commandes" %}</h2>
+                            <p class="ecom-account-orders-subtitle">
+                                {% blocktrans with month=mois_achats_label year=annee_achats %}Période : {{ month }} {{ year }}{% endblocktrans %}
+                            </p>
+                        </div>
+                        <form method="get" class="ecom-account-period-filter" action="{% url 'ecom_account' %}">
+                            <input type="hidden" name="tab" value="orders">
+                            <span class="ecom-account-period-icon" aria-hidden="true">
+                                <i class="fa-solid fa-calendar-days"></i>
+                            </span>
+                            <div class="ecom-account-period-field">
+                                <label class="visually-hidden" for="ecomOrdersMonthFilter">{% trans "Mois" %}</label>
+                                <select
+                                    id="ecomOrdersMonthFilter"
+                                    class="ecom-account-period-select"
+                                    name="mois"
+                                    aria-label="{% trans 'Mois' %}"
+                                    onchange="this.form.submit()">
+                                    {% for num, label in mois_labels %}
+                                    <option value="{{ num }}" {% if num == mois_achats %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <i class="fa-solid fa-chevron-down ecom-account-period-chevron" aria-hidden="true"></i>
+                            </div>
+                            <div class="ecom-account-period-field ecom-account-period-field--year">
+                                <label class="visually-hidden" for="ecomOrdersYearFilter">{% trans "Année" %}</label>
+                                <select
+                                    id="ecomOrdersYearFilter"
+                                    class="ecom-account-period-select ecom-account-period-select--year"
+                                    name="annee"
+                                    aria-label="{% trans 'Année' %}"
+                                    onchange="this.form.submit()">
+                                    {% for y in annees_disponibles %}
+                                    <option value="{{ y }}" {% if y == annee_achats %}selected{% endif %}>{{ y }}</option>
+                                    {% endfor %}
+                                </select>
+                                <i class="fa-solid fa-chevron-down ecom-account-period-chevron" aria-hidden="true"></i>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "N° commande" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Localité" %}</th>
+                                    <th>{% trans "Statut" %}</th>
+                                    <th>{% trans "Total" %}</th>
+                                    <th>{% trans "Réception" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cmd in commandes %}
+                                <tr>
+                                    <td>{{ cmd.numero_commande }}</td>
+                                    <td>{{ cmd.date_creation|date:"d/m/Y" }}</td>
+                                    <td>{{ cmd.panier.local_entrepot.nom|default:"—" }}</td>
+                                    <td>
+                                        <span class="ecom-account-badge{% if cmd.statut_commande == 'annuler' %} is-cancelled{% elif cmd.statut_commande == 'livrer' %} is-success{% endif %}">
+                                            {{ cmd.get_statut_commande_display }}
+                                        </span>
+                                        {% if cmd.client_confirme_reception %}
+                                        <span class="ecom-account-badge is-success">{% trans "Reçu" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ cmd.total|floatformat:0 }} FCFA</td>
+                                    <td>{{ cmd.panier.get_mode_reception_display|default:"—" }}</td>
+                                    <td>
+                                        <div class="ecom-account-actions">
+                                            <a href="{% url 'ecom_invoice' cmd.pk %}" class="ecom-account-action-link">
+                                                <i class="fa-solid fa-file-invoice" aria-hidden="true"></i>
+                                                <span>{% trans "Facture" %}</span>
+                                            </a>
+                                            {% if cmd.statut_commande == 'annuler' %}
+                                            <span class="ecom-orders-cancelled">
+                                                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                                                {% trans "Annulée" %}
+                                            </span>
+                                            {% elif cmd.statut_commande == 'livrer' and not cmd.client_confirme_reception %}
+                                            <form method="post" action="{% url 'ecom_confirmer_reception' cmd.pk %}" class="ecom-account-action-form">
+                                                {% csrf_token %}
+                                                <button type="submit" class="rts-btn btn-primary border-only radious-sm with-icon ecom-orders-action-btn">
+                                                    <div class="btn-text">{% trans "J'ai reçu" %}</div>
+                                                    <div class="arrow-icon"><i class="fa-solid fa-check"></i></div>
+                                                    <div class="arrow-icon"><i class="fa-solid fa-check"></i></div>
+                                                </button>
+                                            </form>
+                                            {% elif cmd.client_confirme_reception %}
+                                            <span class="ecom-orders-confirmed">
+                                                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                                {% trans "Confirmé" %}
+                                            </span>
+                                            {% elif cmd.statut_commande == 'en_attente' or cmd.statut_commande == 'valider' %}
+                                            {% if not cmd.paye %}
+                                            <form method="post" action="{% url 'ecom_annuler_commande' cmd.pk %}" class="ecom-account-action-form"
+                                                  onsubmit="return confirm('{% filter escapejs %}{% trans "Confirmer l'annulation de cette commande ?" %}{% endfilter %}');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{% url 'ecom_account' %}?tab=orders&mois={{ mois_achats }}&annee={{ annee_achats }}">
+                                                <button type="submit" class="rts-btn btn-primary border-only radious-sm with-icon ecom-orders-action-btn ecom-orders-cancel-btn">
+                                                    <div class="btn-text">{% trans "Annuler" %}</div>
+                                                    <div class="arrow-icon"><i class="fa-solid fa-xmark"></i></div>
+                                                    <div class="arrow-icon"><i class="fa-solid fa-xmark"></i></div>
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <span class="ecom-orders-pending">
+                                                <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                                                {% trans "En attente" %}
+                                            </span>
+                                            {% endif %}
+                                            {% else %}
+                                            <span class="ecom-orders-pending">
+                                                <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                                                {% trans "En attente" %}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-muted">
+                                        {% blocktrans with month=mois_achats_label year=annee_achats %}Aucune commande en {{ month }} {{ year }}.{% endblocktrans %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if stats_commandes == 0 %}
+                    <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary mt-3">{% trans "Parcourir la boutique" %}</a>
+                    {% endif %}
+                </div>
+
+                <div data-account-panel="address" class="shipping-address-billing-address-account ecom-account-panel ecom-account-address-panel{% if active_tab != 'address' %} d-none{% endif %}">
+                    <form method="post" action="?tab=address" class="account-details-area w-100">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="address">
+                        <h2 class="title">{% trans "Mon adresse de livraison" %}</h2>
+                        <p class="disc mb-4">{% trans "Cette adresse pourra être utilisée lors de vos commandes en ligne." %}</p>
+
+                        <div class="single-input mb-3">
+                            <label for="{{ address_form.adresse.id_for_label }}">{{ address_form.adresse.label }}</label>
+                            {{ address_form.adresse }}
+                            {% if address_form.adresse.errors %}<p class="text-danger small mb-0">{{ address_form.adresse.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="input-half-area">
+                            <div class="single-input">
+                                <label for="{{ address_form.ville.id_for_label }}">{{ address_form.ville.label }}</label>
+                                {{ address_form.ville }}
+                                {% if address_form.ville.errors %}<p class="text-danger small mb-0">{{ address_form.ville.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div class="single-input">
+                                <label for="{{ address_form.code_postal.id_for_label }}">{{ address_form.code_postal.label }}</label>
+                                {{ address_form.code_postal }}
+                                {% if address_form.code_postal.errors %}<p class="text-danger small mb-0">{{ address_form.code_postal.errors.0 }}</p>{% endif %}
+                            </div>
+                        </div>
+                        <div class="single-input mt-3">
+                            <label for="{{ address_form.pays.id_for_label }}">{{ address_form.pays.label }}</label>
+                            {{ address_form.pays }}
+                            {% if address_form.pays.errors %}<p class="text-danger small mb-0">{{ address_form.pays.errors.0 }}</p>{% endif %}
+                        </div>
+                        <button type="submit" class="rts-btn btn-primary mt-4">{% trans "Enregistrer l'adresse" %}</button>
+                    </form>
+                </div>
+
+                <div data-account-panel="details" class="ecom-account-panel{% if active_tab != 'details' %} d-none{% endif %}">
+                    <h2 class="title">{% trans "Détails du compte" %}</h2>
+                    <p class="disc mb-4">{% trans "Mettez à jour vos informations personnelles et votre photo de profil." %}</p>
+
+                    <form method="post" action="?tab=details" enctype="multipart/form-data" id="ecom-account-photo-form" class="ecom-account-photo-form mb-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="photo">
+                        <div class="ecom-account-profile-head">
+                            <div class="ecom-account-avatar-wrap">
+                                <button type="button" class="ecom-account-avatar-trigger" id="ecom-account-avatar-trigger" title="{% trans 'Changer la photo' %}" aria-label="{% trans 'Changer la photo de profil' %}">
+                                    {% if has_custom_photo %}
+                                    <img src="{{ profil.photo.url }}" alt="{% trans 'Photo de profil' %}" class="ecom-account-avatar" id="ecom-account-avatar-img">
+                                    <span class="ecom-account-avatar ecom-account-avatar--initials d-none" id="ecom-account-avatar-initials" aria-hidden="true">{{ user_initials }}</span>
+                                    {% else %}
+                                    <img src="" alt="{% trans 'Photo de profil' %}" class="ecom-account-avatar d-none" id="ecom-account-avatar-img">
+                                    <span class="ecom-account-avatar ecom-account-avatar--initials" id="ecom-account-avatar-initials" aria-hidden="true">{{ user_initials }}</span>
+                                    {% endif %}
+                                </button>
+                                <button type="button" class="ecom-account-camera-btn" id="ecom-account-camera-btn" title="{% trans 'Changer la photo' %}" aria-label="{% trans 'Choisir une photo' %}">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                                <input type="file" name="photo" id="ecom-account-photo-input" class="ecom-account-photo-input" accept="image/*">
+                            </div>
+                            <div class="ecom-account-photo-actions">
+                                <p class="ecom-account-photo-hint mb-2">{% trans "Cliquez sur la photo ou l'icône caméra pour choisir une image." %}</p>
+                                <button type="submit" class="ecom-account-photo-validate" id="ecom-account-photo-validate" disabled>
+                                    <span class="ecom-account-photo-validate-icon"><i class="fa-solid fa-check"></i></span>
+                                    {% trans "Valider la photo" %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <form method="post" action="?tab=details" class="account-details-area">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="profile">
+
+                        <div class="input-half-area">
+                            <div class="single-input">
+                                <label for="{{ profile_form.first_name.id_for_label }}">{{ profile_form.first_name.label }}</label>
+                                {{ profile_form.first_name }}
+                                {% if profile_form.first_name.errors %}<p class="text-danger small mb-0">{{ profile_form.first_name.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div class="single-input">
+                                <label for="{{ profile_form.last_name.id_for_label }}">{{ profile_form.last_name.label }}</label>
+                                {{ profile_form.last_name }}
+                                {% if profile_form.last_name.errors %}<p class="text-danger small mb-0">{{ profile_form.last_name.errors.0 }}</p>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="input-half-area mt-3">
+                            <div class="single-input">
+                                <label>{% trans "Nom d'utilisateur" %}</label>
+                                <input type="text" class="ecom-account-input" value="{{ user.username }}" readonly>
+                            </div>
+                            <div class="single-input">
+                                <label>{% trans "Email" %}</label>
+                                <input type="email" class="ecom-account-input" value="{{ user.email }}" readonly>
+                            </div>
+                        </div>
+
+                        <div class="input-half-area mt-3">
+                            <div class="single-input">
+                                <label for="{{ profile_form.contact.id_for_label }}">{{ profile_form.contact.label }}</label>
+                                {{ profile_form.contact }}
+                                {% if profile_form.contact.errors %}<p class="text-danger small mb-0">{{ profile_form.contact.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div class="single-input">
+                                <label for="{{ profile_form.date_naissance.id_for_label }}">{{ profile_form.date_naissance.label }}</label>
+                                {{ profile_form.date_naissance }}
+                            </div>
+                        </div>
+
+                        <div class="single-input mt-3">
+                            <label for="{{ profile_form.bio.id_for_label }}">{{ profile_form.bio.label }}</label>
+                            {{ profile_form.bio }}
+                        </div>
+
+                        <button type="submit" class="rts-btn btn-primary mt-4">{% trans "Enregistrer les modifications" %}</button>
+                    </form>
+                </div>
+
+                <div data-account-panel="password" class="ecom-account-panel{% if active_tab != 'password' %} d-none{% endif %}">
+                    <form method="post" action="?tab=password" class="account-details-area">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="password">
+                        <h2 class="title">{% trans "Modifier le mot de passe" %}</h2>
+                        <p class="disc mb-4">
+                            {% trans "Choisissez un mot de passe d'au moins 8 caractères." %}
+                            <a href="{% url 'request_email' %}">{% trans "Mot de passe oublié ?" %}</a>
+                        </p>
+
+                        <div class="single-input mb-3">
+                            <label for="{{ password_form.old_password.id_for_label }}">{{ password_form.old_password.label }}</label>
+                            {{ password_form.old_password }}
+                            {% if password_form.old_password.errors %}<p class="text-danger small mb-0">{{ password_form.old_password.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="single-input mb-3">
+                            <label for="{{ password_form.new_password1.id_for_label }}">{{ password_form.new_password1.label }}</label>
+                            {{ password_form.new_password1 }}
+                            {% if password_form.new_password1.errors %}<p class="text-danger small mb-0">{{ password_form.new_password1.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="single-input mb-3">
+                            <label for="{{ password_form.new_password2.id_for_label }}">{{ password_form.new_password2.label }}</label>
+                            {{ password_form.new_password2 }}
+                            {% if password_form.new_password2.errors %}<p class="text-danger small mb-0">{{ password_form.new_password2.errors.0 }}</p>{% endif %}
+                        </div>
+                        {% if password_form.non_field_errors %}
+                        <div class="alert alert-danger">{{ password_form.non_field_errors.0 }}</div>
+                        {% endif %}
+
+                        <button type="submit" class="rts-btn btn-primary">{% trans "Mettre à jour le mot de passe" %}</button>
+                    </form>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var tabsNav = document.querySelector('[data-ecom-account-tabs]');
+    if (!tabsNav) return;
+
+    var links = tabsNav.querySelectorAll('.ecom-account-nav-link[data-tab]');
+    var panels = document.querySelectorAll('[data-account-panel]');
+
+    function switchTab(tab, pushState) {
+        if (!tab) return;
+
+        links.forEach(function (link) {
+            link.classList.toggle('is-active', link.getAttribute('data-tab') === tab);
+        });
+
+        panels.forEach(function (panel) {
+            panel.classList.toggle('d-none', panel.getAttribute('data-account-panel') !== tab);
+        });
+
+        if (pushState) {
+            var url = new URL(window.location.href);
+            url.searchParams.set('tab', tab);
+            if (tab !== 'dashboard' && tab !== 'orders') {
+                url.searchParams.delete('mois');
+                url.searchParams.delete('annee');
+            }
+            history.pushState({ tab: tab }, '', url.pathname + url.search);
+        }
+    }
+
+    links.forEach(function (link) {
+        link.addEventListener('click', function (event) {
+            var tab = link.getAttribute('data-tab');
+            if (!tab) return;
+            event.preventDefault();
+            switchTab(tab, true);
+        });
+    });
+
+    window.addEventListener('popstate', function (event) {
+        var tab = (event.state && event.state.tab)
+            || new URL(window.location.href).searchParams.get('tab')
+            || 'dashboard';
+        switchTab(tab, false);
+    });
+
+    // Photo profil
+    var input = document.getElementById('ecom-account-photo-input');
+    var trigger = document.getElementById('ecom-account-avatar-trigger');
+    var camera = document.getElementById('ecom-account-camera-btn');
+    var img = document.getElementById('ecom-account-avatar-img');
+    var initials = document.getElementById('ecom-account-avatar-initials');
+    var validateBtn = document.getElementById('ecom-account-photo-validate');
+    if (input && validateBtn) {
+        function openPicker() {
+            input.click();
+        }
+        if (trigger) trigger.addEventListener('click', openPicker);
+        if (camera) camera.addEventListener('click', openPicker);
+        input.addEventListener('change', function () {
+            var file = input.files && input.files[0];
+            if (!file || !file.type || file.type.indexOf('image/') !== 0) {
+                validateBtn.disabled = true;
+                return;
+            }
+            var url = URL.createObjectURL(file);
+            if (img) {
+                img.src = url;
+                img.classList.remove('d-none');
+            }
+            if (initials) initials.classList.add('d-none');
+            validateBtn.disabled = false;
+        });
+    }
+})();
+</script>
+{% endblock extra_js %}

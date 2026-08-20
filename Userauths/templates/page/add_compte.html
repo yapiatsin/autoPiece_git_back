@@ -1,0 +1,472 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+<title>{% block title %} Auto-Pièce - Comptes employés {% endblock title %}</title>
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/compte-modal.css' %}">
+{% endblock extra_head %}
+{% block header %}
+<div class="block-header">
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <h2>{% block page_title %}Comptes employés{% endblock page_title %}</h2>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
+                <li class="breadcrumb-item active"> {% block page %}création et liste des comptes{% endblock page %}</li>
+            </ul>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="d-flex flex-row-reverse">
+                <div class="page_action">
+                    {% block page_action %}
+                        <a href="{% url 'export_comptes_excel' %}{% if search_q %}?q={{ search_q|urlencode }}{% endif %}"
+                           class="btn btn-outline-primary mr-2">
+                            <i class="fa fa-file-excel-o"></i> Exporter Excel
+                        </a>
+                        <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addinf">
+                            <i class="icon-plus"></i> Nouveau compte
+                        </button>
+                    {% endblock page_action %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock header %}
+{% block main_content %}
+
+    {# ── Modal : Nouveau compte ───────────────────────────────────────── #}
+    <div class="modal fade compte-modal" id="addinf" tabindex="-1" role="dialog" aria-labelledby="addCompteLabel">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document" style="max-width: 860px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="addCompteLabel">Nouveau compte</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="basic-form" method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <section class="cm-section">
+                            <h3 class="cm-section__title">
+                                <i class="fa fa-user-circle-o"></i> Information du compte
+                            </h3>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="cm-field">
+                                        <label for="{{ user_form.username.id_for_label }}">Nom utilisateur</label>
+                                        {{ user_form.username }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="cm-field">
+                                        <label for="{{ user_form.email.id_for_label }}">Email</label>
+                                        {{ user_form.email }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="cm-field">
+                                        <label for="{{ user_form.role.id_for_label }}">Rôle</label>
+                                        {{ user_form.role }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="cm-field">
+                                        <label for="{{ user_form.genre.id_for_label }}">Genre</label>
+                                        {{ user_form.genre }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="cm-field">
+                                        <label for="{{ user_form.contact.id_for_label }}">Contact</label>
+                                        {{ user_form.contact }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6" id="div-local-entrepot">
+                                    <div class="cm-field">
+                                        <label for="{{ user_form.local_entrepot.id_for_label }}">
+                                            Entrepôt <span class="cm-req">*</span>
+                                        </label>
+                                        {{ user_form.local_entrepot }}
+                                        <span class="cm-hint">Obligatoire pour : Accueil, Caissier, Livreur, Chef agence.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="cm-section mb-0">
+                            <h3 class="cm-section__title">
+                                <i class="fa fa-lock"></i> Permissions
+                            </h3>
+                            <div class="cm-perm-toolbar">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fa fa-search"></i></span>
+                                    </div>
+                                    <input type="search"
+                                           id="permission-search-input"
+                                           class="form-control"
+                                           placeholder="Rechercher une permission…"
+                                           autocomplete="off">
+                                </div>
+                                <span class="cm-perm-count" id="permission-search-count"></span>
+                                <div class="cm-perm-actions">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="perm-select-visible">Tout cocher</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="perm-clear-visible">Tout décocher</button>
+                                </div>
+                            </div>
+                            <div class="cm-perm-grid" id="permission-checkbox-list">
+                                {% for checkbox in permission_form.permissions %}
+                                <div class="cm-perm-item permission-item"
+                                     data-perm-label="{{ checkbox.choice_label|lower }}">
+                                    <label class="cm-perm-chip" for="{{ checkbox.id_for_label }}">
+                                        {{ checkbox.tag }}
+                                        <span>{{ checkbox.choice_label }}</span>
+                                    </label>
+                                </div>
+                                {% empty %}
+                                <div class="col-12">
+                                    <p class="text-muted mb-0 p-2">Aucune permission disponible.</p>
+                                </div>
+                                {% endfor %}
+                                <div class="permission-empty d-none" style="grid-column: 1 / -1;">
+                                    <p class="text-muted mb-0 p-2 text-center">Aucune permission ne correspond à votre recherche.</p>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-cm-cancel" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-cm-save">
+                            <i class="fa fa-check"></i> Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card" style="border-radius:18px; overflow-y: auto; box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;">
+            <div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:12px;">
+                <h2 class="text-info mb-0">
+                    {{ comptes|length }} Compte{% if comptes|length > 1 %}s{% endif %}
+                    {% if search_q %}
+                    <small class="text-muted font-weight-normal">· filtre « {{ search_q }} »</small>
+                    {% endif %}
+                </h2>
+                <form method="get" action="{% url 'add_compte' %}" class="d-flex align-items-center" style="gap:8px; min-width:280px; max-width:420px; flex:1;">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                        </div>
+                        <input type="search"
+                               name="q"
+                               value="{{ search_q }}"
+                               class="form-control"
+                               placeholder="Rechercher nom, email, rôle, contact…"
+                               autocomplete="off">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">Chercher</button>
+                            {% if search_q %}
+                            <a href="{% url 'add_compte' %}" class="btn btn-outline-secondary" title="Réinitialiser">
+                                <i class="fa fa-times"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Filtrer dans le tableau…" %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover dataTable mag-data-table">
+                            <thead>
+                                <tr class="text">
+                                    <th>Nom utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Genre</th>
+                                    <th class="text-center">Permissions</th>
+                                    <th class="text-center">Activer/Desactiver compte</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tfoot>
+                                <tr class="text">
+                                    <th>Nom utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Genre</th>
+                                    <th class="text-center">Permissions</th>
+                                    <th class="text-center">Activer/Desactiver compte</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </tfoot>
+                            <tbody>
+                                {% for c in comptes %}
+                                <tr>
+                                    <td><a>{{ c.username }}</a></td>
+                                    <td>{{ c.email }}</td>
+                                    <td>{{ c.get_role_display|default:c.role }}</td>
+                                    <td>{{ c.genre }}</td>
+                                    <td class="text-center">
+                                        <a href="#largeModal" class="edit-permission-btn" data-id="{{ c.id }}" data-url="{% url 'update_permissions' c.id %}">
+                                            <i class="icon-lock text-info"></i>
+                                        </a>
+                                    </td>
+                                    <td class="text-center">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox"
+                                                class="toggle-checkbox"
+                                                data-active-url="{% url 'active_compte' c.pk %}"
+                                                data-deactive-url="{% url 'deactive_compte' c.pk %}"
+                                                {% if c.is_active %}checked{% endif %}>
+                                            <span class="toggle-switch-slider {% if c.is_active %}bg-success{% else %}bg-danger{% endif %}"></span>
+                                        </label>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="#" class="edit-compte-btn" data-id="{{ c.id }}" data-url="{% url 'update_compte' c.id %}"><i class="icon-note text-warning"></i></a> -
+                                        <a href="{% url 'del_compte' c.pk %}" onclick="return confirm('Etes-vous sûre de vouloir supprimer le compte de {{ c.username }} - Email {{ c.email }} ? Toutes les informations liées seront supprimées.')"><i class="icon-trash text-danger"></i></a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        {% if search_q %}Aucun compte ne correspond à « {{ search_q }} ».{% else %}Aucun compte.{% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Modal : Modifier le compte ───────────────────────────────────── #}
+    <div class="modal fade compte-modal" id="editCompteModal" tabindex="-1" role="dialog" aria-labelledby="editCompteLabel">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 560px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="editCompteLabel">Modifier le compte</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="modalBodyContent"></div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Modal : Modifier les permissions ─────────────────────────────── #}
+    <div class="modal fade compte-modal" id="editPermissionsModal" tabindex="-1" role="dialog" aria-labelledby="editPermsLabel">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document" style="max-width: 860px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="editPermsLabel">Modifier les permissions</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="modalPermissionsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).on("click", ".edit-permission-btn", function(e) {
+            e.preventDefault();
+            let url = $(this).data("url");
+
+            $.get(url, function(data) {
+                $("#modalPermissionsContent").html(data);
+                $("#editPermissionsModal").modal("show");
+            });
+        });
+        $(document).on("submit", "#comptePermsForm", function(e) {
+            e.preventDefault();
+            let form = $(this);
+            let url = form.attr("action");
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: form.serialize(),
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        $("#editPermissionsModal").modal("hide");
+                        Swal.fire({
+                            icon: 'success',
+                            title: data.message,
+                            toast: true,
+                            position: 'top',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        $("#modalPermissionsContent").html(data.html || data);
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.html) {
+                        $("#modalPermissionsContent").html(xhr.responseJSON.html);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: 'Une erreur est survenue lors de la mise à jour des permissions.'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+
+    <script>
+        const ROLES_AVEC_LOCAL = new Set(['accueil', 'caissier', 'livreur', 'chefagence']);
+        function toggleLocalEntrepot(roleSelect) {
+            const div = document.getElementById('div-local-entrepot');
+            const select = document.getElementById('id_local_entrepot');
+            if (!div || !select) return;
+            if (ROLES_AVEC_LOCAL.has(roleSelect.value)) {
+                div.style.display = 'block';
+                select.setAttribute('required', 'required');
+            } else {
+                div.style.display = 'none';
+                select.removeAttribute('required');
+                select.value = '';
+            }
+        }
+
+        function initPermissionSearch(root) {
+            const scope = root || document;
+            const input = scope.querySelector('#permission-search-input, .permission-search-input');
+            const list = scope.querySelector('#permission-checkbox-list, .permission-checkbox-list, .cm-perm-grid');
+            if (!input || !list) return;
+
+            const items = Array.from(list.querySelectorAll('.permission-item'));
+            const emptyMsg = list.querySelector('.permission-empty');
+            const countEl = scope.querySelector('#permission-search-count, .permission-search-count');
+
+            function filterPermissions() {
+                const q = (input.value || '').trim().toLowerCase();
+                let visible = 0;
+                items.forEach(function (item) {
+                    const label = item.getAttribute('data-perm-label') || '';
+                    const match = !q || label.indexOf(q) !== -1;
+                    item.classList.toggle('d-none', !match);
+                    if (match) visible += 1;
+                });
+                if (emptyMsg) {
+                    emptyMsg.classList.toggle('d-none', visible > 0 || items.length === 0);
+                }
+                if (countEl) {
+                    countEl.textContent = q
+                        ? visible + ' / ' + items.length + ' permission(s)'
+                        : items.length + ' permission(s)';
+                }
+            }
+
+            function setVisibleChecked(checked) {
+                items.forEach(function (item) {
+                    if (item.classList.contains('d-none')) return;
+                    const cb = item.querySelector('input[type="checkbox"]');
+                    if (cb) cb.checked = checked;
+                });
+            }
+
+            input.addEventListener('input', filterPermissions);
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    input.value = '';
+                    filterPermissions();
+                }
+            });
+
+            const selectBtn = scope.querySelector('#perm-select-visible, .perm-select-visible');
+            const clearBtn = scope.querySelector('#perm-clear-visible, .perm-clear-visible');
+            if (selectBtn) selectBtn.addEventListener('click', function () { setVisibleChecked(true); });
+            if (clearBtn) clearBtn.addEventListener('click', function () { setVisibleChecked(false); });
+
+            filterPermissions();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleSelect = document.querySelector('#basic-form select[name="role"]');
+            if (roleSelect) {
+                toggleLocalEntrepot(roleSelect);
+                roleSelect.addEventListener('change', function () { toggleLocalEntrepot(this); });
+            }
+            initPermissionSearch(document.getElementById('addinf'));
+        });
+    </script>
+
+    <script>
+        document.querySelectorAll('.toggle-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                const url = this.checked
+                    ? this.dataset.activeUrl
+                    : this.dataset.deactiveUrl;
+                window.location.href = url;
+            });
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $('#addinf').on('shown.bs.modal', function () {
+            var input = document.getElementById('permission-search-input');
+            if (input) {
+                input.value = '';
+                input.dispatchEvent(new Event('input'));
+            }
+        });
+
+        $(document).on("click", ".edit-compte-btn", function(e) {
+            e.preventDefault();
+            let url = $(this).data("url");
+            $.get(url, function(data) {
+                $("#modalBodyContent").html(data);
+                $("#editCompteModal").modal("show");
+            });
+        });
+
+        $(document).on("submit", "#compteUpdateform", function(e) {
+            e.preventDefault();
+            let form = $(this);
+            let url = form.attr("action");
+            $.post(url, form.serialize(), function(data) {
+                if (data.success) {
+                    $("#editCompteModal").modal("hide");
+
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top',
+                        icon: 'success',
+                        title: data.message,
+                        width: '400px',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: data.message
+                    });
+                    setTimeout(function() {
+                        window.location.href = data.redirect_url;
+                    }, 4000);
+
+                } else {
+                    $("#modalBodyContent").html(data.html);
+                }
+            });
+        });
+    </script>
+{% endblock main_content %}

@@ -1,0 +1,23 @@
+{% load i18n %}
+<div class="ecom-search-suggest" data-ecom-search-suggest
+     data-clear-url="{% url 'ecom_search_clear' %}">
+    <form method="get" action="{% url 'ecom_shop' %}" class="search-header ecom-search-form">
+        <input type="search" name="q" value="{{ request.GET.q|default:'' }}"
+            class="ecom-search-input"
+            placeholder="{% trans 'Rechercher des pièces, catégories ou marques' %}"
+            autocomplete="off"
+            aria-autocomplete="list"
+            aria-haspopup="listbox">
+        <button type="button" class="ecom-search-query-clear" data-ecom-clear-query
+                aria-label="{% trans 'Effacer la recherche' %}"
+                {% if not request.GET.q %}hidden{% endif %}>
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+        <button type="submit" class="rts-btn btn-primary radious-sm with-icon">
+            <div class="btn-text">{% trans "Rechercher" %}</div>
+            <div class="arrow-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <div class="arrow-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+        </button>
+    </form>
+    {% include 'e_autopiece/partials/_ecom_search_suggestions.html' %}
+</div>

@@ -1,0 +1,904 @@
+{% load static %}
+{% load permission_tags %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>{% block title %} P&B AUTO-PIECE {% endblock title %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Template Dossier Santé">
+    <meta name="author" content="DevHTechnologie, design by: YAIB, DevHTechnologie.com">
+    <link rel="icon" href="{% static 'medicon/favicon.ico' %}" type="image/x-icon">
+    {% comment %} <link rel="icon" href="{% static "favicon.ico" %}" type="image/x-icon"> {% endcomment %}
+    <!-- VENDOR CSS — Font Awesome 4.7 (CDN, polices complètes ; le dossier vendor local n’a pas les .woff/.ttf) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'apps/assets/vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/vendor/toastr/toastr.min.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/vendor/charts-c3/plugin.css ' %}"/>
+    <!-- tableau -->
+    <link rel="stylesheet" href="{% static 'apps/assets/vendor/jquery-datatable/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/vendor/jquery-datatable/fixedeader/dataTables.fixedcolumns.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/vendor/jquery-datatable/fixedeader/dataTables.fixedheader.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/vendor/sweetalert/sweetalert.css' %}"/>
+    <!-- MAIN CSS -->
+    <link rel="stylesheet" href="{% static 'apps/assets/css/main.css' %}">
+    <!-- Polices .icon-* (main.css) : réécriture du @font-face après main.css -->
+    <link rel="stylesheet" href="{% static 'apps/assets/css/icon-fonts-fix.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/h-menu.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/inbox.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/ecommerce.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/blog.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/page-header.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/appbases.css' %}">
+    <!-- Thème ecom (couleurs / tables) — garder Font Awesome 4 pour les icônes staff -->
+    <link rel="stylesheet" href="{% static 'apps/assets/css/mag-ecom.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/piece-catalog.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/panier-page.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { corePlugins: { preflight: false } };
+    </script>
+    <script defer src="{% static 'apps/assets/js/mag-table-filter.js' %}"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {% block extra_head %}{% endblock extra_head %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body data-theme="light" class="font-nunito h_menu mag-ecom-body">
+    {% if messages %}
+    <div class="ecom-flash-stack" id="magFlashMessages" aria-live="polite" aria-atomic="true">
+        {% for message in messages %}
+        <div class="ecom-flash-toast ecom-flash-toast--{{ message.tags|default:'info'|cut:' ' }}" role="alert">
+            <span class="ecom-flash-toast-icon" aria-hidden="true">
+                {% if 'success' in message.tags %}
+                <i class="fa fa-check-circle"></i>
+                {% elif 'error' in message.tags or 'danger' in message.tags %}
+                <i class="fa fa-exclamation-circle"></i>
+                {% elif 'warning' in message.tags %}
+                <i class="fa fa-exclamation-triangle"></i>
+                {% else %}
+                <i class="fa fa-info-circle"></i>
+                {% endif %}
+            </span>
+            <p class="ecom-flash-toast-text">{{ message }}</p>
+            <button type="button" class="ecom-flash-toast-close" aria-label="Fermer">
+                <i class="fa fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    <script>
+    (function () {
+        var stack = document.getElementById('magFlashMessages');
+        if (!stack) return;
+
+        function dismissToast(toast) {
+            if (!toast || toast.classList.contains('is-leaving')) return;
+            toast.classList.add('is-leaving');
+            setTimeout(function () {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+                if (stack && !stack.children.length && stack.parentNode) {
+                    stack.parentNode.removeChild(stack);
+                }
+            }, 320);
+        }
+
+        stack.querySelectorAll('.ecom-flash-toast').forEach(function (toast) {
+            var closeBtn = toast.querySelector('.ecom-flash-toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () { dismissToast(toast); });
+            }
+            setTimeout(function () { dismissToast(toast); }, 5000);
+        });
+    })();
+    </script>
+    {% endif %}
+    <div id="wrapper" class="theme-light">
+        <!-- Page Loader -->
+        <div class="page-loader-wrapper bg-light">
+            <div class="loader">
+                <div class="m-t-100"><h1 class="">AUTO-PIECE</h1></div>
+                <p class='text-danger'>Patienter...</p>
+            </div>
+        </div>
+        <div class="over-menu" aria-hidden="true"></div>
+        <header class="header" id="header-sroll">
+            <div class="container-fluid">
+                <div class="desk-menu">
+                    <div class="logo">
+                        <h1 class="logo-ad">
+                            <a href="{% url 'tbord' %}" class="app-logo-animated ecom-logo-animated" title="AUTO-PIECE">
+                                <img src="{% static 'logo.png' %}" alt="AUTO-PIECE" class="app-logo-img ecom-logo-img">
+                            </a>
+                        </h1>
+                    </div>
+                    <nav class="box-menu header-nav-center">
+                        <div class="menu-container mag-mobile-menu">
+                            <div class="menu-head mag-mobile-menu-header">
+                                <div class="mag-mobile-menu-header-text">
+                                    <h6>Menu</h6>
+                                    <p>Navigation de l’espace magasin</p>
+                                </div>
+                                <a href="javascript:void(0);" class="mag-mobile-menu-close" title="Fermer" aria-label="Fermer">
+                                    <i class="fa fa-times" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                            <div class="mag-mobile-menu-user">
+                                <span class="mag-mobile-menu-user-avatar">
+                                    {% if user_nav_has_photo %}
+                                    <img src="{{ user_nav_photo_url }}" alt="{{ user.username }}">
+                                    {% else %}
+                                    <span class="mag-mobile-menu-user-initials" aria-hidden="true">{{ user_nav_initials }}</span>
+                                    {% endif %}
+                                </span>
+                                <div class="mag-mobile-menu-user-meta">
+                                    <strong>{% if user.is_superuser %}Super Admin{% else %}{{ user.get_full_name|default:user.username }}{% endif %}</strong>
+                                    <span>{{ user.get_role_display|default:user.role }}</span>
+                                    {% if user.local_entrepot %}
+                                    <span class="mag-mobile-menu-local"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.local_entrepot.nom }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="menu-header-container">
+                                <p class="mag-mobile-menu-section-title">Navigation</p>
+                                <ul id="cd-primary-nav" class="menu">
+                                    {% for menu_cat in user_menu_categories %}
+                                        {% if menu_cat.display_label == "Comptes" %}
+                                            {# Comptes : affiché dans le menu utilisateur, pas ici #}
+                                        {% elif menu_cat.display_label == "Dashboard" %}
+                                            {% for perm in menu_cat.permissions %}
+                                                {% if forloop.first %}
+                                                <li class="menu-item">
+                                                    <a href="{% url perm.url %}" class="mag-nav-single-link">
+                                                        <i class="{{ menu_cat.icon }}" aria-hidden="true"></i>
+                                                        <span>{{ menu_cat.display_label }}</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <li class="menu-item menu-item-has-children mag-nav-item{% if menu_cat.permissions|length > 4 %} mag-nav-item--wide{% endif %}{% if menu_cat.has_cmd_line or menu_cat.has_livraison_cmd %} js-interfaces-nav-parent{% endif %}">
+                                                <a href="#" class="mag-nav-parent-link" aria-haspopup="true" aria-expanded="false">
+                                                    <i class="{{ menu_cat.icon }}" aria-hidden="true"></i>
+                                                    <span class="mag-nav-parent-label">{{ menu_cat.display_label }}</span>
+                                                    {% if menu_cat.has_cmd_line or menu_cat.has_livraison_cmd %}
+                                                    <span class="mag-nav-badge js-interfaces-badge"
+                                                          data-badge-role="parent"
+                                                          {% if nb_interfaces_notif %}aria-label="{{ nb_interfaces_notif }} notification{{ nb_interfaces_notif|pluralize }} Interfaces"{% else %}hidden aria-hidden="true"{% endif %}>
+                                                        {% if nb_interfaces_notif %}{% if nb_interfaces_notif > 99 %}99+{% else %}{{ nb_interfaces_notif }}{% endif %}{% endif %}
+                                                    </span>
+                                                    {% endif %}
+                                                    <i class="fa fa-chevron-down mag-nav-parent-chevron" aria-hidden="true"></i>
+                                                </a>
+                                                <ul class="sub-menu mag-nav-dropdown{% if menu_cat.permissions|length > 4 %} mag-nav-dropdown--wide{% endif %}">
+                                                    <li class="mag-nav-dropdown-header" aria-hidden="true">
+                                                        <div class="mag-nav-dropdown-header-inner">
+                                                            <span class="mag-nav-dropdown-header-icon"><i class="{{ menu_cat.icon }}"></i></span>
+                                                            <div class="mag-nav-dropdown-header-text">
+                                                                <strong>{{ menu_cat.display_label }}</strong>
+                                                                <span>Accès rapide · {{ menu_cat.permissions|length }} lien{{ menu_cat.permissions|length|pluralize }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="mag-nav-dropdown-body">
+                                                        <ul class="mag-nav-dropdown-list">
+                                                            {% for perm in menu_cat.permissions %}
+                                                                <li class="menu-item mag-nav-dropdown-item">
+                                                                    <a href="{% url perm.url %}"
+                                                                       class="mag-nav-dropdown-link{% if request.resolver_match.url_name == perm.url %} is-active{% endif %}{% if perm.url == 'cmd_line' or perm.url == 'livraison_cmd_online' %} js-ecom-nav-link{% endif %}">
+                                                                        <span class="mag-nav-dropdown-icon{% if perm.url == 'cmd_line' or perm.url == 'livraison_cmd_online' %} mag-nav-dropdown-icon--badge{% endif %}">
+                                                                            <i class="{{ perm.menu_icon|default:'fa fa-angle-right' }}" aria-hidden="true"></i>
+                                                                            {% if perm.url == 'cmd_line' %}
+                                                                            <span class="mag-nav-badge mag-nav-badge--sm js-cmd-line-badge"
+                                                                                  data-badge-role="item"
+                                                                                  {% if nb_cmd_ligne_attente %}aria-label="{{ nb_cmd_ligne_attente }} commande{{ nb_cmd_ligne_attente|pluralize }} en attente"{% else %}hidden aria-hidden="true"{% endif %}>
+                                                                                {% if nb_cmd_ligne_attente %}{% if nb_cmd_ligne_attente > 99 %}99+{% else %}{{ nb_cmd_ligne_attente }}{% endif %}{% endif %}
+                                                                            </span>
+                                                                            {% elif perm.url == 'livraison_cmd_online' %}
+                                                                            <span class="mag-nav-badge mag-nav-badge--sm js-livraison-cmd-badge"
+                                                                                  data-badge-role="item"
+                                                                                  {% if nb_livraison_cmd_a_livrer %}aria-label="{{ nb_livraison_cmd_a_livrer }} livraison{{ nb_livraison_cmd_a_livrer|pluralize }} à effectuer"{% else %}hidden aria-hidden="true"{% endif %}>
+                                                                                {% if nb_livraison_cmd_a_livrer %}{% if nb_livraison_cmd_a_livrer > 99 %}99+{% else %}{{ nb_livraison_cmd_a_livrer }}{% endif %}{% endif %}
+                                                                            </span>
+                                                                            {% endif %}
+                                                                        </span>
+                                                                        <span class="mag-nav-dropdown-label">{{ perm.name }}</span>
+                                                                    </a>
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <li class="line" style="width: 222px; left: 14px; opacity: 1;"></li>
+                                </ul>
+                            </div>
+                            <div class="menu-foot mag-mobile-menu-footer">
+                                <a href="{% url 'deconnexion' %}" class="mag-mobile-menu-logout">
+                                    <i class="fa fa-sign-out" aria-hidden="true"></i>
+                                    Déconnexion
+                                </a>
+                                <a href="javascript:void(0);" class="mag-mobile-menu-close-btn">
+                                    Fermer
+                                </a>
+                            </div>
+                        </div>
+                        <div class="hamburger-menu">
+                            <div class="bar"></div>
+                        </div>
+                    </nav>
+                    <ul class="header-nav-actions">
+                        <li class="nav-user-role">
+                            <span class="user-role-pill" title="Rôle et localité">
+                                <span class="user-role-dot" aria-hidden="true"></span>
+                                Rôle : {% if user.is_superuser %}Admin{% else %}{{ user.get_role_display }}{% endif %}
+                                {% if user_nav_localite %}
+                                <span class="user-role-sep" aria-hidden="true">·</span>
+                                <span class="user-role-localite">{{ user_nav_localite }}</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="dropdown header-notifications-center">
+                            <a href="javascript:void(0);" class="dropdown-toggle icon-menu notification-bell-wrap" data-toggle="dropdown" aria-expanded="false" id="notificationDropdown" aria-label="Notifications">
+                                <i class="fa fa-bell font-18"></i>
+                                <span class="notification-count-badge" id="notificationBadge" style="display: none;" aria-hidden="true">0</span>
+                            </a>
+                            <ul class="dropdown-menu notifications dropdown-menu-right" id="notificationsList">
+                                <li class="header notifications-card-header">
+                                    <div class="notifications-card-header-inner">
+                                        <i class="fa fa-bell" aria-hidden="true"></i>
+                                        <div>
+                                            <strong class="notifications-card-title">Notifications</strong>
+                                            <span class="notifications-card-subtitle" id="notificationHeader">Aucune nouvelle notification</span>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="body notifications-body-scroll">
+                                    <ul id="notificationsContainer">
+                                        <li>
+                                            <div class="notifications-empty-state">Chargement des notifications...</div>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="footer notifications-card-footer">
+                                    <a href="javascript:void(0);" id="marquerToutesLues" class="notifications-mark-all-btn">
+                                        <i class="fa fa-check" aria-hidden="true"></i>
+                                        Tout marquer comme lu
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown nav-user-profile">
+                            <a href="javascript:void(0);" class="nav-user-trigger dropdown-toggle" data-toggle="dropdown" aria-expanded="false" aria-label="Menu utilisateur">
+                                <span class="nav-user-avatar-wrap">
+                                    {% if user_nav_has_photo %}
+                                    <img src="{{ user_nav_photo_url }}" class="nav-user-avatar" alt="{{ user.username }}">
+                                    {% else %}
+                                    <span class="nav-user-avatar nav-user-avatar--initials" aria-hidden="true">{{ user_nav_initials }}</span>
+                                    {% endif %}
+                                    <span class="nav-user-status-dot" aria-hidden="true"></span>
+                                </span>
+                                <i class="fa fa-chevron-down nav-user-chevron" aria-hidden="true"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right nav-user-menu">
+                                <div class="nav-user-menu-header">
+                                    <span class="nav-user-menu-avatar-wrap">
+                                        {% if user_nav_has_photo %}
+                                        <img src="{{ user_nav_photo_url }}" class="nav-user-menu-avatar" alt="{{ user.username }}">
+                                        {% else %}
+                                        <span class="nav-user-menu-avatar nav-user-menu-avatar--initials" aria-hidden="true">{{ user_nav_initials }}</span>
+                                        {% endif %}
+                                    </span>
+                                    <div class="nav-user-menu-identity">
+                                        <strong class="nav-user-menu-name">{% if user.is_superuser %}Super Admin{% else %}{{ user.get_full_name|default:user.username }}{% endif %}</strong>
+                                        <span class="nav-user-menu-email">{{ user.email }}</span>
+                                    </div>
+                                </div>
+                                <div class="nav-user-menu-divider"></div>
+                                <a href="{% url 'change_password' %}" class="nav-user-menu-item">
+                                    <i class="fa fa-vcard" aria-hidden="true"></i>
+                                    Profil &amp; mot de passe
+                                </a>
+                                <a href="{% url 'tbord' %}" class="nav-user-menu-item">
+                                    <i class="fa fa-tachometer" aria-hidden="true"></i>
+                                    Tableau de bord
+                                </a>
+                                {% for menu_cat in user_menu_categories %}
+                                    {% if menu_cat.display_label == "Comptes" %}
+                                        {% for perm in menu_cat.permissions %}
+                                        <a href="{% url perm.url %}" class="nav-user-menu-item">
+                                            <i class="fa fa-users" aria-hidden="true"></i>
+                                            {{ perm.name }}
+                                        </a>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if user.is_staff %}
+                                    <a href="{% url 'list_permissions' %}" class="nav-user-menu-item">
+                                        <i class="fa fa-cog" aria-hidden="true"></i>
+                                        Permissions
+                                    </a>
+                                    <a href="{% url 'list_perm_categories' %}" class="nav-user-menu-item">
+                                        <i class="fa fa-cog" aria-hidden="true"></i>
+                                        Catégories de permissions
+                                    </a>
+                                {% endif %}
+                                <div class="nav-user-menu-divider"></div>
+                                <a href="javascript:void(0);" class="nav-user-menu-item right_setting">
+                                    <i class="fa fa-gear" aria-hidden="true"></i>
+                                    Paramètres
+                                </a>
+                                <a href="javascript:void(0);" class="nav-user-menu-item" data-toggle="modal" data-target="#printerModal">
+                                    <i class="fa fa-print" aria-hidden="true"></i>
+                                    Imprimante
+                                </a>
+                                <div class="nav-user-menu-divider"></div>
+                                <a href="{% url 'deconnexion' %}" class="nav-user-menu-item nav-user-menu-item--logout">
+                                    <i class="fa fa-sign-out" aria-hidden="true"></i>
+                                    Déconnexion
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <div id="main-content" class="mag-ecom-main">
+            <div class="container-fluid">
+                {% block header %}
+                    <div class="app-page-header">
+                        <div class="app-page-header__grid">
+                            <div class="app-page-header__info">
+                                <h2 class="app-page-header__title">{% block page_title %}Home{% endblock page_title %}</h2>
+                                <nav class="app-page-header__breadcrumb" aria-label="Fil d'Ariane">
+                                    <ol class="breadcrumb">
+                                        {% block breadcrumb %}
+                                        <li class="breadcrumb-item">
+                                            <a href="{% url 'tbord' %}"><i class="fa fa-chart-pie"></i> Tableau de bord</a>
+                                        </li>
+                                        <li class="breadcrumb-item active" aria-current="page">{% block page %}Page{% endblock page %}</li>
+                                        {% endblock breadcrumb %}
+                                    </ol>
+                                </nav>
+                            </div>
+                            <div class="app-page-header__toolbar">
+                                {% block page_action %}
+                                <div class="page-header-actions">
+                                    {% block page_action_buttons %}{% endblock page_action_buttons %}
+                                    {% if page_export_excel_url %}
+                                    <a href="{{ page_export_excel_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_excel_title|default:'Exporter en Excel' }}">
+                                        <i class="fa fa-file-excel-o"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if page_export_pdf_url %}
+                                    <a href="{{ page_export_pdf_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_pdf_title|default:'Exporter en PDF' }}">
+                                        <i class="fa fa-file-pdf-o"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if page_export_url and not page_export_excel_url %}
+                                    <a href="{{ page_export_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_title|default:'Télécharger' }}"{% if page_export_download %} download="{{ page_export_download }}"{% endif %}>
+                                        <i class="fa fa-download"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if filter_modal_id %}
+                                    {% include "mag/partials/_periode_filter_header.html" %}
+                                    {% endif %}
+                                    {% block page_action_suffix %}{% endblock page_action_suffix %}
+                                </div>
+                                {% endblock page_action %}
+                            </div>
+                        </div>
+                    </div>
+                {% endblock header %}
+                <div class="row clearfix row-deck">
+                    {% block main_content %} 
+                        
+                    {% endblock main_content %}
+                </div>
+            </div>
+        </div>
+
+        {% block mag_footer %}
+            <footer class="mag-copyright-area" role="contentinfo">
+                <div class="container-fluid">
+                    <div class="mag-copyright-inner">
+                        <div class="mag-copyright-brand">
+                            <span class="mag-copyright-mark" aria-hidden="true"></span>
+                            <p class="mag-copyright-text">
+                                Copyright <span id="ap-copyright-year">{% now "Y" %}</span>
+                                <a href="{% url 'tbord' %}">Auto - Pièce</a>.
+                                <span class="mag-copyright-rest">Tous droits réservés.</span>
+                            </p>
+                        </div>
+                        <nav class="mag-copyright-actions" aria-label="Liens pied de page">
+                            <a href="{% url 'ecom_index' %}" class="mag-copyright-link" title="Boutique en ligne">
+                                <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+                                <span>Boutique</span>
+                            </a>
+                            <a href="{% url 'ecom_support' %}" class="mag-copyright-link" title="Support">
+                                <i class="fa fa-life-ring" aria-hidden="true"></i>
+                                <span>Support</span>
+                            </a>
+                            <a href="#ecomDownloadAppModal"
+                               class="mag-copyright-app"
+                               title="Download App"
+                               role="button"
+                               data-toggle="modal"
+                               data-target="#ecomDownloadAppModal">
+                                <i class="fa fa-mobile" aria-hidden="true"></i>
+                                <span>Download App</span>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </footer>
+        {% endblock mag_footer %}
+    </div>
+
+    <aside class="setting_div mag-settings-panel" aria-label="Paramètres">
+        <div class="mag-settings-header">
+            <div class="mag-settings-header-text">
+                <h6>Paramètres</h6>
+                <p>Préférences de l’espace magasin</p>
+            </div>
+            <a href="javascript:void(0);" class="mag-settings-close right_setting" title="Fermer" aria-label="Fermer">
+                <i class="fa fa-times" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        <div class="mag-settings-user">
+            <span class="mag-settings-user-avatar">
+                {% if user_nav_has_photo %}
+                <img src="{{ user_nav_photo_url }}" alt="{{ user.username }}">
+                {% else %}
+                <span class="mag-settings-user-initials" aria-hidden="true">{{ user_nav_initials }}</span>
+                {% endif %}
+            </span>
+            <div class="mag-settings-user-meta">
+                <strong>{% if user.is_superuser %}Super Admin{% else %}{{ user.get_full_name|default:user.username }}{% endif %}</strong>
+                <span>{{ user.get_role_display|default:user.role }}</span>
+                {% if user.local_entrepot %}
+                <span class="mag-settings-local"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.local_entrepot.nom }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mag-settings-section">
+            <p class="mag-settings-section-title">Apparence</p>
+            <ul class="mag-settings-list">
+                <li class="mag-settings-row">
+                    <div class="mag-settings-row-label">
+                        <i class="fa fa-moon-o" aria-hidden="true"></i>
+                        <div>
+                            <strong>Mode sombre</strong>
+                            <small>Thème foncé pour l’affichage</small>
+                        </div>
+                    </div>
+                    <label class="toggle-switch theme-switch">
+                        <input type="checkbox">
+                        <span class="toggle-switch-slider"></span>
+                    </label>
+                </li>
+                <li class="mag-settings-row">
+                    <div class="mag-settings-row-label">
+                        <i class="fa fa-adjust" aria-hidden="true"></i>
+                        <div>
+                            <strong>Contraste élevé</strong>
+                            <small>Lisibilité renforcée</small>
+                        </div>
+                    </div>
+                    <label class="toggle-switch theme-high-contrast">
+                        <input type="checkbox">
+                        <span class="toggle-switch-slider"></span>
+                    </label>
+                </li>
+            </ul>
+        </div>
+
+        <div class="mag-settings-section">
+            <p class="mag-settings-section-title">Accès rapides</p>
+            <nav class="mag-settings-links" aria-label="Raccourcis paramètres">
+                <a href="{% url 'tbord' %}" class="mag-settings-link">
+                    <i class="fa fa-tachometer" aria-hidden="true"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="{% url 'change_password' %}" class="mag-settings-link">
+                    <i class="fa fa-lock" aria-hidden="true"></i>
+                    <span>Profil &amp; mot de passe</span>
+                </a>
+                <a href="{% url 'ecom_index' %}" class="mag-settings-link">
+                    <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+                    <span>Boutique en ligne</span>
+                </a>
+                <a href="{% url 'cmd_line' %}" class="mag-settings-link">
+                    <i class="fa fa-cloud" aria-hidden="true"></i>
+                    <span>Commandes en ligne</span>
+                </a>
+                <a href="{% url 'livraison_cmd_online' %}" class="mag-settings-link">
+                    <i class="fa fa-truck" aria-hidden="true"></i>
+                    <span>Livraisons en ligne</span>
+                </a>
+                <a href="javascript:void(0);" class="mag-settings-link" data-toggle="modal" data-target="#printerModal">
+                    <i class="fa fa-print" aria-hidden="true"></i>
+                    <span>Imprimante</span>
+                </a>
+                <a href="{% url 'ecom_support' %}" class="mag-settings-link">
+                    <i class="fa fa-life-ring" aria-hidden="true"></i>
+                    <span>Support</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="mag-settings-footer">
+            <a href="{% url 'deconnexion' %}" class="mag-settings-logout">
+                <i class="fa fa-sign-out" aria-hidden="true"></i>
+                Déconnexion
+            </a>
+            <a href="javascript:void(0);" class="mag-settings-close-btn right_setting">
+                Fermer
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Javascript -->
+    <script src="{% static 'apps/assets/bundles/libscripts.bundle.js' %}"></script>
+    <script src="{% static 'apps/assets/bundles/vendorscripts.bundle.js' %}"></script>
+    <!-- page js file -->
+    <script src="{% static 'apps/assets/bundles/mainscripts.bundle.js' %}"></script>
+    {# DataTables désactivé par défaut — filtres Alpine sur les listes #}
+    <!-- page vendor js file -->
+    <script src="{% static 'apps/assets/vendor/toastr/toastr.js' %}"></script>
+    <script src="{% static 'apps/assets/bundles/c3.bundle.js' %}"></script>
+    <script src="{% static 'apps/js/pages/ui/dialogs.js' %}"></script>
+    
+    <script src="{% static 'apps/assets/vendor/sweetalert/sweetalert.min.js' %}"></script> 
+    <script src="{% static 'apps/js/pages/treeview/jstree.js' %}"></script>
+    <script src="{% static 'apps/js/pages/treeview/bootstrap-treeview.js' %}"></script>
+    <script src="{% static 'apps/js/h-menu.js' %}"></script>
+    <script>
+        (function ($) {
+            function closeMobileMenu() {
+                $('body').removeClass('open-menu');
+                $('.hamburger-menu .bar').removeClass('animate');
+                $('header .desk-menu .menu-container .menu .menu-item-has-children .sub-menu').removeClass('open-sub');
+            }
+            $(document).on('click', '.mag-mobile-menu-close, .mag-mobile-menu-close-btn', function (e) {
+                e.preventDefault();
+                closeMobileMenu();
+            });
+            // Libellé FR pour le retour des sous-menus
+            $('header .desk-menu .menu-container .menu .menu-item-has-children ul .back a').text('Retour');
+        })(jQuery);
+    </script>
+    <script type="text/javascript">
+        $(function() {
+            // Toastr conservé pour les toasts de notifications temps réel
+            toastr.options.closeButton = false;
+            toastr.options.positionClass = 'toast-top-center';
+            toastr.options.showDuration = 1;
+            toastr.options.hideDuration = 1000;
+            toastr.options.timeOut = 5000;
+            toastr.options.extendedTimeOut = 1000;
+            toastr.options.progressBar = true;
+            toastr.options.showEasing = 'swing';
+            toastr.options.hideEasing = 'linear';
+            toastr.options.showMethod = 'fadeIn';
+            toastr.options.hideMethod = 'fadeOut';
+        });
+    </script>
+    
+    <!-- Script pour les notifications -->
+    <script>
+        // Fonction pour récupérer le CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        const csrftoken = getCookie('csrftoken');
+
+        // Clé localStorage pour mémoriser les IDs déjà affichés comme toast
+        const SEEN_NOTIFS_KEY = 'autopiece_seen_notif_ids';
+        // Flag : évite d'afficher les toasts au tout premier chargement de la page
+        let premierChargementNotifs = true;
+
+        function getSeenNotifIds() {
+            try {
+                const raw = localStorage.getItem(SEEN_NOTIFS_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveSeenNotifIds(ids) {
+            try {
+                // On garde au plus 200 IDs pour éviter la croissance infinie
+                const trimmed = ids.slice(-200);
+                localStorage.setItem(SEEN_NOTIFS_KEY, JSON.stringify(trimmed));
+            } catch (e) { /* ignore */ }
+        }
+
+        function afficherToastNotif(notif) {
+            const titre = notif.titre || 'Notification';
+            const message = notif.message || '';
+            const options = { timeOut: 8000, extendedTimeOut: 2000, closeButton: true };
+            if (notif.type === 'stock_alerte' || notif.type === 'warning') {
+                toastr.warning(message, titre, options);
+            } else if (notif.type === 'success') {
+                toastr.success(message, titre, options);
+            } else if (notif.type === 'error') {
+                toastr.error(message, titre, options);
+            } else {
+                toastr.info(message, titre, options);
+            }
+        }
+
+        // Fonction pour charger les notifications
+        function chargerNotifications() {
+            fetch('{% url "get_notifications" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('notificationsContainer');
+                    const badge = document.getElementById('notificationBadge');
+                    const header = document.getElementById('notificationHeader');
+                    const dropdown = document.getElementById('notificationDropdown');
+
+                    if (data.nb_non_lues > 0) {
+                        const nb = data.nb_non_lues;
+                        const label = nb > 99 ? '99+' : String(nb);
+                        badge.textContent = label;
+                        badge.classList.toggle('is-single', label.length === 1);
+                        badge.classList.toggle('is-wide', label.length >= 2);
+                        badge.style.display = 'inline-flex';
+                        badge.setAttribute('aria-hidden', 'false');
+                        if (dropdown) {
+                            dropdown.setAttribute('aria-label', `Notifications, ${nb} non lue(s)`);
+                            dropdown.classList.add('bell-alert');
+                        }
+                        header.textContent = `${nb} notification${nb > 1 ? 's' : ''} non lue${nb > 1 ? 's' : ''}`;
+                    } else {
+                        badge.style.display = 'none';
+                        badge.setAttribute('aria-hidden', 'true');
+                        badge.textContent = '0';
+                        badge.classList.remove('is-single', 'is-wide');
+                        if (dropdown) {
+                            dropdown.setAttribute('aria-label', 'Notifications');
+                            dropdown.classList.remove('bell-alert');
+                        }
+                        header.textContent = 'Aucune nouvelle notification';
+                    }
+
+                    updateEcomNavBadges(
+                        data.nb_cmd_ligne_attente || 0,
+                        data.nb_livraison_cmd_a_livrer || 0,
+                        data.nb_interfaces_notif || 0
+                    );
+                    if (data.notifications.length === 0) {
+                        container.innerHTML = '<li><div class="notifications-empty-state">Aucune notification pour le moment</div></li>';
+                        premierChargementNotifs = false;
+                        return;
+                    }
+                    // Détection des nouvelles notifications pour affichage en toast
+                    const seenIds = getSeenNotifIds();
+                    const seenSet = new Set(seenIds);
+                    const nouvelles = data.notifications.filter(n => !n.lu && !seenSet.has(n.id));
+
+                    if (!premierChargementNotifs && nouvelles.length > 0) {
+                        nouvelles.forEach(afficherToastNotif);
+                    }
+
+                    // Mémoriser tous les IDs actuellement présents pour éviter les doublons
+                    const idsActuels = data.notifications.map(n => n.id);
+                    const merged = Array.from(new Set([...seenIds, ...idsActuels]));
+                    saveSeenNotifIds(merged);
+
+                    let html = '';
+                    data.notifications.forEach(notif => {
+                        let iconClass = 'fa fa-info-circle';
+                        let typeClass = 'type-info';
+
+                        if (notif.type === 'stock_alerte' || notif.type === 'warning') {
+                            iconClass = 'fa fa-exclamation-triangle';
+                            typeClass = 'type-warning';
+                        } else if (notif.type === 'success') {
+                            iconClass = 'fa fa-check-circle';
+                            typeClass = 'type-success';
+                        } else if (notif.type === 'transfert_demande') {
+                            iconClass = 'fa fa-exchange';
+                            typeClass = 'type-info';
+                        } else if (notif.type === 'commande_en_ligne') {
+                            iconClass = 'fa fa-shopping-cart';
+                            typeClass = 'type-warning';
+                        }
+                        const notifHref = notif.url || 'javascript:void(0);';
+                        const notifUrlAttr = notif.url ? ' data-has-url="1"' : '';
+                        const titre = notif.titre || 'Notification';
+                        const message = notif.message || '';
+
+                        html += `
+                            <li>
+                                <a href="${notifHref}" class="notification-item ${typeClass}" data-notification-id="${notif.id}"${notifUrlAttr}>
+                                    <div class="media">
+                                        <div class="media-left">
+                                            <i class="${iconClass}" aria-hidden="true"></i>
+                                        </div>
+                                        <div class="media-body">
+                                            <p class="text">
+                                                <strong>${titre}</strong>
+                                                ${message}
+                                            </p>
+                                            <span class="timestamp">${notif.date}</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        `;
+                    });
+
+                    container.innerHTML = html;
+                    // Ajouter les événements de clic pour marquer comme lue
+                    document.querySelectorAll('.notification-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            const notificationId = this.getAttribute('data-notification-id');
+                            marquerNotificationLue(notificationId);
+                            if (this.getAttribute('data-has-url') === '1') {
+                                return;
+                            }
+                        });
+                    });
+
+                    premierChargementNotifs = false;
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement des notifications:', error);
+                });
+        }
+        // Fonction pour marquer une notification comme lue
+        function marquerNotificationLue(notificationId) {
+            fetch(`/stocks/notifications/${notificationId}/marquer-lue/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    chargerNotifications();
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du marquage de la notification:', error);
+            });
+        }
+        // Fonction pour marquer toutes les notifications comme lues
+        function marquerToutesLues() {
+            fetch('{% url "marquer_toutes_notifications_lues" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    chargerNotifications();
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du marquage des notifications:', error);
+            });
+        }
+        function setNavBadge(selector, count, ariaLabel) {
+            const n = Math.max(0, parseInt(count, 10) || 0);
+            const label = n > 99 ? '99+' : String(n);
+            document.querySelectorAll(selector).forEach(el => {
+                if (n > 0) {
+                    el.textContent = label;
+                    el.removeAttribute('hidden');
+                    el.setAttribute('aria-hidden', 'false');
+                    el.setAttribute('aria-label', ariaLabel(n));
+                } else {
+                    el.textContent = '';
+                    el.setAttribute('hidden', '');
+                    el.setAttribute('aria-hidden', 'true');
+                    el.removeAttribute('aria-label');
+                }
+            });
+        }
+
+        function updateEcomNavBadges(nbAttente, nbALivrer, nbInterfaces) {
+            setNavBadge(
+                '.js-cmd-line-badge',
+                nbAttente,
+                n => `${n} commande${n > 1 ? 's' : ''} en ligne en attente`
+            );
+            setNavBadge(
+                '.js-livraison-cmd-badge',
+                nbALivrer,
+                n => `${n} livraison${n > 1 ? 's' : ''} à effectuer`
+            );
+            setNavBadge(
+                '.js-interfaces-badge',
+                nbInterfaces,
+                n => `${n} notification${n > 1 ? 's' : ''} Interfaces`
+            );
+        }
+
+        // Charger les notifications au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            chargerNotifications();
+
+            // Notifications + badges commandes / livraisons : toutes les 30 s
+            setInterval(chargerNotifications, 30000);
+            
+            // Ajouter l'événement pour marquer toutes comme lues
+            const marquerToutesBtn = document.getElementById('marquerToutesLues');
+            if (marquerToutesBtn) {
+                marquerToutesBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    marquerToutesLues();
+                });
+            }
+        });
+    </script>
+    <script>
+        (function initAppLogoEffects() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            var logos = document.querySelectorAll('.app-logo-img');
+            if (!logos.length) return;
+            var effects = ['fx-pulse', 'fx-float', 'fx-glow'];
+            var index = 0;
+            var EFFECT_MS = 1800;
+            var PAUSE_MS = 900;
+            function clearEffects(el) {
+                effects.forEach(function (fx) { el.classList.remove(fx); });
+            }
+            function playNext() {
+                logos.forEach(function (logo) {
+                    clearEffects(logo);
+                    logo.classList.add(effects[index]);
+                });
+                window.setTimeout(function () {
+                    logos.forEach(clearEffects);
+                    index = (index + 1) % effects.length;
+                    window.setTimeout(playNext, PAUSE_MS);
+                }, EFFECT_MS);
+            }
+            window.setTimeout(playNext, 600);
+        })();
+
+        (function updateCopyrightYear() {
+            var yearEl = document.getElementById('ap-copyright-year');
+            if (yearEl) {
+                yearEl.textContent = String(new Date().getFullYear());
+            }
+        })();
+    </script>
+    {# Client Pusher global — doit précéder extra_js (abonnements pages) #}
+    {% include "mag/partials/_pusher_client_js.html" %}
+    {% block extra_js %}{% endblock extra_js %}
+    {# Modal de connexion d'imprimante USB (accessible depuis l'icône imprimante de la navbar) #}
+    {% include 'mag/partials/_printer_modal.html' %}
+    {% include 'mag/partials/_download_app_modal.html' %}
+</body>
+</html>

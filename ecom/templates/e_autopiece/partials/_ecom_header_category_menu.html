@@ -1,0 +1,14 @@
+{% load i18n %}
+<ul class="category-sub-menu ecom-cat-menu-label-only" id="{{ menu_id|default:'category-active-four' }}">
+    {% for cat in ecom_categories %}
+    <li>
+        <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="menu-item">
+            <span>{{ cat.categorie }}</span>
+        </a>
+    </li>
+    {% empty %}
+    <li>
+        <span class="menu-item text-muted px-3">{% trans "Aucune catégorie" %}</span>
+    </li>
+    {% endfor %}
+</ul>

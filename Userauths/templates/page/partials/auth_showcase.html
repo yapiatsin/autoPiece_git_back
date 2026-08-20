@@ -1,0 +1,48 @@
+{% load static %}
+<div class="auth-showcase__bg" style="background-image: url('{% static 'assets/img/b_img.jpg' %}');"></div>
+<div class="auth-showcase__overlay"></div>
+<div class="auth-showcase__content">
+    <a href="{% url 'pbholdingsite' %}" class="auth-showcase__logo">
+        <img src="{% static 'logo.png' %}" alt="AUTO-PIECE" class="logo ecom-logo-img auth-showcase__logo-img">
+    </a>
+
+    <div class="auth-showcase__stage">
+        <div class="auth-showcase__cards">
+            <div class="auth-stat-card auth-stat-card--brand" data-auth-card data-delay="0">
+                <div class="auth-stat-card--row">
+                    <span class="auth-stat-card__avatar">AP</span>
+                    <div>
+                        <p class="auth-stat-card__label">AUTO-PIECE</p>
+                        <p class="auth-stat-card__value auth-stat-card__value--sm">Gestion pièces auto</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-stat-card auth-stat-card--stocks" data-auth-card data-delay="1">
+                <p class="auth-stat-card__label">Stocks</p>
+                <p class="auth-stat-card__value auth-stat-card__value--accent">
+                    <span data-count-up data-target="24" data-prefix="+">0</span>%
+                </p>
+                <div class="auth-stat-bars" aria-hidden="true">
+                    <span style="--h:45%"></span>
+                    <span style="--h:70%"></span>
+                    <span style="--h:55%"></span>
+                    <span style="--h:90%"></span>
+                </div>
+            </div>
+
+            <div class="auth-stat-card auth-stat-card--refs" data-auth-card data-delay="2">
+                <p class="auth-stat-card__label">Références disponibles</p>
+                <p class="auth-stat-card__value auth-stat-card__value--accent">
+                    <span data-count-up data-target="1280" data-suffix="+">0</span>
+                </p>
+                <p class="auth-stat-card__trend"><i class="fa fa-arrow-up"></i> 12 cette semaine</p>
+            </div>
+        </div>
+
+        <div class="auth-showcase__footer">
+            <h2>Passez vos commande à auto-pièces en toute simplicité</h2>
+            <p>Accédez à votre espace en un clic.</p>
+        </div>
+    </div>
+</div>

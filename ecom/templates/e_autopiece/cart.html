@@ -1,0 +1,392 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "Panier" %} — Auto-Pièce{% endblock title %}
+
+{% block content %}
+    <div class="rts-navigation-area-breadcrumb bg_light-1">
+        <div class="container">
+            <div class="navigator-breadcrumb-wrapper">
+                <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span class="current">{% trans "Mon panier" %}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="rts-cart-area rts-section-gap bg_light-1">
+        <div class="container">
+            {% if items %}
+                <div class="row g-5">
+                    <div class="col-xl-9 col-lg-12 col-md-12 col-12 order-2 order-xl-1 order-lg-2 order-md-2 order-sm-2">
+                        <div class="cart-area-main-wrapper">
+                            {% if ecom_shipping_remaining > 0 %}
+                                <div class="cart-top-area-note">
+                                    <p>
+                                        {% trans "Ajoutez" %}
+                                        <span>{{ ecom_shipping_remaining|floatformat:0 }} FCFA</span>
+                                        {% trans "au panier pour bénéficier de la livraison gratuite" %}
+                                    </p>
+                                    <div class="bottom-content-deals mt--10">
+                                        <div class="single-progress-area-incard">
+                                            <div class="progress">
+                                            <div class="progress-bar wow fadeInLeft" role="progressbar"
+                                                style="width: {{ ecom_shipping_progress }}%"
+                                                aria-valuenow="{{ ecom_shipping_progress }}"
+                                                aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% elif ecom_shipping_progress >= 100 %}
+                                <div class="cart-top-area-note">
+                                    <p class="text-success mb-0">
+                                        <i class="fa-solid fa-check"></i>
+                                        {% trans "Vous bénéficiez de la livraison gratuite !" %}
+                                    </p>
+                                </div>
+                            {% endif %}
+                            {% if local %}
+                                <p class="mb-3">
+                                    {% trans "Localité" %} : <strong>{{ local.nom }}</strong>
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="rts-cart-list-area">
+                            <div class="single-cart-area-list head d-none d-md-flex">
+                                <div class="product-main">
+                                    <p>{% trans "Produits" %}</p>
+                                </div>
+                                <div class="price">
+                                    <p>{% trans "Prix" %}</p>
+                                </div>
+                                <div class="quantity">
+                                    <p>{% trans "Quantité" %}</p>
+                                </div>
+                                <div class="subtotal">
+                                    <p>{% trans "Sous-total" %}</p>
+                                </div>
+                            </div>
+
+                            {% for item in items %}
+                                <div class="single-cart-area-list main item-parent" id="ecom-cart-row-{{ item.pk }}"
+                                    data-item-id="{{ item.pk }}" data-piece-id="{{ item.piece.pk }}" data-stock-max="{{ item.stock_disponible|default:item.quantite }}">
+                                    <div class="product-main-cart">
+                                        <form method="post" action="{% url 'ecom_cart_remove' item.pk %}" class="ecom-cart-remove-form m-0">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.path }}">
+                                            <button type="submit" class="close border-0 bg-transparent p-0" title="{% trans 'Retirer' %}" aria-label="{% trans 'Retirer' %}">
+                                                <i class="fa-regular fa-x"></i>
+                                            </button>
+                                        </form>
+                                        <div class="thumbnail">
+                                            <a href="{{ item.piece.get_absolute_url }}">
+                                                {% if item.piece.image %}
+                                                <img src="{{ item.piece.image.url }}" alt="{{ item.piece.designation }}">
+                                                {% else %}
+                                                <div class="ecom-piece-placeholder" aria-hidden="true"><i class="fa-solid fa-gears"></i></div>
+                                                {% endif %}
+                                            </a>
+                                        </div>
+                                        <div class="information">
+                                            <h6 class="title">
+                                                <a href="{{ item.piece.get_absolute_url }}">{{ item.piece.designation }}</a>
+                                            </h6>
+                                            {% if item.piece.categorie %}
+                                            <span class="ecom-cart-category">{{ item.piece.categorie.categorie }}</span>
+                                            {% endif %}
+                                            <span>{% trans "Réf." %} : {{ item.piece.numero_piece }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="price">
+                                        <p>{{ item.prix_unitaire_applique|floatformat:0 }} FCFA</p>
+                                    </div>
+                                    <div class="quantity">
+                                        <form method="post" action="{% url 'ecom_cart_update' item.pk %}" class="ecom-cart-qty-form m-0">
+                                            {% csrf_token %}
+                                            <div class="quantity-edit ecom-cart-qty-edit">
+                                                <input type="text" class="input" name="quantite" value="{{ item.quantite }}" inputmode="numeric" pattern="[0-9]*" aria-label="{% trans 'Quantité' %}">
+                                                <div class="button-wrapper-action">
+                                                    <button type="button" class="button qty-minus" aria-label="{% trans 'Diminuer' %}">
+                                                        <i class="fa-regular fa-chevron-down"></i>
+                                                    </button>
+                                                    <button type="button" class="button plus qty-plus" aria-label="{% trans 'Augmenter' %}">
+                                                        +<i class="fa-regular fa-chevron-up"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="subtotal">
+                                        <p class="ecom-cart-line-total">{{ item.prix_total|floatformat:0 }} FCFA</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                            <div class="bottom-cupon-code-cart-area">
+                                <form action="#" class="ecom-cart-coupon-form" onsubmit="return false;">
+                                    <input type="text" placeholder="{% trans 'Code promo' %}" disabled aria-disabled="true">
+                                    <button type="button" class="rts-btn btn-primary" disabled>{% trans "Appliquer" %}</button>
+                                </form>
+                                <form method="post" action="{% url 'ecom_cart_clear' %}" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="rts-btn btn-primary mr--50">{% trans "Vider le panier" %}</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-lg-12 col-md-12 col-12 order-1 order-xl-2 order-lg-1 order-md-1 order-sm-1">
+                        <div class="cart-total-area-start-right">
+                        <h5 class="title">{% trans "Total panier" %}</h5>
+                            <div class="subtotal">
+                                <span>{% trans "Sous-total" %}</span>
+                                <h6 class="price" id="ecom-cart-subtotal">{{ total|floatformat:0 }} FCFA</h6>
+                            </div>
+                            <div class="shipping">
+                                <span>{% trans "Livraison" %}</span>
+                                <ul>
+                                    <li>
+                                        <input type="radio" id="ecom-ship-free" name="ecom-shipping-preview" checked disabled>
+                                        <label for="ecom-ship-free">
+                                            {% if ecom_shipping_remaining > 0 %}
+                                            {% trans "Livraison gratuite dès le seuil atteint" %}
+                                            {% else %}
+                                            {% trans "Livraison gratuite" %}
+                                            {% endif %}
+                                        </label>
+                                        <div class="check"></div>
+                                    </li>
+                                    {% if local %}
+                                        <li>
+                                            <input type="radio" id="ecom-ship-pickup" name="ecom-shipping-preview" disabled>
+                                            <label for="ecom-ship-pickup"> {% blocktrans with name=local.nom %}Retrait à {{ name }}{% endblocktrans %} </label>
+                                            <div class="check"><div class="inside"></div></div>
+                                        </li>
+                                    {% endif %}
+                                    <li>
+                                        <p>{% trans "Les options de livraison seront confirmées lors de la commande." %}</p>
+                                        <a href="{% url 'ecom_localites' %}" class="bold text-decoration-none">{% trans "Voir nos agences" %}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="bottom">
+                                <div class="wrapper">
+                                    <span>{% trans "Total" %}</span>
+                                    <h6 class="price" id="ecom-cart-grand-total">{{ total|floatformat:0 }} FCFA</h6>
+                                </div>
+                                <div class="button-area">
+                                    <a href="{% url 'ecom_checkout' %}" class="rts-btn btn-primary w-100 text-center">{% trans "Passer la commande" %}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="ecom-empty-cart">
+                    <div class="ecom-empty-cart-icon" aria-hidden="true">
+                        <span class="ecom-empty-cart-badge">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <i class="fa-solid fa-star ecom-empty-cart-star"></i>
+                        </span>
+                    </div>
+                    <h2 class="ecom-empty-cart-title">{% trans "Votre panier est vide !" %}</h2>
+                    <p class="ecom-empty-cart-text">
+                        {% trans "Parcourez nos catégories et découvrez nos meilleures offres !" %}
+                    </p>
+                    <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary ecom-empty-cart-btn">
+                        {% trans "Commencez vos achats" %}
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% include 'e_autopiece/partials/_vues_recentes.html' %}
+{% endblock content %}
+
+{% block extra_js %}
+{% if items %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var cartList = document.querySelector('.rts-cart-list-area');
+    var cartRowSelector = '.single-cart-area-list.main.item-parent';
+
+    function formatFcfa(amount) {
+        var value = Math.round(Number(amount) || 0);
+        return value.toLocaleString('fr-FR') + ' FCFA';
+    }
+
+    function parseQty(value) {
+        var n = parseInt(String(value || '').replace(/\D/g, ''), 10);
+        return isNaN(n) ? 1 : n;
+    }
+
+    function updateHeaderCartCount(count) {
+        document.querySelectorAll(
+            '.accont-wishlist-cart-area-header .cart > .number.ecom-header-count-badge'
+        ).forEach(function (el) {
+            el.textContent = count;
+        });
+    }
+
+    function updateMiniCart(html) {
+        if (!html) return;
+        document.querySelectorAll('.ecom-header-mini-cart').forEach(function (el) {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = html.trim();
+            var fresh = tmp.firstElementChild;
+            if (fresh) el.replaceWith(fresh);
+        });
+    }
+
+    function updateCartSummary(detail) {
+        if (!detail) return;
+        if (detail.cartSubtotal !== undefined) {
+            var label = formatFcfa(detail.cartSubtotal);
+            var subtotalEl = document.getElementById('ecom-cart-subtotal');
+            var grandTotalEl = document.getElementById('ecom-cart-grand-total');
+            if (subtotalEl) subtotalEl.textContent = label;
+            if (grandTotalEl) grandTotalEl.textContent = label;
+        }
+    }
+
+    function findCartRow(detail) {
+        if (!detail) return null;
+        if (detail.itemId) {
+            return document.getElementById('ecom-cart-row-' + detail.itemId);
+        }
+        if (detail.pieceId) {
+            return document.querySelector('[data-piece-id="' + detail.pieceId + '"]');
+        }
+        return null;
+    }
+
+    function showEmptyCartState() {
+        window.location.reload();
+    }
+
+    function removeCartRow(detail) {
+        var row = findCartRow(detail);
+        if (row) row.remove();
+        updateCartSummary(detail);
+        if (cartList && !cartList.querySelector(cartRowSelector)) {
+            showEmptyCartState();
+        }
+    }
+
+    function applyCartResponse(data) {
+        if (!data) return;
+        updateHeaderCartCount(data.cart_count);
+        updateMiniCart(data.mini_cart_html);
+        updateCartSummary({
+            cartSubtotal: data.cart_subtotal,
+            shippingRemaining: data.shipping_remaining,
+            shippingProgress: data.shipping_progress,
+        });
+    }
+
+    function postCartForm(form, done) {
+        var body = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            body: body,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+            .then(function (res) {
+                return res.json().then(function (data) {
+                    return { ok: res.ok, status: res.status, data: data };
+                });
+            })
+            .then(function (result) {
+                if (result.data && result.data.removed) {
+                    applyCartResponse(result.data);
+                    removeCartRow({
+                        itemId: result.data.item_id,
+                        pieceId: result.data.piece_id,
+                        cartSubtotal: result.data.cart_subtotal,
+                    });
+                    if (typeof done === 'function') done(true, result.data);
+                    return;
+                }
+                if (result.ok && result.data && result.data.success) {
+                    applyCartResponse(result.data);
+                    if (typeof done === 'function') done(true, result.data);
+                    return;
+                }
+                if (typeof done === 'function') done(false, result.data);
+                else form.submit();
+            })
+            .catch(function () {
+                if (typeof done === 'function') done(false, null);
+                else form.submit();
+            });
+    }
+
+    document.querySelectorAll('.ecom-cart-qty-form').forEach(function (form) {
+        var row = form.closest('.single-cart-area-list.main');
+        var input = form.querySelector('.input');
+        var minus = form.querySelector('.qty-minus');
+        var plus = form.querySelector('.qty-plus');
+        var lineTotalEl = row ? row.querySelector('.ecom-cart-line-total') : null;
+        if (!input || !minus || !plus || !row) return;
+
+        var maxStock = parseInt(row.getAttribute('data-stock-max') || '99', 10);
+        var busy = false;
+
+        function syncQty(nextQty, onDone) {
+            if (busy) return;
+            if (nextQty < 1) {
+                var removeForm = row.querySelector('.ecom-cart-remove-form');
+                if (removeForm) {
+                    busy = true;
+                    postCartForm(removeForm, function () { busy = false; });
+                }
+                return;
+            }
+            if (nextQty > maxStock) nextQty = maxStock;
+            input.value = String(nextQty);
+            busy = true;
+            postCartForm(form, function (success, data) {
+                busy = false;
+                if (success && data && !data.removed) {
+                    input.value = String(data.quantite || nextQty);
+                    if (lineTotalEl && data.line_total !== undefined) {
+                        lineTotalEl.textContent = formatFcfa(data.line_total);
+                    }
+                } else if (success && data && data.removed) {
+                    removeCartRow({
+                        itemId: data.item_id,
+                        pieceId: data.piece_id,
+                        cartSubtotal: data.cart_subtotal,
+                    });
+                }
+                if (typeof onDone === 'function') onDone(success, data);
+            });
+        }
+
+        minus.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            syncQty(parseQty(input.value) - 1);
+        }, true);
+
+        plus.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            syncQty(parseQty(input.value) + 1);
+        }, true);
+
+        input.addEventListener('change', function () {
+            syncQty(parseQty(input.value));
+        });
+    });
+
+    window.addEventListener('ecom:cart-item-removed', function (event) {
+        removeCartRow(event.detail || {});
+    });
+});
+</script>
+{% endif %}
+{% endblock extra_js %}

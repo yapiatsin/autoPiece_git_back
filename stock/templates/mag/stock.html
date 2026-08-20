@@ -1,0 +1,213 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% block title %}AUTO-PIECE{% endblock title %}
+{% block page_title %}Stock de pièce{% endblock page_title %}
+{% block page %}Stock{% endblock page %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-form-modal.css' %}">
+{% endblock extra_head %}
+
+{% block page_action_buttons %}
+<a href="{% url 'pieces_archivees' %}" class="btn btn-outline-secondary" title="Voir les pièces archivées">
+    <i class="fa fa-archive"></i> Archives
+</a>
+{% endblock page_action_buttons %}
+
+{% block page_action_suffix %}
+{% if not can_choose_localite and localite_active %}
+<span class="badge badge-info">
+    <i class="fa fa-map-marker"></i> {{ localite_active.nom }}
+</span>
+{% endif %}
+{% endblock page_action_suffix %}
+
+{% block main_content %}
+    {% include "mag/partials/_periode_filter_modal.html" %}
+    {% include "mag/partials/_dashboard_kpi_styles.html" %}
+    {% include "mag/partials/_kpi_row_stock.html" %}
+
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Evolution des ventes</h2>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                        <thead>
+                            <tr class='text-info'>
+                                <th>N°#</th>
+                                <th>N°Pièce</th>
+                                <th>Designation</th>
+                                <th>Categorie</th>
+                                <th>Prix</th>
+                                <th class="text-center">Prix vente</th>
+                                <th class="text-center">Prix vente local</th>
+                                <th class="text-center">Quantite stock</th>
+                                <th>Provenance</th>
+                                <th>seuil</th>
+                                <th>Emplacement</th>
+                                <th>Auteur</th>
+                                <th>Date</th>
+                                <th class="text-center">Action</th>
+                                <th class="text-center">Sortie</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr class='text-info'>
+                                <th>N°#</th>
+                                <th>N°Pièce</th>
+                                <th>Designation</th>
+                                <th>Categorie</th>
+                                <th>Prix</th>
+                                <th class="text-center">Prix vente</th>
+                                <th class="text-center">Prix vente local</th>
+                                <th class="text-center">Quantite stock</th>
+                                <th>Provenance</th>
+                                <th>seuil</th>
+                                <th>Emplacement</th>
+                                <th>Auteur</th>
+                                <th>Date</th>
+                                <th class="text-center">Action</th>
+                                <th class="text-center">Sortie</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            {% if piece_queryset %}
+                                {% for d in piece_queryset %}
+                                    <tr>
+                                        <th><a>{{forloop.counter}} </a></th>
+                                        <th><a>{{d.numero_piece}}</a></th>
+                                        <th>{{d.designation}}</th>
+                                        <th><a href="{% url "add_piece" d.categorie.pk %}">{{d.categorie.categorie}}</a></th>
+                                        <th>{{d.prix_achat}}</th>
+                                        <th class="text-center text-success">{{ d.prix_unitaire }} F</th>
+                                        <th class="text-center text-info">
+                                            {% if d.prix_unitaire_local_valeur is not None %}
+                                                {{ d.prix_unitaire_local_valeur }} F
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </th>
+                                        <th class="text-center"><span class="badge badge-{{ d.color_status }}" aria-hidden="true">{{d.quantite_disponible}}</span></th>
+                                        <th>
+                                            {% if d.derniere_origine_type == 'transfert_local' and d.derniere_origine_nom %}
+                                            <span class="badge badge-outline-info" title="Dernière entrée">↪ {{ d.derniere_origine_nom }}</span>
+                                            {% else %}
+                                            <span class="badge badge-outline-secondary">Fournisseur</span>
+                                            {% endif %}
+                                        </th>
+                                        <th class="text-secondary text-center">{{d.seuil}}</th>
+                                        <th>{{d.emplacement}}</th>
+                                        <th>{% if d.utilisateur %}{{d.utilisateur.username}}{% else %}N/A{% endif %}</th>
+                                        <th>{{d.date_creation|date:"d-m-y"}}</th>
+                                        <th class="text-center">
+                                            <a href="javascript:void(0);" data-toggle="modal" data-target="#entreStockModal{{ d.pk }}" title="Cliquer pour mettre a jour le stock"><i class="icon-plus text-success"></i></a> -
+                                            {% if peut_fixer_prix_local %}
+                                                <a href="javascript:void(0);" data-toggle="modal" data-target="#prixLocalModal{{ d.pk }}" title="Fixer le prix de vente local"><i class="fa fa-tag text-info"></i></a> -
+                                            {% endif %}
+                                            <a href="javascript:void(0);" data-toggle="modal" data-target="#editPieceModal{{ d.pk }}" title="Cliquer pour modifier la pièce"><i class="icon-note text-warning"></i></a> -
+                                            <a href="{% url "info_piece" d.pk %}" title="Cliquer pour voir les entrées en stock"><i class="icon-eye text-info"></i></a> -
+                                            <a href="{% url "piece_delete" d.pk %}" onclick="return confirm('Etes-vous sûre de vouloir supprimer la pièce de {{ d.numero_piece }} - {{ d.designation }} - {{ d.categorie.categorie }} ? Toutes les informations liées seront supprimées.')"><i class="icon-trash text-danger"></i></a>
+                                        </th>
+                                        <th class="text-center">
+                                            {% if peut_toggle_sortie_catalogue %}
+                                            <label class="toggle-switch" title="Vente catalogue (toutes localités)">
+                                                <input type="checkbox"
+                                                    class="toggle-checkbox"
+                                                    data-active-url="{% url 'activate_sortie' d.pk %}"
+                                                    data-deactive-url="{% url 'deactivate_sortie' d.pk %}"
+                                                    data-piece-label="{{ d.numero_piece }} — {{ d.designation }}"
+                                                    {% if d.active_sortie %}checked{% endif %}>
+                                                <span class="toggle-switch-slider {% if d.active_sortie %}bg-success{% else %}bg-danger{% endif %}"></span>
+                                            </label>
+                                            {% elif peut_toggle_sortie_local %}
+                                            <label class="toggle-switch" title="Vente dans votre localité">
+                                                <input type="checkbox"
+                                                    class="toggle-checkbox"
+                                                    data-active-url="{% url 'activate_sortie_local' d.pk %}"
+                                                    data-deactive-url="{% url 'deactivate_sortie_local' d.pk %}"
+                                                    data-piece-label="{{ d.numero_piece }} — {{ d.designation }}"
+                                                    {% if d.active_sortie_local|default:True %}checked{% endif %}>
+                                                <span class="toggle-switch-slider {% if d.active_sortie_local|default:True %}bg-success{% else %}bg-danger{% endif %}"></span>
+                                            </label>
+                                            {% else %}
+                                            <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </th>
+                                    </tr>
+                                {% empty %}
+                                    <tr class="mag-table-skip-filter">
+                                        <td colspan="15" class="text-center text-muted">
+                                            <p>Aucune pièce trouvée avec les critères de filtrage.</p>
+                                            <p>Vérifiez les filtres ou l'activation catalogue / locale de la pièce.</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="15" class="text-center text-muted">
+                                        <p>Aucune pièce disponible dans le stock.</p>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if piece_queryset %}
+        {% for d in piece_queryset %}
+            {% include "mag/partials/entre_stock.html" with piece=d entre_stock_form=entre_stock_form %}
+            {% include "mag/partials/_edit_piece.html" with piece=d edit_piece_form=edit_piece_form fournisseurs=fournisseurs categories=categories %}
+            {% if peut_fixer_prix_local %}
+            {% include "mag/partials/_modal_prix_local.html" with piece=d %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {% include "mag/partials/_modal_archive_motif.html" %}
+
+    <script>
+        document.querySelectorAll('.form-prix-local').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const url = form.dataset.url;
+                const errEl = form.querySelector('.prix-local-erreur');
+                const fd = new FormData(form);
+                fetch(url, {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success(data.message || 'Prix enregistré.');
+                        }
+                        window.location.reload();
+                    } else {
+                        errEl.textContent = data.error || 'Erreur lors de l\'enregistrement.';
+                        errEl.classList.remove('d-none');
+                    }
+                })
+                .catch(function () {
+                    errEl.textContent = 'Erreur réseau.';
+                    errEl.classList.remove('d-none');
+                });
+            });
+        });
+    </script>
+    {% include "mag/partials/_archive_toggle_js.html" %}
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

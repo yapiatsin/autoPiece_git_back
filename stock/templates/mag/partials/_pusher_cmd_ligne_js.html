@@ -1,0 +1,126 @@
+{% load static %}
+{% comment %}Temps réel Pusher — page_mode: cmd_line | livraison | liste_cmd{% endcomment %}
+<audio id="receive-sound" src="{% static 'sons/receive_c.mp3' %}" preload="auto"></audio>
+<script>
+(function () {
+    var pageMode = '{{ page_mode|default:"cmd_line" }}';
+    var userRole = '{{ request.user.role|default:""|escapejs }}';
+    var isAdmin = {% if request.user.is_superuser or request.user.role == 'admin' %}true{% else %}false{% endif %};
+    var userLocalPk = '{% if request.user.local_entrepot_id %}{{ request.user.local_entrepot_id }}{% endif %}';
+    var userPk = '{{ request.user.pk }}';
+    var reloadTimer = null;
+
+    var EVENT_LABELS = {
+        nouvelle: 'Nouvelle commande en ligne',
+        valider: 'Commande validée',
+        assigner: 'Commande assignée à un livreur',
+        payer: 'Paiement enregistré',
+        livrer: 'Commande livrée',
+        annuler: 'Commande annulée',
+    };
+
+    function shouldHandle(payload) {
+        if (!payload || !payload.event) return false;
+        if (pageMode === 'cmd_line' || pageMode === 'liste_cmd') {
+            if (isAdmin) return true;
+            if (!userLocalPk) return false;
+            return String(payload.local_entrepot_id || '') === String(userLocalPk);
+        }
+        if (userRole === 'livreur') {
+            return String(payload.livreur_id || '') === String(userPk);
+        }
+        if (['assigner', 'payer', 'livrer', 'annuler', 'valider'].indexOf(payload.event) === -1) {
+            return false;
+        }
+        if (isAdmin) return true;
+        if (!userLocalPk) return false;
+        return String(payload.local_entrepot_id || '') === String(userLocalPk);
+    }
+
+    function playReceiveSound() {
+        var receiveSound = document.getElementById('receive-sound');
+        if (!receiveSound) return;
+        try {
+            receiveSound.currentTime = 0;
+            receiveSound.play().catch(function (e) {
+                console.warn('Impossible de jouer le son:', e);
+            });
+        } catch (e) {
+            console.warn('Lecture son bloquée:', e);
+        }
+    }
+
+    function toastFor(payload) {
+        if (typeof toastr === 'undefined') return;
+        var title = EVENT_LABELS[payload.event] || 'Commande en ligne';
+        var msg = (payload.numero_commande || '') +
+            (payload.local_entrepot_nom ? ' · ' + payload.local_entrepot_nom : '');
+        if (payload.event === 'nouvelle' || payload.event === 'assigner') {
+            toastr.warning(msg, title);
+        } else if (payload.event === 'annuler') {
+            toastr.error(msg, title);
+        } else {
+            toastr.info(msg, title);
+        }
+    }
+
+    function refreshNotifs() {
+        if (typeof chargerNotifications === 'function') {
+            try { chargerNotifications(); } catch (e) { /* ignore */ }
+        }
+    }
+
+    function scheduleReload() {
+        if (reloadTimer) return;
+        reloadTimer = setTimeout(function () {
+            reloadTimer = null;
+            if (pageMode === 'liste_cmd' && typeof window.reloadListeCommandes === 'function') {
+                window.reloadListeCommandes();
+                return;
+            }
+            location.reload();
+        }, 900);
+    }
+
+    function onPayload(payload) {
+        if (!shouldHandle(payload)) return;
+        if (
+            payload.event === 'nouvelle' ||
+            (pageMode === 'livraison' && payload.event === 'assigner')
+        ) {
+            playReceiveSound();
+        }
+        toastFor(payload);
+        refreshNotifs();
+        scheduleReload();
+    }
+
+    function bindChannel() {
+        if (!window.magPusher) {
+            console.warn('Pusher indisponible — actualisation manuelle requise');
+            return false;
+        }
+        try {
+            var channel = window.magPusher.subscribe('magasin-commande-ligne');
+            channel.bind('update', function (data) {
+                try {
+                    onPayload(data || {});
+                } catch (e) {
+                    console.error('Pusher commande_ligne parse error', e);
+                }
+            });
+            return true;
+        } catch (e) {
+            console.warn('Pusher commande_ligne non connecté', e);
+            return false;
+        }
+    }
+
+    if (!bindChannel()) {
+        // Client peut arriver juste après (ordre scripts) — 1 retry court
+        setTimeout(bindChannel, 300);
+    }
+
+    setInterval(refreshNotifs, 30000);
+})();
+</script>

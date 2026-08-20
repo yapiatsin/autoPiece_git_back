@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>COMPTE CREE AVEC SUCCES</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <div style="max-width: 100%; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2 style="text-align: center; color: #005d81;">COMPTE CREE AVEC SUCCES</h2>
+            <p>Bonjour <strong>{{username}}</strong>,</p>
+            <p>Nous sommes ravis de vous informer que votre compte a été créé avec succès <strong>!!!</strong>.</p>
+            <p>Vous pouvez vous connecter en utilisant le mot de passe suivant :</p>
+            <div style="margin: 10px 0;">
+                <p style="font-size: 20px; font-weight: bold; color: #2c3e50;">Votre mot de passe : <span style="color: #720b00;">{{password}}</span></p>
+            </div>
+            <div style="margin: 10px 0;">
+                <p style="color: #555;"> Pour accéder à votre compte, cliquez sur</p>
+                <a href="{% url 'connexion' %}" class="btn btn-success" style="border: 1px solid #c4e2ffff; color: #c4e2ffff;background-color: #0062c4ff; text-align: center; padding:10px; width: 200px; border-radius: 10px;margin:4px">Se Connecter</a>
+            </div>
+            <div style="margin: 10px 0;">
+                <p style="color: #555;">Merci d'être AUTO-PIECE.</p>
+            </div>
+            <p style="color: #555;">Cordialement,<br>L'équipe support</p>
+            <footer style="margin-top: 20px; text-align: center; font-size: 12px; color: #999;">
+                &copy; 2024-2025 AUTO-PIECE. Tous droits réservés.
+            </footer>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,19 @@
+{% load static i18n %}
+<div class="rts-section-gap pt_sm--20 pb--30">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-5">
+                {% include 'e_autopiece/partials/_localite_map.html' %}
+            </div>
+            <div class="col-lg-7">
+                <h2 class="title-left mb-2">{% trans "Catalogue pièces auto" %}</h2>
+                <p class="mb-0">
+                    {% trans "Commande depuis" %} :
+                    <strong id="ecom-local-label">{% if local_selectionne %}{{ local_selectionne.nom }}{% else %}{% trans "aucune localité" %}{% endif %}</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% include 'e_autopiece/partials/_catalogue_pieces.html' %}
+    {% include 'e_autopiece/partials/_ecom_catalogue_scripts.html' %}
+</div>

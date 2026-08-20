@@ -1,0 +1,124 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+
+<head>
+<title>P&BHoldingsite</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="{% static 'apps/assets/vendor/bootstrap/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/vendor/font-awesome/css/font-awesome.min.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/main.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/pbholdingsite.css' %}">
+</head>
+<body data-theme="light" class="font-nunito">
+
+<div id="wrapper" class="theme-cyan">
+
+    <div class="page-loader-wrapper">
+        <div class="loader">
+            <div class="m-t-30"><img src="assets/images/logo-icon.svg" width="48" height="48" alt="Iconic"></div>
+            <p>AUTO-PIECE...</p>
+        </div>
+    </div>
+    <div class="vertical-align-wrap">
+        <div class="vertical-align-middle maintenance">
+            <div class="text-center pb-home">
+                {% if messages %}
+                <div class="ecom-flash-stack" id="pbFlashMessages" aria-live="polite" aria-atomic="true">
+                    {% for message in messages %}
+                    <div class="ecom-flash-toast ecom-flash-toast--{{ message.tags|default:'info'|cut:' ' }}" role="alert">
+                        <span class="ecom-flash-toast-icon" aria-hidden="true">
+                            {% if 'success' in message.tags %}
+                            <i class="fa fa-check-circle"></i>
+                            {% elif 'error' in message.tags or 'danger' in message.tags %}
+                            <i class="fa fa-exclamation-circle"></i>
+                            {% elif 'warning' in message.tags %}
+                            <i class="fa fa-exclamation-triangle"></i>
+                            {% else %}
+                            <i class="fa fa-info-circle"></i>
+                            {% endif %}
+                        </span>
+                        <p class="ecom-flash-toast-text">{{ message }}</p>
+                        <button type="button" class="ecom-flash-toast-close" aria-label="Fermer">
+                            <i class="fa fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <script>
+                (function () {
+                    var stack = document.getElementById('pbFlashMessages');
+                    if (!stack) return;
+
+                    function dismissToast(toast) {
+                        if (!toast || toast.classList.contains('is-leaving')) return;
+                        toast.classList.add('is-leaving');
+                        setTimeout(function () {
+                            if (toast.parentNode) toast.parentNode.removeChild(toast);
+                            if (stack && !stack.children.length && stack.parentNode) {
+                                stack.parentNode.removeChild(stack);
+                            }
+                        }, 320);
+                    }
+
+                    stack.querySelectorAll('.ecom-flash-toast').forEach(function (toast) {
+                        var closeBtn = toast.querySelector('.ecom-flash-toast-close');
+                        if (closeBtn) {
+                            closeBtn.addEventListener('click', function () { dismissToast(toast); });
+                        }
+                        setTimeout(function () { dismissToast(toast); }, 5000);
+                    });
+                })();
+                </script>
+                {% endif %}
+
+                <article>
+                    <h1>Bienvenue à P&BHoldingsite</h1>
+                    <p class="pb-home__intro">
+                        Pour accéder à une plateforme, cliquez sur une des icônes ci-dessous.
+                        En cas de difficulté, contactez <a href="#">l'administrateur</a> de votre plateforme.
+                    </p>
+                    <p class="pb-home__divider">&mdash; Accéder à &mdash;</p>
+                </article>
+
+                <div class="platform-cards">
+                    <a href="https://pbholdingsite.com/auth/se%20connecter" class="platform-card" title="Gestion VTC">
+                        <div class="platform-card__icon">
+                            <img src="{% static 'car_icon.png' %}" alt="Gestion VTC">
+                        </div>
+                        <span class="platform-card__label">Gestion VTC</span>
+                    </a>
+
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'tbord' %}" class="platform-card" title="Auto-Pièce">
+                    {% else %}
+                    <a href="{% url 'connexion' %}" class="platform-card" title="Auto-Pièce">
+                    {% endif %}
+                        <div class="platform-card__icon">
+                            <img src="{% static 'setting.png' %}" alt="Auto-Pièce">
+                        </div>
+                        <span class="platform-card__label">Auto-Pièce</span>
+                    </a>
+
+                    <a href="https://pbholdingsite.com/" class="platform-card" title="P&amp;B Entreprise site">
+                        <div class="platform-card__icon">
+                            <img src="{% static 'globe.png' %}" alt="P&amp;B Entreprise site">
+                        </div>
+                        <span class="platform-card__label">P&amp;B Entreprise site</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'apps/assets/bundles/libscripts.bundle.js' %}"></script>
+<script src="{% static 'apps/assets/bundles/vendorscripts.bundle.js' %}"></script>
+<script src="{% static 'apps/assets/bundles/mainscripts.bundle.js' %}"></script>
+</body>
+
+</html>

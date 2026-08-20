@@ -1,0 +1,90 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE — Historique général{% endblock title %}
+{% block page_title %}HISTORIQUE GENERAL{% endblock page_title %}
+{% block page %}Historique général{% endblock page %}
+
+{% block main_content %}
+    {% include "mag/partials/_periode_filter_modal.html" %}
+
+    <div class="col-md-12 p-2 mt-4">
+        <div class="card">
+            <div class="header text-info">
+                <h2 class="text-info">
+                    {{ global_history|length }} Historique{% if global_history|length > 1 %}s{% endif %}
+                </h2>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                        <thead>
+                            <tr class='text'>
+                                <th>N°#</th>
+                                <th>Table</th>
+                                <th>Type d'Action</th>
+                                <th>Utilisateur</th>
+                                <th>Changements</th>
+                                <th>Date de l'Action</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr class='text'>
+                                <th>N°#</th>
+                                <th>Table</th>
+                                <th>Type d'Action</th>
+                                <th>Utilisateur</th>
+                                <th>Changements</th>
+                                <th>Date de l'Action</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            {% for entry in global_history %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ entry.model }}</td>
+                                    <td>
+                                        {% if entry.record.history_type == '+' %}
+                                        Création
+                                        {% elif entry.record.history_type == '-' %}
+                                        Suppression
+                                        {% else %}
+                                        Modification
+                                        {% endif %}
+                                    </td>
+                                    <td>{% if entry.record.utilisateur %}{{ entry.record.utilisateur }}{% else %}Système{% endif %}</td>
+                                    <td>
+                                        {% if entry.changed_fields %}
+                                        <ul>
+                                            {% for change in entry.changed_fields %}
+                                            <li>{{ change }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ entry.record.history_date|date:"d M Y H:i:s" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted p-3">
+                                        Aucun historique pour cette période.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

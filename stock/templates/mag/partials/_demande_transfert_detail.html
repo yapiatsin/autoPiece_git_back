@@ -1,0 +1,145 @@
+{% load custom_filters %}
+<div class="demande-detail-doc">
+    <table class="detail-header-bar" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="55%">
+                <div class="detail-brand-name">P&amp;B AUTO-PIECE</div>
+                <div class="detail-brand-sub">Transfert inter-agences — Détail de la demande</div>
+            </td>
+            <td width="45%" class="detail-header-meta">
+                N° {{ demande.numero_demande }}<br>
+                {{ demande.date_demande|date:"d/m/Y H:i" }}
+            </td>
+        </tr>
+    </table>
+
+    <div class="detail-body-pad">
+        <div class="detail-toolbar no-print">
+            <a href="{% url 'imprimer_demande_transfert' demande.pk %}?print=1" target="_blank" class="btn btn-sm btn-outline-dark">
+                <i class="fa fa-print"></i> Imprimer la fiche
+            </a>
+            <a href="{% url 'imprimer_demande_transfert' demande.pk %}?format=pdf" target="_blank" class="btn btn-sm btn-outline-dark" download="Bon_de_commande_{{ demande.numero_demande }}.pdf">
+                <i class="fa fa-file-pdf-o"></i> PDF
+            </a>
+        </div>
+
+        <h1 class="detail-doc-title">DÉTAIL DE LA DEMANDE</h1>
+
+        <table class="detail-info-grid" cellpadding="0" cellspacing="0">
+            <tr>
+                <td><span class="lbl">N° demande</span>{{ demande.numero_demande }}</td>
+                <td><span class="lbl">Statut</span>{{ demande|statut_demande_affichage:user }}</td>
+            </tr>
+            <tr>
+                <td><span class="lbl">Demandeur</span>{{ demande.local_demandeur.nom }}</td>
+                <td><span class="lbl">Donneur</span>{{ demande.local_donneur.nom }}</td>
+            </tr>
+            <tr>
+                <td><span class="lbl">Motif</span>{{ demande.motif|default:"—" }}</td>
+                <td><span class="lbl">Bon commande</span>{{ demande.numero_bon_donneur|default:"—" }}</td>
+            </tr>
+            <tr>
+                <td><span class="lbl">Bon réception</span>{{ demande.numero_bon_commande|default:"—" }}</td>
+                <td><span class="lbl">Créée le</span>{{ demande.date_demande|date:"d/m/Y H:i" }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="lbl">Validée le</span>
+                    {% if demande.date_validation %}{{ demande.date_validation|date:"d/m/Y H:i" }}{% else %}—{% endif %}
+                </td>
+                <td>
+                    <span class="lbl">Reçue le</span>
+                    {% if demande.date_reception %}{{ demande.date_reception|date:"d/m/Y H:i" }}{% else %}—{% endif %}
+                </td>
+            </tr>
+        </table>
+
+        {% if demande.bon_livraison %}
+        {% with bon=demande.bon_livraison %}
+        <h2 class="detail-section-title">BON DE LIVRAISON</h2>
+
+        <table class="detail-info-grid" cellpadding="0" cellspacing="0">
+            <tr>
+                <td><span class="lbl">N° demande</span>{{ demande.numero_demande }}</td>
+                <td><span class="lbl">Destinataire</span>{{ demande.local_demandeur.nom }}</td>
+            </tr>
+            <tr>
+                <td><span class="lbl">Expéditeur</span>{{ demande.local_donneur.nom }}</td>
+                <td><span class="lbl">Livreur</span>{{ bon.livreur.get_full_name|default:bon.livreur.username }}</td>
+            </tr>
+            <tr>
+                <td><span class="lbl">Bon commande</span>{{ demande.numero_bon_donneur|default:"—" }}</td>
+                <td><span class="lbl">Statut</span>{{ bon|statut_bon_affichage:user }}</td>
+            </tr>
+        </table>
+
+        <div class="detail-summary-box">
+            <div>
+                N° bon livraison :
+                <span class="val">{{ bon.numero_bon_livraison }}</span>
+            </div>
+            <div>
+                Distance estimée :
+                <span class="val">{{ bon.distance_km|floatformat:2 }} km</span>
+            </div>
+            <div>
+                Coût calculé :
+                <span class="val">{{ bon.cout_base|floatformat:0 }} F</span>
+            </div>
+            {% if bon.cout_ajustement %}
+            <div>
+                Ajustement{% if bon.motif_ajustement %} ({{ bon.motif_ajustement }}){% endif %} :
+                <span class="val">{{ bon.cout_ajustement|floatformat:0 }} F</span>
+            </div>
+            {% endif %}
+            <div>
+                Coût total livraison :
+                <span class="val">{{ bon.cout_total|floatformat:0 }} F</span>
+            </div>
+        </div>
+
+        <div class="detail-toolbar detail-bl-actions no-print">
+            <a href="{% url 'imprimer_bon_livraison' bon.pk %}?print=1" target="_blank" class="btn btn-sm btn-outline-dark">
+                <i class="fa fa-truck"></i> Imprimer bon de livraison
+            </a>
+            {% if peut_gerer_livraison %}
+                {% if bon.statut == 'en_preparation' %}
+                <form method="post" action="{% url 'marquer_livraison_en_route' bon.pk %}" class="d-inline">{% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-dark">Marquer en route</button>
+                </form>
+                {% endif %}
+                {% if bon.statut == 'en_route' %}
+                <form method="post" action="{% url 'marquer_livraison_livre' bon.pk %}" class="d-inline">{% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success-outline">Marquer livré</button>
+                </form>
+                {% endif %}
+            {% endif %}
+            {% if est_chef_demandeur and bon.statut == 'livre' and demande.statut == 'validee' %}
+            <button type="button" class="btn btn-sm btn-primary btn-recevoir-demande"
+                data-id="{{ demande.pk }}" data-numero="{{ demande.numero_demande }}">Reçu</button>
+            {% endif %}
+        </div>
+        {% endwith %}
+        {% endif %}
+
+        <h2 class="detail-section-title">PIÈCES DEMANDÉES</h2>
+        <table class="detail-items-table" cellpadding="0" cellspacing="0">
+            <thead>
+                <tr>
+                    <th class="col-piece">N° pièce</th>
+                    <th>Désignation</th>
+                    <th class="col-qte">Qté</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in demande.lignes.all %}
+                <tr>
+                    <td>{{ ligne.piece.numero_piece }}</td>
+                    <td>{{ ligne.piece.designation }}</td>
+                    <td class="text-center">{{ ligne.quantite }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

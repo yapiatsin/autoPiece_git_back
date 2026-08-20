@@ -1,0 +1,679 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE — Caisse{% endblock title %}
+{% block page_title %}{% endblock page_title %}
+{% block page %}{% endblock page %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/caisse.css' %}">
+{% endblock extra_head %}
+{% block main_content %}
+    <div class="col-md-8 col-lg-8 p-2 mt-0 panier-page-col">
+        <div class="card panier-page-card panier-page-card--catalog">
+            <div class="body panier-catalog-search">
+                <label class="sr-only" for="searchInput">Rechercher un ticket</label>
+                <div class="piece-catalog-search" id="adv-search" role="search">
+                    <span class="piece-catalog-search__icon" aria-hidden="true">
+                        <i class="fa fa-search"></i>
+                    </span>
+                    <input type="search"
+                           name="q"
+                           class="form-control piece-catalog-search__input"
+                           placeholder="Rechercher un ticket, client…"
+                           id="searchInput"
+                           autocomplete="off" />
+                    <button type="button"
+                            class="piece-catalog-search__reset"
+                            onclick="resetCaisseSearch()"
+                            title="Réinitialiser la recherche"
+                            aria-label="Réinitialiser la recherche">
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="body" style="background-color: #ffe9e95c;">
+                {% include 'mag/partials/_panier_no_valid_styles.html' %}
+                <div class="cwidget-scroll">
+                    <ul class="chat-widget m-r-5 clearfix" style="border-radius:18px; height: 450px;">
+                        <div class="row clearfix piece-catalog-row" id="result-articles">
+                            {% include 'mag/partials/_panier_no_valid.html' %}
+                        </div>
+                    </ul>
+                </div>
+            </div>
+            <div class="body">
+                <p class="mb-0" id="result-count">Paniers en attente ({{ paniers_non_valides|length }})</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-4 p-2 mt-0 panier-page-col">
+        <div class="card panier-page-card panier-page-card--basket" id="caisse-panel">
+            {% include 'mag/partials/_caisse_form.html' %}
+        </div>
+    </div>
+
+    <div class="col-lg-12 p-2 mt-2" id="caisse-ventes">
+        <div class="card panier-page-card panier-page-card--ventes">
+            <div class="panier-basket-header">
+                <div class="panier-basket-header__main">
+                    <span class="panier-basket-header__icon" aria-hidden="true">
+                        <i class="fa fa-list-alt"></i>
+                    </span>
+                    <div class="panier-basket-header__text">
+                        <h2 class="panier-basket-header__title">Ventes</h2>
+                        <p class="panier-basket-header__subtitle">Commandes encaissées aujourd’hui</p>
+                    </div>
+                </div>
+                <div class="panier-basket-header__badge" title="Nombre de ventes">
+                    <span class="panier-basket-header__badge-label">Total</span>
+                    <span class="panier-basket-header__badge-value">{{ cmdes|length }}</span>
+                </div>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher une vente…" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                            <thead>
+                                <tr>
+                                    <th>N°#</th>
+                                    <th>N°Commande</th>
+                                    <th>Montant</th>
+                                    <th>Total</th>
+                                    <th>Remise</th>
+                                    <th>TVA</th>
+                                    <th>Versé</th>
+                                    <th>Reste</th>
+                                    <th>Paiement</th>
+                                    <th>Caissier(ère)</th>
+                                    <th>Date</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in cmdes %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ c.numero_commande }}</td>
+                                    <td>{{ c.total_sans_remise }}</td>
+                                    <td>{{ c.total }}</td>
+                                    <td>{{ c.remise }}</td>
+                                    <td>{% if c.montant_tva and c.montant_tva > 0 %}{{ c.montant_tva }}{% else %}—{% endif %}</td>
+                                    <td>{{ c.montant_paye }}</td>
+                                    <td>{{ c.montant_reste }}</td>
+                                    <td class="text-center">
+                                        {% if c.paye %}
+                                        <span class="badge badge-success">Payé</span>
+                                        {% else %}
+                                        <span class="badge badge-danger">Impayé</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ c.utilisateur.username|default:"—" }}</td>
+                                    <td>{{ c.date_creation|date:"d-m-y" }}</td>
+                                    <td class="text-center text-nowrap">
+                                        {% if c.paye and c.ticket %}
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary reprint-recu-paiement"
+                                                    data-ticket="{{ c.ticket.numero }}"
+                                                    title="Réimprimer le reçu de paiement">
+                                                <i class="fa fa-print"></i>
+                                            </button>
+                                            {% if c.bon_paiement %}
+                                                <a href="{% url 'imprimer_bon_commande_vente' c.ticket.numero %}?format=pdf"
+                                                   class="btn btn-sm btn-outline-secondary"
+                                                   target="_blank"
+                                                   rel="noopener"
+                                                   title="PDF bon de commande (paiement)">
+                                                    <i class="fa fa-file-pdf-o"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="12" class="text-center text-muted py-4">Aucune vente pour le moment.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="modalBonCommandeVente" tabindex="-1" role="dialog" aria-labelledby="modalBonCommandeVenteLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalBonCommandeVenteLabel">Bon de commande</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="bon-commande-modal-content"></div>
+                <div class="modal-footer">
+                    <a href="#" id="btn-bon-pdf" class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener">PDF</a>
+                    <button type="button" class="btn btn-dark btn-sm" id="btn-imprimer-bon-modal">Imprimer</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="success-sound" src="{% static 'sons/success.mp3' %}" preload="auto"></audio>
+    <audio id="receive-sound" src="{% static 'sons/receive_c.mp3' %}" preload="auto"></audio>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("paiement") === "success") {
+                const audio = document.getElementById("success-sound");
+                if (audio) {
+                    audio.play().then(() => {
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        toastr.success("Paiement effectué avec succès !");
+                    }).catch((e) => {
+                        console.warn("Lecture automatique du son bloquée :", e);
+                    });
+                }
+            }
+            const bonTicket = urlParams.get("bon_ticket");
+            if (bonTicket) {
+                chargerBonCommandeModal(bonTicket);
+                const clean = new URL(window.location.href);
+                clean.searchParams.delete("bon_ticket");
+                clean.searchParams.delete("paiement");
+                window.history.replaceState({}, document.title, clean.pathname + clean.search);
+            }
+        });
+    </script>
+    <script>
+        // URL template pour le détail caisse AJAX (ticket remplacé dynamiquement)
+        const AJAX_CAISSE_DETAIL_URL = "{% url 'ajax_caisse_detail' 'TICKET_ID' %}";
+        const AJAX_RELOAD_PANIERS_URL = "{% url 'ajax_reload_paniers' %}";
+        const AJAX_CALCUL_TIMBRE_URL = "{% url 'ajax_calcul_timbre' %}";
+        let defaultCaisseHTML = '';
+
+        document.addEventListener("DOMContentLoaded", function () {
+            defaultCaisseHTML = document.getElementById("caisse-panel").innerHTML;
+            initMontantCalcul();
+
+            // Initialiser la liste des tickets déjà visibles (évite un faux "nouveau panier" au 1er poll)
+            const initialContainer = document.getElementById("result-articles");
+            if (initialContainer) {
+                knownTickets = _extractTicketsFromContainer(initialContainer);
+            }
+
+            // Délégation de clic sur les cartes panier (supporte le rechargement AJAX de la liste)
+            document.getElementById("caisse-ventes").addEventListener("click", function (e) {
+                const recuBtn = e.target.closest(".reprint-recu-paiement");
+                if (recuBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    reprintRecuPaiement(recuBtn.dataset.ticket, recuBtn);
+                    return;
+                }
+            });
+
+            document.getElementById("result-articles").addEventListener("click", function (e) {
+                // Bouton réimpression du bon de commande (panier en attente)
+                const reprintBtn = e.target.closest(".reprint-bon-commande");
+                if (reprintBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    reprintBonCommande(reprintBtn.dataset.ticket, reprintBtn);
+                    return;
+                }
+                const link = e.target.closest(".panier-select-link");
+                if (!link) return;
+                e.preventDefault();
+                loadCaisseForm(link.dataset.ticket);
+            });
+
+        function reprintRecuPaiement(ticket, btn) {
+            if (!ticket) return;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+            const url = "{% url 'reimprimer_recu_paiement' 'TICKET_ID' %}".replace('TICKET_ID', ticket);
+            const csrf = (document.cookie.split('; ').find(c => c.startsWith('csrftoken=')) || '').split('=')[1];
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrf || '',
+                }
+            })
+            .then(r => r.json().then(data => ({ ok: r.ok, data })))
+            .then(({ ok, data }) => {
+                if (ok && data.success) {
+                    if (typeof toastr !== 'undefined') toastr.success(data.message || "Reçu de paiement réimprimé.");
+                } else {
+                    if (typeof toastr !== 'undefined') toastr.error(data.error || "Erreur lors de l'impression.");
+                }
+            })
+            .catch(() => {
+                if (typeof toastr !== 'undefined') toastr.error("Erreur réseau lors de l'impression.");
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            });
+        }
+
+        function reprintBonCommande(ticket, btn) {
+            if (!ticket) return;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Impression...';
+            const url = "{% url 'imprimer_recu_commande' 'TICKET_ID' %}".replace('TICKET_ID', ticket);
+            const csrf = (document.cookie.split('; ').find(c => c.startsWith('csrftoken=')) || '').split('=')[1];
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrf || '',
+                }
+            })
+            .then(r => r.json().then(data => ({ ok: r.ok, data })))
+            .then(({ ok, data }) => {
+                if (ok && data.success) {
+                    if (typeof toastr !== 'undefined') toastr.success(data.message || "Bon de commande réimprimé.");
+                } else {
+                    if (typeof toastr !== 'undefined') toastr.error(data.error || "Erreur lors de l'impression.");
+                }
+            })
+            .catch(() => {
+                if (typeof toastr !== 'undefined') toastr.error("Erreur réseau lors de l'impression.");
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            });
+        }
+
+            // Polling de secours : rafraîchit la liste toutes les 8 s pour garantir la mise à jour
+            // même si le broker MQTT WebSocket n'est pas joignable ou si la session MQTT a été perdue.
+            setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    reloadPanierList();
+                }
+            }, 8000);
+
+            // Rafraîchit immédiatement à chaque retour sur l'onglet
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') reloadPanierList();
+            });
+        });
+
+        function loadCaisseForm(ticket) {
+            const url = AJAX_CAISSE_DETAIL_URL.replace('TICKET_ID', ticket);
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => {
+                    if (!r.ok) throw new Error("Panier introuvable ou déjà payé.");
+                    return r.json();
+                })
+                .then(data => {
+                    document.getElementById("caisse-panel").innerHTML = data.html;
+                    markSelectedPanier(ticket);
+                    bindCaisseFormSubmit();
+                    initMontantCalcul();
+                })
+                .catch(err => toastr.error(err.message || "Erreur lors du chargement du formulaire"));
+        }
+
+        function markSelectedPanier(ticket) {
+            document.querySelectorAll('.panier-order-card').forEach(function (card) {
+                card.classList.toggle('panier-order-card--active', card.dataset.ticket === ticket);
+            });
+        }
+
+        function clearSelectedPanier() {
+            document.querySelectorAll('.panier-order-card--active').forEach(function (card) {
+                card.classList.remove('panier-order-card--active');
+            });
+        }
+
+        const BON_COMMANDE_PRINT_URL_TPL = "{{ bon_commande_print_url_tpl|escapejs }}";
+
+        function ouvrirModalBonCommande(data) {
+            if (!data || !data.bon_commande_html) return;
+            const container = document.getElementById("bon-commande-modal-content");
+            if (!container) return;
+            container.innerHTML = data.bon_commande_html;
+            const titleEl = document.getElementById("modalBonCommandeVenteLabel");
+            if (titleEl) {
+                titleEl.textContent = data.print_title || "Bon de commande";
+            }
+            const pdfBtn = document.getElementById("btn-bon-pdf");
+            if (pdfBtn && data.pdf_url) pdfBtn.href = data.pdf_url;
+            const modal = $("#modalBonCommandeVente");
+            modal.data("print-url", data.print_url || "");
+            modal.modal("show");
+        }
+
+        function imprimerBonDepuisModal() {
+            const printUrl = $("#modalBonCommandeVente").data("print-url");
+            if (!printUrl) return;
+            const w = window.open(printUrl, "bon_commande_print", "width=920,height=720");
+            if (!w) {
+                toastr.warning("Autorisez les fenêtres popup pour imprimer le bon.");
+            }
+        }
+
+        document.getElementById("btn-imprimer-bon-modal")?.addEventListener("click", imprimerBonDepuisModal);
+
+        function chargerBonCommandeModal(ticketNumero) {
+            const base = BON_COMMANDE_PRINT_URL_TPL.replace("__TICKET__", encodeURIComponent(ticketNumero));
+            fetch(base + "?fragment=1", { headers: { "X-Requested-With": "XMLHttpRequest" } })
+                .then(r => {
+                    if (!r.ok) throw new Error("Bon introuvable");
+                    return r.text();
+                })
+                .then(html => {
+                    ouvrirModalBonCommande({
+                        bon_commande_html: html,
+                        print_url: base + "?print=1",
+                        pdf_url: base + "?format=pdf",
+                        print_title: "Bon de commande",
+                    });
+                })
+                .catch(() => toastr.warning("Bon de commande non disponible pour ce ticket."));
+        }
+
+        function bindCaisseFormSubmit() {
+            const form = document.getElementById("form-valider-panier");
+            if (!form) return;
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                fetch(form.action, {
+                    method: "POST",
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const audio = document.getElementById("success-sound");
+                        if (audio) audio.play().catch(() => {});
+                        if (data.warning) {
+                            toastr.warning(data.warning);
+                        } else {
+                            toastr.success("Paiement effectué avec succès !");
+                        }
+                        resetCaissePanel();
+                        reloadPanierList();
+                        if (data.bon_commande_html) {
+                            ouvrirModalBonCommande(data);
+                        }
+                    } else {
+                        toastr.error(data.error || "Erreur lors du paiement");
+                    }
+                })
+                .catch(() => toastr.error("Erreur lors du paiement"));
+            });
+        }
+
+        function resetCaissePanel() {
+            document.getElementById("caisse-panel").innerHTML = defaultCaisseHTML;
+            clearSelectedPanier();
+            initMontantCalcul();
+        }
+
+        // Ensemble des tickets actuellement affichés — sert au polling pour détecter les nouveautés
+        let knownTickets = new Set();
+
+        function _extractTicketsFromContainer(container) {
+            const tickets = new Set();
+            container.querySelectorAll('.panier-select-link').forEach(a => {
+                const t = a.dataset.ticket;
+                if (t) tickets.add(t);
+            });
+            return tickets;
+        }
+
+        function reloadPanierList(options) {
+            options = options || {};
+            return fetch(AJAX_RELOAD_PANIERS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.text())
+                .then(html => {
+                    const container = document.getElementById("result-articles");
+                    if (!container) return;
+
+                    // Parse la réponse HTML dans un fragment pour détecter les nouveaux tickets
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = html;
+                    const newTickets = _extractTicketsFromContainer(tmp);
+
+                    // Détection des ajouts (tickets présents dans la nouvelle liste mais pas dans l'ancienne)
+                    const added = [];
+                    newTickets.forEach(t => { if (!knownTickets.has(t)) added.push(t); });
+
+                    container.innerHTML = html;
+                    knownTickets = newTickets;
+                    if (typeof updateCaisseResultCount === 'function') updateCaisseResultCount();
+
+                    // Notifier visuellement/sonorement s'il y a de nouveaux paniers
+                    //  - silent: true  → initial load, pas de notification
+                    //  - added.length → polling a détecté une nouveauté (fallback si MQTT ne passe pas)
+                    if (!options.silent && added.length > 0) {
+                        const receiveSound = document.getElementById("receive-sound");
+                        if (receiveSound) {
+                            receiveSound.currentTime = 0;
+                            receiveSound.play().catch(() => {});
+                        }
+                        if (typeof toastr !== 'undefined') {
+                            toastr.info(`${added.length} nouveau(x) panier(s) à encaisser`, "Nouveau panier", {
+                                timeOut: 4000,
+                                progressBar: true
+                            });
+                        }
+                        container.style.transition = "background-color 0.5s";
+                        container.style.backgroundColor = "#c8f7c5";
+                        setTimeout(() => { container.style.backgroundColor = "transparent"; }, 500);
+                    }
+                })
+                .catch(() => {});
+        }
+        function getTotalMarchandisesCaisse() {
+            const form = document.getElementById("form-valider-panier");
+            if (!form) return 0;
+            const fromData = parseFloat(form.dataset.totalMarchandises || 0);
+            if (!isNaN(fromData) && fromData > 0) return fromData;
+            const el = document.getElementById("affiche-montant-a-payer");
+            return parseFloat(el?.dataset.totalBase || el?.textContent || 0) || 0;
+        }
+
+        function majResteCaisse() {
+            const montantInput = document.getElementById("montant");
+            const montantAPayerEl = document.getElementById("affiche-montant-a-payer");
+            const resteEl = document.getElementById("affiche-montant-reste");
+            const btnValider = document.querySelector("#form-valider-panier button[type='submit']");
+            if (!montantInput || !montantAPayerEl || !resteEl || !btnValider) return;
+            const montantPaye = parseFloat(montantInput.value || 0);
+            const montantAPayer = parseFloat(montantAPayerEl.textContent || 0);
+            const reste = montantPaye - montantAPayer;
+            resteEl.textContent = reste.toFixed(2);
+            if (reste < 0) {
+                resteEl.style.color = "red";
+                btnValider.disabled = true;
+            } else {
+                resteEl.style.color = "green";
+                btnValider.disabled = false;
+            }
+        }
+
+        function refreshTimbreCaisse() {
+            const form = document.getElementById("form-valider-panier");
+            const selectMp = document.getElementById("moyen-paiement-select");
+            const montantAPayerEl = document.getElementById("affiche-montant-a-payer");
+            const timbreEl = document.getElementById("affiche-timbre");
+            const ligneTimbre = document.getElementById("ligne-timbre");
+            const tvaEl = document.getElementById("affiche-tva");
+            const ligneTva = document.getElementById("ligne-tva");
+            const checkboxTva = document.getElementById("appliquer-tva");
+            if (!form || !selectMp || !montantAPayerEl) return;
+
+            const total = getTotalMarchandisesCaisse();
+            const params = new URLSearchParams({
+                total: String(total),
+                moyen_paiement: selectMp.value || '',
+            });
+            if (checkboxTva && checkboxTva.checked) {
+                params.set('appliquer_tva', '1');
+            }
+
+            fetch(AJAX_CALCUL_TIMBRE_URL + '?' + params.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(r => r.json())
+            .then(data => {
+                const timbre = parseFloat(data.timbre || 0);
+                const tva = parseFloat(data.tva || 0);
+                const totalAPayer = parseFloat(data.total_a_payer ?? total);
+                if (timbreEl) timbreEl.textContent = timbre.toFixed(0);
+                if (ligneTimbre) ligneTimbre.style.display = timbre > 0 ? '' : 'none';
+                if (tvaEl) tvaEl.textContent = tva.toFixed(0);
+                if (ligneTva) ligneTva.style.display = tva > 0 ? '' : 'none';
+                montantAPayerEl.textContent = totalAPayer.toFixed(2);
+                majResteCaisse();
+            })
+            .catch(() => {
+                montantAPayerEl.textContent = total.toFixed(2);
+                if (ligneTimbre) ligneTimbre.style.display = 'none';
+                if (ligneTva) ligneTva.style.display = 'none';
+                majResteCaisse();
+            });
+        }
+
+        function initMontantCalcul() {
+            const montantInput = document.getElementById("montant");
+            const selectMp = document.getElementById("moyen-paiement-select");
+            const btnValider = document.querySelector("#form-valider-panier button[type='submit']");
+            if (!montantInput || !btnValider) return;
+            btnValider.disabled = true;
+
+            if (selectMp && !selectMp.dataset.timbreBound) {
+                selectMp.dataset.timbreBound = '1';
+                selectMp.addEventListener('change', refreshTimbreCaisse);
+            }
+            const checkboxTva = document.getElementById("appliquer-tva");
+            if (checkboxTva && !checkboxTva.dataset.tvaBound) {
+                checkboxTva.dataset.tvaBound = '1';
+                checkboxTva.addEventListener('change', refreshTimbreCaisse);
+            }
+            if (!montantInput.dataset.resteBound) {
+                montantInput.dataset.resteBound = '1';
+                montantInput.addEventListener('input', majResteCaisse);
+            }
+            refreshTimbreCaisse();
+        }
+    </script>
+    <!-- Recherche AJAX des paniers par ticket -->
+    <script>
+        function updateCaisseResultCount() {
+            const container = document.getElementById("result-articles");
+            const countEl = document.getElementById("result-count");
+            if (!container || !countEl) return;
+            const n = container.querySelectorAll(".panier-order-col").length;
+            countEl.textContent = "Paniers en attente (" + n + ")";
+        }
+
+        function loadPaniers(query) {
+            const resultContainer = document.getElementById("result-articles");
+            const baseUrl = "{% url 'ajax_reload_paniers' %}";
+            const url = new URL(baseUrl, window.location.origin);
+            if (query) url.searchParams.set("q", query);
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error("Erreur lors du chargement des paniers");
+                    return response.text();
+                })
+                .then(html => {
+                    if (resultContainer) {
+                        resultContainer.innerHTML = html;
+                        if (typeof _extractTicketsFromContainer === 'function') {
+                            knownTickets = _extractTicketsFromContainer(resultContainer);
+                        }
+                        updateCaisseResultCount();
+                    }
+                })
+                .catch(error => console.error("Erreur de recherche panier:", error));
+        }
+
+        function resetCaisseSearch() {
+            const searchInput = document.getElementById("searchInput");
+            if (searchInput) searchInput.value = "";
+            loadPaniers("");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById("searchInput");
+            if (searchInput) {
+                searchInput.addEventListener("input", function () {
+                    loadPaniers(this.value.trim());
+                });
+            }
+            updateCaisseResultCount();
+        });
+    </script>
+{% endblock main_content %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var CURRENT_USER_LOCAL_ID = {% if request.user.local_entrepot_id %}"{{ request.user.local_entrepot_id }}"{% else %}null{% endif %};
+    var CURRENT_USER_IS_ADMIN = {% if request.user.is_superuser or request.user.role == 'admin' %}true{% else %}false{% endif %};
+
+    function handlePanierValide(data) {
+        try {
+            if (!CURRENT_USER_IS_ADMIN && CURRENT_USER_LOCAL_ID !== null) {
+                if (data.local_entrepot_id && String(data.local_entrepot_id) !== String(CURRENT_USER_LOCAL_ID)) {
+                    return;
+                }
+            }
+            var receiveSound = document.getElementById("receive-sound");
+            if (receiveSound) {
+                receiveSound.currentTime = 0;
+                receiveSound.play().catch(function (e) {
+                    console.warn("Impossible de jouer le son:", e);
+                });
+            }
+            if (typeof toastr !== 'undefined') {
+                toastr.info("Nouveau panier validé ! ID: " + data.panier_id + " | Total: " + data.total + " Fcfa", "Nouveau panier", {
+                    timeOut: 5000,
+                    progressBar: true
+                });
+            }
+            if (typeof reloadPanierList === 'function') {
+                reloadPanierList({ silent: true });
+            }
+            var container = document.getElementById("result-articles");
+            if (container) {
+                container.style.transition = "background-color 0.5s";
+                container.style.backgroundColor = "#c8f7c5";
+                setTimeout(function () { container.style.backgroundColor = "transparent"; }, 500);
+            }
+            if (typeof updateCaisseResultCount === 'function') updateCaisseResultCount();
+        } catch (error) {
+            console.error("Erreur traitement Pusher panier:", error);
+        }
+    }
+
+    function bindPanierChannel() {
+        if (!window.magPusher) return false;
+        var channel = window.magPusher.subscribe("magasin-panier");
+        channel.bind("valide", handlePanierValide);
+        return true;
+    }
+    if (!bindPanierChannel()) {
+        console.warn("Pusher indisponible — retry…");
+        setTimeout(bindPanierChannel, 400);
+    }
+})();
+</script>
+{% endblock extra_js %}

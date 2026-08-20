@@ -1,0 +1,221 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE — Liste des ventes{% endblock title %}
+{% block page_title %}Liste des ventes{% endblock page_title %}
+{% block page %}Liste des ventes{% endblock page %}
+
+{% block extra_head %}
+{% include "mag/partials/_dashboard_kpi_styles.html" %}
+{% endblock extra_head %}
+
+{% block main_content %}
+
+{% include "mag/partials/_periode_filter_modal.html" %}
+
+<div class="col-lg-12 p-2 mt-2">
+    <div class="row dashboard-kpi-row w-100 mx-0">
+        <div class="col-lg-4 col-md-4 col-sm-12 mt-2">
+            <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
+                <div class="body">
+                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-calendar"></i></span></div>
+                    <div class="content">
+                        <div class="text mb-1 text-uppercase">Ventes journalières</div>
+                        <h4 class="number mb-0">
+                            {{ stats_jour.nombre }}
+                            <span class="kpi-value-muted">— {{ stats_jour.montant }} Fcfa</span>
+                        </h4>
+                        <small class="text-muted">{{ dates|date:"d/m/Y" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-12 mt-2">
+            <div class="card top_widget dashboard-kpi dashboard-kpi--revenue">
+                <div class="body">
+                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-calendar-check-o"></i></span></div>
+                    <div class="content">
+                        <div class="text mb-1 text-uppercase">Ventes mensuelles</div>
+                        <h4 class="number mb-0">
+                            {{ stats_mois.nombre }}
+                            <span class="kpi-value-muted">— {{ stats_mois.montant }} Fcfa</span>
+                        </h4>
+                        <small class="text-muted">{{ moisact }} {{ annee }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-12 mt-2">
+            <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
+                <div class="body">
+                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-line-chart"></i></span></div>
+                    <div class="content">
+                        <div class="text mb-1 text-uppercase">Ventes annuelles</div>
+                        <h4 class="number mb-0">
+                            {{ stats_annee.nombre }}
+                            <span class="kpi-value-muted">— {{ stats_annee.montant }} Fcfa</span>
+                        </h4>
+                        <small class="text-muted">Année {{ annee }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-12 p-2 mt-2">
+    <div class="card">
+        <div class="header text-info">
+            <h2 class="text-info">
+                {{ cmdes|length }} vente{% if cmdes|length > 1 %}s{% endif %}
+                <small class="text-muted font-14">
+                    ({{ filtre_resume }})
+                </small>
+            </h2>
+        </div>
+        <div class="body">
+            <div class="mag-table-shell" x-data="magTableFilter()">
+                {% include "mag/partials/_alpine_table_toolbar.html" %}
+                <div class="table-responsive">
+                    <table class="table table-hover mag-data-table">
+                        <thead>
+                            <tr class="text">
+                                <th>N°#</th>
+                                <th>N°Commande</th>
+                                <th>Montant</th>
+                                <th>Remise</th>
+                                <th>Total</th>
+                                <th>Versé</th>
+                                <th>Reste</th>
+                                <th>Paiement</th>
+                                <th>N°ticket</th>
+                                <th>Caissier(ère)</th>
+                                <th>Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr class="text">
+                                <th>N°#</th>
+                                <th>N°Commande</th>
+                                <th>Montant</th>
+                                <th>Remise</th>
+                                <th>Total</th>
+                                <th>Versé</th>
+                                <th>Reste</th>
+                                <th>Paiement</th>
+                                <th>N°ticket</th>
+                                <th>Caissier(ère)</th>
+                                <th>Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            {% for c in cmdes %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ c.numero_commande }}</td>
+                                    <td>{{ c.total_sans_remise }}</td>
+                                    <td>{{ c.remise }}</td>
+                                    <td>{{ c.total }}</td>
+                                    <td>{{ c.montant_paye }}</td>
+                                    <td>{{ c.montant_reste }}</td>
+                                    <td class="text-center">
+                                        {% if c.paye %}✅{% else %}❌{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if c.ticket %}
+                                            {% if c.ticket.fichier_pdf %}
+                                                <a href="{{ c.ticket.fichier_pdf.url }}" target="_blank" rel="noopener" title="PDF reçu">{{ c.ticket.numero }}</a>
+                                            {% else %}
+                                                {{ c.ticket.numero }}
+                                            {% endif %}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ c.utilisateur.username|default:"—" }}</td>
+                                    <td>{{ c.date_creation|date:"d-m-y" }}</td>
+                                    <td class="text-center text-nowrap">
+                                        {% if c.paye and c.ticket %}
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary reprint-recu-paiement"
+                                                    data-ticket="{{ c.ticket.numero }}"
+                                                    title="Réimprimer le reçu de paiement">
+                                                <i class="fa fa-print"></i>
+                                            </button>
+                                            {% if c.bon_paiement %}
+                                                <a href="{% url 'imprimer_bon_commande_vente' c.ticket.numero %}?format=pdf"
+                                                   class="btn btn-sm btn-outline-secondary"
+                                                   target="_blank"
+                                                   rel="noopener"
+                                                   title="PDF bon de commande (paiement)">
+                                                    <i class="fa fa-file-pdf-o"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="12" class="text-center text-muted py-4">
+                                        Aucune vente pour la période sélectionnée.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+<script>
+(function () {
+    function reprintRecuPaiement(ticket, btn) {
+        if (!ticket) return;
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+        const url = "{% url 'reimprimer_recu_paiement' 'TICKET_ID' %}".replace('TICKET_ID', ticket);
+        const csrf = (document.cookie.split('; ').find(c => c.startsWith('csrftoken=')) || '').split('=')[1];
+        fetch(url, {
+            method: "POST",
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrf || '',
+            }
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && data.success) {
+                if (typeof toastr !== 'undefined') toastr.success(data.message || "Reçu de paiement réimprimé.");
+            } else if (typeof toastr !== 'undefined') {
+                toastr.error(data.error || "Erreur lors de l'impression.");
+            }
+        })
+        .catch(() => {
+            if (typeof toastr !== 'undefined') toastr.error("Erreur réseau lors de l'impression.");
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.reprint-recu-paiement');
+        if (!btn) return;
+        e.preventDefault();
+        reprintRecuPaiement(btn.dataset.ticket, btn);
+    });
+})();
+</script>
+{% endblock extra_js %}

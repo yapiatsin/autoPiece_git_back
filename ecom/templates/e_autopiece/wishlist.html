@@ -1,0 +1,93 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Mes favoris" %} — Auto-Pièce{% endblock title %}
+{% block content %}
+<div class="rts-navigation-area-breadcrumb">
+            <div class="container">
+                    <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span class="current">{% trans "Mes favoris" %}</span>
+                    </div>
+                </div>
+            </div>
+<div class="rts-cart-list-area wishlist rts-section-gap">
+        <div class="container">
+        <h2 class="title-left mb-4" id="ecom-wishlist-title">{% trans "Mes favoris" %} ({{ favoris_rows|length }})</h2>
+        {% if favoris_rows %}
+        <div class="row g-4 ecom-localite-pieces-row ecom-wishlist-pieces-row">
+            {% for row in favoris_rows %}
+            {% include 'e_autopiece/partials/_piece_card_vendor.html' with piece=row.piece prix_affiche=row.prix_affiche quantite=row.quantite localite_code=row.localite_code localite_nom=row.localite_nom next_url=request.path wishlist_card=True col_class='col-xl-3 col-lg-4 col-md-6 col-12' %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">{% trans "Aucun article dans vos favoris." %}</p>
+        <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary mt-3">{% trans "Parcourir la boutique" %}</a>
+        {% endif %}
+    </div>
+                            </div>
+{% include 'e_autopiece/partials/_vues_recentes.html' %}
+{% endblock content %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var titleEl = document.getElementById('ecom-wishlist-title');
+    var rowEl = document.querySelector('.ecom-wishlist-pieces-row');
+
+    function updateFavorisCount(count) {
+        document.querySelectorAll(
+            '.accont-wishlist-cart-area-header .wishlist > .number.ecom-header-count-badge'
+        ).forEach(function (el) {
+            el.textContent = count;
+        });
+    }
+
+    function updateTitle(count) {
+        if (!titleEl) return;
+        titleEl.textContent = '{% trans "Mes favoris"|escapejs %} (' + count + ')';
+    }
+
+    document.addEventListener('submit', function (event) {
+        var form = event.target.closest('.ecom-wishlist-remove-form');
+        if (!form) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        var cardCol = form.closest('[class*="col-"]');
+        var body = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: body,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+            .then(function (res) {
+                return res.json().then(function (data) {
+                    return { ok: res.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (result.ok && result.data && result.data.success) {
+                    if (cardCol) {
+                        cardCol.remove();
+                    }
+                    updateFavorisCount(result.data.favoris_count);
+                    updateTitle(result.data.favoris_count);
+                    if (rowEl && !rowEl.querySelector('.ecom-wishlist-remove-form')) {
+                        var emptyHtml = '<p class="text-muted">{% trans "Aucun article dans vos favoris."|escapejs %}</p>' +
+                            '<a href="{% url "ecom_shop" %}" class="rts-btn btn-primary mt-3">{% trans "Parcourir la boutique"|escapejs %}</a>';
+                        rowEl.insertAdjacentHTML('afterend', emptyHtml);
+                        rowEl.remove();
+                    }
+                    return;
+                }
+                form.submit();
+            })
+            .catch(function () {
+                form.submit();
+            });
+    }, true);
+});
+</script>
+{% endblock extra_js %}

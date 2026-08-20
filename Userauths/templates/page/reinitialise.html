@@ -1,0 +1,33 @@
+{% extends 'page/base_compt.html' %}
+
+{% block title %}Nouveau mot de passe — AUTO-PIECE{% endblock title %}
+
+{% block auth_content %}
+<h1 class="auth-panel__title">Nouveau mot de passe</h1>
+<p class="auth-panel__subtitle">Choisissez un mot de passe fort et unique.</p>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    <div class="auth-form-group">
+        <div class="auth-input-wrap">
+            <input type="password" class="auth-input" name="new_password" id="new_password"
+                placeholder="Nouveau mot de passe" required minlength="8" autocomplete="new-password">
+            <button type="button" class="auth-toggle-pwd" data-toggle-password="new_password" aria-label="Afficher">
+                <i class="fa fa-eye"></i>
+            </button>
+        </div>
+    </div>
+    <div class="auth-form-group">
+        <div class="auth-input-wrap">
+            <input type="password" class="auth-input" name="confirm_password" id="confirm_password"
+                placeholder="Confirmer le mot de passe" required minlength="8" autocomplete="new-password">
+            <button type="button" class="auth-toggle-pwd" data-toggle-password="confirm_password" aria-label="Afficher">
+                <i class="fa fa-eye"></i>
+            </button>
+        </div>
+    </div>
+    <button type="submit" class="auth-btn-primary">Enregistrer</button>
+</form>
+
+<a href="{% url 'connexion' %}" class="auth-link auth-back-link"><i class="fa fa-arrow-left"></i> Retour à la connexion</a>
+{% endblock auth_content %}

@@ -1,0 +1,197 @@
+<style type="text/css">
+    @page { size: A4; margin: 12mm; }
+    .doc-bon-format-scope * { box-sizing: border-box; }
+    body.doc-bon-print {
+        font-family: Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f4f1ea;
+        color: #2c2c2c;
+        font-size: 10pt;
+    }
+    .doc-bon-format-scope .page {
+        max-width: 210mm;
+        margin: 0 auto;
+        box-shadow: 0 0 12px rgba(0,0,0,.08);
+        background: #ffffff;
+    }
+    #modal-proforma .modal-body {
+        max-height: 75vh;
+        overflow-y: auto;
+        background: #f4f1ea;
+        padding: 12px;
+    }
+    #modal-proforma .doc-bon-format-scope .page {
+        max-width: 100%;
+        box-shadow: none;
+    }
+    .doc-bon-format-scope .header-bar {
+        background-color: #1e3d34;
+        color: #ffffff;
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .doc-bon-format-scope .header-bar td {
+        padding: 14px 24px;
+        vertical-align: middle;
+        color: #ffffff;
+    }
+    .doc-bon-format-scope .brand-name { font-size: 16pt; font-weight: bold; }
+    .doc-bon-format-scope .brand-sub { font-size: 7pt; margin-top: 4px; }
+    .doc-bon-format-scope .header-contact {
+        text-align: right;
+        font-size: 8pt;
+        line-height: 1.5;
+    }
+    .doc-bon-format-scope .body-pad { padding: 18px 24px 24px; }
+    .doc-bon-format-scope .doc-title {
+        text-align: center;
+        font-size: 20pt;
+        color: #5a7d6c;
+        margin: 6px 0 16px;
+        font-weight: normal;
+        font-family: Georgia, serif;
+    }
+    .doc-bon-format-scope .doc-title-line {
+        display: none;
+    }
+    .doc-bon-format-scope .meta-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 18px;
+    }
+    .doc-bon-format-scope .meta-table td {
+        width: 50%;
+        vertical-align: top;
+        padding-right: 12px;
+    }
+    .doc-bon-format-scope .meta-table td.meta-right {
+        padding-right: 0;
+        padding-left: 12px;
+    }
+    .doc-bon-format-scope .field { margin-bottom: 10px; }
+    .doc-bon-format-scope .field-label {
+        font-size: 7pt;
+        text-transform: uppercase;
+        color: #6b6b6b;
+        margin-bottom: 2px;
+    }
+    .doc-bon-format-scope .field-value {
+        border-bottom: none;
+        padding-bottom: 0;
+        font-size: 9.5pt;
+        min-height: 14px;
+    }
+    .doc-bon-format-scope .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 16px;
+    }
+    .doc-bon-format-scope .items-table th {
+        background-color: #e8efe6;
+        border: 1px solid #9cb39a;
+        padding: 7px 8px;
+        font-size: 7pt;
+        text-transform: uppercase;
+        color: #1e3d34;
+        text-align: left;
+    }
+    .doc-bon-format-scope .items-table td {
+        border: 1px solid #c5d4c0;
+        padding: 7px 8px;
+        font-size: 9pt;
+    }
+    .doc-bon-format-scope .text-center { text-align: center; }
+    .doc-bon-format-scope .text-right { text-align: right; }
+    .doc-bon-format-scope .footer-table { width: 100%; border-collapse: collapse; }
+    .doc-bon-format-scope .footer-table > tbody > tr > td { vertical-align: top; }
+    .doc-bon-format-scope .footer-left { width: 58%; padding-right: 16px; }
+    .doc-bon-format-scope .footer-right { width: 42%; }
+    .doc-bon-format-scope .notes-box {
+        border: 1px solid #9cb39a;
+        padding: 8px 10px;
+        font-size: 8.5pt;
+        background-color: #fafaf8;
+        min-height: 70px;
+    }
+    .doc-bon-format-scope .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 8.5pt;
+    }
+    .doc-bon-format-scope .summary-table td { padding: 3px 0; }
+    .doc-bon-format-scope .summary-table td:last-child {
+        text-align: right;
+        font-weight: bold;
+    }
+    .doc-bon-format-scope .statut-badge {
+        border: 1px solid #5a7d6c;
+        background-color: #e8efe6;
+        padding: 2px 6px;
+        font-size: 8pt;
+    }
+    .doc-bon-format-scope .sig-block { margin-top: 14px; font-size: 8pt; }
+    .doc-bon-format-scope .sig-line {
+        border-bottom: 1px solid #2c2c2c;
+        margin-top: 24px;
+        width: 70%;
+        height: 1px;
+    }
+    body.doc-bon-print .toolbar {
+        text-align: center;
+        padding: 12px;
+        background: #eeeeee;
+    }
+    body.doc-bon-print .toolbar button,
+    body.doc-bon-print .toolbar a.btn-pdf {
+        padding: 8px 20px;
+        margin: 0 6px;
+        cursor: pointer;
+        border: 1px solid #1e3d34;
+        background: #1e3d34;
+        color: #fff;
+        border-radius: 4px;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    body.doc-bon-print .toolbar .btn-secondary {
+        background: #fff;
+        color: #1e3d34;
+    }
+    body.doc-bon-print .print-hint {
+        font-size: 12px;
+        color: #555;
+        margin-top: 8px;
+        max-width: 520px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .proforma-modal-actions {
+        padding: 12px 0 4px;
+        text-align: center;
+    }
+    @media print {
+        body.doc-bon-print { background: #fff !important; }
+        .doc-bon-format-scope .page {
+            box-shadow: none;
+            max-width: none;
+            width: 100%;
+        }
+        body.doc-bon-print .toolbar,
+        body.doc-bon-print .print-hint,
+        .proforma-modal-actions,
+        .modal-header,
+        .modal-footer,
+        .modal-backdrop { display: none !important; }
+        .doc-bon-format-scope .items-table .empty-row { display: none; }
+        #modal-proforma .modal-body {
+            max-height: none;
+            overflow: visible;
+            padding: 0;
+            background: #fff;
+        }
+        #modal-proforma .modal-dialog { max-width: none; margin: 0; }
+        #modal-proforma .modal-content { border: none; box-shadow: none; }
+    }
+</style>

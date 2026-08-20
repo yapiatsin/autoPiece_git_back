@@ -1,0 +1,360 @@
+{% load static i18n %}
+<div class="rts-navigation-area-breadcrumb bg_light-1">
+    <div class="container">
+        <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <a href="{% url 'ecom_shop' %}">{% trans "Boutique" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            {% if piece.categorie %}
+            <a href="{% url 'ecom_shop' %}?categorie={{ piece.categorie_id }}">{{ piece.categorie.categorie }}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            {% endif %}
+            <span class="current">{{ piece.designation }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="rts-chop-details-area rts-section-gap bg_light-1">
+    <div class="container">
+        <div class="shopdetails-style-1-wrapper">
+            <div class="row g-5">
+                <div class="col-xl-8 col-lg-8 col-md-12">
+                    <div class="product-details-popup-wrapper in-shopdetails">
+                        <div class="rts-product-details-section rts-product-details-section2 product-details-popup-section">
+                            <div class="product-details-popup">
+                                <div class="details-product-area">
+                                    <div class="product-thumb-area">
+                                        {% if piece.image %}
+                                        <div class="thumb-wrapper one filterd-items figure">
+                                            <div class="product-thumb">
+                                                <img src="{{ piece.image.url }}" alt="{{ piece.designation }}">
+                                            </div>
+                                        </div>
+                                        <div class="product-thumb-filter-group">
+                                            <div class="thumb-filter filter-btn active" data-show=".one">
+                                                <img src="{{ piece.image.url }}" alt="{{ piece.designation }}">
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <div class="thumb-wrapper one filterd-items figure">
+                                            <div class="product-thumb ecom-detail-placeholder">
+                                                <div class="ecom-piece-placeholder" aria-hidden="true">
+                                                    <i class="fa-solid fa-gears"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="contents">
+                                        <div class="product-status">
+                                            <span class="product-catagory">{% if piece.categorie %}{{ piece.categorie.categorie }}{% else %}{% trans "Pièce" %}{% endif %}</span>
+                                            {% if piece.quantite_disponible > 0 or piece.stock_total %}
+                                            <div class="rating-stars-group">
+                                                <span class="text-success fw-semibold">
+                                                    <i class="fa-solid fa-check"></i>
+                                                    {% trans "En stock" %}
+                                                </span>
+                                            </div>
+                                            {% else %}
+                                            <div class="rating-stars-group">
+                                                <span class="text-danger fw-semibold">{% trans "Rupture de stock" %}</span>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <h2 class="product-title">{{ piece.designation }}</h2>
+                                        <p class="mt--20 mb--20">
+                                            {% blocktrans with ref=piece.numero_piece cat=piece.categorie.categorie %}
+                                            Pièce automobile {{ cat }} — référence {{ ref }}. Vérifiez la disponibilité par localité avant de commander.
+                                            {% endblocktrans %}
+                                        </p>
+
+                                        <span class="product-price mb--15 d-block" style="color: #DC2626; font-weight: 600;">
+                                            {{ prix|floatformat:0 }} FCFA
+                                            {% if local_selectionne and prix != piece.prix_unitaire %}
+                                            <span class="old-price ml--15">{{ piece.prix_unitaire|floatformat:0 }} FCFA</span>
+                                            {% endif %}
+                                        </span>
+
+                                        {% if user.is_authenticated and local_selectionne and piece.quantite_disponible > 0 %}
+                                        <div class="product-bottom-action ecom-detail-add-form d-flex align-items-center flex-wrap gap-2">
+                                            <div id="ecom-detail-cart-widget" class="d-flex align-items-center flex-wrap gap-2"
+                                                data-cart-url="{% url 'ecom_piece_cart_quantity' piece.pk %}"
+                                                data-piece-id="{{ piece.pk }}"
+                                                data-stock-max="{{ piece.quantite_disponible }}"
+                                                data-cart-qty="{{ cart_quantite|default:0 }}"
+                                                data-local-nom="{{ local_selectionne.nom }}"
+                                                data-local-id="{{ local_selectionne.code }}">
+                                                {% csrf_token %}
+                                                <div id="ecom-detail-add-wrap" class="{% if cart_quantite %}d-none{% endif %}">
+                                                    <button type="button" class="rts-btn btn-primary radious-sm with-icon" id="ecom-detail-add-btn">
+                                                        <div class="btn-text">{% trans "Ajouter au panier" %}</div>
+                                                        <div class="arrow-icon"><i class="fa-regular fa-cart-shopping"></i></div>
+                                                        <div class="arrow-icon"><i class="fa-regular fa-cart-shopping"></i></div>
+                                                    </button>
+                                                </div>
+                                                <div id="ecom-detail-qty-wrap" class="d-flex align-items-center flex-wrap gap-3 {% if not cart_quantite %}d-none{% endif %}">
+                                                    <div class="quantity-edit action-item ecom-detail-qty-control">
+                                                        <button type="button" class="button qty-minus" aria-label="{% trans 'Diminuer' %}">
+                                                            <i class="fa-solid fa-minus"></i>
+                                                        </button>
+                                                        <span class="ecom-detail-qty-value" id="ecom-detail-qty-display">{{ cart_quantite|default:1 }}</span>
+                                                        <button type="button" class="button plus qty-plus" aria-label="{% trans 'Augmenter' %}">
+                                                            <i class="fa-solid fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                    <span class="ecom-detail-added-label" id="ecom-detail-added-label">
+                                                        (<span id="ecom-detail-added-count">{{ cart_quantite|default:0 }}</span> {% trans "ajouté(s)" %})
+                                                    </span>
+                                                </div>
+                                                <p class="ecom-detail-stock-alert small mb-0 w-100" id="ecom-detail-stock-alert" role="alert" hidden></p>
+                                            </div>
+                                            <form method="post" action="{% url 'ecom_favori_toggle' piece.pk %}" class="m-0">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ piece.get_absolute_url }}">
+                                                <button type="submit"
+                                                    class="rts-btn btn-primary{% if piece.pk in ecom_favoris_ids %} is-favori{% endif %}"
+                                                    title="{% trans 'Favoris' %}">
+                                                    <i class="fa-solid fa-heart"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% elif not user.is_authenticated %}
+                                        <div class="product-bottom-action">
+                                            <a href="{% url 'connexion' %}?next={{ piece.get_absolute_url }}"
+                                                class="rts-btn btn-primary radious-sm with-icon">
+                                                <div class="btn-text">{% trans "Se connecter pour commander" %}</div>
+                                                <div class="arrow-icon"><i class="fa-regular fa-user"></i></div>
+                                                <div class="arrow-icon"><i class="fa-regular fa-user"></i></div>
+                                            </a>
+                                        </div>
+                                        {% elif not local_selectionne %}
+                                        <p class="text-muted mt--20 mb-0">{% trans "Sélectionnez une localité sur l'accueil pour commander." %}</p>
+                                        {% else %}
+                                        <p class="text-danger mt--20 mb-0">{% trans "Cette pièce n'est pas disponible dans votre localité." %}</p>
+                                        {% endif %}
+
+                                        <div class="product-uniques">
+                                            <span class="sku product-unipue mb--10">
+                                                <span style="font-weight: 400; margin-right: 10px;">{% trans "Référence :" %}</span>
+                                                {{ piece.numero_piece }}
+                                            </span>
+                                            <span class="catagorys product-unipue mb--10">
+                                                <span style="font-weight: 400; margin-right: 10px;">{% trans "Catégorie :" %}</span>
+                                                {{ piece.categorie.categorie }}
+                                            </span>
+                                            {% if local_selectionne %}
+                                            <span class="tags product-unipue mb--10">
+                                                <span style="font-weight: 400; margin-right: 10px;">{% trans "Localité :" %}</span>
+                                                {{ local_selectionne.nom }}
+                                            </span>
+                                            <span class="tags product-unipue mb--10">
+                                                <span style="font-weight: 400; margin-right: 10px;">{% trans "Stock local :" %}</span>
+                                                {{ piece.quantite_disponible }}
+                                            </span>
+                                            {% endif %}
+                                            {% if piece.stock_total %}
+                                            <span class="tags product-unipue mb--10">
+                                                <span style="font-weight: 400; margin-right: 10px;">{% trans "Stock total :" %}</span>
+                                                {{ piece.stock_total }}
+                                            </span>
+                                            {% endif %}
+                                            {% if piece.emplacement %}
+                                            <span class="tags product-unipue mb--10">
+                                                <span style="font-weight: 400; margin-right: 10px;">{% trans "Emplacement :" %}</span>
+                                                {{ piece.emplacement }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="share-option-shop-details">
+                                            {% if user.is_authenticated %}
+                                            <form method="post" action="{% url 'ecom_favori_toggle' piece.pk %}" class="single-share-option ecom-favori-form m-0 border-0 bg-transparent p-0">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ piece.get_absolute_url }}">
+                                                <button type="submit" class="d-flex align-items-center gap-2 border-0 bg-transparent p-0">
+                                                    <div class="icon"><i class="fa-regular fa-heart"></i></div>
+                                                    <span>{% if piece.pk in ecom_favoris_ids %}{% trans "Retirer des favoris" %}{% else %}{% trans "Ajouter aux favoris" %}{% endif %}</span>
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <a href="{% url 'connexion' %}?next={{ piece.get_absolute_url }}" class="single-share-option text-decoration-none">
+                                                <div class="icon"><i class="fa-regular fa-heart"></i></div>
+                                                <span>{% trans "Ajouter aux favoris" %}</span>
+                                            </a>
+                                            {% endif %}
+                                            <a href="{% url 'ecom_shop' %}{% if piece.categorie_id %}?categorie={{ piece.categorie_id }}{% endif %}" class="single-share-option text-decoration-none">
+                                                <div class="icon"><i class="fa-solid fa-store"></i></div>
+                                                <span>{% trans "Voir la boutique" %}</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-discription-tab-shop mt--50">
+                        <ul class="nav nav-tabs" id="pieceDetailTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="piece-details-tab" data-bs-toggle="tab"
+                                    data-bs-target="#piece-details-pane" type="button" role="tab"
+                                    aria-controls="piece-details-pane" aria-selected="true">
+                                    {% trans "Détails produit" %}
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="piece-info-tab" data-bs-toggle="tab"
+                                    data-bs-target="#piece-info-pane" type="button" role="tab"
+                                    aria-controls="piece-info-pane" aria-selected="false">
+                                    {% trans "Informations" %}
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="piece-stock-tab" data-bs-toggle="tab"
+                                    data-bs-target="#piece-stock-pane" type="button" role="tab"
+                                    aria-controls="piece-stock-pane" aria-selected="false">
+                                    {% trans "Stock par localité" %}
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="pieceDetailTabContent">
+                            <div class="tab-pane fade show active" id="piece-details-pane" role="tabpanel"
+                                aria-labelledby="piece-details-tab" tabindex="0">
+                                <div class="single-tab-content-shop-details">
+                                    <p class="disc">
+                                        {% blocktrans with name=piece.designation ref=piece.numero_piece %}
+                                        {{ name }} (réf. {{ ref }}) est disponible à la commande en ligne selon le stock de chaque localité Auto-Pièce.
+                                        {% endblocktrans %}
+                                    </p>
+                                    {% if piece.categorie.description %}
+                                    <p class="disc">{{ piece.categorie.description }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="piece-info-pane" role="tabpanel"
+                                aria-labelledby="piece-info-tab" tabindex="0">
+                                <div class="single-tab-content-shop-details">
+                                    <div class="table-responsive table-shop-details-pd">
+                                        <table class="table">
+                                            <tbody>
+                                                <tr>
+                                                    <td>{% trans "Désignation" %}</td>
+                                                    <td>{{ piece.designation }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{% trans "Référence" %}</td>
+                                                    <td>{{ piece.numero_piece }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{% trans "Catégorie" %}</td>
+                                                    <td>{{ piece.categorie.categorie }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{% trans "Prix catalogue" %}</td>
+                                                    <td>{{ piece.prix_unitaire|floatformat:0 }} FCFA</td>
+                                                </tr>
+                                                {% if local_selectionne %}
+                                                <tr>
+                                                    <td>{% trans "Prix localité" %}</td>
+                                                    <td>{{ prix|floatformat:0 }} FCFA</td>
+                                                </tr>
+                                                {% endif %}
+                                                {% if piece.emplacement %}
+                                                <tr>
+                                                    <td>{% trans "Emplacement" %}</td>
+                                                    <td>{{ piece.emplacement }}</td>
+                                                </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="piece-stock-pane" role="tabpanel"
+                                aria-labelledby="piece-stock-tab" tabindex="0">
+                                <div class="single-tab-content-shop-details">
+                                    <div class="table-responsive table-shop-details-pd">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>{% trans "Localité" %}</th>
+                                                    <th>{% trans "Quantité" %}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for stock in piece.stocks_disponibles %}
+                                                <tr>
+                                                    <td>{{ stock.local_entrepot.nom }}</td>
+                                                    <td>{{ stock.quantite_disponible }}</td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="2">{% trans "Aucun stock disponible." %}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% if piece.stock_total %}
+                                    <p class="note mt--20">
+                                        <span>{% trans "Total :" %}</span> {{ piece.stock_total }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-lg-4 col-md-12 offset-xl-1 rts-sticky-column-item">
+                    <div class="theiaStickySidebar">
+                        <div class="shop-sight-sticky-sidevbar mb--20">
+                            <h6 class="title">{% trans "Disponibilité" %}</h6>
+                            {% for stock in piece.stocks_disponibles %}
+                            <div class="single-offer-area">
+                                <div class="icon">
+                                    <i class="fa-solid fa-location-dot text-primary"></i>
+                                </div>
+                                <div class="details">
+                                    <p>
+                                        <strong>{{ stock.local_entrepot.nom }}</strong> —
+                                        {% blocktrans with q=stock.quantite_disponible %}{{ q }} en stock{% endblocktrans %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="single-offer-area">
+                                <div class="details">
+                                    <p>{% trans "Aucun stock dans les localités." %}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if local_selectionne %}
+                            <div class="single-offer-area">
+                                <div class="icon">
+                                    <i class="fa-solid fa-truck text-primary"></i>
+                                </div>
+                                <div class="details">
+                                    <p>
+                                        {% trans "Commande depuis" %} :
+                                        <strong>{{ local_selectionne.nom }}</strong>
+                                    </p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="our-payment-method">
+                            <h5 class="title">{% trans "Paiement sécurisé" %}</h5>
+                            <p class="mb-0 small text-muted">
+                                {% trans "Commandez en ligne et retirez ou faites livrer selon votre localité Auto-Pièce." %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

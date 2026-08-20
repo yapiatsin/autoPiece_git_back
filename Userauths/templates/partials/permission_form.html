@@ -1,0 +1,40 @@
+<div class="modal-body">
+    <form id="permissionForm" method="post" novalidate>
+        {% csrf_token %}
+        <div class="row clearfix">
+            <div class="col-md-12 form-group">
+                <label>Nom de la Permission *</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <div class="text-danger">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-12 form-group">
+                <label>Catégorie *</label>
+                {{ form.categorie }}
+                {% if form.categorie.errors %}
+                <div class="text-danger">{{ form.categorie.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-12 form-group">
+                <label>URL/Name *</label>
+                {{ form.url }}
+                <small class="form-text text-muted">Nom de l'URL Django (ex: add_panier, tbord, etc.)</small>
+                {% if form.url.errors %}
+                    <div class="text-danger">{{ form.url.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-outline-success">Enregistrer</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#permissionForm').data('object-id', {% if object %}{{ object.pk }}{% else %}null{% endif %});
+    });
+</script>
+

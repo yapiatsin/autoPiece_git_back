@@ -1,0 +1,111 @@
+/* Caisse — aligné sur panier / proforma (panier-page.css + piece-catalog.css) */
+
+.panier-page-card--ventes {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+}
+
+.panier-page-card--ventes > .body {
+    padding-top: 0.75rem;
+}
+
+.caisse-basket-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #ffedd5;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.06);
+}
+
+.caisse-basket-item__thumb {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ea580c;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.caisse-basket-item__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.caisse-basket-item__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.caisse-basket-item__name {
+    margin: 0;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.caisse-basket-item__qty {
+    margin: 0.15rem 0 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.caisse-basket-item__price {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #ea580c;
+    white-space: nowrap;
+}
+
+.caisse-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 0.55rem;
+}
+
+.caisse-btn-annuler {
+    border-color: #e2e8f0 !important;
+    background: #fff !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+}
+
+.caisse-btn-annuler:hover {
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+    transform: none;
+}
+
+#moyen-paiement-select.panier-remise-input {
+    appearance: auto;
+    padding-right: 0.75rem;
+}
+
+/* Select dans le wrap icône : pleine largeur */
+.panier-remise-input-wrap select.panier-remise-input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+}
+
+#btn-valider-panier:disabled,
+#btn-valider-panier.panier-btn-valider:disabled {
+    opacity: 0.65;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}

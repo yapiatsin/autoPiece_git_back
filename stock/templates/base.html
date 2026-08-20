@@ -1,0 +1,602 @@
+{% load static %} {% if user.is_authenticated %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>
+        {% block title %} Magasin | Dashboard {% endblock %}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content />
+    <meta name="author" content />
+    <link href="{% static 'assets/css/vendor.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'assets/css/app.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'assets/plugins/jvectormap-next/jquery-jvectormap.css' %} " rel="stylesheet" />
+
+
+    <link href="{% static 'assets/plugins/datatables.net-bs5/css/dataTables.bootstrap5.min.css' %} " rel="stylesheet" />
+    <link href="{% static 'assets/plugins/datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css' %} " rel="stylesheet" />
+    <link href="{% static 'assets/plugins/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css' %} " rel="stylesheet" />
+    <link href="{% static 'assets/plugins/bootstrap-table/dist/bootstrap-table.min.css' %} " rel="stylesheet" />
+    <style>
+        /* Style du contenu du reçu */
+        
+        #receiptContent {
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            color: white;
+        }
+        
+        #receiptContent p {
+            margin: 0.5em 0;
+        }
+        
+        #receiptContent h5 {
+            margin-top: 1em;
+            border-bottom: 1px solid #e0dfdf;
+            padding-bottom: 0.5em;
+        }
+        
+        #receiptContent ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        #receiptContent ul li {
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        #receiptContent strong {
+            display: inline-block;
+            width: 200px;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        /* Styles spécifiques pour l'impression */
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #paymentReceiptModal,
+            #paymentReceiptModal * {
+                visibility: visible;
+            }
+            #paymentReceiptModal {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            .modal-content {
+                border: none;
+            }
+            .modal-footer {
+                display: none;
+            }
+            #receiptContent ul {
+                border-top: 1px solid #333;
+            }
+        }
+    </style>
+</head>
+{% block content %} {% endblock %}
+
+<body>
+
+    <div id="loader" class="app-loader">
+        <div class="d-flex align-items-center">
+            <div class="app-loader-circle"></div>
+            <div class="app-loader-text">LOADING...</div>
+        </div>
+    </div>
+
+    <div id="app" class="app">
+        <div id="header" class="app-header">
+            <div class="desktop-toggler">
+                <button type="button" class="menu-toggler" data-toggle-class="app-sidebar-collapsed" data-dismiss-class="app-sidebar-toggled" data-toggle-target=".app">
+			    	<span class="bar"></span>
+			    	<span class="bar"></span>
+			    	<span class="bar"></span>
+			    </button>
+            </div>
+            <div class="mobile-toggler">
+                <button type="button" class="menu-toggler" data-toggle-class="app-sidebar-mobile-toggled" data-toggle-target=".app">
+			    	<span class="bar"></span>
+			    	<span class="bar"></span>
+			    	<span class="bar"></span>
+			    </button>
+            </div>
+
+
+            <div class="brand">
+                <a href=" " class="brand-logo w-100">
+                    <iconify-icon icon="lets-icons:time-progress-duotone" class="fs-24px me-2 text-theme"></iconify-icon>
+                    <span class="brand-text fw-500 fs-14px">AUTO-PIECE</span>
+                </a>
+            </div>
+
+
+            <div class="menu">
+                <div class="menu-item dropdown d-lg-flex d-none">
+                    <a href="#" class="menu-link text-theme">
+                        <span></span>
+                    </a>
+                </div>
+                <div class="menu-item dropdown dropdown-mobile-full">
+                    <a href="#" data-bs-toggle="dropdown" data-bs-display="static" class="menu-link menu-link-icon">
+                        <iconify-icon icon="ph:calendar-dots-duotone" class="menu-icon"></iconify-icon>
+                    </a>
+                    <div class="dropdown-menu fade dropdown-menu-end p-0 w-300px text-center">
+                        <div class="row row-grid gx-0">
+                            <div class="col-12 p-2">
+                                <form method="get">
+                                    {% csrf_token %}
+                                    <div class="row">
+                                        <div class="col-xl-12">
+                                            <div class="mb-3">
+                                                <label class="form-label">Filtre <span class="text-danger">*</span></label>
+                                                <div class="input-group input-daterange" id="datepicker-range">
+                                                    <span class="input-group-text">De</span> {{ form.date_debut }}
+                                                    <span class="input-group-text">à</span> {{ form.date_fin }}
+                                                    <button type="submit" class="input-group-text btn btn-outline-light btn-block" style="border-radius: 0px 5px 5px 0px;">valider</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-item dropdown d-lg-flex d-none me-3">
+                    <div class="menu-search-inline">
+                        <a id="refreshButton" href="#" class="menu-link menu-link-icon">
+                            <iconify-icon icon="uiw:reload" width="18" height="18"></iconify-icon>
+                        </a>
+                    </div>
+                </div>
+                <div class="menu-item dropdown d-lg-flex d-none me-3">
+                    <div class="menu-search-inline">
+                        <input class="form-control" placeholder="Search something..." value name="keywords" />
+                    </div>
+                </div>
+                <div class="menu-item dropdown dropdown-mobile-full">
+                    <a href="#" data-bs-toggle="dropdown" data-bs-display="static" class="menu-link menu-link-icon">
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end p-0 w-400px">
+                        <div class="card">
+
+                        </div>
+                        <a class="" href=""></a>
+                    </div>
+                </div>
+                <div class="menu-item dropdown dropdown-mobile-full">
+                    <a href="#" data-bs-toggle="dropdown" data-bs-display="static" class="menu-link menu-link-icon">
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end p-0 w-400px">
+                        <div class="card">
+                        </div>
+                        <a class="" href=""></a>
+                    </div>
+                </div>
+                <div class="menu-item dropdown dropdown-mobile-full">
+                    <a href="#" data-bs-toggle="dropdown" data-bs-display="static" class="menu-link menu-link-icon"></a>
+                    <div class="dropdown-menu dropdown-menu-end p-0 w-300px">
+                        <div class="card">
+                        </div>
+                        <a class="" href=""></a>
+                    </div>
+                </div>
+
+                <div class="menu-item dropdown dropdown-mobile-full">
+                    <a href="#" data-bs-toggle="dropdown" data-bs-display="static" class="menu-link d-flex align-items-center">
+                        <div class="menu-img online me-sm-2 ms-lg-0 ms-n2">
+                            <img src="assets/img/user/profile.jpg" alt="Profile" class />
+                        </div>
+                        <div class="menu-text d-sm-block d-none">
+                            <span class="d-block"><span><span class="__cf_email__" >{{user.username}}</span></span>
+                            </span>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end me-lg-3 fs-10px fade">
+                        <h6 class="dropdown-header">{{ user.profile.role }}</h6>
+                        <a class="dropdown-item" href="{% url 'user_detail' user.pk %}">Profile</a>
+                        <a class="dropdown-item" href="{% url 'password_change' %}">Modifier mot de passe</a>
+                        {% if request.user.profile.role == 'AdminMagasin' %}
+                        <a class="dropdown-item" href="{% url 'global_history' %}">Piste d'audite</a> {% comment %} <a class="dropdown-item" href="calendar.html">CALENDER SETTINGS</a> {% endcomment %}
+                        {% endif %}
+
+                        <div class="dropdown-divider"></div>
+                        {% comment %} <a class="dropdown-item" href="helper.html">HELP & SUPPORT</a> {% endcomment %}
+                        <a class="dropdown-item" href="{% url 'deconnexion' %}"><i class="fa fa-sign-out" aria-hidden="true"></i> DECONNEXION</a>
+                    </div>
+                </div>
+            </div>
+
+            {% comment %}
+            <form class="menu-search-float" method="POST" name="header_search_form">
+                <div class="menu-search-container">
+                    <div class="menu-search-icon"><i class="bi bi-search"></i></div>
+                    <div class="menu-search-input">
+                        <input type="text" class="form-control" placeholder="Search something..." />
+                    </div>
+                    <div class="menu-search-icon">
+                        <a href="#" data-toggle-class="app-header-menu-search-toggled" data-toggle-target=".app"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                </div>
+            </form> {% endcomment %}
+        </div>
+
+        <div id="sidebar" class="app-sidebar">
+            <div class="app-sidebar-content" data-scrollbar="true" data-height="100%">
+                <div class="menu">
+                
+                    <div class="menu-header">TABLEAU DE BORD</div>
+                    {% if  request.user.profile.role == 'AdminMagasin' %}
+                    <div class="menu-item {% if request.resolver_match.url_name == 'adminmagasin' %}active{% endif %}">
+                        <a href="{% url 'adminmagasin' %}" class="menu-link">
+                            <span class="menu-icon"><iconify-icon icon="fluent-mdl2:b-i-dashboard"></iconify-icon></span>
+                            <span class="menu-text">ADMINISTRATEUR</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if request.user.profile.role == 'Accueillants' or request.user.profile.role == 'AdminMagasin' %}
+                    <div class="menu-item {% if request.resolver_match.url_name == 'piece_list_accueil' %}active{% endif %}">
+                        <a href="{% url 'piece_list_accueil' %}" class="menu-link">
+                            <span class="menu-icon">
+                            <iconify-icon icon="bi:person-workspace"></iconify-icon>
+                        </span>
+                            <span class="menu-text">ACCUEIL</span>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if request.user.profile.role == 'Caissiers' or request.user.profile.role == 'AdminMagasin' %}
+                    <div class="menu-item {% if request.resolver_match.url_name == 'caisseDashboard' %}active{% endif %} ">
+                        <a href="{% url 'caisseDashboard' %}" class="menu-link">
+                            <span class="menu-icon">
+								<iconify-icon icon="clarity:wallet-line"></iconify-icon>
+							</span>
+                            <span class="menu-text">CAISSIERE</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if request.user.profile.role == 'Livraisons' or request.user.profile.role == 'AdminMagasin' %}
+                    <div class="menu-item {% if request.resolver_match.url_name == 'livraison_dashboard' %}active{% endif %} ">
+                        <a href="{% url 'livraison_dashboard' %}" class="menu-link">
+                            <span class="menu-icon">
+								<iconify-icon icon="fluent-emoji-high-contrast:delivery-truck"></iconify-icon>
+							</span>
+                            <span class="menu-text">LIVRAISON</span>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if request.user.profile.role == 'AdminMagasin' %}
+                    <div class="menu-header">FORMULAIRES & LISTES</div>
+                    <div class="menu-item has-sub ">
+                        <a href="javascript:;" class="menu-link">
+                            <div class="menu-icon">
+                                <iconify-icon icon="ph:gear-duotone"></iconify-icon>
+                                <span class="w-5px h-5px rounded-3 bg-theme position-absolute top-0 end-0 mt-3px me-3px d-none"></span>
+                            </div>
+                            <div class="menu-text d-flex align-items-center">STOCK</div>
+                            <span class="menu-caret"><b class="caret"></b></span>
+                        </a>
+                        <div class="menu-submenu">
+                            <div class="menu-item {% if request.resolver_match.url_name == 'piece_create' %}active{% endif %}">
+                                <a href="{% url 'piece_create' %}" target="_blank" class="menu-link">
+                                    <div class="menu-text">PIECES</div>
+                                </a>
+                            </div>
+                            <div class="menu-item {% if request.resolver_match.url_name == 'fournisseur' %}active{% endif %} ">
+                                <a href="{% url 'fournisseur' %}" target="_blank" class="menu-link">
+                                    <div class="menu-text">FOURNISSEURS</div>
+                                </a>
+                            </div>
+                            <div class="menu-item {% if request.resolver_match.url_name == 'global_history' %}active{% endif %} ">
+                                <a href="{% url 'global_history' %}" target="_blank" class="menu-link">
+                                    <div class="menu-text">AUDITE</div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-header">UTILISATEURS</div>
+                    <div class="menu-item {% if request.resolver_match.url_name == 'user_create' %}active{% endif %}">
+                        <a href="{% url 'user_create' %}" class="menu-link">
+                            <span class="menu-icon"><iconify-icon icon="ph:users"></iconify-icon></span>
+                            <span class="menu-text">EMPLOYERS</span>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-auto p-15px w-100 ">
+                        <a href="{% url 'deconnexion' %} " target="_blank " class="btn d-block btn-secondary btn-sm py-6px w-100 " style="border-radius: 20px;"><i class="fa fa-sign-out " aria-hidden="true "></i> DECONNEXION</a>
+                    </div>
+                    {% comment %} {% if user.is_superuser %}
+                    <a class="btn d-block btn-secondary btn-sm py-6px w-100 " style="border-radius: 20px;" href="/admin/">Accéder à la page admin</a> {% endif %} {% endcomment %}
+                </div>
+            </div>
+        </div>
+
+
+
+        {% block main_content %} {% endblock %}
+
+        <div class="modal fade" id="paymentReceiptModal" tabindex="-1" aria-labelledby="paymentReceiptModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="paymentReceiptModalLabel">Reçu de Paiement</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="receiptContent">
+                            <!-- Le contenu du reçu sera inséré ici via JavaScript -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary rounded" data-bs-dismiss="modal">Fermer</button>
+                        <button type="button" class="btn btn-theme rounded" onclick="printReceipt()">Imprimer le Reçu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        {% if messages %} {% for msg in messages %}
+        <div class="modal fade" id="modalSm">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Message</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        {{msg}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %} {% endif %}
+        <a href="# " data-toggle="scroll-to-top " class="btn-scroll-top fade ">
+            <iconify-icon icon="material-symbols-light:keyboard-arrow-up "></iconify-icon>
+        </a>
+
+
+    </div>
+    </div>
+    </div>
+    </div>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var myModal = new bootstrap.Modal(document.getElementById('modalSm'));
+            myModal.show();
+
+            setTimeout(function() {
+                myModal.hide();
+            }, 3000);
+        });
+    </script>
+
+    <script>
+        setTimeout(function() {
+            $('#message').fadeOut('slow')
+        }, 3000);
+    </script>
+
+    <script>
+        document.getElementById('refreshButton').addEventListener('click', function() {
+            // Get the current URL without query parameters
+            let baseUrl = window.location.origin + window.location.pathname;
+
+            // Reload the page with the base URL
+            window.location.href = baseUrl;
+        });
+    </script>
+
+    <script src="{% static 'assets/plugins/jquery-migrate/dist/jquery-migrate.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/moment/min/moment.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/bootstrap-daterangepicker/daterangepicker.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/bootstrap-timepicker/js/bootstrap-timepicker.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/bootstrap-slider/dist/bootstrap-slider.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/jquery-typeahead/dist/jquery.typeahead.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/jquery.maskedinput/src/jquery.maskedinput.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/tag-it/js/tag-it.min.js' %} " type="text/javascript"></script>
+
+    <script src="{% static 'assets/plugins/blueimp-file-upload/js/vendor/jquery.ui.widget.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/blueimp-tmpl/js/tmpl.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/blueimp-load-image/js/load-image.all.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/blueimp-canvas-to-blob/js/canvas-to-blob.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/blueimp-gallery/js/jquery.blueimp-gallery.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/blueimp-file-upload/js/jquery.iframe-transport.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/blueimp-file-upload/js/jquery.fileupload-ui.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/summernote/dist/summernote-lite.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/spectrum-colorpicker2/dist/spectrum.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/plugins/select-picker/dist/picker.min.js' %} " type="text/javascript"></script>
+    <script src="{% static 'assets/js/demo/form-plugins.demo.js' %} " type="text/javascript"></script>
+
+    {% comment %} _________________________________________________________________________________________ {% endcomment %}
+
+
+    <script src="{% static 'assets/magas/scripts/5c5dd728/cloudflare-static/email-decode.min.js' %} " data-cfasync="false "></script>
+    <script src="{% static 'assets/magas/code/2.1.0/iconify-icon.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/js/vendor.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/js/app.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/jvectormap-next/jquery-jvectormap.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/jvectormap-content/world-mill.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/apexcharts/dist/apexcharts.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/js/demo/dashboard.demo.js' %} " type="text/javascript "></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y3Q0VGQKY3 " type="text/javascript "></script>
+
+    <script type="text/javascript ">
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-Y3Q0VGQKY3');
+    </script>
+    <script src="{% static 'assets/magas/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js' %} " data-cf-settings="10847b0cfbd4efa22118d4f9-|49 " defer></script>
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015 " integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"
+                            rayId ":"8ad979c61e3a0e34 ","version ":"2024.7.0 ","r ":1,"serverTiming ":{"name ":{"cfL4 ":true}},"token ":"4db8c6ef997743fda032d4f73cfeff63 ","b ":1}' crossorigin="anonymous "></script>
+
+    {% comment %}
+    <script src="{ static 'assets/js/vendor.min.js' %} " type="text/javascript "></script> {% endcomment %}
+    <script src="{% static 'assets/js/app.min.js' %} " type="text/javascript "></script>
+
+    <script src="{% static 'assets/plugins/%40highlightjs/cdn-assets/highlight.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/js/demo/highlightjs.demo.js' %} " type="text/javascript "></script>
+
+    <script src="{% static 'assets/plugins/datatables.net/js/dataTables.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/datatables.net-buttons/js/dataTables.buttons.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/datatables.net-buttons/js/buttons.colVis.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/datatables.net-buttons/js/buttons.html5.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/datatables.net-buttons/js/buttons.print.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/datatables.net-buttons-bs5/js/buttons.bootstrap5.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/datatables.net-responsive/js/dataTables.responsive.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/plugins/bootstrap-table/dist/bootstrap-table.min.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/js/demo/table-plugins.demo.js' %} " type="text/javascript "></script>
+
+    <script src="{% static 'assets/plugins/chart.js/dist/chart.umd.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/js/demo/chart-js.demo.js' %} " type="text/javascript "></script>
+    <script src="{% static 'assets/js/demo/sidebar-scrollspy.demo.js' %} " type="text/javascript "></script>
+
+
+    <script src="{% static 'assets/js/demo/pos-customer-order.demo.js' %} " type="text/javascript "></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y3Q0VGQKY3 " type="text/javascript "></script>
+    <script type="text/javascript ">
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-Y3Q0VGQKY3');
+    </script>
+    <script src="{% static 'assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %} " type="text/javascript "></script>
+
+    <script>
+        document.getElementById('date-filter-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const dateDebut = document.getElementById('date_debut').value;
+            const dateFin = document.getElementById('date_fin').value;
+
+            // Redirect to the same page with the date parameters in the URL
+            window.location.href = `?date_debut=${dateDebut}&date_fin=${dateFin}`;
+        });
+    </script>
+
+
+
+
+
+
+    <script>
+        function handlePaymentFormSubmit(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const url = form.action;
+
+            fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Afficher le message de succès
+                        showModal(data.receipt_data);
+                    } else {
+                        // Afficher le message d'erreur
+                        alert(data.message);
+                    }
+                });
+        }
+
+        function showModal(receiptData) {
+            const receiptContent = document.getElementById('receiptContent');
+            receiptContent.innerHTML = `
+            <p><strong>Numéro de commande:</strong> ${receiptData.commande_numero}</p>
+            <p><strong>Total:</strong> ${receiptData.total} Fcfa</p>
+            <p><strong>Montant payé:</strong> ${receiptData.montant_paye} Fcfa</p>
+            <p><strong>Montant restant:</strong> ${receiptData.montant_reste} Fcfa</p>
+            <h5>Articles:</h5>
+            <ul>
+                ${receiptData.panier_items.map(item => `
+                    <li>${item.designation} - ${item.quantite} x ${item.prix_unitaire}Fcfa</li>
+                `).join('')}
+            </ul>
+        `;
+
+        // Afficher le modal
+        const modal = new bootstrap.Modal(document.getElementById('paymentReceiptModal'));
+        modal.show();
+    }
+
+    function printReceipt() {
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        printWindow.document.write(document.getElementById('receiptContent').innerHTML);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    }
+    </script>
+
+
+    {% comment %}
+    <script id="template-upload" type="text/x-tmpl">
+        {% for (var i=0, file; file=o.files[i]; i++) {%}
+        <tr class="template-upload">
+            <td>
+                <span class="preview d-flex justify-content-center flex-align-center" style="height: 80px"></span>
+            </td>
+            <td>
+                <p class="name mb-1">{%=file.name%}</p>
+                <strong class="error text-danger"></strong>
+            </td>
+            <td>
+                <p class="size mb-2">Processing...</p>
+                <div class="progress progress-sm mb-0 h-4px progress-striped active">
+                    <div class="progress-bar progress-bar-primary" style="min-width: 2em; width:0%;"></div>
+                </div>
+            </td>
+            <td nowrap>
+                {% if (!i && !o.options.autoUpload) { %}
+                <button class="btn btn-theme btn-sm d-block w-100 start" disabled>
+						<span>Start</span>
+					</button> {% } %} {% if (!i) { %}
+                <button class="btn btn-default btn-sm d-block w-100 cancel mt-2">
+						<span>Cancel</span>
+					</button> {% } %}
+            </td>
+        </tr>
+        {%} %}
+    </script> {% endcomment %}
+
+</body>
+
+</html>
+{% endif %}

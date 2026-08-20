@@ -1,0 +1,44 @@
+<div class="modal fade mag-form-modal" id="prixLocalModal{{ piece.pk }}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Prix de vente local</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form class="form-prix-local" data-piece-id="{{ piece.pk }}" data-url="{% url 'ajax_definir_prix_local' piece.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mf-info">
+                        <strong>{{ piece.numero_piece }}</strong> — {{ piece.designation }}
+                        <br>
+                        Prix catalogue : <strong>{{ piece.prix_unitaire }} Fcfa</strong>
+                    </div>
+                    <section class="mf-section mb-0">
+                        <h3 class="mf-section__title">
+                            <i class="fa fa-tag"></i> Votre localité
+                        </h3>
+                        <div class="mf-field mb-0">
+                            <label for="prix-local-{{ piece.pk }}">Prix de vente local</label>
+                            <input type="number"
+                                   class="form-control"
+                                   id="prix-local-{{ piece.pk }}"
+                                   name="prix_unitaire_local"
+                                   min="0"
+                                   step="0.01"
+                                   value="{% if piece.prix_unitaire_local_valeur is not None %}{{ piece.prix_unitaire_local_valeur }}{% endif %}"
+                                   placeholder="Vide = prix catalogue">
+                            <span class="mf-hint">Laissez vide pour revenir au prix catalogue.</span>
+                        </div>
+                    </section>
+                    <div class="alert alert-danger d-none prix-local-erreur mt-3" role="alert"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

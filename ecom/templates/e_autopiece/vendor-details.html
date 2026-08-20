@@ -1,0 +1,315 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{{ localite.nom }} — Auto-Pièce{% endblock title %}
+{% block body_class %}vendor-details shop-main-h{% endblock body_class %}
+{% block content %}
+    <div class="rts-navigation-area-breadcrumb">
+        <div class="container">
+            <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <a href="{% url 'ecom_localites' %}">{% trans "Localités" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span class="current">{{ localite.nom }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="section-seperator">
+        <div class="container">
+            <hr class="section-seperator">
+        </div>
+    </div>
+
+    <div class="vendor-name ecom-localite-page-title">
+        <div class="store-details-area rts-section-gap">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-3 col-lg-12 pr--60 pr_md--10 pr_sm--10">
+                        <div class="filter-area-vendor-details">
+                            <div class="single-filter-box">
+                            <h5 class="title">{% trans "Catégories" %}</h5>
+                                <div class="filterbox-body">
+                                <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" id="localite-cat-form">
+                                    {% if localite_filters.q %}
+                                    <input type="hidden" name="q" value="{{ localite_filters.q }}">
+                                    {% endif %}
+                                    {% if localite_filters.sort %}
+                                    <input type="hidden" name="sort" value="{{ localite_filters.sort }}">
+                                    {% endif %}
+                                    <div class="category-wrapper">
+                                        {% for cat in categories %}
+                                        <div class="single-category">
+                                            <input id="loc-cat-{{ cat.pk }}" type="checkbox" name="categorie"
+                                                value="{{ cat.pk }}"
+                                                {% if cat.pk|stringformat:'s' in selected_categories %}checked{% endif %}
+                                                onchange="this.form.submit()">
+                                            <label for="loc-cat-{{ cat.pk }}">{{ cat.categorie }}</label>
+                                        </div>
+                                        {% empty %}
+                                        <p class="text-muted small mb-0">{% trans "Aucune catégorie pour cette localité." %}</p>
+                                        {% endfor %}
+                                    </div>
+                                </form>
+                                </div>
+                            </div>
+                            <div class="single-filter-box">
+                                <h5 class="title">{% trans "Horaires" %}</h5>
+                                <div class="filterbox-body vendor-time-opening">
+                                    <h6 class="title-opeing">
+                                        {% trans "Heures d'ouverture" %}
+                                        {% if localite_ouverte %}
+                                        <span class="ecom-localite-open-now">{% trans "Ouvert maintenant" %}</span>
+                                        {% else %}
+                                        <span class="ecom-localite-closed-now">{% trans "Fermé actuellement" %}</span>
+                                        {% endif %}
+                                    </h6>
+                                    {% for h in horaires_semaine %}
+                                    <span class="single-opening-hour{% if not h.ouvert %} is-closed{% endif %}">
+                                        <span class="day">{{ h.jour_court }}</span> :
+                                        {% if h.ouvert %}
+                                        {{ h.heure_ouverture|time:"H:i" }} – {{ h.heure_fermeture|time:"H:i" }}
+                                        {% else %}
+                                        <span>{% trans "Fermé" %}</span>
+                                        {% endif %}
+                                    </span>
+                                    {% empty %}
+                                    <span class="single-opening-hour">
+                                        <span class="text-muted">{% trans "Horaires non renseignés." %}</span>
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-9 col-lg-12 mt-lg--30">
+                    <div class="vendor-details-banner--area ecom-localite-hero-banner">
+                        <div class="row g-4 align-items-stretch">
+                            <div class="col-lg-3 col-md-5">
+                                <div class="vendor-banner-left ecom-localite-banner-left">
+                                    <div class="ecom-localite-detail-thumb">
+                                        <span class="ecom-localite-thumb-icon" aria-hidden="true">
+                                            <i class="fa-solid fa-store"></i>
+                                        </span>
+                                        <span class="ecom-localite-thumb-label">{{ localite.nom }}</span>
+                                    </div>
+                                        <div class="header-area">
+                                        <h4 class="title">
+                                            {{ localite.nom }}
+                                            {% if shop_total %}
+                                            <span>{% trans "Ouvert" %}</span>
+                                            {% else %}
+                                            <span class="closed">{% trans "Sans stock" %}</span>
+                                            {% endif %}
+                                        </h4>
+                                        </div>
+                                    <div class="stars-area ecom-localite-meta">
+                                        <i class="fa-solid fa-box"></i>
+                                        <span>
+                                            {% blocktrans count counter=shop_total %}{{ counter }} pièce disponible{% plural %}{{ counter }} pièces disponibles{% endblocktrans %}
+                                        </span>
+                                        </div>
+                                        <div class="location">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <p>
+                                            {% if localite.a_coordonnees %}
+                                            {{ localite.latitude }}, {{ localite.longitude }}
+                                            {% else %}
+                                            {% trans "Abidjan, Côte d'Ivoire" %}
+                                            {% endif %}
+                                        </p>
+                                        </div>
+                                        <div class="location">
+                                        <i class="fa-solid fa-phone"></i>
+                                        <p>+225 07 00 00 00 00</p>
+                                        </div>
+                                        <div class="location">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                        <p>
+                                            {% blocktrans count counter=shop_total %}{{ counter }} produit disponible{% plural %}{{ counter }} produits disponibles{% endblocktrans %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            <div class="col-lg-9 col-md-7">
+                                <div class="banner-vendor-details ecom-localite-promo-banner"
+                                    style="background-image: url('{% static 'e_assets/images/feature/bg_c.png' %}');">
+                                    <div class="content-area">
+                                        <div class="ecom-localite-promo-top">
+                                            <span class="ecom-localite-promo-badge">{% trans "Agence Auto-Pièce" %}</span>
+                                            <a href="{% url 'ecom_shop' %}?localite={{ localite.code }}" class="shop-now-goshop-btn ecom-localite-promo-cta">
+                                                <div class="plus-icon">
+                                                    <i class="fa-solid fa-plus"></i>
+                                                </div>
+                                                <span class="text">{% trans "Voir la boutique" %}</span>
+                                                <div class="plus-icon">
+                                                    <i class="fa-solid fa-plus"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <h3 class="title">
+                                            {% trans "Pièces auto" %}<br>
+                                            <span>{% trans "disponibles ici" %}</span>
+                                        </h3>
+                                        <p class="ecom-localite-promo-text">
+                                            {% trans "Commandez depuis cette agence pour voir les stocks et prix locaux." %}
+                                        </p>
+                                        <div class="ecom-localite-promo-actions">
+                                            <form method="post" action="{% url 'ecom_select_local' %}" class="ecom-localite-promo-select-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="local_id" value="{{ localite.code }}">
+                                                <input type="hidden" name="next" value="{% url 'ecom_shop' %}?localite={{ localite.code }}">
+                                                <button type="submit" class="rts-btn btn-primary ecom-localite-promo-select-btn">
+                                                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                                    {% trans "Sélectionner cette localité" %}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt--50 ml-v-dec-m">
+                            <div class="col-lg-12">
+                            <div class="ecom-localite-filter-bar">
+                                <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" class="ecom-localite-search-form">
+                                    {% for cat_id in selected_categories %}
+                                    <input type="hidden" name="categorie" value="{{ cat_id }}">
+                                    {% endfor %}
+                                    {% if localite_filters.sort %}
+                                    <input type="hidden" name="sort" value="{{ localite_filters.sort }}">
+                                    {% endif %}
+                                    <div class="ecom-localite-search-box">
+                                        <input type="text" name="q" value="{{ localite_filters.q }}"
+                                            class="ecom-localite-search-input"
+                                            placeholder="{% trans 'Entrez le nom de la pièce' %}"
+                                            autocomplete="off">
+                                        <button type="submit" class="ecom-localite-search-btn" aria-label="{% trans 'Search' %}">
+                                            {% trans "Rechercher" %}
+                                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                        </button>
+                                                </div>
+                                        </form>
+                                <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" class="ecom-localite-sort-form">
+                                    {% if localite_filters.q %}
+                                    <input type="hidden" name="q" value="{{ localite_filters.q }}">
+                                    {% endif %}
+                                    {% for cat_id in selected_categories %}
+                                    <input type="hidden" name="categorie" value="{{ cat_id }}">
+                                    {% endfor %}
+                                    <label class="ecom-localite-sort-wrap" for="localite-sort-select">
+                                        <select id="localite-sort-select" name="sort"
+                                            class="ecom-localite-sort-select ecom-no-nice-select" onchange="this.form.submit()">
+                                            <option value="designation" {% if localite_filters.sort == 'designation' %}selected{% endif %}>{% trans "Default Sorting" %}</option>
+                                            <option value="price_asc" {% if localite_filters.sort == 'price_asc' %}selected{% endif %}>{% trans "Prix croissant" %}</option>
+                                            <option value="price_desc" {% if localite_filters.sort == 'price_desc' %}selected{% endif %}>{% trans "Prix décroissant" %}</option>
+                                        </select>
+                                        <span class="ecom-localite-sort-caret" aria-hidden="true"></span>
+                                    </label>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 ml-v-dec-m mt--40 ecom-localite-pieces-row">
+                        {% for row in shop_rows %}
+                        {% include 'e_autopiece/partials/_piece_card_vendor.html' with piece=row.piece prix_affiche=row.prix_affiche quantite=row.quantite localite_code=row.localite_code|default:localite.code localite_nom=row.localite_nom|default:localite.nom next_url=shop_next_url col_class='col-lg-4 col-md-6 col-12' %}
+                        {% empty %}
+                        <div class="col-12">
+                            <p class="text-muted text-center py-5">
+                                {% trans "Aucune pièce disponible dans cette localité pour le moment." %}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if shop_page.paginator.num_pages > 1 %}
+                    <div class="ecom-shop-pagination mt-5">
+                        {% if shop_page.has_previous %}
+                        <a class="ecom-page-btn" href="?{% if shop_query %}{{ shop_query }}&{% endif %}page={{ shop_page.previous_page_number }}">&lsaquo;</a>
+                        {% endif %}
+                        {% for num in shop_page.paginator.page_range %}
+                            {% if num == shop_page.number %}
+                            <span class="ecom-page-btn is-active">{{ num }}</span>
+                            {% elif num == 1 or num == shop_page.paginator.num_pages or num >= shop_page.number|add:'-2' and num <= shop_page.number|add:'2' %}
+                            <a class="ecom-page-btn" href="?{% if shop_query %}{{ shop_query }}&{% endif %}page={{ num }}">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        {% if shop_page.has_next %}
+                        <a class="ecom-page-btn" href="?{% if shop_query %}{{ shop_query }}&{% endif %}page={{ shop_page.next_page_number }}">&rsaquo;</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="rts-shorts-service-area rts-section-gap bg_primary">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-tags"></i></span>
+                        </div>
+                        <div class="information">
+                        <h4 class="title">{% trans "Prix compétitifs" %}</h4>
+                        <p class="disc">{% trans "Des pièces auto au juste prix, par localité." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-rotate-left"></i></span>
+                        </div>
+                        <div class="information">
+                        <h4 class="title">{% trans "Assistance commande" %}</h4>
+                        <p class="disc">{% trans "Aide pour vos commandes en ligne et retraits." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-headset"></i></span>
+                        </div>
+                        <div class="information">
+                        <h4 class="title">{% trans "Support réactif" %}</h4>
+                        <p class="disc">{% trans "Une équipe disponible pour vos questions." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                        </div>
+                        <div class="information">
+                        <h4 class="title">{% trans "Livraison locale" %}</h4>
+                        <p class="disc">{% trans "Retrait ou livraison selon votre localité." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.jQuery && jQuery.fn.niceSelect) {
+        jQuery('.ecom-localite-sort-wrap select.ecom-no-nice-select').each(function () {
+            var $el = jQuery(this);
+            if ($el.next().hasClass('nice-select')) {
+                $el.niceSelect('destroy');
+            }
+            $el.show();
+        });
+    }
+});
+</script>
+{% endblock extra_js %}

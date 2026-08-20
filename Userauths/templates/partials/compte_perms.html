@@ -1,0 +1,100 @@
+<form id="comptePermsForm" method="post" action="{% url 'update_permissions' object.id %}">
+    {% csrf_token %}
+    <div class="modal-body">
+        <section class="cm-section mb-0">
+            <h3 class="cm-section__title">
+                <i class="fa fa-lock"></i> Permissions pour {{ object.username }}
+            </h3>
+            <div class="cm-perm-toolbar">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fa fa-search"></i></span>
+                    </div>
+                    <input type="search"
+                           class="form-control permission-search-input"
+                           placeholder="Rechercher une permission…"
+                           autocomplete="off">
+                </div>
+                <span class="cm-perm-count permission-search-count"></span>
+                <div class="cm-perm-actions">
+                    <button type="button" class="btn btn-outline-secondary btn-sm perm-select-visible">Tout cocher</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm perm-clear-visible">Tout décocher</button>
+                </div>
+            </div>
+            <div class="cm-perm-grid permission-checkbox-list">
+                {% if permission_form.permissions %}
+                    {% for checkbox in permission_form.permissions %}
+                    <div class="cm-perm-item permission-item"
+                         data-perm-label="{{ checkbox.choice_label|lower }}">
+                        <label class="cm-perm-chip" for="{{ checkbox.id_for_label }}">
+                            {{ checkbox.tag }}
+                            <span>{{ checkbox.choice_label }}</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                    <div class="permission-empty d-none" style="grid-column: 1 / -1;">
+                        <p class="text-muted mb-0 p-2 text-center">Aucune permission ne correspond à votre recherche.</p>
+                    </div>
+                {% else %}
+                    <div style="grid-column: 1 / -1;">
+                        <p class="text-muted mb-0 p-2">Aucune permission disponible.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-cm-cancel" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-cm-save">
+            <i class="fa fa-check"></i> Enregistrer
+        </button>
+    </div>
+</form>
+<script>
+(function () {
+    var root = document.getElementById('comptePermsForm');
+    if (!root) return;
+    var input = root.querySelector('.permission-search-input');
+    var list = root.querySelector('.permission-checkbox-list');
+    if (!input || !list) return;
+    var items = Array.from(list.querySelectorAll('.permission-item'));
+    var emptyMsg = list.querySelector('.permission-empty');
+    var countEl = root.querySelector('.permission-search-count');
+    function filterPermissions() {
+        var q = (input.value || '').trim().toLowerCase();
+        var visible = 0;
+        items.forEach(function (item) {
+            var label = item.getAttribute('data-perm-label') || '';
+            var match = !q || label.indexOf(q) !== -1;
+            item.classList.toggle('d-none', !match);
+            if (match) visible += 1;
+        });
+        if (emptyMsg) emptyMsg.classList.toggle('d-none', visible > 0 || items.length === 0);
+        if (countEl) {
+            countEl.textContent = q
+                ? visible + ' / ' + items.length + ' permission(s)'
+                : items.length + ' permission(s)';
+        }
+    }
+    function setVisibleChecked(checked) {
+        items.forEach(function (item) {
+            if (item.classList.contains('d-none')) return;
+            var cb = item.querySelector('input[type="checkbox"]');
+            if (cb) cb.checked = checked;
+        });
+    }
+    input.addEventListener('input', filterPermissions);
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            input.value = '';
+            filterPermissions();
+        }
+    });
+    var selectBtn = root.querySelector('.perm-select-visible');
+    var clearBtn = root.querySelector('.perm-clear-visible');
+    if (selectBtn) selectBtn.addEventListener('click', function () { setVisibleChecked(true); });
+    if (clearBtn) clearBtn.addEventListener('click', function () { setVisibleChecked(false); });
+    filterPermissions();
+    setTimeout(function () { input.focus(); }, 80);
+})();
+</script>

@@ -1,0 +1,122 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% block title %}AUTO-PIECE — Catégories{% endblock title %}
+{% block page_title %}Liste des categories de pièce{% endblock page_title %}
+{% block page %}Catégories{% endblock page %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-form-modal.css' %}">
+{% endblock extra_head %}
+
+{% block page_action_buttons %}
+<button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addinf">Nouvelle categorie <i class="fa fa-edit"></i></button>
+{% endblock page_action_buttons %}
+
+{% block main_content %}
+    <div class="modal fade mag-form-modal" id="addinf" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="title">Nouvelle catégorie</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="basic-form" method="post" novalidate enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <section class="mf-section mb-0">
+                            <h3 class="mf-section__title">
+                                <i class="fa fa-tags"></i> Informations
+                            </h3>
+                            <div class="mf-field">
+                                <label>Catégorie</label>
+                                {{ form.categorie }}
+                            </div>
+                            <div class="mf-field">
+                                <label>Description</label>
+                                {{ form.description }}
+                            </div>
+                            <div class="mf-field mb-0">
+                                <label>Image</label>
+                                {{ form.image }}
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card" style="overflow-y: auto;">
+            <div class="mobile-left">
+                <a class="btn btn-primary toggle-email-nav" data-toggle="collapse" href="#email-nav" role="button" aria-expanded="true" aria-controls="email-nav">
+                    <span class="btn-label"><i class="la la-bars"></i></span>
+                    Menu
+                </a>
+            </div>
+            <div class="mail-inbox">
+                <div class="mail-left collapse show" id="email-nav">
+                    <div class="mail-compose m-b-20">
+                        <a href="" class="btn btn-outline-danger btn-block" data-toggle="modal" data-target="#addinf">Nouvelle categorie <i class="fa fa-edit"></i></a>
+                    </div>
+                    <div class="mail-side">
+                        <ul class="nav">
+                            <li class="active text-secondary"><a href="{% url "stock" %}"><i class="icon-star"></i>Mon stock<span class="badge badge-primary float-right"> {{count_medoc}} </span></a></li>
+                            {% for c in categories %}
+                                <li class="active">
+                                    <a href="{% url "add_piece" c.pk %}" class="mail-detail-expand">
+                                        <i class="icon-star text-warning"></i>{{c.categorie}}
+                                        <span class="badge badge-outline-info float-right">{{ c.total_quantite|default:0 }}</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="mail-right">
+                    <div class="header d-flex align-center">
+                        <h2>Liste des categories</h2>
+                    </div>
+                    <div class="mail-list">
+                        <ul class="list-unstyled">
+                            {% for c in categories %}
+                                <li class="clearfix">
+                                    <div class="mail-detail-left">
+                                        {% if c.image.url %}
+                                            <img style="height:60px;width:60px;" src="{{ c.image.url }}" alt="">
+                                        {% endif %}
+                                    </div>
+                                    <div class="mail-detail-right">
+                                        <h6 class="sub">
+                                            <a href="{% url "add_piece" c.pk %}" class="mail-detail-expand">{{c.categorie}}</a>
+                                            <span class="badge badge-primary ml-2">{{ c.total_quantite|default:0 }} pièces</span>
+                                        </h6>
+                                        <p class="dep"><span class="m-r-10">{{c.description}}</span></p>
+                                        <span class="time">{{c.cid}}</span>
+                                    </div>
+                                    <div class="hover-action">
+                                        <a class="btn btn-success mr-2" href="{% url "add_piece" c.pk %}"><i class="icon-plus"></i></a>
+                                        <a class="btn btn-warning mr-2" href="javascript:void(0);" data-toggle="modal" data-target="#editCategorieModal{{ c.pk }}" title="Modifier la catégorie"><i class="icon-note"></i></a>
+                                        <a class="btn btn-danger mr-2" href="{% url "delet_categorie" c.pk %}" onclick="return confirm('Etes-vous sûre de vouloir supprimer la catégorie {{c.cid}} - {{c.categorie}} - {{c.description}}?, car si vous supprimer toutes les informations liées seront supprimées')"><i class="fa fa-trash-o"></i></a>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if categories %}
+        {% for c in categories %}
+            {% include "mag/partials/_edit_categorie_piece.html" with categorie=c edit_form=edit_form %}
+        {% endfor %}
+    {% endif %}
+{% endblock main_content %}

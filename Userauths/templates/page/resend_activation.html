@@ -1,0 +1,23 @@
+{% extends 'page/base_compt.html' %}
+
+{% block title %}Renvoyer l'activation — AUTO-PIECE{% endblock title %}
+
+{% block auth_content %}
+<h1 class="auth-panel__title">Renvoyer l'activation</h1>
+<p class="auth-panel__subtitle">Recevez un nouveau lien d'activation par email.</p>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    <div class="auth-form-group">
+        {{ form.email }}
+    </div>
+    <button type="submit" class="auth-btn-primary">Envoyer le lien</button>
+</form>
+
+<p class="auth-footer-text">
+    Pas encore inscrit ?
+    <a href="{% url 'register' %}" class="auth-link">Créer un compte</a>
+</p>
+
+<a href="{% url 'connexion' %}" class="auth-link auth-back-link"><i class="fa fa-arrow-left"></i> Retour à la connexion</a>
+{% endblock auth_content %}

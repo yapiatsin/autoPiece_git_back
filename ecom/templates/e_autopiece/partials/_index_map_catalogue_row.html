@@ -1,0 +1,79 @@
+{% load static i18n %}
+<div class="weekly-best-selling-area rts-section-gap ecom-catalogue-section-white" id="ecom-catalogue-section">
+    <div class="container">
+        <div class="row g-4 align-items-start ecom-map-catalogue-row">
+            <div class="col-lg-12 col-md-12">
+                <div class="ecom-map-column card border-0 shadow-sm p-3 h-100">
+                    <h2 class="title-left mb-2">{% trans "Map Localité" %}</h2>
+                    <p class="mb-3">
+                        {% trans "Commande depuis" %} :
+                        <strong id="ecom-local-label">{% if local_selectionne %}{{ local_selectionne.nom }}{% else %}{% trans "aucune localité" %}{% endif %}</strong>
+                    </p>
+                    {% include 'e_autopiece/partials/_localite_map.html' %}
+                    <p class="small text-muted mt-3 mb-0">{% trans "Cliquez sur un marqueur pour filtrer les pièces." %}</p>
+                </div>
+            </div>
+            <div class="col-lg-12 col-md-12">
+                <div class="ecom-catalogue-column">
+                    <div class="title-area-between flex-wrap gap-3 mb-3">
+                        <div>
+                            <h2 class="title-left mb-1">{% trans "Catalogue pièces auto" %}</h2>
+                            {% if cart_count %}
+                            <p class="mb-0 text-muted">{{ cart_count }} {% trans "article(s) au panier" %}</p>
+                            {% endif %}
+                        </div>
+                        <ul class="nav nav-tabs best-selling-grocery" id="ecomLocalTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if not local_selectionne %}active{% endif %}"
+                                    id="ecom-tab-all" data-bs-toggle="tab" data-bs-target="#ecom-pane-all"
+                                    type="button" role="tab" data-loc-tab="all" aria-controls="ecom-pane-all"
+                                    aria-selected="{% if not local_selectionne %}true{% else %}false{% endif %}">
+                                    {% trans "Toutes" %}
+                                </button>
+                            </li>
+                            {% for loc in localites %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if local_selectionne and local_selectionne.code == loc.code %}active{% endif %}"
+                                    id="ecom-tab-{{ loc.code }}" data-bs-toggle="tab" data-bs-target="#ecom-pane-{{ loc.code }}"
+                                    type="button" role="tab" data-loc-tab="{{ loc.code }}"
+                                    aria-controls="ecom-pane-{{ loc.code }}"
+                                    aria-selected="{% if local_selectionne and local_selectionne.code == loc.code %}true{% else %}false{% endif %}">
+                                    {{ loc.nom }}
+                                </button>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="tab-content" id="ecomLocalTabContent">
+                        <div class="tab-pane fade {% if not local_selectionne %}show active{% endif %}"
+                            id="ecom-pane-all" role="tabpanel" aria-labelledby="ecom-tab-all">
+                            <div class="row g-4">
+                                {% for row in catalogue_all_display %}
+                                {% include 'e_autopiece/partials/_piece_card_theme.html' with piece=row.piece prix_affiche=row.prix_affiche show_all_stocks=row.show_all_stocks quantite=row.quantite localite_code=row.localite_code localite_nom=row.localite_nom next_url=index_next_url|default:shop_next_url hide_quantity=True col_class='col-xl-20 col-lg-20 col-md-4 col-sm-6 col-12' %}
+                                {% empty %}
+                                <div class="col-12"><p class="text-muted">{% trans "Aucune pièce en stock." %}</p></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% for tab in catalogue_local_tabs %}
+                        {% with loc=tab.localite %}
+                        <div class="tab-pane fade {% if local_selectionne and local_selectionne.code == loc.code %}show active{% endif %}"
+                            id="ecom-pane-{{ loc.code }}" role="tabpanel" aria-labelledby="ecom-tab-{{ loc.code }}">
+                            <div class="row g-4">
+                                {% for row in tab.rows %}
+                                {% include 'e_autopiece/partials/_piece_card_theme.html' with piece=row.piece prix_affiche=row.prix quantite=row.quantite localite_nom=loc.nom localite_code=loc.code next_url=index_next_url|default:shop_next_url hide_quantity=True col_class='col-xl-20 col-lg-20 col-md-4 col-sm-6 col-12' %}
+                                {% empty %}
+                                <div class="col-12"><p class="text-muted">{% trans "Aucune pièce en stock dans cette localité." %}</p></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endwith %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% include 'e_autopiece/partials/_ecom_catalogue_scripts.html' %}

@@ -1,0 +1,405 @@
+<style>
+.fiche-client { font-size: 0.92rem; color: #1f2937; }
+.fiche-client-hero {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    padding: 1rem 1.15rem; margin: -0.25rem -0.25rem 1.1rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #f8fafc 100%);
+    border: 1px solid #fed7aa;
+}
+.fiche-client-avatar {
+    width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+    border: 2px solid #fb923c; background: #fff7ed; flex-shrink: 0;
+}
+.fiche-client-avatar-fallback {
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #ea580c; color: #fff; font-weight: 700; font-size: 1.25rem;
+    border: 2px solid #fb923c;
+}
+.fiche-client-hero h5 { margin: 0 0 0.2rem; font-weight: 700; color: #9a3412; }
+.fiche-client-hero .meta { color: #64748b; font-size: 0.85rem; }
+.fiche-client-badges { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.45rem; }
+.fiche-client-badges .badge { font-weight: 600; padding: 0.35em 0.65em; }
+.fiche-client-section-title {
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; color: #9a3412; margin: 1rem 0 0.65rem;
+    padding-bottom: 0.35rem; border-bottom: 2px solid #fed7aa;
+}
+.fiche-client-identity {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    margin-bottom: 0.25rem;
+}
+@media (max-width: 700px) {
+    .fiche-client-identity { grid-template-columns: 1fr; }
+}
+.fiche-client-identity-panel {
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    background:
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.fiche-client-identity-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.7rem 0.95rem;
+    background: linear-gradient(90deg, #fff7ed, #ffffff);
+    border-bottom: 1px solid #fed7aa;
+}
+.fiche-client-identity-panel-head .ico {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #ea580c; color: #fff; font-size: 0.85rem; flex-shrink: 0;
+}
+.fiche-client-identity-panel-head .ttl {
+    font-size: 0.8rem; font-weight: 700; color: #9a3412;
+    letter-spacing: 0.02em; margin: 0;
+}
+.fiche-client-identity-panel-head .sub {
+    display: block; font-size: 0.7rem; color: #94a3b8; font-weight: 500;
+}
+.fiche-client-identity-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+@media (max-width: 480px) {
+    .fiche-client-identity-fields { grid-template-columns: 1fr; }
+}
+.fiche-client-identity-field {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.8rem 0.95rem;
+    border-right: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    min-height: 64px;
+}
+.fiche-client-identity-field:nth-child(2n) { border-right: none; }
+.fiche-client-identity-field:nth-last-child(-n+2) { border-bottom: none; }
+@media (max-width: 480px) {
+    .fiche-client-identity-field { border-right: none; }
+    .fiche-client-identity-field:last-child { border-bottom: none; }
+}
+.fiche-client-identity-field.span-2 {
+    grid-column: 1 / -1;
+    border-right: none;
+}
+.fiche-client-identity-field .field-ico {
+    width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #fff7ed; color: #ea580c; font-size: 0.78rem;
+    border: 1px solid #ffedd5;
+}
+.fiche-client-identity-field label {
+    display: block;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+    margin: 0 0 0.15rem;
+    font-weight: 600;
+}
+.fiche-client-identity-field .field-val {
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: #0f172a;
+    word-break: break-word;
+    line-height: 1.35;
+}
+.fiche-client-identity-field .field-val.is-empty {
+    color: #cbd5e1;
+    font-weight: 500;
+    font-style: italic;
+}
+.fiche-client-identity-field a.field-val {
+    color: #c2410c;
+    text-decoration: none;
+}
+.fiche-client-identity-field a.field-val:hover {
+    text-decoration: underline;
+}
+.fiche-client-stats {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.65rem;
+}
+@media (max-width: 768px) {
+    .fiche-client-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.fiche-client-stat {
+    border-radius: 12px; padding: 0.75rem 0.85rem; border: 1px solid #e2e8f0;
+    background: #fff; text-align: center;
+}
+.fiche-client-stat .val { display: block; font-size: 1.15rem; font-weight: 700; color: #ea580c; line-height: 1.2; }
+.fiche-client-stat .lbl { display: block; font-size: 0.7rem; color: #64748b; margin-top: 0.2rem; }
+.fiche-client-stat.stat-muted .val { color: #475569; }
+.fiche-client-stat.stat-ok .val { color: #15803d; }
+.fiche-client-stat.stat-warn .val { color: #b45309; }
+.fiche-client-stat.stat-bad .val { color: #b91c1c; }
+.fiche-client-table { margin-bottom: 0; font-size: 0.85rem; }
+.fiche-client-table th {
+    background: #fff7ed; color: #9a3412; border-color: #fed7aa !important;
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.fiche-client-fav-thumb {
+    width: 36px; height: 36px; object-fit: cover; border-radius: 6px;
+    border: 1px solid #e2e8f0; background: #f8fafc;
+}
+.fiche-client-empty { color: #94a3b8; font-size: 0.88rem; padding: 0.75rem 0; margin: 0; }
+.fiche-client-scroll { max-height: 220px; overflow-y: auto; }
+</style>
+
+<div class="fiche-client">
+    <div class="fiche-client-hero">
+        {% if profil and profil.photo and 'default' not in profil.photo.name %}
+        <img class="fiche-client-avatar" src="{{ profil.photo.url }}" alt="{{ object.username }}">
+        {% else %}
+        <div class="fiche-client-avatar-fallback">
+            {{ object.first_name|default:object.username|slice:":1"|upper }}{{ object.last_name|default:""|slice:":1"|upper }}
+        </div>
+        {% endif %}
+        <div class="flex-grow-1">
+            <h5>{{ object.get_full_name|default:object.username }}</h5>
+            <div class="meta">@{{ object.username }} · {{ object.email }}</div>
+            <div class="fiche-client-badges">
+                <span class="badge badge-secondary">{{ object.get_role_display }}</span>
+                {% if object.is_active %}
+                <span class="badge badge-success">Compte actif</span>
+                {% else %}
+                <span class="badge badge-danger">Compte inactif</span>
+                {% endif %}
+                {% if profil %}
+                <span class="badge badge-info">{{ profil.get_statut_display }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="fiche-client-section-title">Identité &amp; contact</div>
+    <div class="fiche-client-identity">
+        <div class="fiche-client-identity-panel">
+            <div class="fiche-client-identity-panel-head">
+                <span class="ico"><i class="fa fa-user"></i></span>
+                <div>
+                    <p class="ttl">Identité</p>
+                    <span class="sub">Informations personnelles</span>
+                </div>
+            </div>
+            <div class="fiche-client-identity-fields">
+                <div class="fiche-client-identity-field">
+                    <span class="field-ico"><i class="fa fa-id-badge"></i></span>
+                    <div>
+                        <label>Prénom</label>
+                        <div class="field-val{% if not object.first_name %} is-empty{% endif %}">
+                            {{ object.first_name|default:"Non renseigné" }}
+                        </div>
+                    </div>
+                </div>
+                <div class="fiche-client-identity-field">
+                    <span class="field-ico"><i class="fa fa-address-card-o"></i></span>
+                    <div>
+                        <label>Nom</label>
+                        <div class="field-val{% if not object.last_name %} is-empty{% endif %}">
+                            {{ object.last_name|default:"Non renseigné" }}
+                        </div>
+                    </div>
+                </div>
+                <div class="fiche-client-identity-field">
+                    <span class="field-ico"><i class="fa fa-user"></i></span>
+                    <div>
+                        <label>Genre</label>
+                        <div class="field-val{% if not object.genre %} is-empty{% endif %}">
+                            {{ object.genre|default:"Non renseigné" }}
+                        </div>
+                    </div>
+                </div>
+                <div class="fiche-client-identity-field">
+                    <span class="field-ico"><i class="fa fa-calendar"></i></span>
+                    <div>
+                        <label>Inscrit le</label>
+                        <div class="field-val{% if not profil or not profil.date_creation %} is-empty{% endif %}">
+                            {% if profil %}{{ profil.date_creation|date:"d/m/Y H:i"|default:"Non renseigné" }}{% else %}Non renseigné{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fiche-client-identity-panel">
+            <div class="fiche-client-identity-panel-head">
+                <span class="ico"><i class="fa fa-map-marker"></i></span>
+                <div>
+                    <p class="ttl">Contact &amp; adresse</p>
+                    <span class="sub">Coordonnées de livraison</span>
+                </div>
+            </div>
+            <div class="fiche-client-identity-fields">
+                <div class="fiche-client-identity-field">
+                    <span class="field-ico"><i class="fa fa-phone"></i></span>
+                    <div>
+                        <label>Téléphone</label>
+                        {% if object.contact %}
+                        <a class="field-val" href="tel:{{ object.contact }}">{{ object.contact }}</a>
+                        {% else %}
+                        <div class="field-val is-empty">Non renseigné</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="fiche-client-identity-field">
+                    <span class="field-ico"><i class="fa fa-envelope-o"></i></span>
+                    <div>
+                        <label>Email</label>
+                        {% if object.email %}
+                        <a class="field-val" href="mailto:{{ object.email }}">{{ object.email }}</a>
+                        {% else %}
+                        <div class="field-val is-empty">Non renseigné</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="fiche-client-identity-field span-2">
+                    <span class="field-ico"><i class="fa fa-home"></i></span>
+                    <div>
+                        <label>Adresse complète</label>
+                        <div class="field-val{% if not profil or not profil.adresse and not profil.ville and not profil.pays %} is-empty{% endif %}">
+                            {% if profil %}
+                                {% if profil.adresse or profil.ville or profil.pays or profil.code_postal %}
+                                    {% if profil.adresse %}{{ profil.adresse }}{% endif %}
+                                    {% if profil.adresse and profil.ville %}, {% endif %}
+                                    {% if profil.ville %}{{ profil.ville }}{% endif %}
+                                    {% if profil.code_postal %} ({{ profil.code_postal }}){% endif %}
+                                    {% if profil.pays %}{% if profil.adresse or profil.ville %} — {% endif %}{{ profil.pays }}{% endif %}
+                                {% else %}
+                                    Non renseignée
+                                {% endif %}
+                            {% else %}
+                                Non renseignée
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fiche-client-section-title">Statistiques commandes</div>
+    <div class="fiche-client-stats">
+        <div class="fiche-client-stat">
+            <span class="val">{{ stats.nb_commandes }}</span>
+            <span class="lbl">Commandes</span>
+        </div>
+        <div class="fiche-client-stat stat-ok">
+            <span class="val">{{ stats.nb_payees }}</span>
+            <span class="lbl">Payées</span>
+        </div>
+        <div class="fiche-client-stat">
+            <span class="val">{{ stats.montant_paye|floatformat:0 }}</span>
+            <span class="lbl">Total payé (FCFA)</span>
+        </div>
+        <div class="fiche-client-stat stat-ok">
+            <span class="val">{{ stats.nb_livrees }}</span>
+            <span class="lbl">Livrées</span>
+        </div>
+        <div class="fiche-client-stat stat-warn">
+            <span class="val">{{ stats.nb_en_attente }}</span>
+            <span class="lbl">En attente</span>
+        </div>
+        <div class="fiche-client-stat stat-muted">
+            <span class="val">{{ stats.nb_validees }}</span>
+            <span class="lbl">Validées</span>
+        </div>
+        <div class="fiche-client-stat stat-bad">
+            <span class="val">{{ stats.nb_annulees }}</span>
+            <span class="lbl">Annulées</span>
+        </div>
+        <div class="fiche-client-stat">
+            <span class="val">{{ nb_favoris }}</span>
+            <span class="lbl">Favoris</span>
+        </div>
+    </div>
+
+    <div class="fiche-client-section-title">Dernières commandes</div>
+    {% if commandes_recentes %}
+    <div class="fiche-client-scroll table-responsive">
+        <table class="table table-sm table-bordered fiche-client-table">
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                    <th>Paiement</th>
+                    <th class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cmd in commandes_recentes %}
+                <tr>
+                    <td>{{ cmd.numero_commande }}</td>
+                    <td>{{ cmd.date|date:"d/m/Y H:i"|default:cmd.date_creation }}</td>
+                    <td>{{ cmd.get_statut_commande_display }}</td>
+                    <td>
+                        {% if cmd.paye %}
+                        <span class="text-success">Payée</span>
+                        {% else %}
+                        <span class="text-muted">Impayée</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right">{{ cmd.total|floatformat:0 }} FCFA</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fiche-client-empty">Aucune commande en ligne pour ce client.</p>
+    {% endif %}
+
+    <div class="fiche-client-section-title">Favoris ({{ nb_favoris }})</div>
+    {% if favoris %}
+    <div class="fiche-client-scroll table-responsive">
+        <table class="table table-sm table-bordered fiche-client-table">
+            <thead>
+                <tr>
+                    <th style="width:48px;"></th>
+                    <th>Référence</th>
+                    <th>Désignation</th>
+                    <th>Catégorie</th>
+                    <th>Ajouté le</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fav in favoris %}
+                <tr>
+                    <td class="text-center align-middle">
+                        {% if fav.piece.image %}
+                        <img class="fiche-client-fav-thumb" src="{{ fav.piece.image.url }}" alt="">
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ fav.piece.numero_piece }}</td>
+                    <td>{{ fav.piece.designation }}</td>
+                    <td>{{ fav.piece.categorie }}</td>
+                    <td>{{ fav.date_ajout|date:"d/m/Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fiche-client-empty">Aucun favori enregistré.</p>
+    {% endif %}
+</div>
+
+<div class="modal-footer">
+    <a href="{% url 'fiche_client_pdf' object.pk %}"
+       class="btn btn-outline-primary"
+       target="_blank"
+       rel="noopener">
+        <i class="fa fa-file-pdf-o"></i> Imprimer PDF
+    </a>
+    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Fermer</button>
+</div>

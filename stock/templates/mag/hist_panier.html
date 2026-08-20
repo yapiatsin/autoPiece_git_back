@@ -1,0 +1,125 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE{% endblock title %}
+{% block page_title %}HISTORIQUE DES PANIERS{% endblock page_title %}
+{% block page %}Historique paniers{% endblock page %}
+
+{% block page_action_buttons %}
+<button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addinf">{{ annee }} Filtre <i class="icon-calendar"></i></button>
+<a href="" class="btn btn-outline-secondary">{{ annee }} Filtre <i class="icon-refresh"></i></a>
+{% endblock page_action_buttons %}
+
+{% block main_content %}
+    <div class="modal fade" id="addinf" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="title" id="defaultModalLabel">Filtrage Périodique</h6>
+                </div>
+                <div class="modal-body">
+                    <form id="basic-form" method="get" novalidate>
+                        <div class="row clearfix">
+                            <div class="col-md-12 form-group"><input type="text" value="Filtre" class="form-control text-center" disabled></div>
+                            <div class="col-12">
+                                <label>FILTRE </label>
+                                <div class="form-group">                                    
+                                    <select name="annee" id="annee" onchange="this.form.submit()" class="form-control w-100">
+                                        {% for year in last_10_years %}
+                                            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% comment %} <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-outline-success" >Enrégistrer</button>
+                    </div> {% endcomment %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+<div class="col-md-12 p-2 mt-4">
+    <div class="card">
+        <div class="header text-info">
+            <h2 class="text-info">{{historique_paniers|length}} Historique{% if historique_paniers|length > 1 %}s{% endif %} 
+            </h2>
+        </div>
+        <div class="body">
+            <div class="mag-table-shell" x-data="magTableFilter()">
+                {% include "mag/partials/_alpine_table_toolbar.html" %}
+                <div class="table-responsive">
+                    <table class="table table-hover mag-data-table">
+                    <thead>
+                        <tr class='text'>
+                            <th>N°#</th>
+                            <th>ID</th>
+                            <th>Utilisateur</th>
+                            <th>Valide</th>
+                            <th>Payé</th>
+                            <th>Livre</th>
+                            <th>Date création</th>
+                            <th>Date save</th>
+                            <th>Action</th>
+                            <th>Date historique</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr class='text'>
+                            <th>N°#</th>
+                            <th>ID</th>
+                            <th>Utilisateur</th>
+                            <th>Valide</th>
+                            <th>Payé</th>
+                            <th>Livre</th>
+                            <th>Date création</th>
+                            <th>Date save</th>
+                            <th>Action</th>
+                            <th>Date historique</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        {% for panier in historique_paniers %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ panier.id }}</td>
+                                <td>{{ panier.utilisateur }}</td>
+                                <td>
+                                    {% if panier.valide %}
+                                    ✅​
+                                    {% else %}
+                                    ​❌​
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if panier.panier_paye %}
+                                    ✅​
+                                    {% else %}
+                                    ​❌​
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if panier.panier_livre %}
+                                    ✅​
+                                    {% else %}
+                                    ​❌​
+                                    {% endif %}
+                                </td>
+                                <td>{{ panier.date_creation }}</td>
+                                <td>{{ panier.date_save }}</td>
+                                <td>{{ panier.get_history_type_display }}</td>
+                                <td>{{ panier.history_date }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+{% endblock main_content %}

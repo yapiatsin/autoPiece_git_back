@@ -1,0 +1,1482 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<!-- Mirrored from html.themewant.com/ekomart/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 22 Mar 2026 19:52:05 GMT -->
+<head>
+    <meta charset="UTF-8">
+    {% block meta_description %}<meta name="description" content="AUTO-PIECE — Votre plateforme pièces automobiles en ligne.">{% endblock meta_description %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block meta_keywords %}<meta name="keywords" content="pièces auto, automobile, AUTO-PIECE">{% endblock meta_keywords %}
+    <title>{% block title %}Auto-Pièce e-commerce{% endblock title %}</title>
+    <link rel="icon" href="{% static 'icn.png' %}" type="image/png">
+    <!-- Bibliothèque d'icônes UNIQUE : Font Awesome 6 Free -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <!-- plugins css -->
+    <link rel="stylesheet preload" href="{% static 'e_assets/css/plugins.css' %}" as="style">
+    <link rel="stylesheet preload" href="{% static 'e_assets/css/style.css' %}" as="style">
+    <!-- force Font Awesome 6 Free par-dessus l'ancien Font Awesome Pro de plugins.css -->
+    <link rel="stylesheet" href="{% static 'e_assets/css/fontawesome-fix.css' %}">
+    <!-- en-tete fixe au scroll -->
+    <link rel="stylesheet" href="{% static 'e_assets/css/sticky-header.css' %}">
+    <link rel="stylesheet" href="{% static 'e_assets/css/ecom-piece-card.css' %}">
+    {% block extra_css %}{% endblock extra_css %}
+
+</head>
+
+<body class="{% block body_class %}shop-main-h{% endblock body_class %}">
+    {% if messages %}
+        <div class="ecom-flash-stack" id="ecomFlashMessages" aria-live="polite" aria-atomic="true">
+            {% for message in messages %}
+            <div class="ecom-flash-toast ecom-flash-toast--{{ message.tags|default:'info'|cut:' ' }}" role="alert">
+                <span class="ecom-flash-toast-icon" aria-hidden="true">
+                    {% if 'success' in message.tags %}
+                    <i class="fa-solid fa-circle-check"></i>
+                    {% elif 'error' in message.tags or 'danger' in message.tags %}
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    {% elif 'warning' in message.tags %}
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    {% else %}
+                    <i class="fa-solid fa-circle-info"></i>
+                    {% endif %}
+                </span>
+                <p class="ecom-flash-toast-text">{{ message }}</p>
+                <button type="button" class="ecom-flash-toast-close" aria-label="{% trans 'Fermer' %}">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        <script>
+        (function () {
+            var stack = document.getElementById('ecomFlashMessages');
+            if (!stack) return;
+
+            function dismissToast(toast) {
+                if (!toast || toast.classList.contains('is-leaving')) return;
+                toast.classList.add('is-leaving');
+                setTimeout(function () {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                    if (stack && !stack.children.length && stack.parentNode) {
+                        stack.parentNode.removeChild(stack);
+                    }
+                }, 320);
+            }
+
+            stack.querySelectorAll('.ecom-flash-toast').forEach(function (toast) {
+                var closeBtn = toast.querySelector('.ecom-flash-toast-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function () { dismissToast(toast); });
+                }
+                setTimeout(function () { dismissToast(toast); }, 5000);
+            });
+        })();
+        </script>
+    {% endif %}
+    {% block header %}
+    <!-- rts header area start -->
+    <!-- rts header area start -->
+    <div class="rts-header-one-area-one">
+        <div class="header-top-area">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="bwtween-area-header-top ecom-header-top-ticker">
+                            <div class="discount-area ecom-header-ticker" data-ticker-interval="3500" data-ticker-role="promo">
+                                <p class="disc ecom-header-ticker-text is-active" aria-live="polite">
+                                    {% trans "Livraison locale & pièces auto de qualité — commandez en ligne, retirez en agence." %}
+                                </p>
+                                </div>
+                            <div class="contact-number-area ecom-header-ticker" data-ticker-interval="4200" data-ticker-role="contact">
+                                <p class="ecom-header-ticker-text is-active" aria-live="polite">
+                                    {% trans "Besoin d'aide ? Appelez-nous :" %}
+                                    <a href="tel:+2250700000000">+225 07 00 00 00 00</a>
+                                </p>
+                            </div>
+                        </div>
+                        <ul id="ecom-header-ticker-promo" class="d-none" hidden aria-hidden="true">
+                            <li>{% trans "Livraison locale & pièces auto de qualité — commandez en ligne, retirez en agence." %}</li>
+                            <li>{% trans "Freins, filtres, courroies : trouvez vos pièces près de chez vous." %}</li>
+                            <li>{% trans "Stock vérifié par localité — ajoutez au panier en toute confiance." %}</li>
+                            <li>{% trans "Retrait en agence ou livraison selon votre localité." %}</li>
+                        </ul>
+                        <ul id="ecom-header-ticker-contact" class="d-none" hidden aria-hidden="true">
+                            <li>{% trans "Besoin d'aide ? Appelez-nous :" %} <a href="tel:+2250700000000">+225 07 00 00 00 00</a></li>
+                            <li>{% trans "Support client disponible pour vos commandes en ligne." %}</li>
+                            <li>{% trans "Une question sur une pièce ? Notre équipe vous répond." %}</li>
+                            <li>{% trans "Suivez vos commandes depuis votre compte Auto-Pièce." %}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="header-mid-one-wrapper">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="header-mid-wrapper-between">
+                            <div class="nav-sm-left">
+                                <ul class="nav-h_top">
+                                    <li><a href="{% url 'ecom_about' %}">{% trans "About Us" %}</a></li>
+                                    <li><a href="{% url 'ecom_account' %}">{% trans "My Account" %}</a></li>
+                                    <li><a href="{% url 'ecom_wishlist' %}">{% trans "Wishlist" %}</a></li>
+                                </ul>
+                                <p class="para">{% trans "Nous livrons à votre quotidien de 7:00 à 22:00" %}</p>
+                            </div>
+                            <div class="nav-sm-left">
+                                <ul class="nav-h_top language">
+                                    <li class="category-hover-header language-hover ecom-lang-dropdown">
+                                        <a href="#" class="ecom-lang-trigger" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa-solid fa-globe ecom-lang-trigger-icon" aria-hidden="true"></i>
+                                            <span class="ecom-lang-trigger-label">
+                                                {% if LANGUAGE_CODE == 'en' %}English{% else %}Français{% endif %}
+                                            </span>
+                                            <i class="fa-solid fa-chevron-down ecom-lang-trigger-chevron" aria-hidden="true"></i>
+                                        </a>
+                                        <ul class="category-sub-menu ecom-lang-menu">
+                                            <li>
+                                                <form action="{% url 'set_language' %}" method="post" class="ecom-lang-form">{% csrf_token %}
+                                                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                                                    <button type="submit" name="language" value="fr"
+                                                            class="lang-switch-btn ecom-lang-option{% if LANGUAGE_CODE == 'fr' %} is-active{% endif %}">
+                                                        <span class="ecom-lang-flag" aria-hidden="true">FR</span>
+                                                        <span class="ecom-lang-name">Français</span>
+                                                        {% if LANGUAGE_CODE == 'fr' %}
+                                                            <i class="fa-solid fa-check ecom-lang-check" aria-hidden="true"></i>
+                                                        {% endif %}
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form action="{% url 'set_language' %}" method="post" class="ecom-lang-form">{% csrf_token %}
+                                                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                                                    <button type="submit" name="language" value="en"
+                                                            class="lang-switch-btn ecom-lang-option{% if LANGUAGE_CODE == 'en' %} is-active{% endif %}">
+                                                        <span class="ecom-lang-flag" aria-hidden="true">EN</span>
+                                                        <span class="ecom-lang-name">English</span>
+                                                        {% if LANGUAGE_CODE == 'en' %}
+                                                        <i class="fa-solid fa-check ecom-lang-check" aria-hidden="true"></i>
+                                                        {% endif %}
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="category-hover-header language-hover">
+                                        <a href="#">
+                                            FCFA
+                                        </a>
+                                    </li>
+                                    <li><a href="{% url 'ecom_support' %}">{% trans "Support client" %}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Zone d'en-tete fixee au scroll (recherche + navigation) -->
+        <div class="ap-sticky-header">
+        <div class="search-header-area-main">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="logo-search-category-wrapper">
+                            <a href="{% url 'ecom_index' %}" class="logo-area ecom-logo-animated">
+                                <img src="{% static 'logo.png' %}" alt="AUTO-PIECE" class="logo ecom-logo-img">
+                            </a>
+                            <div class="category-search-wrapper">
+                                <div class="category-btn category-hover-header">
+                                    <img class="parent" src="{% static 'e_assets/images/icons/bar-1.svg' %}" alt="icons">
+                                    <span>{% trans "Categories" %}</span>
+                                    {% include 'e_autopiece/partials/_ecom_header_category_menu.html' with menu_id='category-active-four' %}
+                                </div>
+                                {% include 'e_autopiece/partials/_ecom_search_form.html' %}
+                            </div>
+                            <div class="actions-area">
+                                <div class="search-btn" id="searchs">
+                                    <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M15.75 14.7188L11.5625 10.5312C12.4688 9.4375 12.9688 8.03125 12.9688 6.5C12.9688 2.9375 10.0312 0 6.46875 0C2.875 0 0 2.9375 0 6.5C0 10.0938 2.90625 13 6.46875 13C7.96875 13 9.375 12.5 10.5 11.5938L14.6875 15.7812C14.8438 15.9375 15.0312 16 15.25 16C15.4375 16 15.625 15.9375 15.75 15.7812C16.0625 15.5 16.0625 15.0312 15.75 14.7188ZM1.5 6.5C1.5 3.75 3.71875 1.5 6.5 1.5C9.25 1.5 11.5 3.75 11.5 6.5C11.5 9.28125 9.25 11.5 6.5 11.5C3.71875 11.5 1.5 9.28125 1.5 6.5Z" fill="#1F1F25"></path>
+                                    </svg>
+                                </div>
+                                <div class="menu-btn" id="menu-btn">
+                                    <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect y="14" width="20" height="2" fill="#1F1F25"></rect>
+                                        <rect y="7" width="20" height="2" fill="#1F1F25"></rect>
+                                        <rect width="20" height="2" fill="#1F1F25"></rect>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="accont-wishlist-cart-area-header ecom-header-actions">
+                                <div class="btn-border-only cart category-hover-header ecom-header-action-btn" aria-label="{% trans 'Mon panier' %}" title="{% trans 'Mon panier' %}">
+                                    <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+                                    <span class="number ecom-header-count-badge">{{ ecom_cart_count|default:0 }}</span>
+                                    {% include 'e_autopiece/partials/_header_mini_cart.html' %}
+                                    <a href="{% url 'ecom_cart' %}" class="over_link" aria-label="{% trans 'Mon panier' %}"></a>
+                                </div>
+                                <a href="{% url 'ecom_wishlist' %}" class="btn-border-only wishlist ecom-header-action-btn" aria-label="{% trans 'Favoris' %}" title="{% trans 'Favoris' %}">
+                                    <i class="fa-solid fa-heart" aria-hidden="true"></i>
+                                    <span class="number ecom-header-count-badge">{{ ecom_favoris_count|default:0 }}</span>
+                                </a>
+                                {% if user.is_authenticated %}
+                                    <div class="ecom-header-user-dropdown">
+                                        <button type="button" class="ecom-header-user-card" aria-haspopup="true" aria-expanded="false" aria-label="{% trans 'Mon compte' %}">
+                                            <span class="ecom-header-user-avatar-wrap">
+                                                {% if ecom_user_has_photo %}
+                                                <img src="{{ ecom_user_photo_url }}" alt="{% trans 'Photo de profil' %}" class="ecom-header-user-avatar">
+                                                {% else %}
+                                                <span class="ecom-header-user-avatar ecom-header-user-avatar--initials" aria-hidden="true">{{ ecom_user_initials }}</span>
+                                                {% endif %}
+                                                {% if ecom_user_verified %}
+                                                <span class="ecom-header-user-badge" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                                                {% endif %}
+                                            </span>
+                                            <span class="ecom-header-user-meta">
+                                                <span class="ecom-header-user-name">{{ ecom_user_display_name }}</span>
+                                                <span class="ecom-header-user-email">{{ ecom_user_email }}</span>
+                                            </span>
+                                            <i class="fa-solid fa-chevron-down ecom-header-user-chevron" aria-hidden="true"></i>
+                                        </button>
+                                        <ul class="ecom-header-user-menu" role="menu">
+                                            <li role="none">
+                                                <a href="{% url 'ecom_account' %}" role="menuitem">
+                                                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                                                    {% trans "Mon compte" %}
+                                                </a>
+                                            </li>
+                                            <li role="none">
+                                                <a href="{% url 'deconnexion' %}" role="menuitem" class="ecom-header-user-menu-logout">
+                                                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                                                    {% trans "Déconnexion" %}
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                {% else %}
+                                    <a href="{% url 'connexion' %}" class="ecom-header-user-card ecom-header-user-card--guest" title="{% trans 'Se connecter' %}">
+                                        <span class="ecom-header-user-avatar-wrap">
+                                            <span class="ecom-header-user-avatar ecom-header-user-avatar--initials" aria-hidden="true">
+                                                <i class="fa-solid fa-user"></i>
+                                            </span>
+                                        </span>
+                                        <span class="ecom-header-user-meta">
+                                            <span class="ecom-header-user-name">{% trans "Bienvenue" %}</span>
+                                            <span class="ecom-header-user-email">{% trans "Connectez-vous à votre compte" %}</span>
+                                        </span>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="rts-header-nav-area-one">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="nav-and-btn-wrapper">
+                            <div class="nav-area">
+                                <nav>
+                                    <ul class="parent-nav">
+                                        <li class="parent has-dropdown">
+                                            <a class="nav-link" href="{% url 'ecom_index' %}">{% trans "Home" %}</a>
+                                        </li>
+                                        <li class="parent with-megamenu">
+                                            <a href="{% url 'ecom_shop' %}">{% trans "Boutique" %}</a>
+                                            <div class="rts-megamenu">
+                                                <div class="wrapper">
+                                                    <div class="row align-items-center">
+                                                        <div class="col-lg-8">
+                                                            <div class="megamenu-item-wrapper">
+                                                                <div class="single-megamenu-wrapper">
+                                                                    <p class="title">{% trans "Boutique" %}</p>
+                                                                    <ul>
+                                                                        <li><a href="{% url 'ecom_shop' %}">{% trans "Toutes les pièces" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_localites' %}">{% trans "Nos agences" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_about' %}">{% trans "À propos" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_vues_recentes' %}">{% trans "Vus récemment" %}</a></li>
+                                                                    </ul>
+                                                                </div>
+                                                                <div class="single-megamenu-wrapper">
+                                                                    <p class="title">{% trans "Achats" %}</p>
+                                                                    <ul>
+                                                                        <li><a href="{% url 'ecom_cart' %}">{% trans "Mon panier" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_checkout' %}">{% trans "Passer commande" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_wishlist' %}">{% trans "Favoris" %}</a></li>
+                                                                    </ul>
+                                                                </div>
+                                                                <div class="single-megamenu-wrapper">
+                                                                    <p class="title">{% trans "Mon espace" %}</p>
+                                                                    <ul>
+                                                                        <li><a href="{% url 'ecom_account' %}">{% trans "Mon compte" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_mes_commandes' %}">{% trans "Mes commandes" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_account' %}?tab=orders">{% trans "Suivi des commandes" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_contact' %}">{% trans "Contact" %}</a></li>
+                                                                    </ul>
+                                                                </div>
+                                                                <div class="single-megamenu-wrapper">
+                                                                    <p class="title">{% trans "Informations" %}</p>
+                                                                    <ul>
+                                                                        <li><a href="{% url 'ecom_privacy_policy' %}">{% trans "Confidentialité" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_cookies_policy' %}">{% trans "Cookies" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_terms_condition' %}">{% trans "Conditions générales" %}</a></li>
+                                                                        <li><a href="{% url 'ecom_support' %}">{% trans "Centre d'aide" %}</a></li>
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <a href="{% url 'ecom_shop' %}" class="feature-add-megamenu-area">
+                                                                <img src="{% static 'e_assets/images/feature/bg.png' %}" alt="{% trans 'Boutique Auto-Pièce' %}">
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="parent has-dropdown">
+                                            <a class="nav-link" href="{% url 'ecom_localites' %}">{% trans "Nos localités" %}</a>
+                                        </li>
+                                        <li class="parent"><a href="{% url 'ecom_contact' %}">{% trans "Contact" %}</a></li>
+                                    </ul>
+                                </nav>
+                            </div>
+                            <!-- button-area -->
+                            <div class="right-btn-area">
+                                <a href="{% url 'ecom_privacy_policy' %}" class="btn-narrow">{% trans "Politique de confidentialite" %}</a>
+                                <button class="rts-btn btn-success">
+                                    {% trans "100% Pièces d'origine" %}
+                                </button>
+                            </div>
+                            <!-- button-area end -->
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="ecom-mobile-header after-md-device-header">
+                            <div class="ecom-mobile-header__top">
+                                <div class="ecom-mobile-header__brand">
+                                    <button type="button" class="ecom-mobile-header__icon-btn menu-btn" aria-label="{% trans 'Menu' %}">
+                                        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                                    </button>
+                                    <a href="{% url 'ecom_index' %}" class="ecom-mobile-header__logo ecom-logo-animated" aria-label="{% trans 'Accueil' %}">
+                                        <img src="{% static 'logo.png' %}" alt="AUTO-PIECE" class="logo ecom-logo-img">
+                                    </a>
+                                </div>
+                                <div class="ecom-mobile-header__actions">
+                                    {% if user.is_authenticated %}
+                                    <a href="{% url 'ecom_account' %}" class="ecom-mobile-header__icon-btn" aria-label="{% trans 'Mon compte' %}">
+                                        <i class="fa-regular fa-user" aria-hidden="true"></i>
+                                    </a>
+                                    {% else %}
+                                    <a href="{% url 'connexion' %}" class="ecom-mobile-header__icon-btn" aria-label="{% trans 'Se connecter' %}">
+                                        <i class="fa-regular fa-user" aria-hidden="true"></i>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'ecom_cart' %}" class="ecom-mobile-header__icon-btn ecom-mobile-header__icon-btn--cart" aria-label="{% trans 'Mon panier' %}">
+                                        <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+                                        {% if ecom_cart_count|default:0 > 0 %}
+                                        <span class="ecom-mobile-header__badge ecom-header-count-badge">{{ ecom_cart_count }}</span>
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="ecom-mobile-header__search">
+                                <div class="ecom-search-suggest ecom-search-suggest--mobile-header" data-ecom-search-suggest
+                                     data-clear-url="{% url 'ecom_search_clear' %}">
+                                    <form method="get" action="{% url 'ecom_shop' %}" class="ecom-mobile-header-search-form ecom-search-form" role="search">
+                                        <span class="ecom-mobile-header-search-form__icon" aria-hidden="true">
+                                            <i class="fa-solid fa-magnifying-glass"></i>
+                                        </span>
+                                        <input type="search" name="q" value="{{ request.GET.q|default:'' }}"
+                                            class="ecom-mobile-header-search-form__input ecom-search-input"
+                                            placeholder="{% trans 'Cherchez sur Auto-Pièce' %}"
+                                            autocomplete="off"
+                                            aria-label="{% trans 'Rechercher' %}"
+                                            aria-autocomplete="list"
+                                            aria-haspopup="listbox">
+                                        <button type="button" class="ecom-search-query-clear ecom-mobile-header-search-form__clear" data-ecom-clear-query
+                                                aria-label="{% trans 'Effacer la recherche' %}"
+                                                {% if not request.GET.q %}hidden{% endif %}>
+                                            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                    {% include 'e_autopiece/partials/_ecom_search_suggestions.html' %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div id="side-bar" class="side-bar header-two">
+        <button type="button" class="close-icon-menu" aria-label="{% trans 'Fermer le menu' %}">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+        <div class="ecom-mobile-sidebar-scroll">
+        <div class="ecom-search-suggest ecom-search-suggest--sidebar" data-ecom-search-suggest
+             data-clear-url="{% url 'ecom_search_clear' %}">
+            <form method="get" action="{% url 'ecom_shop' %}" class="search-input-area-menu ecom-search-form">
+                <input type="search" name="q" value="{{ request.GET.q|default:'' }}" class="ecom-search-input"
+                    placeholder="{% trans 'Rechercher...' %}" autocomplete="off">
+                <button type="button" class="ecom-search-query-clear" data-ecom-clear-query
+                        aria-label="{% trans 'Effacer la recherche' %}"
+                        {% if not request.GET.q %}hidden{% endif %}>
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </form>
+            {% include 'e_autopiece/partials/_ecom_search_suggestions.html' %}
+        </div>
+
+        <div class="mobile-menu-nav-area tab-nav-btn mt--20">
+            <div class="ecom-mobile-profile">
+                {% if user.is_authenticated %}
+                <a href="{% url 'ecom_account' %}" class="ecom-mobile-profile-card">
+                    <span class="ecom-mobile-profile-avatar-wrap">
+                        {% if ecom_user_has_photo %}
+                        <img src="{{ ecom_user_photo_url }}" alt="{% trans 'Photo de profil' %}" class="ecom-mobile-profile-avatar">
+                        {% else %}
+                        <span class="ecom-mobile-profile-avatar ecom-mobile-profile-avatar--initials" aria-hidden="true">{{ ecom_user_initials }}</span>
+                        {% endif %}
+                        {% if ecom_user_verified %}
+                        <span class="ecom-mobile-profile-badge" aria-label="{% trans 'Compte vérifié' %}">
+                            <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        </span>
+                        {% endif %}
+                    </span>
+                    <span class="ecom-mobile-profile-meta">
+                        <span class="ecom-mobile-profile-name">{{ ecom_user_display_name }}</span>
+                        <span class="ecom-mobile-profile-email">{{ ecom_user_email }}</span>
+                    </span>
+                </a>
+                {% else %}
+                <a href="{% url 'connexion' %}" class="ecom-mobile-profile-card ecom-mobile-profile-card--guest">
+                    <span class="ecom-mobile-profile-avatar-wrap">
+                        <span class="ecom-mobile-profile-avatar ecom-mobile-profile-avatar--initials" aria-hidden="true">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                    </span>
+                    <span class="ecom-mobile-profile-meta">
+                        <span class="ecom-mobile-profile-name">{% trans "Bienvenue" %}</span>
+                        <span class="ecom-mobile-profile-email">{% trans "Connectez-vous à votre compte" %}</span>
+                    </span>
+                </a>
+                {% endif %}
+            </div>
+
+            <nav>
+                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                    <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">{% trans "Menu" %}</button>
+                    <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">{% trans "Catégories" %}</button>
+                </div>
+            </nav>
+
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+                    <div class="mobile-menu-main ecom-mobile-menu">
+                        <nav class="nav-main mainmenu-nav mt--20">
+                            <ul class="mainmenu metismenu ecom-mobile-nav" id="mobile-menu-active">
+                                <li>
+                                    <a href="{% url 'ecom_index' %}" class="main ecom-mobile-link">
+                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-house" aria-hidden="true"></i></span>
+                                        <span class="ecom-mobile-link-label">{% trans "Accueil" %}</span>
+                                    </a>
+                                </li>
+                                <li class="has-droupdown">
+                                    <a href="#" class="main ecom-mobile-link">
+                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span>
+                                        <span class="ecom-mobile-link-label">{% trans "Boutique" %}</span>
+                                        <span class="ecom-mobile-link-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+                                    </a>
+                                    <ul class="submenu mm-collapse">
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_shop' %}">{% trans "Toutes les pièces" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_localites' %}">{% trans "Nos agences" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_about' %}">{% trans "À propos" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_vues_recentes' %}">{% trans "Vus récemment" %}</a></li>
+                                    </ul>
+                                </li>
+                                <li class="has-droupdown">
+                                    <a href="#" class="main ecom-mobile-link">
+                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i></span>
+                                        <span class="ecom-mobile-link-label">{% trans "Achats" %}</span>
+                                        <span class="ecom-mobile-link-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+                                    </a>
+                                    <ul class="submenu mm-collapse">
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_cart' %}">{% trans "Mon panier" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_checkout' %}">{% trans "Passer commande" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_wishlist' %}">{% trans "Favoris" %}</a></li>
+                                    </ul>
+                                </li>
+                                <li class="has-droupdown">
+                                    <a href="#" class="main ecom-mobile-link">
+                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                                        <span class="ecom-mobile-link-label">{% trans "Mon espace" %}</span>
+                                        <span class="ecom-mobile-link-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+                                    </a>
+                                    <ul class="submenu mm-collapse">
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_account' %}">{% trans "Mon compte" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_mes_commandes' %}">{% trans "Mes commandes" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_account' %}?tab=orders">{% trans "Suivi des commandes" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_contact' %}">{% trans "Contact" %}</a></li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <a href="{% url 'ecom_localites' %}" class="main ecom-mobile-link">
+                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
+                                        <span class="ecom-mobile-link-label">{% trans "Nos localités" %}</span>
+                                    </a>
+                                </li>
+                                <li class="has-droupdown">
+                                    <a href="#" class="main ecom-mobile-link">
+                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span>
+                                        <span class="ecom-mobile-link-label">{% trans "Informations" %}</span>
+                                        <span class="ecom-mobile-link-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+                                    </a>
+                                    <ul class="submenu mm-collapse">
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_privacy_policy' %}">{% trans "Confidentialité" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_cookies_policy' %}">{% trans "Cookies" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_terms_condition' %}">{% trans "Conditions générales" %}</a></li>
+                                        <li><a class="mobile-menu-link" href="{% url 'ecom_support' %}">{% trans "Centre d'aide" %}</a></li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <a href="{% url 'ecom_contact' %}" class="main ecom-mobile-link">
+                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-headset" aria-hidden="true"></i></span>
+                                        <span class="ecom-mobile-link-label">{% trans "Contact" %}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
+                    <div class="ecom-mobile-categories">
+                        {% include 'e_autopiece/partials/_ecom_mobile_category_menu.html' with menu_id='category-active-menu' %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="button-area-main-wrapper-menuy-sidebar mt--40 ecom-mobile-sidebar-footer">
+            <div class="contact-area">
+                <div class="phone">
+                    <i class="fa-solid fa-headset"></i>
+                    <a href="tel:+2250700000000">+225 07 00 00 00 00</a>
+                </div>
+                <div class="phone">
+                    <i class="fa-solid fa-envelope"></i>
+                    <a href="mailto:contact@autopiece.ci">contact@autopiece.ci</a>
+                </div>
+            </div>
+            <div class="buton-area-bottom">
+                {% if user.is_authenticated %}
+                <a href="{% url 'deconnexion' %}" class="rts-btn btn-primary ecom-mobile-logout-btn">{% trans "Déconnexion" %}</a>
+                {% else %}
+                <a href="{% url 'connexion' %}" class="rts-btn btn-primary">{% trans "Se connecter" %}</a>
+                <a href="{% url 'register' %}" class="rts-btn btn-primary">{% trans "S'inscrire" %}</a>
+                {% endif %}
+            </div>
+        </div>
+        </div>
+    </div>
+    {% endblock header %}
+
+    {% block content %}
+    {% endblock content %}
+    {% block footer %}
+    <!-- rts footer one area start -->
+    <div class="rts-footer-area pt--80 bg_light-1">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="footer-main-content-wrapper pb--70 pb_sm--30">
+                        <div class="single-footer-wized">
+                            <h3 class="footer-title">{% trans "Auto-Pièce" %}</h3>
+                            <div class="call-area">
+                                <div class="icon">
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <div class="info">
+                                    <span>{% trans "Une question ? Appelez-nous" %}</span>
+                                    <a href="tel:+2250700000000" class="number">+225 07 00 00 00 00</a>
+                                </div>
+                            </div>
+                            <div class="opening-hour">
+                                <div class="single">
+                                    <p>{% trans "Lundi - Vendredi" %} : <span>8:00 – 18:00</span></p>
+                                </div>
+                                <div class="single">
+                                    <p>{% trans "Samedi" %} : <span>8:00 – 18:00</span></p>
+                                </div>
+                                <div class="single">
+                                    <p>{% trans "Dimanche" %} : <span>{% trans "Fermé" %}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="single-footer-wized">
+                            <h3 class="footer-title">{% trans "Boutique" %}</h3>
+                            <div class="footer-nav">
+                                <ul>
+                                    <li><a href="{% url 'ecom_shop' %}">{% trans "Toutes les pièces" %}</a></li>
+                                    <li><a href="{% url 'ecom_localites' %}">{% trans "Nos agences" %}</a></li>
+                                    <li><a href="{% url 'ecom_wishlist' %}">{% trans "Favoris" %}</a></li>
+                                    <li><a href="{% url 'ecom_vues_recentes' %}">{% trans "Vus récemment" %}</a></li>
+                                    <li><a href="{% url 'ecom_cart' %}">{% trans "Mon panier" %}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="single-footer-wized">
+                            <h3 class="footer-title">{% trans "Mon espace" %}</h3>
+                            <div class="footer-nav">
+                                <ul>
+                                    <li><a href="{% url 'ecom_account' %}">{% trans "Mon compte" %}</a></li>
+                                    <li><a href="{% url 'ecom_mes_commandes' %}">{% trans "Mes commandes" %}</a></li>
+                                    <li><a href="{% url 'ecom_checkout' %}">{% trans "Passer commande" %}</a></li>
+                                    <li><a href="{% url 'ecom_about' %}">{% trans "À propos" %}</a></li>
+                                    <li><a href="{% url 'ecom_contact' %}">{% trans "Contact" %}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="single-footer-wized">
+                            <h3 class="footer-title">{% trans "Informations" %}</h3>
+                            <div class="footer-nav">
+                                <ul>
+                                    <li><a href="{% url 'ecom_privacy_policy' %}">{% trans "Confidentialité" %}</a></li>
+                                    <li><a href="{% url 'ecom_cookies_policy' %}">{% trans "Cookies" %}</a></li>
+                                    <li><a href="{% url 'ecom_terms_condition' %}">{% trans "Conditions générales" %}</a></li>
+                                    <li><a href="{% url 'ecom_support' %}">{% trans "Support" %}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="single-footer-wized">
+                            <h3 class="footer-title">{% trans "Notre newsletter" %}</h3>
+                            <p class="disc-news-letter">
+                                {% trans "Inscrivez-vous pour recevoir les nouveautés et nos offres exclusives." %}
+                            </p>
+                            <form class="footersubscribe-form" method="post" action="{% url 'ecom_newsletter' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <div class="footersubscribe-fields">
+                                    <input type="email" name="email" placeholder="{% trans 'Votre adresse e-mail' %}" required autocomplete="email">
+                                    <button type="submit" class="rts-btn btn-primary">{% trans "S'abonner" %}</button>
+                                </div>
+                                <p class="dsic">
+                                    <label>
+                                        <input type="checkbox" name="accepte_offres" value="true" checked>
+                                        {% trans "Je souhaite recevoir les actualités et offres spéciales." %}
+                                    </label>
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="social-and-payment-area-wrapper">
+                        <div class="social-one-wrapper">
+                            <span>{% trans "Suivez-nous :" %}</span>
+                            <ul>
+                                <li><a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a></li>
+                                <li><a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a></li>
+                                <li><a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a></li>
+                                <li><a href="https://wa.me/2250700000000" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a></li>
+                                <li><a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a></li>
+                            </ul>
+                        </div>
+                        <div class="payment-access">
+                            <span>{% trans "Paiements acceptés" %}</span>
+                            <img src="{% static 'e_assets/images/payment/01.html' %}" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- rts footer one area end -->
+
+    <!-- rts copyright-area start -->
+    <div class="rts-copyright-area">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="copyright-between-1">
+                        <p class="disc">
+                            Copyright <span id="ap-copyright-year"></span> <a href="#">Auto - Pièce</a>. Tous droits réservés.
+                        </p>
+                        <a href="#ecomDownloadAppModal" class="playstore-app-area" data-bs-toggle="modal" data-bs-target="#ecomDownloadAppModal" role="button">
+                            <span>{% trans 'Download App' %}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- rts copyright-area end -->
+
+    {% endblock footer %}
+
+    {% block overlays %}
+    <div class="product-details-popup-wrapper">
+        <div class="rts-product-details-section rts-product-details-section2 product-details-popup-section">
+            <div class="product-details-popup">
+                <button class="product-details-close-btn"><i class="fa-solid fa-times"></i></button>
+                <div class="details-product-area">
+                    <div class="product-thumb-area">
+                        <div class="cursor"></div>
+                        <div class="thumb-wrapper one filterd-items figure">
+                            <div class="product-thumb zoom" onmousemove="zoom(event)" style="background-image: url({% static 'e_assets/images/products/product-details.html' %})"><img src="{% static 'e_assets/images/products/product-details.html' %}" alt="product-thumb">
+                            </div>
+                        </div>
+                        <div class="thumb-wrapper two filterd-items hide">
+                            <div class="product-thumb zoom" onmousemove="zoom(event)" style="background-image: url({% static 'e_assets/images/products/product-filt2.html' %})"><img src="{% static 'e_assets/images/products/product-filt2.html' %}" alt="product-thumb">
+                            </div>
+                        </div>
+                        <div class="thumb-wrapper three filterd-items hide">
+                            <div class="product-thumb zoom" onmousemove="zoom(event)" style="background-image: url({% static 'e_assets/images/products/product-filt3.html' %})"><img src="{% static 'e_assets/images/products/product-filt3.html' %}" alt="product-thumb">
+                            </div>
+                        </div>
+                        <div class="product-thumb-filter-group">
+                            <div class="thumb-filter filter-btn active" data-show=".one"><img src="{% static 'e_assets/images/products/product-filt1.html' %}" alt="product-thumb-filter"></div>
+                            <div class="thumb-filter filter-btn" data-show=".two"><img src="{% static 'e_assets/images/products/product-filt2.html' %}" alt="product-thumb-filter"></div>
+                            <div class="thumb-filter filter-btn" data-show=".three"><img src="{% static 'e_assets/images/products/product-filt3.html' %}" alt="product-thumb-filter"></div>
+                        </div>
+                    </div>
+                    <div class="contents">
+                        <div class="product-status">
+                            <span class="product-catagory">Dress</span>
+                            <div class="rating-stars-group">
+                                <div class="rating-star"><i class="fa-solid fa-star"></i></div>
+                                <div class="rating-star"><i class="fa-solid fa-star"></i></div>
+                                <div class="rating-star"><i class="fa-solid fa-star-half-alt"></i></div>
+                                <span>10 Reviews</span>
+                            </div>
+                        </div>
+                        <h2 class="product-title">Wide Cotton Tunic Dress <span class="stock">In Stock</span></h2>
+                        <span class="product-price"><span class="old-price">$9.35</span> $7.25</span>
+                        <p>
+                            Priyoshop has brought to you the Hijab 3 Pieces Combo Pack PS23. It is a
+                            completely modern design and you feel comfortable to put on this hijab.
+                            Buy it at the best price.
+                        </p>
+                        <div class="product-bottom-action">
+                            <div class="cart-edit">
+                                <div class="quantity-edit action-item">
+                                    <button class="button"><i class="fa-solid fa-minus minus"></i></button>
+                                    <input type="text" class="input" value="01" />
+                                    <button class="button plus">+<i class="fa-solid fa-plus plus"></i></button>
+                                </div>
+                            </div>
+                            <a href="#" class="rts-btn btn-primary radious-sm with-icon">
+                                <div class="btn-text">
+                                    Add To Cart
+                                </div>
+                                <div class="arrow-icon">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                </div>
+                                <div class="arrow-icon">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                </div>
+                            </a>
+                            <a href="javascript:void(0);" class="rts-btn btn-primary ml--20"><i class="fa-solid fa-heart"></i></a>
+                        </div>
+                        <div class="product-uniques">
+                            <span class="sku product-unipue"><span>SKU: </span> BO1D0MX8SJ</span>
+                            <span class="catagorys product-unipue"><span>Categories: </span> T-Shirts, Tops, Mens</span>
+                            <span class="tags product-unipue"><span>Tags: </span> fashion, t-shirts, Men</span>
+                        </div>
+                        <div class="share-social">
+                            <span>Share:</span>
+                            <a class="platform" href="http://facebook.com/" target="_blank"><i
+                                class="fa-brands fa-facebook-f"></i></a>
+                            <a class="platform" href="http://twitter.com/" target="_blank"><i
+                                class="fa-brands fa-twitter"></i></a>
+                            <a class="platform" href="http://behance.com/" target="_blank"><i
+                                class="fa-brands fa-behance"></i></a>
+                            <a class="platform" href="http://youtube.com/" target="_blank"><i
+                                class="fa-brands fa-youtube"></i></a>
+                            <a class="platform" href="http://linkedin.com/" target="_blank"><i
+                                class="fa-brands fa-linkedin"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- successfully add in wishlist -->
+    <div class="successfully-addedin-wishlist">
+        <div class="d-flex" style="align-items: center; gap: 15px;">
+            <i class="fa-solid fa-check"></i>
+            <p>Your item has already added in wishlist successfully</p>
+        </div>
+    </div>
+    <!-- successfully add in wishlist end -->
+    <!-- Modal téléchargement app -->
+    <div class="modal fade ecom-app-download-modal" id="ecomDownloadAppModal" tabindex="-1"
+         aria-labelledby="ecomDownloadAppModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content ecom-app-download-content">
+                <button type="button" class="ecom-app-download-close" data-bs-dismiss="modal"
+                        aria-label="{% trans 'Fermer' %}">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+                <div class="ecom-app-download-visual">
+                    <img src="{% static 'back_modal0.png' %}"
+                         alt="{% trans 'Application Auto-Pièce' %}"
+                         class="ecom-app-download-img"
+                         loading="lazy">
+                </div>
+                <div class="ecom-app-download-body">
+                    <p class="ecom-app-download-eyebrow">{% trans "Application mobile" %}</p>
+                    <h2 class="ecom-app-download-title" id="ecomDownloadAppModalLabel">
+                        {% trans "Téléchargez Auto-Pièce" %}
+                    </h2>
+                    <p class="ecom-app-download-text">
+                        {% trans "Emportez votre garage partout. Commandez vos pièces, suivez vos livraisons et retrouvez vos favoris sur iOS et Android." %}
+                    </p>
+                    <div class="ecom-app-download-stores">
+                        <a href="#" class="ecom-app-store-link" aria-label="{% trans 'Télécharger sur l’App Store' %}">
+                            <img src="{% static 'appstore.png' %}" alt="App Store" width="160" height="48" loading="lazy">
+                        </a>
+                        <a href="#" class="ecom-app-store-link" aria-label="{% trans 'Télécharger sur Google Play' %}">
+                            <img src="{% static 'googleplay.png' %}" alt="Google Play" width="160" height="48" loading="lazy">
+                        </a>
+                    </div>
+                    <p class="ecom-app-download-note">
+                        {% trans "Disponible bientôt sur les stores — restez connectés." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal modal-compare-area-start fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Products Compare</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="compare-main-wrapper-body">
+                        <div class="single-compare-elements name">Preview</div>
+                        <div class="single-compare-elements">
+                            <div class="thumbnail-preview">
+                                <img src="{% static 'e_assets/images/grocery/01.html' %}" alt="grocery">
+                            </div>
+                        </div>
+                        <div class="single-compare-elements">
+                            <div class="thumbnail-preview">
+                                <img src="{% static 'e_assets/images/grocery/02.html' %}" alt="grocery">
+                            </div>
+                        </div>
+                        <div class="single-compare-elements">
+                            <div class="thumbnail-preview">
+                                <img src="{% static 'e_assets/images/grocery/03.html' %}" alt="grocery">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="compare-main-wrapper-body productname spacifiq">
+                        <div class="single-compare-elements name">Name</div>
+                        <div class="single-compare-elements">
+                            <p>J.Crew Mercantile Women's Short</p>
+                        </div>
+                        <div class="single-compare-elements">
+                            <p>Amazon Essentials Women's Tanks</p>
+                        </div>
+                        <div class="single-compare-elements">
+                            <p>Amazon Brand - Daily Ritual Wom</p>
+                        </div>
+                    </div>
+                    <div class="compare-main-wrapper-body productname">
+                        <div class="single-compare-elements name">Price</div>
+                        <div class="single-compare-elements price">
+                            <p>$25.00</p>
+                        </div>
+                        <div class="single-compare-elements price">
+                            <p>$39.25</p>
+                        </div>
+                        <div class="single-compare-elements price">
+                            <p>$12.00</p>
+                        </div>
+                    </div>
+                    <div class="compare-main-wrapper-body productname">
+                        <div class="single-compare-elements name">Description</div>
+                        <div class="single-compare-elements discription">
+                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard</p>
+                        </div>
+                        <div class="single-compare-elements discription">
+                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard</p>
+                        </div>
+                        <div class="single-compare-elements discription">
+                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard</p>
+                        </div>
+                    </div>
+                    <div class="compare-main-wrapper-body productname">
+                        <div class="single-compare-elements name">Rating</div>
+                        <div class="single-compare-elements">
+                            <div class="rating">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <span>(25)</span>
+                            </div>
+                        </div>
+                        <div class="single-compare-elements">
+                            <div class="rating">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <span>(19)</span>
+                            </div>
+                        </div>
+                        <div class="single-compare-elements">
+                            <div class="rating">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <span>(120)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="compare-main-wrapper-body productname">
+                        <div class="single-compare-elements name">Weight</div>
+                        <div class="single-compare-elements">
+                            <div class="rating">
+                                <p>320 gram</p>
+                            </div>
+                        </div>
+                        <div class="single-compare-elements">
+                            <p>370 gram</p>
+                        </div>
+                        <div class="single-compare-elements">
+                            <p>380 gram</p>
+                        </div>
+                    </div>
+                    <div class="compare-main-wrapper-body productname">
+                        <div class="single-compare-elements name">Stock status</div>
+                        <div class="single-compare-elements">
+                            <div class="instocks">
+                                <span>In Stock</span>
+                            </div>
+                        </div>
+                        <div class="single-compare-elements">
+                            <div class="outstocks">
+                                <span class="out-stock">Out Of Stock</span>
+                            </div>
+                        </div>
+                        <div class="single-compare-elements">
+                            <div class="instocks">
+                                <span>In Stock</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="compare-main-wrapper-body productname">
+                        <div class="single-compare-elements name">Buy Now</div>
+                        <div class="single-compare-elements">
+                            <div class="cart-counter-action">
+                                <a href="#" class="rts-btn btn-primary radious-sm with-icon">
+                                    <div class="btn-text">
+                                        Add To Cart
+                                    </div>
+                                    <div class="arrow-icon">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </div>
+                                    <div class="arrow-icon">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="single-compare-elements">
+                            <div class="cart-counter-action">
+                                <a href="#" class="rts-btn btn-primary radious-sm with-icon">
+                                    <div class="btn-text">
+                                        Add To Cart
+                                    </div>
+                                    <div class="arrow-icon">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </div>
+                                    <div class="arrow-icon">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="single-compare-elements">
+                            <div class="cart-counter-action">
+                                <a href="#" class="rts-btn btn-primary radious-sm with-icon">
+                                    <div class="btn-text">
+                                        Add To Cart
+                                    </div>
+                                    <div class="arrow-icon">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </div>
+                                    <div class="arrow-icon">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--================= Preloader Section Start Here =================-->
+    <div id="weiboo-load">
+        <div class="preloader-new">
+            <svg class="cart_preloader" role="img" aria-label="Shopping cart_preloader line animation"
+                viewBox="0 0 128 128" width="128px" height="128px" xmlns="http://www.w3.org/2000/svg">
+                <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="8">
+                    <g class="cart__track" stroke="hsla(0,10%,10%,0.1)">
+                        <polyline points="4,4 21,4 26,22 124,22 112,64 35,64 39,80 106,80" />
+                        <circle cx="43" cy="111" r="13" />
+                        <circle cx="102" cy="111" r="13" />
+                    </g>
+                    <g class="cart__lines" stroke="currentColor">
+                        <polyline class="cart__top" points="4,4 21,4 26,22 124,22 112,64 35,64 39,80 106,80"
+                            stroke-dasharray="338 338" stroke-dashoffset="-338" />
+                        <g class="cart__wheel1" transform="rotate(-90,43,111)">
+                            <circle class="cart__wheel-stroke" cx="43" cy="111" r="13" stroke-dasharray="81.68 81.68"
+                                stroke-dashoffset="81.68" />
+                        </g>
+                        <g class="cart__wheel2" transform="rotate(90,102,111)">
+                            <circle class="cart__wheel-stroke" cx="102" cy="111" r="13" stroke-dasharray="81.68 81.68"
+                                stroke-dashoffset="81.68" />
+                        </g>
+                    </g>
+                </g>
+            </svg>
+        </div>
+    </div>
+    <!--================= Preloader End Here =================-->
+    <div class="search-input-area ecom-mobile-search-overlay">
+        <div class="container">
+            <div class="search-input-inner ecom-mobile-search-inner">
+                <div class="ecom-search-suggest ecom-search-suggest--overlay" data-ecom-search-suggest
+                     data-clear-url="{% url 'ecom_search_clear' %}">
+                    <form method="get" action="{% url 'ecom_shop' %}" class="input-div ecom-search-form ecom-mobile-search-form" role="search">
+                        <input id="searchInput1" class="search-input ecom-mobile-search-input ecom-search-input" type="search" name="q"
+                            value="{{ request.GET.q|default:'' }}"
+                            placeholder="{% trans 'Rechercher par mot-clé ou référence' %}"
+                            autocomplete="off"
+                            aria-label="{% trans 'Rechercher' %}">
+                        <button type="button" class="ecom-search-query-clear" data-ecom-clear-query
+                                aria-label="{% trans 'Effacer la recherche' %}"
+                                {% if not request.GET.q %}hidden{% endif %}>
+                            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                        </button>
+                        <button type="submit" class="ecom-mobile-search-submit" aria-label="{% trans 'Lancer la recherche' %}">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                    {% include 'e_autopiece/partials/_ecom_search_suggestions.html' %}
+                </div>
+            </div>
+        </div>
+        <button type="button" id="close" class="search-close-icon ecom-mobile-search-close" aria-label="{% trans 'Fermer la recherche' %}">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div id="anywhere-home" class="anywere"></div>
+    <!-- progress area start -->
+    <div class="progress-wrap">
+        <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
+            <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" style="transition: stroke-dashoffset 10ms linear 0s; stroke-dasharray: 307.919, 307.919; stroke-dashoffset: 307.919;"></path>
+        </svg>
+    </div>
+    <!-- progress area end -->
+
+
+    {% endblock overlays %}
+
+    <!-- Alpine.js 3.x -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- plugins js -->
+    <script defer src="{% static 'e_assets/js/plugins.js' %}"></script>
+
+    <!-- custom js -->
+    <script defer src="{% static 'e_assets/js/main.js' %}"></script>
+
+    <!-- Fixe l'en-tete (recherche + navigation) au scroll -->
+    <script>
+        (function () {
+            var header = document.querySelector('.ap-sticky-header');
+            if (!header) return;
+            var placeholder = document.createElement('div');
+            placeholder.setAttribute('aria-hidden', 'true');
+            header.parentNode.insertBefore(placeholder, header.nextSibling);
+            var TRIGGER = 150;
+
+            function onScroll() {
+                if (window.pageYOffset > TRIGGER) {
+                    if (!header.classList.contains('is-stuck')) {
+                        placeholder.style.height = header.offsetHeight + 'px';
+                        header.classList.add('is-stuck');
+                    }
+                } else if (header.classList.contains('is-stuck')) {
+                    header.classList.remove('is-stuck');
+                    placeholder.style.height = '0px';
+                }
+            }
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+            window.addEventListener('resize', function () {
+                if (header.classList.contains('is-stuck')) {
+                    placeholder.style.height = header.offsetHeight + 'px';
+                }
+            });
+            onScroll();
+        })();
+        /** Met à jour l'année du copyright avec l'année courante. */
+        function updateCopyrightYear() {
+            var yearEl = document.getElementById('ap-copyright-year');
+            if (yearEl) {
+                yearEl.textContent = String(new Date().getFullYear());
+            }
+        }
+        document.addEventListener('DOMContentLoaded', updateCopyrightYear);
+
+        (function initHeaderTopTickers() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            document.querySelectorAll('.ecom-header-ticker').forEach(function (ticker) {
+                var textEl = ticker.querySelector('.ecom-header-ticker-text');
+                var role = ticker.getAttribute('data-ticker-role');
+                var source = role && document.getElementById('ecom-header-ticker-' + role);
+                if (!textEl || !source) return;
+
+                var list = Array.prototype.map.call(source.querySelectorAll('li'), function (li) {
+                    return li.innerHTML;
+                }).filter(Boolean);
+                if (list.length < 2) return;
+
+                var index = 0;
+                var interval = parseInt(ticker.getAttribute('data-ticker-interval'), 10) || 3500;
+                var busy = false;
+
+                function showNext() {
+                    if (busy) return;
+                    busy = true;
+                    textEl.classList.remove('is-active');
+                    textEl.classList.add('is-leaving');
+                    window.setTimeout(function () {
+                        index = (index + 1) % list.length;
+                        textEl.innerHTML = list[index];
+                        textEl.classList.remove('is-leaving');
+                        textEl.classList.add('is-entering');
+                        window.requestAnimationFrame(function () {
+                            textEl.classList.add('is-active');
+                            textEl.classList.remove('is-entering');
+                            busy = false;
+                        });
+                    }, 320);
+                }
+
+                window.setInterval(showNext, interval);
+            });
+        })();
+
+        (function initHeaderCountBadgesShake() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            function getBadges() {
+                return Array.prototype.slice.call(
+                    document.querySelectorAll(
+                        '.accont-wishlist-cart-area-header .wishlist > .number, ' +
+                        '.accont-wishlist-cart-area-header .cart > .number, ' +
+                        '.ecom-header-count-badge'
+                    )
+                );
+            }
+
+            var badges = getBadges();
+            if (!badges.length) return;
+
+            badges.forEach(function (badge) {
+                badge.classList.add('ecom-header-count-badge');
+            });
+
+            var SHAKE_MS = 2200;
+            var PAUSE_MS = 3800;
+
+            function startShake() {
+                var current = getBadges();
+                current.forEach(function (badge) {
+                    badge.classList.add('is-shaking');
+                });
+                window.setTimeout(function () {
+                    current.forEach(function (badge) {
+                        badge.classList.remove('is-shaking');
+                    });
+                    window.setTimeout(startShake, PAUSE_MS);
+                }, SHAKE_MS);
+            }
+
+            window.setTimeout(startShake, 800);
+        })();
+
+        (function initLogoEffects() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            var logos = document.querySelectorAll('.ecom-logo-img');
+            if (!logos.length) return;
+
+            var effects = [
+                'fx-pulse',
+                'fx-float',
+                'fx-glow'
+            ];
+            var index = 0;
+            var EFFECT_MS = 1800;
+            var PAUSE_MS = 900;
+
+            function clearEffects(el) {
+                effects.forEach(function (fx) {
+                    el.classList.remove(fx);
+                });
+            }
+
+            function playNext() {
+                logos.forEach(function (logo) {
+                    clearEffects(logo);
+                    logo.classList.add(effects[index]);
+                });
+                window.setTimeout(function () {
+                    logos.forEach(function (logo) {
+                        clearEffects(logo);
+                    });
+                    index = (index + 1) % effects.length;
+                    window.setTimeout(playNext, PAUSE_MS);
+                }, EFFECT_MS);
+            }
+
+            window.setTimeout(playNext, 600);
+        })();
+
+        (function initMiniCartRemoveAjax() {
+            function updateHeaderCartCount(count) {
+                document.querySelectorAll(
+                    '.accont-wishlist-cart-area-header .cart > .number.ecom-header-count-badge'
+                ).forEach(function (el) {
+                    el.textContent = count;
+                });
+            }
+
+            function updateMiniCart(html) {
+                if (!html) return;
+                document.querySelectorAll('.ecom-header-mini-cart').forEach(function (el) {
+                    var tmp = document.createElement('div');
+                    tmp.innerHTML = html.trim();
+                    var fresh = tmp.firstElementChild;
+                    if (fresh) el.replaceWith(fresh);
+                });
+            }
+
+            document.addEventListener('submit', function (event) {
+                var form = event.target.closest('.ecom-mini-cart-remove, .ecom-cart-remove-form');
+                if (!form) return;
+                event.preventDefault();
+                event.stopPropagation();
+
+                var body = new FormData(form);
+                fetch(form.action, {
+                    method: 'POST',
+                    body: body,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                })
+                    .then(function (res) {
+                        return res.json().then(function (data) {
+                            return { ok: res.ok, data: data };
+                        });
+                    })
+                    .then(function (result) {
+                        if (result.data && (result.data.success || result.data.removed)) {
+                            updateHeaderCartCount(result.data.cart_count);
+                            updateMiniCart(result.data.mini_cart_html);
+                            window.dispatchEvent(new CustomEvent('ecom:cart-item-removed', {
+                                detail: {
+                                    pieceId: result.data.piece_id,
+                                    itemId: result.data.item_id,
+                                    cartSubtotal: result.data.cart_subtotal,
+                                    shippingRemaining: result.data.shipping_remaining,
+                                    shippingProgress: result.data.shipping_progress,
+                                },
+                            }));
+                            return;
+                        }
+                        form.submit();
+                    })
+                    .catch(function () {
+                        form.submit();
+                    });
+            }, true);
+        })();
+    </script>
+    <script>
+        (function () {
+            function csrfToken() {
+                var input = document.querySelector('input[name="csrfmiddlewaretoken"]');
+                if (input && input.value) return input.value;
+                var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+                return match ? decodeURIComponent(match[1]) : '';
+            }
+
+            function openPanel(root) {
+                var panel = root.querySelector('[data-ecom-search-panel]');
+                if (!panel) return;
+                var hasRecent = panel.querySelector('[data-ecom-recent-pills] a');
+                var hasPopular = panel.querySelector('.ecom-search-suggest-section:not([data-ecom-recent-section]) a');
+                if (!hasRecent && !hasPopular) return;
+                panel.hidden = false;
+                root.classList.add('is-open');
+            }
+
+            function closePanel(root) {
+                var panel = root.querySelector('[data-ecom-search-panel]');
+                if (!panel) return;
+                panel.hidden = true;
+                root.classList.remove('is-open');
+            }
+
+            function closeAll(except) {
+                document.querySelectorAll('[data-ecom-search-suggest].is-open').forEach(function (root) {
+                    if (root !== except) closePanel(root);
+                });
+            }
+
+            function syncClearButtons(root, value) {
+                root.querySelectorAll('[data-ecom-clear-query]').forEach(function (btn) {
+                    if (value) btn.removeAttribute('hidden');
+                    else btn.setAttribute('hidden', 'hidden');
+                });
+            }
+
+            function clearQueryFromUrl() {
+                var url = new URL(window.location.href);
+                if (!url.searchParams.has('q')) {
+                    return false;
+                }
+                url.searchParams.delete('q');
+                var qs = url.searchParams.toString();
+                window.location.assign(url.pathname + (qs ? '?' + qs : '') + url.hash);
+                return true;
+            }
+
+            function clearSearchInput(root, input) {
+                input.value = '';
+                syncClearButtons(root, '');
+                document.querySelectorAll('.ecom-search-input, input[name="q"]').forEach(function (el) {
+                    el.value = '';
+                });
+                document.querySelectorAll('[data-ecom-clear-query]').forEach(function (btn) {
+                    btn.setAttribute('hidden', 'hidden');
+                });
+                if (!clearQueryFromUrl()) {
+                    input.focus();
+                    openPanel(root);
+                }
+            }
+
+            document.querySelectorAll('[data-ecom-search-suggest]').forEach(function (root) {
+                var input = root.querySelector('input[type="search"], input.ecom-search-input, input.search-input');
+                if (!input) return;
+
+                syncClearButtons(root, (input.value || '').trim());
+
+                input.addEventListener('focus', function () {
+                    closeAll(root);
+                    openPanel(root);
+                });
+
+                input.addEventListener('input', function () {
+                    syncClearButtons(root, (input.value || '').trim());
+                });
+
+                input.addEventListener('search', function () {
+                    if (!(input.value || '').trim()) {
+                        clearSearchInput(root, input);
+                    }
+                });
+
+                input.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') closePanel(root);
+                });
+
+                root.querySelectorAll('[data-ecom-suggest]').forEach(function (pill) {
+                    pill.addEventListener('mousedown', function (event) {
+                        event.preventDefault();
+                    });
+                    pill.addEventListener('click', function () {
+                        input.value = pill.getAttribute('data-ecom-suggest') || pill.textContent.trim();
+                        syncClearButtons(root, input.value);
+                    });
+                });
+
+                root.querySelectorAll('[data-ecom-clear-query]').forEach(function (btn) {
+                    btn.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        clearSearchInput(root, input);
+                    });
+                });
+
+                var clearBtn = root.querySelector('[data-ecom-clear-recent]');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        var url = root.getAttribute('data-clear-url');
+                        if (!url) return;
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken(),
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            credentials: 'same-origin',
+                        }).then(function (response) {
+                            if (!response.ok) throw new Error('clear failed');
+                            return response.json();
+                        }).then(function () {
+                            document.querySelectorAll('[data-ecom-recent-section]').forEach(function (section) {
+                                section.remove();
+                            });
+                            document.querySelectorAll('[data-ecom-search-suggest]').forEach(function (box) {
+                                var panel = box.querySelector('[data-ecom-search-panel]');
+                                if (!panel) return;
+                                if (!panel.querySelector('.ecom-search-suggest-pill')) {
+                                    panel.remove();
+                                    closePanel(box);
+                                }
+                            });
+                        }).catch(function () {});
+                    });
+                }
+            });
+
+            document.addEventListener('click', function (event) {
+                document.querySelectorAll('[data-ecom-search-suggest].is-open').forEach(function (root) {
+                    if (!root.contains(event.target)) closePanel(root);
+                });
+            });
+        })();
+    </script>
+    {% block extra_js %}{% endblock extra_js %}
+    <!-- header style two End -->
+
+
+</body>
+</html>

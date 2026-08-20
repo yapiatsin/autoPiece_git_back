@@ -1,0 +1,12 @@
+{% include 'mag/partials/_document_bon_format_styles.html' %}
+<div class="doc-bon-format-scope">
+    {% include 'mag/partials/_proforma_document_body.html' %}
+</div>
+<div class="proforma-modal-actions hidden-print">
+    <button type="button" class="btn btn-outline-danger btn-sm" onclick="imprimerProforma('{{ panier.ticket }}')">
+        <i class="icon-printer"></i> Imprimer
+    </button>
+    <button type="button" class="btn btn-outline-info btn-sm" onclick="validerProforma('{{ panier.ticket }}')">
+        <i class="icon-check"></i> Valider
+    </button>
+</div>

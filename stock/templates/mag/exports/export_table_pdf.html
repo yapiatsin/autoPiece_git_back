@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <style>
+        @page { size: A4 landscape; margin: 1.2cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #1a1a1a; }
+        h1 { font-size: 16px; margin: 0 0 4px; color: #ea580c; }
+        .subtitle { font-size: 11px; color: #666; margin: 0 0 14px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #fed7aa; padding: 5px 6px; text-align: left; vertical-align: top; }
+        th { background: #ea580c; color: #fff; font-weight: bold; }
+        tr:nth-child(even) td { background: #fff7ed; }
+        .empty { text-align: center; color: #888; padding: 20px; }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<p class="subtitle">{{ subtitle }}</p>{% endif %}
+    <table>
+        <thead>
+            <tr>
+                {% for h in headers %}
+                <th>{{ h }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td class="empty" colspan="{{ headers|length }}">Aucune donnée à exporter.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

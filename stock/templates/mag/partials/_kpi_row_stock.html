@@ -1,0 +1,50 @@
+<div class="row dashboard-kpi-row w-100 mx-0">
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--revenue">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-pie-chart"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Catégorie &amp; revenu</div>
+                    <h4 class="number mb-0">Cat: {{ count_catego }} — Ben: {{ benefice_mensuel }} <span class="kpi-value-muted">frs</span></h4>
+                    <small class="text-muted">{{ annee }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--entry">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-archive"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Pièces entrées en stock</div>
+                    <h4 class="number mb-0">{{ total_entre_piece }} <span class="kpi-value-muted">Val {{ valeur_entre_piece }} frs</span></h4>
+                    <small class="text-muted">{{ moisact }} — {{ annee }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-money"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Pièces vendues</div>
+                    <h4 class="number mb-0">{{ nb_piece_vendu }} <span class="kpi-value-muted">Val {{ val_piece_vendu }} frs</span></h4>
+                    <small class="text-muted">{{ moisact }} — {{ annee }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-cubes"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Stock</div>
+                    <h4 class="number mb-0">{{ count_piece }} <span class="kpi-value-muted">Val {{ valeur_piece }} frs</span></h4>
+                    <small class="text-muted">{{ annee }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,52 @@
+<style>
+    .page-header-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        width: 100%;
+        min-height: 2.5rem;
+    }
+    .periode-filter-toolbar {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.35rem;
+        margin-left: auto;
+    }
+    .btn-periode-filter {
+        background: var(--dash-filter-bg, linear-gradient(135deg, #f97316 0%, #ea580c 55%, #dc2626 100%));
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.5rem 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.28);
+    }
+    .btn-periode-filter:hover,
+    .btn-periode-filter:focus {
+        color: #fff;
+        filter: brightness(1.08);
+    }
+    .badge-periode-resume {
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fed7aa;
+        font-weight: 500;
+        white-space: normal;
+        text-align: left;
+        max-width: min(100%, 520px);
+    }
+    @media (max-width: 767px) {
+        .page-header-actions {
+            justify-content: flex-start;
+            margin-top: 0.5rem;
+        }
+        .periode-filter-toolbar {
+            justify-content: flex-start;
+            margin-left: 0;
+        }
+    }
+</style>

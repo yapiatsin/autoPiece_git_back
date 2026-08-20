@@ -1,0 +1,380 @@
+{% extends 'perfect/baslog.html' %} 
+{% load static %} 
+{% block title %}Liste des pièces{% endblock title %} 
+
+{% block page_title %}Liste des pièces{% endblock page_title %}
+{% block page %}Pièces{% endblock page %}
+{% block main_content %}
+
+{% block formfade %}
+    <div class="modal fade" id="modal-sm0">
+        <div class="modal-dialog modal-sm0" style="backdrop-filter: blur(18px);background-color:rgba(152, 189, 214, 0.14);--webkit-backdrop-filter: blur(18px);">
+            <div class="modal-content text-secondary" style="backdrop-filter: blur(18px);background-color:rgba(255, 255, 255, 0.8);--webkit-backdrop-filter: blur(18px);">
+                <div class="modal-body">
+                    <form class="validated" method="post" id="loginForm">
+                        {% csrf_token %}
+                        {% block form_content %}
+                        <div class="row mb-3">
+                            <div class="col-md-12 mb-3 text-center">
+                                <label for="validationValidInput" class="form-label" style="color: #616161;">
+                                    NOUVELLE PIECE
+                                </label>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="validationValidInput" class="form-label">Categorie véhicule</label> {{ form.type_voiture }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="validationValidInput" class="form-label">N° Piece</label> {{ form.numero_piece }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="validationValidInput" class="form-label">Désignation</label> {{ form.designation }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="validationValidInput" class="form-label">Prix achat</label> {{ form.prix_achat }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="validationValidInput" class="form-label">Prix unitaire</label> {{ form.prix_unitaire }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="validationValidInput" class="form-label">Quantité</label> {{ form.quantite }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="validationValidInput" class="form-label">Quantité d'alerte</label> {{ form.seuil }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="validationValidInput" class="form-label">Emplacement</label> {{ form.emplacement }}
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="validationValidInput" class="form-label">Fournisseur</label> {{ form.fournisseur }}
+                            </div>
+                        </div>
+                        {% endblock form_content %}
+                        <div class="mt-3 d-grid text-center">
+                            <button type="submit" class="btn btn-outline-primary w-50" id="loginButton" style="border-radius: 50px; background-color: rgba(144, 192, 255, 0.63)">
+                                <span id="buttonText" style="color: rgba(255, 255, 255, 0.79);"><i class="fa fa-check-circle me-2"></i> VALIDER</span>
+                                <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock formfade %}
+
+
+
+
+
+
+<div class="col-md-12">
+    <div class="row">
+        <div class="col-md-2">
+<div class="card p-1 mt-4" style="font-size:12px; backdrop-filter: blur(15px); background-color:rgba(255, 255, 255, 0);--webkit-backdrop-filter: blur(15px);">
+                <div class="col-md-12">
+                    <div class="card-header text-danger">
+                        <h5 class="card-title" style='font-size:12px; font-weight:700;'>TYPE PIECE PAR CATEGORIE</h5>
+                    </div>
+                    <div class="row text-secondary" style="box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); border-radius:8px; background-color: rgba(255, 255, 255, 0.71)">
+                        <div class="col-md-12 p-1">
+                            <div style="margin-left: 0px; font-size:10px">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div><i class="fa fa" style="font-size:14px;">ALTO</i> </div>
+                                    <div id="remise" class="text-end mb-0 ms-auto">{{ nbtypealto }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 p-1">
+                            <div style="margin-left: 0px; font-size:10px">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div><i class="fa fa" style="font-size:14px;">DZIRE</i> </div>
+                                    <div id="remise" class="text-end mb-0 ms-auto">{{ nbtypedzir }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 p-1">
+                            <div style="margin-left: 0px; font-size:10px">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div><i class="fa fa" style="font-size:14px;">SWIFT</i> </div>
+                                    <div id="remise" class="text-end mb-0 ms-auto">{{ nbtypespre }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="card-header text-danger">
+                        <h5 class="card-title" style='font-size:12px; font-weight:700;'>QUANTITE DE PIECE</h5>
+                    </div>
+                    <div class="row" style="box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); border-radius:8px; background-color: rgba(255, 255, 255, 0.71)">
+                        <div class="col-md-12 p-1 text-secondary">
+                            {% if top_pieces %} 
+                                {% for t in top_pieces %}
+                                    <div class="col-md-12 p-1">
+                                        <div style="margin-left: 0px; font-size:10px">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <div><i class="fa fa-gear" style="font-size:14px; margin-top: 0px;"></i>
+                                                    <i class="fa fa" style="font-size:14px;">{{ t.piece__designation }}</i> </div>
+                                                <div id="remise" class="text-end mb-0 ms-auto">{{ t.total_commandes }} - {{ t.total_somme }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %} 
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="card-header text-danger">
+                        <h5 class="card-title" style='font-size:12px; font-weight:700;'>PIECE EN ALERTE</h5>
+                    </div>
+                    <div class="row" style="box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); border-radius:8px; background-color: rgba(255, 255, 255, 0.71)">
+                        <div class="col-md-12 p-1 text-secondary">
+                            <div style="margin-left: 0px; font-size:10px">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div><i class="fa fa-" style="font-size:14px; margin-top: 0px;"></i>
+                                        <i class="fa fa" style="font-size:14px;">Designation</i> </div>
+                                    <div id="remise" class="text-end mb-0 ms-auto">Qte</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if liste_piece_alerte %} 
+                            {% for a in liste_piece_alerte %}
+                                <div class="col-md-12 p-1 text-secondary" style="border-color: red">
+                                    <div style="margin-left: 0px; font-size:10px">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <div><i class="fa fa-plus-circle" style="font-size:14px; margin-top: 0px;"></i>
+                                                <i class="fa fa" style="font-size:14px;">{{a.designation}}</i> </div>
+                                            <div id="remise" class="text-end mb-0 ms-auto">{{ a.quantite }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %} 
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style="display: flex; align-items: center;">
+                                                                    <div style="font-size: 12px;" class="text-cyan">ALTO
+                                                                        {{qtalto}}
+                                                                        <a href="{ url 'list_recet' %}" style="left:0px;"><i class="fa fa-arrow-circle-right text-danger" style=" font-size:15px;position:absolute; top:13px; right: -4px"></i></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style="display: flex; align-items: center;">
+                                                                    <div style="font-size: 12px;" class="text-cyan">DZIRE 
+                                                                        {{qtdzir}} 
+                                                                    </div>
+                                                                    <a href="{ url 'list_recet' %}" style="left:0px;"><i class="fa fa-arrow-circle-right text-danger" style=" font-size:15px;position:absolute; top:13px; right: -4px"></i></a>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style="display: flex; align-items: center;">
+                                                                    <div style="font-size: 12px;" class="text-cyan">SWIFT 
+                                                                        {{qtspre}} 
+                                                                        <a href="{ url 'list_recet' %}" style="left:0px;"><i class="fa fa-arrow-circle-right text-danger" style=" font-size:15px;position:absolute; top:13px; right: -4px"></i></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style="display: flex; align-items: center;">
+                                                                    <div style="font-size: 12px;" class="text-cyan">TOTAL
+                                                                        {{qtepiece}}
+                                                                        <a href="{ url 'list_recet' %}" style="left:0px;"><i class="fa fa-arrow-circle-right text-danger" style=" font-size:15px;position:absolute; top:13px; right: -4px"></i></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style="display: flex; align-items: center;">
+                                                                    <div style="font-size: 12px;" class="text-cyan">COUT
+                                                                        {{libelle_mois_en_cours}}: {{inventaire}} - {{vente_month}}
+                                                                        <a href="{ url 'list_recet' %}" style="left:0px;"><i class="fa fa-arrow-circle-right text-danger" style=" font-size:15px;position:absolute; top:13px; right: -4px"></i></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card" style="color: #0176bf; border-radius: 20px; border-color: #00217b; font-weight: 700;">
+                                <div class="card-body table-responsive p-0" style="border-radius:8px; border:none">
+                                    <table class="table table text-nowrap">
+                                        <tr>
+                                            <div class="col-md-2">
+                                                <div class="row bg-danger">
+                                                    <div class="col-md-12">
+                                                        <td style="border: none;">
+                                                            <div style=" align-items: center;">
+                                                                    <div style="font-size: 12px;color: #06497C">
+                                                                        {% block plus %}<a href="#" data-toggle="modal" data-target="#modal-sm0">
+                                                                            <i class="fa fa-plus-circle mr-0 text-cyan" id="" style="font-size: 22px; position: absolute; margin-left: -15px; top:10px"></i>
+                                                                        </a> 
+                                                                        {% endblock plus %}
+                                                                        {% block calendar %}
+                                                                            
+                                                                        {% endblock calendar %}
+                                                                        <a href="#" class="text-cyan" data-widget="control-sidebar" data-slide="true">
+                                                                            <i class="fa fa-user-circle" style="font-size: 18px; margin-left: 80px; "></i>
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row p-2">
+                        <div class="col-md-12" style="backdrop-filter: blur(8px);--webkit-backdrop-filter: blur(8px);height: 100%; background-color:rgba(255, 255, 255, 0.847);top:-10px">
+                            <div class="card-body table-responsive p-1" style="font-size:12px; backdrop-filter: blur(8px); --webkit-backdrop-filter: blur(8px); height: 89%; background-color:rgba(255, 255, 255, 0)">
+                                <table id="example1" class="table table-head-fixed text-nowrap" style="backdrop-filter: blur(8px);--webkit-backdrop-filter: blur(8px);">
+                                    <thead>
+                                        <tr class="text-danger">
+                                            <th>N°PIECE</th>
+                                            <th>LIBELLE</th>
+                                            <th>VEHICULE</th>
+                                            <th>QUANTITE</th>
+                                            <th>ALERTE</th>
+                                            <th>INDICATEUR</th>
+                                            <th>PRIX ACHAT</th>
+                                            <th>PRIX UNITAIRE</th>
+                                            <th>FOURNISSEUR</th>
+                                            <th>ACTION</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for p in listpiece %}
+                                        <tr class="text-secondary">
+                                            <td><a href="{% url "info_piece" p.id %}">{{p.numero_piece}}</a></td>
+                                            <td>{{p.designation}}</td>
+                                            <td>{{p.type_voiture.type_voiture}}</td>
+                                            <td><a href="" class="{% if p.quantite > p.seuil %}text-success{% elif p.quantite == p.seuil %}text-warning{% elif p.quantite <= p.seuil and p.quantite >= 0 %}text-danger{% endif %}">{{p.quantite}}</a></td>
+                                            <td>{{p.seuil}}</td>
+                                            <td>
+                                                {% if p.quantite > p.seuil %}
+                                                    <a href="" class="text-success">bon</a>
+                                                {% elif p.quantite == p.seuil %}
+                                                    <a class="text-warning">virgilance</a>
+                                                {% elif p.quantite <= p.seuil and p.quantite > 0 %}
+                                                    <a class="text-danger">attention</a>
+                                                {% elif p.quantite == 0 %}
+                                                    <a class="text-danger">RUPTURE</a>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{p.prix_achat}}</td>
+                                            <td>{{p.prix_unitaire}}</td>
+                                            <td>{{p.fournisseur}}</td>
+                                            <td>
+                                                <a href="{% url 'update_piece' p.pk %}" class="text-warning"><i class="fa fa-eye mr-1" style="font-size: 14px"></i></a>
+                                                <a href="{% url 'piece_delete' p.pk %}" class="text-danger" onclick="return confirm('Etes-vous sûre de vouloir supprimer la recette du véhicule {{p.designation}} - {{p.prix_unitaire}} - {{p.date_creation}}? car si vous supprimer toutes les informations liées seront supprimées')"><i class="fa fa-trash"  style="font-size: 14px"></i></a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}

@@ -1,0 +1,32 @@
+{% extends "mag/base_mag_ecom.html" %}
+<title>{% block title %} Auto-Piece - Gestion des Catégories {% endblock title %}</title>
+
+{% block header %}
+<div class="block-header">
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <h2>{% block page_title %}<i class="fa fa-tags text-info"></i> Gestion des Catégories{% endblock page_title %}</h2>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'list_permissions' %}">Permissions</a></li>
+                <li class="breadcrumb-item active">{% block page %}Catégories{% endblock page %}</li>
+            </ul>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="d-flex flex-row-reverse">
+                <div class="page_action">
+                    {% block page_action %}
+                        <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addCategoryModal" onclick="openCategoryModal()">
+                            <i class="icon-plus"></i> Nouvelle Catégorie
+                        </button>
+                    {% endblock page_action %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock header %}
+
+{% block main_content %}
+    {% include 'page/list_categories.html' %}
+{% endblock main_content %}

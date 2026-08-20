@@ -1,0 +1,79 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE{% endblock title %}
+{% block page_title %}HISTORIQUE DES PIECES{% endblock page_title %}
+{% block page %}Historique pièces{% endblock page %}
+
+{% block main_content %}
+    {% include "mag/partials/_periode_filter_modal.html" %}
+<div class="col-md-12 p-2 mt-4">
+    <div class="card">
+        <div class="header text-info">
+            <h2 class="text-info">{{historique_pieces|length}} Historique{% if historique_pieces|length > 1 %}s{% endif %} 
+            </h2>
+        </div>
+        <div class="body">
+            <div class="mag-table-shell" x-data="magTableFilter()">
+                {% include "mag/partials/_alpine_table_toolbar.html" %}
+                <div class="table-responsive">
+                    <table class="table table-hover mag-data-table">
+                    <thead>
+                        <tr class='text'>
+                            <th>N°#</th>
+                            <th>Numéro</th>
+                            <th>Désignation</th>
+                            <th>Prix Achat</th>
+                            <th>Prix Unitaire</th>
+                            <th>Quantité</th>
+                            <th>Seuil</th>
+                            <th>Emplacement</th>
+                            <th>Utilisateur</th>
+                            <th>Action</th>
+                            <th>Date Historique</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr class='text'>
+                            <th>N°#</th>
+                            <th>Numéro</th>
+                            <th>Désignation</th>
+                            <th>Prix Achat</th>
+                            <th>Prix Unitaire</th>
+                            <th>Quantité</th>
+                            <th>Seuil</th>
+                            <th>Emplacement</th>
+                            <th>Utilisateur</th>
+                            <th>Action</th>
+                            <th>Date Historique</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        {% for piece in historique_pieces %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ piece.numero_piece }}</td>
+                                <td>{{ piece.designation }}</td>
+                                <td>{{ piece.prix_achat }}</td>
+                                <td>{{ piece.prix_unitaire }}</td>
+                                <td>{{ piece.quantite_disponible }}</td>
+                                <td>{{ piece.seuil }}</td>
+                                <td>{{ piece.emplacement }}</td>
+                                <td>{{ piece.utilisateur }}</td>
+                                <td>{{ piece.get_history_type_display }}</td>
+                                <td>{{ piece.history_date }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

@@ -1,0 +1,31 @@
+/* MES VENTES — bordures calendrier (.calendar-section)
+   Décommenter les blocs ci-dessous pour activer les bordures grises. */
+
+/*
+.calendar-section {
+    border-left: 2px solid #adb5bd !important;
+    border-right: 2px solid #adb5bd !important;
+}
+
+th.calendar-section:first-of-type,
+td.calendar-section:first-of-type {
+    border-left: 2px solid #adb5bd !important;
+}
+
+th.calendar-section:last-of-type,
+td.calendar-section:last-of-type {
+    border-right: 2px solid #adb5bd !important;
+}
+
+thead tr:first-child th.calendar-section {
+    border-top: 2px solid #adb5bd !important;
+}
+
+tfoot tr td.calendar-section {
+    border-bottom: 2px solid #adb5bd !important;
+}
+
+tbody tr:first-child td.calendar-section {
+    border-top: 2px solid #adb5bd !important;
+}
+*/

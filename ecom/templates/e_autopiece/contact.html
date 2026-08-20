@@ -1,0 +1,344 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Contact" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+{% block content %}
+<div class="rts-navigation-area-breadcrumb bg_light-1">
+    <div class="container">
+        <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span class="current">{% trans "Contact" %}</span>
+        </div>
+    </div>
+</div>
+<section class="ecom-contact-info rts-section-gap">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="ecom-contact-card">
+                    <div class="ecom-contact-card-icon"><i class="fa-solid fa-phone"></i></div>
+                    <h3 class="ecom-contact-card-title">{% trans "Téléphone" %}</h3>
+                    <p class="ecom-contact-card-text">{% trans "Du lundi au samedi, 8h–18h" %}</p>
+                    <a href="tel:+2250700000000" class="ecom-contact-card-link">+225 07 00 00 00 00</a>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="ecom-contact-card">
+                    <div class="ecom-contact-card-icon"><i class="fa-solid fa-envelope"></i></div>
+                    <h3 class="ecom-contact-card-title">{% trans "E-mail" %}</h3>
+                    <p class="ecom-contact-card-text">{% trans "Réponse sous 24 h ouvrées" %}</p>
+                    <a href="mailto:contact@autopiece.ci" class="ecom-contact-card-link">contact@autopiece.ci</a>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-12">
+                <div class="ecom-contact-card">
+                    <div class="ecom-contact-card-icon"><i class="fa-solid fa-location-dot"></i></div>
+                    <h3 class="ecom-contact-card-title">{% trans "Siège" %}</h3>
+                    <p class="ecom-contact-card-text">{% trans "Abidjan, Côte d'Ivoire" %}</p>
+                    <span class="ecom-contact-card-link">{% trans "Plusieurs points de retrait" %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="ecom-contact-main rts-section-gapBottom">
+    <div class="container">
+        <div class="row g-4 align-items-stretch ecom-contact-map-form-row">
+            <div class="col-lg-6">
+                <div class="ecom-map-column ecom-contact-map-panel card border-0 shadow-sm h-100">
+                    <h2 class="title-left mb-2">{% trans "Map Localité" %}</h2>
+                    <p class="mb-3">
+                        {% trans "Commande depuis" %} :
+                        <strong id="ecom-local-label">{% if local_selectionne %}{{ local_selectionne.nom }}{% else %}{% trans "aucune localité" %}{% endif %}</strong>
+                    </p>
+                    <div class="ecom-contact-map-body">
+                        {% include 'e_autopiece/partials/_localite_map.html' %}
+                    </div>
+                    <p class="small text-muted mt-3 mb-0">{% trans "Cliquez sur un marqueur pour sélectionner une localité." %}</p>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="ecom-contact-form-card ecom-contact-form-modern h-100">
+                    <h2 class="ecom-contact-form-title">{% trans "Envoyez-nous un message" %}</h2>
+                    <p class="ecom-contact-form-text">
+                        {% trans "Remplissez le formulaire : nous vous recontacterons dès que possible." %}
+                    </p>
+
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} mb-3">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <form method="post" action="{% url 'ecom_contact' %}" class="ecom-contact-form" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="ecom-contact-label" for="contact-name">{% trans "Nom complet" %}</label>
+                                <input id="contact-name" name="name" type="text" class="ecom-contact-input"
+                                    value="{{ form_data.name|default:'' }}"
+                                    placeholder="{% trans 'Entrez votre nom complet…' %}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="ecom-contact-label" for="contact-email">{% trans "Adresse e-mail" %}</label>
+                                <input id="contact-email" name="email" type="email" class="ecom-contact-input"
+                                    value="{{ form_data.email|default:'' }}"
+                                    placeholder="{% trans 'Entrez votre adresse e-mail…' %}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="ecom-contact-label" for="contact-phone">{% trans "Numéro de téléphone" %}</label>
+                                <input id="contact-phone" name="phone" type="tel" class="ecom-contact-input"
+                                    value="{{ form_data.phone|default:'' }}"
+                                    placeholder="{% trans 'Entrez votre numéro…' %}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="ecom-contact-label" for="contact-subject">{% trans "Sujet" %}</label>
+                                <select id="contact-subject" name="subject" class="ecom-contact-input ecom-contact-select ecom-no-nice-select" required>
+                                    <option value="">{% trans "Choisissez un sujet" %}</option>
+                                    <option value="commande" {% if form_data.subject == 'commande' %}selected{% endif %}>{% trans "Suivi de commande" %}</option>
+                                    <option value="piece" {% if form_data.subject == 'piece' %}selected{% endif %}>{% trans "Disponibilité d'une pièce" %}</option>
+                                    <option value="livraison" {% if form_data.subject == 'livraison' %}selected{% endif %}>{% trans "Livraison / retrait" %}</option>
+                                    <option value="autre" {% if form_data.subject == 'autre' %}selected{% endif %}>{% trans "Autre demande" %}</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="ecom-contact-label">{% trans "Choisissez nos services" %}</label>
+                                <div class="ecom-contact-services">
+                                    <label class="ecom-contact-service">
+                                        <input type="checkbox" name="services" value="pieces"
+                                            {% if 'pieces' in form_data.services %}checked{% endif %}>
+                                        <span class="ecom-contact-check"></span>
+                                        <span>{% trans "Pièces auto" %}</span>
+                                    </label>
+                                    <label class="ecom-contact-service">
+                                        <input type="checkbox" name="services" value="commande"
+                                            {% if 'commande' in form_data.services %}checked{% endif %}>
+                                        <span class="ecom-contact-check"></span>
+                                        <span>{% trans "Suivi commande" %}</span>
+                                    </label>
+                                    <label class="ecom-contact-service">
+                                        <input type="checkbox" name="services" value="livraison"
+                                            {% if 'livraison' in form_data.services %}checked{% endif %}>
+                                        <span class="ecom-contact-check"></span>
+                                        <span>{% trans "Livraison" %}</span>
+                                    </label>
+                                    <label class="ecom-contact-service">
+                                        <input type="checkbox" name="services" value="retrait"
+                                            {% if 'retrait' in form_data.services %}checked{% endif %}>
+                                        <span class="ecom-contact-check"></span>
+                                        <span>{% trans "Retrait localité" %}</span>
+                                    </label>
+                                    <label class="ecom-contact-service">
+                                        <input type="checkbox" name="services" value="devis"
+                                            {% if 'devis' in form_data.services %}checked{% endif %}>
+                                        <span class="ecom-contact-check"></span>
+                                        <span>{% trans "Devis" %}</span>
+                                    </label>
+                                    <label class="ecom-contact-service">
+                                        <input type="checkbox" name="services" value="sav"
+                                            {% if 'sav' in form_data.services %}checked{% endif %}>
+                                        <span class="ecom-contact-check"></span>
+                                        <span>{% trans "SAV" %}</span>
+                                    </label>
+                                    <label class="ecom-contact-service">
+                                        <input type="checkbox" name="services" value="autre"
+                                            {% if 'autre' in form_data.services %}checked{% endif %}>
+                                        <span class="ecom-contact-check"></span>
+                                        <span>{% trans "Autre" %}</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="ecom-contact-label" for="contact-message">{% trans "Message" %}</label>
+                                <div class="ecom-contact-message-wrap">
+                                    <textarea id="contact-message" name="message" class="ecom-contact-input ecom-contact-textarea"
+                                        rows="4" maxlength="300"
+                                        placeholder="{% trans 'Saisissez votre message ici…' %}" required>{{ form_data.message|default:'' }}</textarea>
+                                    <span class="ecom-contact-counter" id="contact-message-counter">0/300</span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="ecom-contact-submit-pill">
+                                    {% trans "Envoyer le formulaire" %}
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="rts-shorts-service-area rts-section-gap bg_primary">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                <div class="single-short-service-area-start">
+                    <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-tags"></i></span>
+                    </div>
+                    <div class="information">
+                        <h4 class="title">{% trans "Prix compétitifs" %}</h4>
+                        <p class="disc">{% trans "Des pièces auto au juste prix, par localité." %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                <div class="single-short-service-area-start">
+                    <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-rotate-left"></i></span>
+                    </div>
+                    <div class="information">
+                        <h4 class="title">{% trans "Assistance commande" %}</h4>
+                        <p class="disc">{% trans "Aide pour vos commandes en ligne et retraits." %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                <div class="single-short-service-area-start">
+                    <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-headset"></i></span>
+                    </div>
+                    <div class="information">
+                        <h4 class="title">{% trans "Support réactif" %}</h4>
+                        <p class="disc">{% trans "Une équipe disponible pour vos questions." %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                <div class="single-short-service-area-start">
+                    <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                    </div>
+                    <div class="information">
+                        <h4 class="title">{% trans "Livraison locale" %}</h4>
+                        <p class="disc">{% trans "Retrait ou livraison selon votre localité." %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+{% block extra_js %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    /* Empêche nice-select de casser le select du formulaire contact */
+    if (window.jQuery && jQuery.fn.niceSelect) {
+        jQuery('.ecom-contact-form select.ecom-no-nice-select').each(function () {
+            var $el = jQuery(this);
+            if ($el.next().hasClass('nice-select')) {
+                $el.niceSelect('destroy');
+            }
+        });
+    }
+
+    var mapEl = document.getElementById('ecom-map');
+    var form = document.getElementById('ecom-local-form');
+    var localInput = document.getElementById('ecom-local-id');
+    var localLabel = document.getElementById('ecom-local-label');
+    var locs = {{ localites_json|safe }};
+    var markers = {};
+
+    function saveLocalite(code, nom) {
+        if (!form || !code) return;
+        if (localInput) localInput.value = code;
+        var fd = new FormData(form);
+        fd.set('local_id', code);
+        fetch(form.action, {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success && localLabel) {
+                localLabel.textContent = data.local || nom;
+            }
+        })
+        .catch(function () {});
+    }
+
+    if (mapEl && typeof L !== 'undefined') {
+        var map = L.map('ecom-map', { scrollWheelZoom: false }).setView([5.3453, -4.0244], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        var bounds = [];
+        locs.forEach(function (loc) {
+            if (loc.lat == null || loc.lng == null) return;
+            var m = L.marker([loc.lat, loc.lng]).addTo(map);
+            m.bindPopup('<strong>' + loc.nom + '</strong><br><small>{% trans "Cliquer pour sélectionner" %}</small>');
+            m.on('click', function () {
+                Object.keys(markers).forEach(function (c) {
+                    if (markers[c]) markers[c].setOpacity(c === loc.code ? 1 : 0.45);
+                });
+                saveLocalite(loc.code, loc.nom);
+            });
+            markers[loc.code] = m;
+            bounds.push([loc.lat, loc.lng]);
+        });
+
+        if (bounds.length) {
+            map.fitBounds(bounds, { padding: [30, 30] });
+        } else {
+            mapEl.innerHTML = '<p class="p-4 text-muted mb-0">{% trans "Aucune coordonnée GPS configurée pour les localités." %}</p>';
+        }
+        function syncMapToFormHeight() {
+            var formCard = document.querySelector('.ecom-contact-form-modern');
+            var mapPanel = document.querySelector('.ecom-contact-map-panel');
+            var mapBody = document.querySelector('.ecom-contact-map-body');
+            if (!formCard || !mapPanel || !mapBody || !mapEl) return;
+            var formH = formCard.offsetHeight;
+            if (formH < 320) return;
+            mapPanel.style.minHeight = formH + 'px';
+            var chrome = mapPanel.offsetHeight - mapBody.offsetHeight;
+            var mapH = Math.max(280, formH - chrome);
+            mapEl.style.height = mapH + 'px';
+            mapEl.style.minHeight = mapH + 'px';
+            map.invalidateSize();
+            if (bounds.length) {
+                map.fitBounds(bounds, { padding: [24, 24] });
+            }
+        }
+        setTimeout(syncMapToFormHeight, 150);
+        setTimeout(syncMapToFormHeight, 400);
+        window.addEventListener('resize', syncMapToFormHeight);
+
+        {% if local_selectionne %}
+        if (markers['{{ local_selectionne.code }}']) {
+            markers['{{ local_selectionne.code }}'].openPopup();
+        }
+        {% endif %}
+    }
+
+    var msg = document.getElementById('contact-message');
+    var counter = document.getElementById('contact-message-counter');
+    function updateCounter() {
+        if (!msg || !counter) return;
+        var max = parseInt(msg.getAttribute('maxlength') || '300', 10);
+        var len = (msg.value || '').length;
+        counter.textContent = len + '/' + max;
+    }
+    if (msg) {
+        updateCounter();
+        msg.addEventListener('input', updateCounter);
+    }
+});
+</script>
+{% endblock extra_js %}

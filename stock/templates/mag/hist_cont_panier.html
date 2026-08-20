@@ -1,0 +1,101 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+<title>{% block title %} Auto-Piece - Historique des paniers {% endblock title %}</title>
+{% block page_title %}Historique des paniers{% endblock page_title %}
+{% block page %}Historique paniers{% endblock page %}
+
+{% block page_action_buttons %}
+<button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addinf">{{ annee }} Filtre <i class="icon-calendar"></i></button>
+<a href="" class="btn btn-outline-secondary" title="Réinitialiser"><i class="icon-refresh"></i></a>
+{% endblock page_action_buttons %}
+
+{% block main_content %}
+    <div class="modal fade" id="addinf" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="title" id="defaultModalLabel">Filtrage Périodique</h6>
+                </div>
+                <div class="modal-body">
+                    <form id="basic-form" method="get" novalidate>
+                        <div class="row clearfix">
+                            <div class="col-md-12 form-group"><input type="text" value="Filtre" class="form-control text-center" disabled></div>
+                            <div class="col-12">
+                                <label>FILTRE </label>
+                                <div class="form-group">                                    
+                                    <select name="annee" id="annee" onchange="this.form.submit()" class="form-control w-100">
+                                        {% for year in last_10_years %}
+                                            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% comment %} <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-outline-success" >Enrégistrer</button>
+                    </div> {% endcomment %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+
+<div class="col-md-12 p-2 mt-4">
+    <div class="card">
+        <div class="header text-info">
+            <h2 class="text-info">{{historique_commandes|length}} Historique{% if historique_commandes|length > 1 %}s{% endif %} 
+            </h2>
+        </div>
+        <div class="body">
+            <div class="mag-table-shell" x-data="magTableFilter()">
+                {% include "mag/partials/_alpine_table_toolbar.html" %}
+                <div class="table-responsive">
+                    <table class="table table-hover mag-data-table">
+                    <thead>
+                        <tr class='text'>
+                            <th>N°#</th>
+                            <th>Panier ID</th>
+                            <th>Pièce</th>
+                            <th>Quantité</th>
+                            <th>Date Création</th>
+                            <th>Action</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr class='text'>
+                            <th>N°#</th>
+                            <th>Panier ID</th>
+                            <th>Pièce</th>
+                            <th>Quantité</th>
+                            <th>Date Création</th>
+                            <th>Action</th>
+                            <th>Action</th>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        {% for item in historique_items %}
+                            <tr>
+                                <td>{{forloop.counter}}</td>
+                                <td>{{forloop.counter}}</td>
+                                <td>{{ item.panier.id }}</td>
+                                <td>{{ item.piece.designation }}</td>
+                                <td>{{ item.quantite }}</td>
+                                <td>{{ item.date_creation }}</td>
+                                <td>{{ item.get_history_type_display }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+{% endblock main_content %}

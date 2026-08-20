@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Fiche client — {{ object.username }}</title>
+    <style>
+        @page { size: A4; margin: 1.5cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #1f2937; }
+        h1 { font-size: 18px; color: #9a3412; margin: 0 0 4px; }
+        h2 {
+            font-size: 12px; color: #9a3412; text-transform: uppercase;
+            border-bottom: 1.5px solid #fed7aa; padding-bottom: 4px; margin: 16px 0 8px;
+        }
+        .meta { color: #64748b; font-size: 10px; margin-bottom: 12px; }
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        .header-table td { vertical-align: top; }
+        .badge {
+            display: inline-block; padding: 2px 6px; border-radius: 3px;
+            font-size: 9px; font-weight: bold; margin-right: 4px;
+        }
+        .badge-ok { background: #dcfce7; color: #166534; }
+        .badge-off { background: #fee2e2; color: #991b1b; }
+        .badge-muted { background: #f1f5f9; color: #475569; }
+        table.data { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        table.data th, table.data td {
+            border: 1px solid #e2e8f0; padding: 5px 6px; text-align: left;
+        }
+        table.data th { background: #fff7ed; color: #9a3412; font-size: 9px; text-transform: uppercase; }
+        table.data td.right { text-align: right; }
+        table.stats { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        table.stats td {
+            width: 25%; border: 1px solid #e2e8f0; padding: 8px 6px; text-align: center;
+            background: #fff;
+        }
+        table.stats .val { display: block; font-size: 14px; font-weight: bold; color: #ea580c; }
+        table.stats .lbl { display: block; font-size: 8px; color: #64748b; margin-top: 2px; }
+        .info-label { color: #94a3b8; font-size: 8px; text-transform: uppercase; }
+        .info-value { font-weight: bold; font-size: 11px; }
+        .empty { color: #94a3b8; font-style: italic; }
+        .footer { margin-top: 18px; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 6px; }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td>
+                <h1>Fiche client — Auto-Pièce</h1>
+                <div class="meta">Générée le {{ generated_at|date:"d/m/Y à H:i" }}</div>
+            </td>
+            <td style="text-align: right;">
+                {% if object.is_active %}
+                <span class="badge badge-ok">Actif</span>
+                {% else %}
+                <span class="badge badge-off">Inactif</span>
+                {% endif %}
+                <span class="badge badge-muted">{{ object.get_role_display }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <h2>Identité</h2>
+    <table class="data">
+        <tr>
+            <td width="25%"><span class="info-label">Nom complet</span><br>
+                <span class="info-value">{{ object.get_full_name|default:object.username }}</span></td>
+            <td width="25%"><span class="info-label">Nom utilisateur</span><br>
+                <span class="info-value">{{ object.username }}</span></td>
+            <td width="25%"><span class="info-label">Email</span><br>
+                <span class="info-value">{{ object.email }}</span></td>
+            <td width="25%"><span class="info-label">Téléphone</span><br>
+                <span class="info-value">{{ object.contact|default:"—" }}</span></td>
+        </tr>
+        <tr>
+            <td><span class="info-label">Genre</span><br>
+                <span class="info-value">{{ object.genre|default:"—" }}</span></td>
+            <td><span class="info-label">Adresse</span><br>
+                <span class="info-value">{% if profil %}{{ profil.adresse|default:"—" }}{% else %}—{% endif %}</span></td>
+            <td><span class="info-label">Ville</span><br>
+                <span class="info-value">{% if profil %}{{ profil.ville|default:"—" }}{% else %}—{% endif %}</span></td>
+            <td><span class="info-label">Pays</span><br>
+                <span class="info-value">{% if profil %}{{ profil.pays|default:"—" }}{% else %}—{% endif %}</span></td>
+        </tr>
+    </table>
+
+    <h2>Statistiques commandes</h2>
+    <table class="stats">
+        <tr>
+            <td><span class="val">{{ stats.nb_commandes }}</span><span class="lbl">Commandes</span></td>
+            <td><span class="val">{{ stats.nb_payees }}</span><span class="lbl">Payées</span></td>
+            <td><span class="val">{{ stats.montant_paye|floatformat:0 }}</span><span class="lbl">Total payé (FCFA)</span></td>
+            <td><span class="val">{{ stats.nb_livrees }}</span><span class="lbl">Livrées</span></td>
+        </tr>
+        <tr>
+            <td><span class="val">{{ stats.nb_en_attente }}</span><span class="lbl">En attente</span></td>
+            <td><span class="val">{{ stats.nb_validees }}</span><span class="lbl">Validées</span></td>
+            <td><span class="val">{{ stats.nb_annulees }}</span><span class="lbl">Annulées</span></td>
+            <td><span class="val">{{ nb_favoris }}</span><span class="lbl">Favoris</span></td>
+        </tr>
+    </table>
+
+    <h2>Dernières commandes</h2>
+    {% if commandes_recentes %}
+    <table class="data">
+        <thead>
+            <tr>
+                <th>N°</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th>Paiement</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cmd in commandes_recentes %}
+            <tr>
+                <td>{{ cmd.numero_commande }}</td>
+                <td>{{ cmd.date|date:"d/m/Y H:i"|default:cmd.date_creation }}</td>
+                <td>{{ cmd.get_statut_commande_display }}</td>
+                <td>{% if cmd.paye %}Payée{% else %}Impayée{% endif %}</td>
+                <td class="right">{{ cmd.total|floatformat:0 }} FCFA</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">Aucune commande en ligne.</p>
+    {% endif %}
+
+    <h2>Favoris ({{ nb_favoris }})</h2>
+    {% if favoris %}
+    <table class="data">
+        <thead>
+            <tr>
+                <th>Référence</th>
+                <th>Désignation</th>
+                <th>Catégorie</th>
+                <th>Ajouté le</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fav in favoris %}
+            <tr>
+                <td>{{ fav.piece.numero_piece }}</td>
+                <td>{{ fav.piece.designation }}</td>
+                <td>{{ fav.piece.categorie }}</td>
+                <td>{{ fav.date_ajout|date:"d/m/Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">Aucun favori enregistré.</p>
+    {% endif %}
+
+    <div class="footer">
+        Auto-Pièce — Fiche client confidentielle · {{ object.email }}
+    </div>
+</body>
+</html>

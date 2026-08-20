@@ -1,0 +1,26 @@
+{% load static i18n %}
+{% if vues_recentes_rows %}
+<div class="top-tranding-product rts-section-gap ecom-vues-recentes">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="title-area-between flex-wrap gap-3 align-items-center">
+                    <h2 class="title-left mb--10 mb-0">
+                        {% trans "Vus récemment" %}
+                    </h2>
+                    {% if show_voir_plus|default:True %}
+                    <a href="{% url 'ecom_vues_recentes' %}" class="rts-btn btn-primary radious-sm">
+                        {% trans "Voir plus" %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="row g-4 ecom-localite-pieces-row ecom-vues-recentes-row">
+            {% for row in vues_recentes_rows %}
+            {% include 'e_autopiece/partials/_piece_card_vendor.html' with piece=row.piece prix_affiche=row.prix_affiche quantite=row.quantite localite_code=row.localite_code localite_nom=row.localite_nom next_url=request.path col_class='col-xl-3 col-lg-4 col-md-6 col-12' %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

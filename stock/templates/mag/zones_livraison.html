@@ -1,0 +1,446 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+
+{% block title %}AUTO-PIECE — Zones de livraison{% endblock title %}
+{% block page_title %}Zones de livraison{% endblock page_title %}
+{% block page %}Zones de livraison{% endblock page %}
+
+{% block extra_head %}
+<style>
+[x-cloak] { display: none !important; }
+</style>
+{% endblock extra_head %}
+
+{% block main_content %}
+{% include "mag/partials/_periode_filter_modal.html" %}
+
+<div class="col-12 p-2 mt-4 zones-page"
+     x-data="{ tab: '{{ request.GET.tab|default:'pays' }}' }"
+     x-init="
+        if (!['pays','ville','commune'].includes(tab)) tab = 'pays';
+        $watch('tab', value => {
+            const u = new URL(window.location.href);
+            u.searchParams.set('tab', value);
+            history.replaceState({}, '', u);
+            document.querySelectorAll('#{{ filter_modal_id }} input[name=tab]').forEach(el => { el.value = value; });
+        });
+     ">
+    <div class="row zones-layout">
+        <aside class="col-lg-3 mb-3 mb-lg-0 zones-overview" aria-label="Aperçu des zones">
+            <p class="zones-stat-hint mb-2">
+                Période : <strong>{{ filtre_resume }}</strong>
+                {% if cmd_periode_total is not None %}
+                · {{ cmd_periode_total }} commande{{ cmd_periode_total|pluralize }} en ligne
+                {% endif %}
+            </p>
+            <div class="zones-stat-row" role="tablist">
+                <button type="button" class="zones-stat" role="tab"
+                        :class="{ 'is-active': tab === 'pays' }"
+                        :aria-selected="tab === 'pays'"
+                        @click="tab = 'pays'">
+                    <span class="zones-stat-icon" aria-hidden="true"><i class="fa fa-globe"></i></span>
+                    <span class="zones-stat-meta">
+                        <span class="zones-stat-label">Pays</span>
+                        <strong class="zones-stat-value">{{ pays_list|length }}</strong>
+                    </span>
+                </button>
+
+                <span class="zones-stat-connector" aria-hidden="true"><i class="fa fa-long-arrow-down"></i></span>
+
+                <button type="button" class="zones-stat" role="tab"
+                        :class="{ 'is-active': tab === 'ville' }"
+                        :aria-selected="tab === 'ville'"
+                        @click="tab = 'ville'">
+                    <span class="zones-stat-icon" aria-hidden="true"><i class="fa fa-map-marker"></i></span>
+                    <span class="zones-stat-meta">
+                        <span class="zones-stat-label">Villes <em>· frais</em></span>
+                        <strong class="zones-stat-value">{{ villes_list|length }}</strong>
+                    </span>
+                </button>
+
+                <span class="zones-stat-connector" aria-hidden="true"><i class="fa fa-long-arrow-down"></i></span>
+
+                <button type="button" class="zones-stat" role="tab"
+                        :class="{ 'is-active': tab === 'commune' }"
+                        :aria-selected="tab === 'commune'"
+                        @click="tab = 'commune'">
+                    <span class="zones-stat-icon" aria-hidden="true"><i class="fa fa-building"></i></span>
+                    <span class="zones-stat-meta">
+                        <span class="zones-stat-label">Communes</span>
+                        <strong class="zones-stat-value">{{ communes_list|length }}</strong>
+                    </span>
+                </button>
+            </div>
+            <p class="zones-stat-hint mb-0">
+                Les frais de livraison sont définis au niveau de la
+                <button type="button" class="zones-stat-hint-link" @click="tab = 'ville'">ville</button>.
+                Colonne « Cmd » = commandes en ligne sur la période filtrée.
+            </p>
+        </aside>
+        <div class="col-lg-9">
+            <div class="card zones-card">
+                <div class="header zones-card-header">
+                    <nav class="zones-tabs" role="tablist" aria-label="Niveaux de zone">
+                        <button type="button" class="zones-tab" role="tab"
+                                :class="{ 'is-active': tab === 'pays' }"
+                                :aria-selected="tab === 'pays'"
+                                @click="tab = 'pays'">
+                            <i class="fa fa-globe" aria-hidden="true"></i>
+                            Pays
+                            <span class="zones-tab-count">{{ pays_list|length }}</span>
+                        </button>
+                        <button type="button" class="zones-tab" role="tab"
+                                :class="{ 'is-active': tab === 'ville' }"
+                                :aria-selected="tab === 'ville'"
+                                @click="tab = 'ville'">
+                            <i class="fa fa-map-marker" aria-hidden="true"></i>
+                            Villes
+                            <span class="zones-tab-count">{{ villes_list|length }}</span>
+                        </button>
+                        <button type="button" class="zones-tab" role="tab"
+                                :class="{ 'is-active': tab === 'commune' }"
+                                :aria-selected="tab === 'commune'"
+                                @click="tab = 'commune'">
+                            <i class="fa fa-building" aria-hidden="true"></i>
+                            Communes
+                            <span class="zones-tab-count">{{ communes_list|length }}</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="body">
+            {# ── Pays ── #}
+            <div x-show="tab === 'pays'" x-cloak role="tabpanel">
+                <form method="post" action="{% url 'zones_livraison_save' %}" class="zones-add-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="kind" value="pays">
+                    <div class="zones-add-title">Ajouter un pays</div>
+                    <div class="zones-add-grid zones-add-grid--pays">
+                        <div class="form-group mb-0">
+                            <label for="pays-nom">Nom</label>
+                            <input id="pays-nom" type="text" name="nom" class="form-control" required placeholder="Côte d'Ivoire">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="pays-code">Code</label>
+                            <input id="pays-code" type="text" name="code" class="form-control" required placeholder="CI" maxlength="10">
+                        </div>
+                        <div class="form-group mb-0 zones-add-actions">
+                            <label class="d-none d-md-block">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-plus" aria-hidden="true"></i> Ajouter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher un pays…" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Code</th>
+                                    <th>Commandes</th>
+                                    <th>Statut</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in pays_list %}
+                                <tr x-data="{ editing: false }">
+                                    <td>
+                                        <div x-show="!editing">
+                                            <strong>{{ p.nom }}</strong>
+                                        </div>
+                                        <form method="post" action="{% url 'zones_livraison_save' %}"
+                                              class="zones-edit-form" x-show="editing" x-cloak>
+                                            {% csrf_token %}
+                                            <input type="hidden" name="kind" value="pays">
+                                            <input type="hidden" name="pk" value="{{ p.pk }}">
+                                            <input type="text" name="nom" value="{{ p.nom }}" class="form-control form-control-sm" required>
+                                            <input type="text" name="code" value="{{ p.code }}" class="form-control form-control-sm zones-code-input" required maxlength="10">
+                                            <button type="submit" class="btn btn-sm btn-primary" title="Enregistrer">OK</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @click="editing = false">Annuler</button>
+                                        </form>
+                                    </td>
+                                    <td><code class="zones-code">{{ p.code }}</code></td>
+                                    <td><span class="badge badge-light">{{ p.nb_cmd_periode }}</span></td>
+                                    <td>
+                                        {% if p.actif %}<span class="badge badge-success">Actif</span>
+                                        {% else %}<span class="badge badge-secondary">Inactif</span>{% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="zones-actions">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" x-show="!editing" @click="editing = true" title="Modifier">
+                                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                                            </button>
+                                            <form method="post" action="{% url 'zones_livraison_toggle' %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="kind" value="pays">
+                                                <input type="hidden" name="pk" value="{{ p.pk }}">
+                                                <button type="submit" class="btn btn-sm {% if p.actif %}btn-warning{% else %}btn-success{% endif %}"
+                                                        title="{% if p.actif %}Désactiver{% else %}Activer{% endif %}">
+                                                    {% if p.actif %}Désactiver{% else %}Activer{% endif %}
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'zones_livraison_delete' %}" class="d-inline"
+                                                  onsubmit="return confirm('Supprimer ce pays et ses villes/communes ?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="kind" value="pays">
+                                                <input type="hidden" name="pk" value="{{ p.pk }}">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">
+                                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted py-4">Aucun pays pour le moment.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Villes ── #}
+            <div x-show="tab === 'ville'" x-cloak role="tabpanel">
+                <form method="post" action="{% url 'zones_livraison_save' %}" class="zones-add-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="kind" value="ville">
+                    <div class="zones-add-title">Ajouter une ville</div>
+                    <div class="zones-add-grid zones-add-grid--ville">
+                        <div class="form-group mb-0">
+                            <label for="ville-pays">Pays</label>
+                            <select id="ville-pays" name="pays_id" class="form-control" required>
+                                {% for p in pays_list %}
+                                <option value="{{ p.pk }}">{{ p.nom }}</option>
+                                {% empty %}
+                                <option value="" disabled>Créez d’abord un pays</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="ville-nom">Ville</label>
+                            <input id="ville-nom" type="text" name="nom" class="form-control" required placeholder="Abidjan">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="ville-frais">Frais (FCFA)</label>
+                            <input id="ville-frais" type="number" name="frais_livraison" class="form-control" value="2000" min="0" step="1" required>
+                        </div>
+                        <div class="form-group mb-0 zones-add-actions">
+                            <label class="d-none d-md-block">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary" {% if not pays_list %}disabled{% endif %}>
+                                <i class="fa fa-plus" aria-hidden="true"></i> Ajouter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher une ville…" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                            <thead>
+                                <tr>
+                                    <th>Pays</th>
+                                    <th>Ville</th>
+                                    <th>Frais</th>
+                                    <th>Cmd</th>
+                                    <th>Statut</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for v in villes_list %}
+                                <tr x-data="{ editing: false }">
+                                    <td>
+                                        <span x-show="!editing">{{ v.pays.nom }}</span>
+                                        <span x-show="editing" x-cloak class="text-muted small">—</span>
+                                    </td>
+                                    <td>
+                                        <div x-show="!editing">
+                                            <strong>{{ v.nom }}</strong>
+                                        </div>
+                                        <form method="post" action="{% url 'zones_livraison_save' %}"
+                                              class="zones-edit-form zones-edit-form--ville" x-show="editing" x-cloak>
+                                            {% csrf_token %}
+                                            <input type="hidden" name="kind" value="ville">
+                                            <input type="hidden" name="pk" value="{{ v.pk }}">
+                                            <select name="pays_id" class="form-control form-control-sm">
+                                                {% for p in pays_list %}
+                                                <option value="{{ p.pk }}" {% if p.pk == v.pays_id %}selected{% endif %}>{{ p.nom }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input type="text" name="nom" value="{{ v.nom }}" class="form-control form-control-sm" required>
+                                            <input type="number" name="frais_livraison" value="{{ v.frais_livraison|floatformat:0 }}"
+                                                   class="form-control form-control-sm zones-frais-input" min="0" step="1" required>
+                                            <button type="submit" class="btn btn-sm btn-primary">OK</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @click="editing = false">Annuler</button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <span class="zones-frais" x-show="!editing">{{ v.frais_livraison|floatformat:0 }} FCFA</span>
+                                    </td>
+                                    <td><span class="badge badge-light">{{ v.nb_cmd_periode }}</span></td>
+                                    <td>
+                                        {% if v.actif %}<span class="badge badge-success">Actif</span>
+                                        {% else %}<span class="badge badge-secondary">Inactif</span>{% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="zones-actions">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" x-show="!editing" @click="editing = true" title="Modifier">
+                                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                                            </button>
+                                            <form method="post" action="{% url 'zones_livraison_toggle' %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="kind" value="ville">
+                                                <input type="hidden" name="pk" value="{{ v.pk }}">
+                                                <button type="submit" class="btn btn-sm {% if v.actif %}btn-warning{% else %}btn-success{% endif %}">
+                                                    {% if v.actif %}Désactiver{% else %}Activer{% endif %}
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'zones_livraison_delete' %}" class="d-inline"
+                                                  onsubmit="return confirm('Supprimer cette ville et ses communes ?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="kind" value="ville">
+                                                <input type="hidden" name="pk" value="{{ v.pk }}">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">
+                                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="6" class="text-center text-muted py-4">Aucune ville pour le moment.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Communes ── #}
+            <div x-show="tab === 'commune'" x-cloak role="tabpanel">
+                <form method="post" action="{% url 'zones_livraison_save' %}" class="zones-add-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="kind" value="commune">
+                    <div class="zones-add-title">Ajouter une commune</div>
+                    <div class="zones-add-grid zones-add-grid--commune">
+                        <div class="form-group mb-0">
+                            <label for="commune-ville">Ville</label>
+                            <select id="commune-ville" name="ville_id" class="form-control" required>
+                                {% for v in villes_list %}
+                                <option value="{{ v.pk }}">{{ v.pays.nom }} — {{ v.nom }}</option>
+                                {% empty %}
+                                <option value="" disabled>Créez d’abord une ville</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="commune-nom">Commune</label>
+                            <input id="commune-nom" type="text" name="nom" class="form-control" required placeholder="Cocody">
+                        </div>
+                        <div class="form-group mb-0 zones-add-actions">
+                            <label class="d-none d-md-block">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary" {% if not villes_list %}disabled{% endif %}>
+                                <i class="fa fa-plus" aria-hidden="true"></i> Ajouter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher une commune…" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ville</th>
+                                    <th>Commune</th>
+                                    <th>Cmd</th>
+                                    <th>Statut</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in communes_list %}
+                                <tr x-data="{ editing: false }">
+                                    <td>
+                                        <div class="zones-ville-cell">
+                                            <strong>{{ c.ville.nom }}</strong>
+                                            <small class="text-muted">{{ c.ville.pays.nom }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div x-show="!editing">
+                                            <strong>{{ c.nom }}</strong>
+                                        </div>
+                                        <form method="post" action="{% url 'zones_livraison_save' %}"
+                                              class="zones-edit-form" x-show="editing" x-cloak>
+                                            {% csrf_token %}
+                                            <input type="hidden" name="kind" value="commune">
+                                            <input type="hidden" name="pk" value="{{ c.pk }}">
+                                            <select name="ville_id" class="form-control form-control-sm">
+                                                {% for v in villes_list %}
+                                                <option value="{{ v.pk }}" {% if v.pk == c.ville_id %}selected{% endif %}>
+                                                    {{ v.pays.nom }} — {{ v.nom }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                            <input type="text" name="nom" value="{{ c.nom }}" class="form-control form-control-sm" required>
+                                            <button type="submit" class="btn btn-sm btn-primary">OK</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @click="editing = false">Annuler</button>
+                                        </form>
+                                    </td>
+                                    <td><span class="badge badge-light">{{ c.nb_cmd_periode }}</span></td>
+                                    <td>
+                                        {% if c.actif %}<span class="badge badge-success">Actif</span>
+                                        {% else %}<span class="badge badge-secondary">Inactif</span>{% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="zones-actions">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" x-show="!editing" @click="editing = true" title="Modifier">
+                                                <i class="fa fa-pencil" aria-hidden="true"></i>
+                                            </button>
+                                            <form method="post" action="{% url 'zones_livraison_toggle' %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="kind" value="commune">
+                                                <input type="hidden" name="pk" value="{{ c.pk }}">
+                                                <button type="submit" class="btn btn-sm {% if c.actif %}btn-warning{% else %}btn-success{% endif %}">
+                                                    {% if c.actif %}Désactiver{% else %}Activer{% endif %}
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'zones_livraison_delete' %}" class="d-inline"
+                                                  onsubmit="return confirm('Supprimer cette commune ?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="kind" value="commune">
+                                                <input type="hidden" name="pk" value="{{ c.pk }}">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">
+                                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted py-4">Aucune commune pour le moment.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

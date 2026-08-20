@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ print_title }}</title>
+    <style type="text/css">
+        @page {
+            size: A4;
+            margin: 12mm;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f1ea;
+            color: #2c2c2c;
+            font-size: 10pt;
+        }
+        .page {
+            max-width: 210mm;
+            margin: 0 auto;
+            box-shadow: 0 0 12px rgba(0,0,0,.08);
+            background: #ffffff;
+        }
+        .header-bar {
+            background-color: #1e3d34;
+            color: #ffffff;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .header-bar td {
+            padding: 14px 24px;
+            vertical-align: middle;
+            color: #ffffff;
+        }
+        .brand-name {
+            font-size: 16pt;
+            font-weight: bold;
+        }
+        .brand-sub {
+            font-size: 7pt;
+            margin-top: 4px;
+        }
+        .header-contact {
+            text-align: right;
+            font-size: 8pt;
+            line-height: 1.5;
+        }
+        .body-pad { padding: 18px 24px 24px; }
+        .doc-title {
+            text-align: center;
+            font-size: 20pt;
+            color: #5a7d6c;
+            margin: 6px 0 16px;
+            font-weight: normal;
+            font-family: Georgia, serif;
+        }
+        .doc-title-line {
+            display: none;
+        }
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+        }
+        .meta-table td {
+            width: 50%;
+            vertical-align: top;
+            padding-right: 12px;
+        }
+        .meta-table td.meta-right {
+            padding-right: 0;
+            padding-left: 12px;
+        }
+        .field { margin-bottom: 10px; }
+        .field-label {
+            font-size: 7pt;
+            text-transform: uppercase;
+            color: #6b6b6b;
+            margin-bottom: 2px;
+        }
+        .field-value {
+            border-bottom: none;
+            padding-bottom: 0;
+            font-size: 9.5pt;
+            min-height: 14px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+        .items-table th {
+            background-color: #e8efe6;
+            border: 1px solid #9cb39a;
+            padding: 7px 8px;
+            font-size: 7pt;
+            text-transform: uppercase;
+            color: #1e3d34;
+            text-align: left;
+        }
+        .items-table td {
+            border: 1px solid #c5d4c0;
+            padding: 7px 8px;
+            font-size: 9pt;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .footer-table > tbody > tr > td {
+            vertical-align: top;
+        }
+        .footer-left { width: 58%; padding-right: 16px; }
+        .footer-right { width: 42%; }
+        .notes-box {
+            border: 1px solid #9cb39a;
+            padding: 8px 10px;
+            font-size: 8.5pt;
+            background-color: #fafaf8;
+            min-height: 70px;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.5pt;
+        }
+        .summary-table td {
+            padding: 3px 0;
+        }
+        .summary-table td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+        .statut-badge {
+            border: 1px solid #5a7d6c;
+            background-color: #e8efe6;
+            padding: 2px 6px;
+            font-size: 8pt;
+        }
+        .sig-block { margin-top: 14px; font-size: 8pt; }
+        .sig-line {
+            border-bottom: 1px solid #2c2c2c;
+            margin-top: 24px;
+            width: 70%;
+            height: 1px;
+        }
+        .toolbar {
+            text-align: center;
+            padding: 12px;
+            background: #eeeeee;
+        }
+        .toolbar button, .toolbar a.btn-pdf {
+            padding: 8px 20px;
+            margin: 0 6px;
+            cursor: pointer;
+            border: 1px solid #1e3d34;
+            background: #1e3d34;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .toolbar .btn-secondary {
+            background: #fff;
+            color: #1e3d34;
+        }
+        .print-hint {
+            font-size: 12px;
+            color: #555;
+            margin-top: 8px;
+            max-width: 520px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media print {
+            body { background: #fff !important; }
+            .page { box-shadow: none; max-width: none; width: 100%; }
+            .toolbar, .print-hint { display: none !important; }
+            .items-table .empty-row { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button type="button" onclick="imprimerSansEntetes()">Imprimer</button>
+        <a href="{% url 'imprimer_demande_transfert' demande.pk %}?format=pdf" target="_blank" class="btn-pdf" download="{{ pdf_filename }}">PDF (recommandé)</a>
+        <button type="button" class="btn-secondary" onclick="window.close()">Fermer</button>
+        <p class="print-hint">
+            PDF : affichage identique sans en-têtes navigateur. Impression HTML : décocher
+            « En-têtes et pieds de page » dans la boîte de dialogue.
+        </p>
+    </div>
+
+    <div class="page">
+        <table class="header-bar" cellpadding="0" cellspacing="0">
+            <tr>
+                <td width="55%">
+                    <div class="brand-name">P&amp;B AUTO-PIECE</div>
+                    <div class="brand-sub">Transfert inter-agences — Pièces détachées</div>
+                </td>
+                <td width="45%" class="header-contact">
+                    Demande de transfert<br>
+                    {% if demande.date_demande %}{{ demande.date_demande|date:"d/m/Y H:i" }}{% endif %}
+                </td>
+            </tr>
+        </table>
+
+        <div class="body-pad">
+            <h1 class="doc-title">BON DE COMMANDE</h1>
+
+            <table class="meta-table" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td>
+                        <div class="field">
+                            <div class="field-label">Numéro de commande</div>
+                            <div class="field-value">{% if demande.numero_bon_donneur %}{{ demande.numero_bon_donneur }}{% else %}{{ demande.numero_demande }}{% endif %}</div>
+                        </div>
+                        <div class="field">
+                            <div class="field-label">N° demande</div>
+                            <div class="field-value">{{ demande.numero_demande }}</div>
+                        </div>
+                        <div class="field">
+                            <div class="field-label">Date</div>
+                            <div class="field-value">{{ demande.date_demande|date:"d/m/Y" }}</div>
+                        </div>
+                        <div class="field">
+                            <div class="field-label">Agence demandeur</div>
+                            <div class="field-value">{{ demande.local_demandeur.nom }}</div>
+                        </div>
+                    </td>
+                    <td class="meta-right">
+                        <div class="field">
+                            <div class="field-label">Agence donneuse</div>
+                            <div class="field-value">{{ demande.local_donneur.nom }}</div>
+                        </div>
+                        <div class="field">
+                            <div class="field-label">Statut</div>
+                            <div class="field-value"><span class="statut-badge">{{ demande.get_statut_display }}</span></div>
+                        </div>
+                        <div class="field">
+                            <div class="field-label">Demandeur (utilisateur)</div>
+                            <div class="field-value">{% if demande.demandeur %}{{ demande.demandeur.username }}{% else %}—{% endif %}</div>
+                        </div>
+                        {% if demande.numero_bon_commande %}
+                        <div class="field">
+                            <div class="field-label">Bon réception</div>
+                            <div class="field-value">{{ demande.numero_bon_commande }}</div>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            <table class="items-table" cellpadding="0" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th width="18%">N° pièce</th>
+                        <th>Désignation</th>
+                        <th width="12%" class="text-center">Quantité</th>
+                        <th width="14%" class="text-right">Prix unit.</th>
+                        <th width="14%" class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ligne in lignes %}
+                    <tr>
+                        <td>{{ ligne.piece.numero_piece }}</td>
+                        <td>{{ ligne.piece.designation }}</td>
+                        <td class="text-center">{{ ligne.quantite }}</td>
+                        <td class="text-right">{{ ligne.piece.prix_unitaire|floatformat:0 }} F</td>
+                        <td class="text-right">{{ ligne.total_ligne|floatformat:0 }} F</td>
+                    </tr>
+                    {% endfor %}
+                    {% for i in empty_rows %}
+                    <tr class="empty-row">
+                        <td>&nbsp;</td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <table class="footer-table" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="footer-left">
+                        <div class="field-label">Notes / Motif</div>
+                        <div class="notes-box">
+                            {% if demande.motif %}<strong>Motif :</strong> {{ demande.motif }}<br/>{% endif %}
+                            Transfert de {{ demande.local_donneur.nom }} vers {{ demande.local_demandeur.nom }}.
+                            {% if demande.date_validation %}<br/>Validée le {{ demande.date_validation|date:"d/m/Y H:i" }}{% if demande.validateur_donneur %} par {{ demande.validateur_donneur.username }}{% endif %}.{% endif %}
+                            {% if demande.date_reception %}<br/>Reçue le {{ demande.date_reception|date:"d/m/Y H:i" }}{% if demande.receveur %} par {{ demande.receveur.username }}{% endif %}.{% endif %}
+                        </div>
+                    </td>
+                    <td class="footer-right">
+                        <table class="summary-table" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td>Nombre de lignes</td>
+                                <td>{{ lignes|length }}</td>
+                            </tr>
+                            <tr>
+                                <td>Quantité totale</td>
+                                <td>{{ total_quantite }}</td>
+                            </tr>
+                            <tr>
+                                <td>Valeur indicative</td>
+                                <td>{{ total_valeur|floatformat:0 }} Fcfa</td>
+                            </tr>
+                        </table>
+                        <div class="sig-block">
+                            <div>Date : _______________</div>
+                            <div style="margin-top:8px;">À : _______________</div>
+                            <div style="margin-top:6px;">Signature :</div>
+                            <div class="sig-line"></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var titreImpression = '{{ print_title|escapejs }}';
+        document.title = titreImpression;
+        function imprimerSansEntetes() {
+            document.title = titreImpression;
+            window.print();
+        }
+        window.imprimerSansEntetes = imprimerSansEntetes;
+        {% if auto_print %}
+        window.addEventListener('load', function () {
+            setTimeout(imprimerSansEntetes, 300);
+        });
+        {% endif %}
+    })();
+    </script>
+</body>
+</html>

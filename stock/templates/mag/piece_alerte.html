@@ -1,0 +1,97 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% block title %}AUTO-PIECE{% endblock title %}
+{% block page_title %}Pièce en alerte{% endblock page_title %}
+{% block page %}Pièces en alerte{% endblock page %}
+
+{% block main_content %}
+    <div class="modal fade" id="addinf" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="title" id="defaultModalLabel">Filtrage Périodique</h6>
+                </div>
+                <div class="modal-body">
+                    <form id="basic-form" method="get" novalidate>
+                        <div class="row clearfix">
+                            <div class="col-md-12 form-group"><input type="text" value="Filtre" class="form-control text-center" disabled></div>
+                            <div class="col-6">
+                                <label>Date debut </label>
+                                <div class="form-group">                                    
+                                    {{ form.date_debut }}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label>Date fin</label>
+                                <div class="form-group">                                    
+                                    {{ form.date_fin }}
+                                </div>
+                            </div>
+                            {% if user.role == "admin" %}
+                                <div class="col-12">
+                                    <label>Caissière</label>
+                                    <div class="form-group">                                    
+                                        {{ form.caissier }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-outline-success" >Enrégistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>{{liste_piece_alerte|length}} pièce{% if liste_piece_alerte|length > 1 %}s{% endif %} en alerte</h2>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                        <thead>
+                            <tr class='text-info'>
+                                <th>N°#</th>
+                                <th>N°Pièce</th>
+                                <th>Designation</th>
+                                <th>Categorie</th>
+                                <th class="text-center">Quantite</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr class='text-info'>
+                                <th>N°#</th>
+                                <th>N°Pièce</th>
+                                <th>Designation</th>
+                                <th>Categorie</th>
+                                <th class="text-center">Quantite</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            {% if liste_piece_alerte %}
+                                {% for d in liste_piece_alerte %}
+                                    <tr>
+                                        <th>{{forloop.counter}}</th>
+                                        <th>{{d.numero_piece}}</th>
+                                        <th>{{d.designation}}</th>
+                                        <th>{{d.categorie.categorie}}</th>
+                                        <th class="text-center">{{d.quantite_disponible}}</th>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main_content %}
+

@@ -1,0 +1,103 @@
+{% for panier in paniers_non_valides %}
+    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 panier-order-col">
+        <div class="card panier-order-card" data-ticket="{{ panier.ticket }}">
+            <div class="body panier-order-body">
+                <div class="panier-order-top">
+                    <div class="panier-order-title-block">
+                        <h3 class="panier-order-title">N°{{ panier.ticket }}</h3>
+                        <span class="panier-order-date">{{ panier.date_save|date:"d/m/Y, H:i" }}</span>
+                    </div>
+                    <button type="button"
+                            class="btn panier-order-print reprint-bon-commande"
+                            data-ticket="{{ panier.ticket }}"
+                            title="Réimprimer le bon de commande"
+                            aria-label="Réimprimer le bon de commande">
+                        <i class="fa fa-print"></i>
+                    </button>
+                </div>
+
+                <hr class="panier-order-divider">
+
+                <p class="panier-order-client">
+                    {% if panier.nom_client %}
+                        {{ panier.nom_client }}
+                    {% else %}
+                        Client comptoir
+                    {% endif %}
+                </p>
+                <div class="panier-order-meta">
+                    <span><i class="fa fa-cube"></i> {{ panier.panier_items.all|length }} article{{ panier.panier_items.all|length|pluralize }}</span>
+                    {% if panier.utilisateur %}
+                    <span><i class="fa fa-user"></i> @{{ panier.utilisateur.username }}</span>
+                    {% endif %}
+                    {% if panier.proforma %}
+                    <span><i class="fa fa-file-text-o"></i> Proforma</span>
+                    {% endif %}
+                </div>
+
+                <hr class="panier-order-divider">
+
+                <div class="panier-order-info-row">
+                    <span>Date commande</span>
+                    <strong>{{ panier.date_creation|date:"d/m/Y" }}</strong>
+                </div>
+                <div class="panier-order-info-row">
+                    <span>Statut</span>
+                    <strong>Validé — à encaisser</strong>
+                </div>
+
+                <hr class="panier-order-divider">
+
+                <a href="javascript:void(0);" class="panier-select-link panier-order-link" data-ticket="{{ panier.ticket }}">
+                    <p class="panier-order-section-title">Articles du panier</p>
+                    <ul class="panier-order-menu">
+                        {% for item in panier.panier_items.all %}
+                            {% if forloop.counter <= 4 %}
+                            <li class="panier-order-menu-item">
+                                <div class="panier-order-thumb">
+                                    {% if item.piece.image %}
+                                        <img src="{{ item.piece.image.url }}" alt="{{ item.piece.designation }}">
+                                    {% else %}
+                                        <i class="fa fa-cog"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="panier-order-item-info">
+                                    <p class="panier-order-item-name">{{ item.piece.designation }}</p>
+                                    <p class="panier-order-item-qty">x{{ item.quantite }}</p>
+                                </div>
+                                <span class="panier-order-item-price">+{{ item.prix_total|floatformat:0 }} F</span>
+                            </li>
+                            {% endif %}
+                        {% empty %}
+                            <li class="panier-order-menu-item">
+                                <span class="text-muted small">Aucun article</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    {% if panier.panier_items.all|length > 4 %}
+                        <p class="panier-order-more">+ {{ panier.panier_items.all|length|add:"-4" }} article(s) supplémentaire(s)</p>
+                    {% endif %}
+
+                    <hr class="panier-order-divider">
+
+                    <div class="panier-order-total-row">
+                        <span>Total</span>
+                        <span class="panier-order-total-value">{{ panier.total|floatformat:2 }} F</span>
+                    </div>
+
+                    <span class="panier-order-status {% if panier.proforma %}panier-order-status--proforma{% else %}panier-order-status--wait{% endif %}">
+                        {% if panier.proforma %}
+                            Proforma validée — encaisser
+                        {% else %}
+                            En attente de paiement
+                        {% endif %}
+                    </span>
+                </a>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <div class="col-12">
+        <p class="piece-catalog-empty mb-0">Aucun panier en attente…</p>
+    </div>
+{% endfor %}

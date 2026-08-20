@@ -1,0 +1,108 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% block title %}AUTO-PIECE — Bons de commande (paiement){% endblock title %}
+{% block page_title %}Bons de commande — paiement caisse{% endblock page_title %}
+{% block page %}Bons commande caisse{% endblock page %}
+
+{% block main_content %}
+    {% include "mag/partials/_periode_filter_modal.html" %}
+    {% include "mag/partials/_dashboard_kpi_styles.html" %}
+    {% include "mag/partials/_kpi_row_bon_cmd_paiement.html" %}
+
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Liste des bons de commande (paiement)</h2>
+                <ul class="header-dropdown">
+                    <li>
+                        <span class="badge badge-info mb-0">{{ nb_bons }} bon{% if nb_bons > 1 %}s{% endif %}</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                        <thead>
+                            <tr class="text-info">
+                                <th>N°</th>
+                                <th>N° bon</th>
+                                <th>N° commande</th>
+                                <th>N° ticket</th>
+                                <th>Client</th>
+                                <th>Localité</th>
+                                <th>Caissier</th>
+                                <th>Hôte accueil</th>
+                                <th>Moyen paiement</th>
+                                <th class="text-right">Total cmd.</th>
+                                <th class="text-right">Montant payé</th>
+                                <th class="text-right">Reste</th>
+                                <th>Date émission</th>
+                                <th class="text-center">PDF</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr class="text-info">
+                                <th>N°</th>
+                                <th>N° bon</th>
+                                <th>N° commande</th>
+                                <th>N° ticket</th>
+                                <th>Client</th>
+                                <th>Localité</th>
+                                <th>Caissier</th>
+                                <th>Hôte accueil</th>
+                                <th>Moyen paiement</th>
+                                <th class="text-right">Total cmd.</th>
+                                <th class="text-right">Montant payé</th>
+                                <th class="text-right">Reste</th>
+                                <th>Date émission</th>
+                                <th class="text-center">PDF</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            {% for bon in bons_paiement %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><strong>{{ bon.numero_bon }}</strong></td>
+                                    <td>{{ bon.commande.numero_commande|default:bon.commande_id }}</td>
+                                    <td>{{ bon.ticket_numero }}</td>
+                                    <td>{{ bon.client_nom|default:"—" }}</td>
+                                    <td>{% if bon.local_entrepot %}{{ bon.local_entrepot.nom }}{% else %}—{% endif %}</td>
+                                    <td>{% if bon.caissier %}{{ bon.caissier.get_full_name|default:bon.caissier.username }}{% else %}—{% endif %}</td>
+                                    <td>{% if bon.hote_accueil %}{{ bon.hote_accueil.get_full_name|default:bon.hote_accueil.username }}{% else %}—{% endif %}</td>
+                                    <td>{{ bon.moyen_paiement_nom|default:"—" }}</td>
+                                    <td class="text-right">{{ bon.total_commande }}</td>
+                                    <td class="text-right">{{ bon.montant_paye }}</td>
+                                    <td class="text-right">{{ bon.montant_reste }}</td>
+                                    <td>{{ bon.date_emission|date:"d/m/Y H:i" }}</td>
+                                    <td class="text-center">
+                                        {% if bon.fichier_pdf %}
+                                            <a href="{{ bon.fichier_pdf.url }}" class="btn btn-sm btn-outline-info" target="_blank" title="Télécharger le PDF">
+                                                <i class="fa fa-download"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'imprimer_bon_commande_vente' bon.ticket_numero %}" class="btn btn-sm btn-outline-secondary" target="_blank" title="Réimprimer">
+                                            <i class="fa fa-print"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="14" class="text-center text-muted py-4">
+                                        Aucun bon de commande pour la période sélectionnée.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

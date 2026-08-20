@@ -1,0 +1,356 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE — Paiement caisse{% endblock title %}
+{% block page %}Paiement caisse{% endblock page %}
+
+{% block main_content %}
+    <div class="col-md-8 p-2 mt-4">
+        <div class="card" style='border-radius:18px'>
+            <div class="body">
+                <div class="input-group" id="adv-search">
+                    <input type="text" name="q" class="form-control" placeholder="Rechercher ici..." id="searchInput" />
+                    <div class="input-group-btn">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-info" onclick="resetSearch()">Actualiser <span class="icon-refresh" aria-hidden="true"></span></button>
+                            {% comment %} <button type="reset" class="btn btn-outline-info">Actualiser <span class="icon-refresh" aria-hidden="true"></span></button> {% endcomment %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="body">
+                <ul class="nav nav-tabs-new m-b-20">
+                    {% for cat in categories %}
+                        <li class="nav-item">
+                            <a class="nav-link text-info" href="#" onclick="filterByCategorie('{{ cat.id }}')">{{ cat.categorie }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <div class="cwidget-scroll">
+                    <ul class="chat-widget m-r-5 clearfix">
+                        <div class="row clearfix" id="result-articles">
+                            {% include 'mag/partials/_article_list.html' with articles=articles %}
+                        </div>
+                    </ul>
+                </div>
+                <p class="mb-0" id="result-count">Résultat ({{ articles|length }})</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 p-2 mt-4">
+        <div class="card" style="border-radius:18px">
+            <div class="header">
+                <h2><i class=" icon-basket text"></i></h2>
+                <ul class="header-dropdown">
+                    <li class="dropdown">
+                        <strong class="font-14">TOTAL: </strong> <span id="panier-quantite-total" class="badge badge-warning mb-0">{% if items %}{{total_quantite}}{% else %}0{% endif %}</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="body">
+                <form method='post' role="form" id="quickForm" action="{% url 'valid_pay_article' %}">
+                    {% csrf_token %}
+                    <div class="cwidget-scroll">
+                        <ul class="chat-widget m-r-5 clearfix">
+                            {% if items %}
+                                {% for item in items %}
+                                    <div class="card" id="article-card-{{ item.article.pk }}" style="border-radius:18px">
+                                        <div class="body">
+                                            <div class="row">
+                                                {% comment %} <a href="{% url "supprimer_du_panier" item.article.pk %}" style="position:absolute; left:305px;top:5px"><i class="icon-trash text-danger"></i></a> {% endcomment %}
+                                                <a href="javascript:void(0);" onclick="supprimerDuPanier({{ item.piece.pk }})" style="position:absolute; left:305px;top:5px"><i class="icon-trash text-danger"></i></a>
+                                                <div class="col-sm-5">
+                                                    {% comment %} <img src="{{ item.article.image.url }}" class="rounded" width="70" height="60"> {% endcomment %}
+                                                    <i class="fa fa-percent" width="70" height="60"></i>
+                                                </div>
+                                                <div class="form-group p-0" style="position:absolute;left:105px;top:19px">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            {% comment %} <a href="{% url "add_panier" item.article.pk %}" class="input-group-text font-6"><i class="fa fa-plus"></i></a> {% endcomment %}
+                                                            <a href="javascript:void(0);" onclick="ajouterAuPanier({{ item.article.pk }})" class="input-group-text font-6"><i class="fa fa-plus"></i></a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            {% comment %} <span class="input-group-text font-6 text-center" style="width:30px; left:-2px">{{ item.quantite }}</span> {% endcomment %}
+                                                            <span class="input-group-text font-6 text-center" id="quantite-{{ item.article.pk }}">{{ item.quantite }}</span>
+                                                            
+                                                        </div>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            {% comment %} <a href="{% url "retier_du_panier" item.article.pk %}" class="input-group-text font-6"><i class="fa fa-minus"></i></a> {% endcomment %}
+                                                            <a href="javascript:void(0);" onclick="retirerDuPanier({{ item.article.pk }})" class="input-group-text font-6"><i class="fa fa-minus"></i></a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-7 ">
+                                                    <h6 class="font-10">{{ item.article.designation }}</h6>
+                                                    <h6 class="font-10">Prix: {{ item.article.prix }}</h6>
+                                                    <h6 class="font-10">{{ item.article.type_taille }}: {{ item.article.valeur_taille }}</h6>
+                                                </div>
+                                                <div class="badge" style="position:absolute; left:225px;top:79px;border-radius: 88px 0 100px 0px">Total: {{ item.quantite|mul:item.article.prix}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="input-group p-t-15">
+                        <div class="input-group p-t-15">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fa fa-minus-circle"></i></span>
+                            </div>
+                            <input type="text" class="form-control" id="input-remise" name="remiser" placeholder="Remise (montant) ex: 500.00">
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row clearfix">
+                        <div class="col-md-6">
+                            <div class="input-group p-t-15">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fa fa-coins"></i></span>
+                                </div>
+                                <input type="text" class="form-control" name="montant" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <p class="mb-0"><b>Cout total:</b> <span id="panier-total">{{ total }}</span> </p>
+                            <p class="mb-0">Remise: <span id="affiche-remise">0.00</span> FRS</p>
+                            <p class="mb-0">A payer: <span id="affiche-montant-a-payer">{{ total_apres_remise }}</span></p>
+                        </div>
+                    </div> 
+                    <hr>
+                    <div class="row clearfix">
+                        <div class="col-md-12 text-center">
+                            <p class="mb-0">
+                                {% if items %}
+                                    <button type="submit" class="btn btn-outline-success" href="">Valider <i class="fa fa-check-circle"></i></button>
+                                {% else %}
+                                    <button type="button" class="btn btn-outline-danger" href="">Valider <i class="fa fa-times-circle"></i></button>
+                                {% endif %}
+                            </p>
+                        </div> 
+                    </div> 
+                </form>
+            </div>
+        </div>
+    </div>
+    <audio id="success-sound" src="{% static 'sons/success.mp3' %}" preload="auto"></audio>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("paiement") === "success") {
+                const audio = document.getElementById("success-sound");
+                if (audio) {
+                    audio.play().then(() => {
+                        // Nettoyer l'URL pour ne pas rejouer le son au rafraîchissement
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        toastr.success("Paiement effectué avec succès !");
+                    }).catch((e) => {
+                        console.warn("Lecture automatique du son bloquée :", e);
+                    });
+                }
+            }
+        });
+    </script>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function ajouterAuPanier(articleId) {
+            $.ajax({
+                url: `/ajax/add_panier/${articleId}/`,
+                type: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                success: function(response) {
+                    if (response.success) {
+                        $('#panier-quantite-total').text(response.total_quantite);
+                        $(`#quantite-${articleId}`).text(response.quantite);
+                        updateTotal(response.total);
+                    } else {
+                        alert("Erreur lors de l'ajout de l'article au panier.");
+                    }
+                },
+                error: function(xhr) {
+                    let message = "Erreur réseau lors de l'ajout de l'article.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    alert(message);
+                }
+            });
+        }
+
+        function retirerDuPanier(articleId) {
+            $.ajax({
+                url: `/ajax/remove_panier/${articleId}/`,
+                type: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                success: function(response) {
+                    if (response.success) {
+                        if (response.quantite > 0) {
+                            $(`#quantite-${articleId}`).text(response.quantite);
+                        } else {
+                            $(`#article-card-${articleId}`).remove();
+                        }
+                        $('#panier-quantite-total').text(response.total_quantite);
+                        updateTotal(response.total);
+                    } else {
+                        alert("Erreur lors du retrait de l'article.");
+                    }
+                },
+                error: function(xhr) {
+                    let message = "Erreur lors de la suppression de l'article.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    alert(message);
+                }
+            });
+        }
+        // Fonction pour mettre à jour le total global et état du bouton
+        function updateTotal(newTotal) {
+            const panierTotalEl = document.getElementById('panier-total');
+            panierTotalEl.textContent = newTotal.toFixed(2);
+            total = newTotal;
+            if (typeof calculerEtAfficher === 'function') {
+                calculerEtAfficher();
+            }
+            const boutonValider = document.querySelector('#quickForm button[type="submit"]');
+            if (newTotal === 0) {
+                boutonValider.disabled = true;
+                boutonValider.classList.remove('btn-outline-success');
+                boutonValider.classList.add('btn-outline-danger');
+            } else {
+                boutonValider.disabled = false;
+                boutonValider.classList.add('btn-outline-success');
+                boutonValider.classList.remove('btn-outline-danger');
+            }
+        }
+    </script>
+    <script>
+        let currentQuery = "";
+        let currentCategorie = "";
+
+        function updateArticleList() {
+            $.ajax({
+                url: "{% url 'ajax_search_articles' %}",
+                data: {
+                    q: currentQuery,
+                    categorie: currentCategorie
+                },
+                dataType: "json",
+                success: function (data) {
+                    $('#result-articles').html(data.html);
+                    const count = $('#result-articles').children().length;
+                    $('#result-count').text(`Résultat (${count})`);
+                },
+                error: function () {
+                    $('#result-articles').html("<div class='col-12 text-danger'>Erreur de chargement.</div>");
+                    $('#result-count').text("Résultat (0)");
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Déclenche la recherche quand on tape dans la barre
+            $('#searchInput').on('input', function () {
+                currentQuery = $(this).val();
+                updateArticleList();
+            });
+
+            // Permet aussi d’utiliser entrée si formulaire autour
+            $('#searchInput').closest('form').on('submit', function (e) {
+                e.preventDefault(); // empêche rechargement
+                currentQuery = $('#searchInput').val();
+                updateArticleList();
+            });
+        });
+
+        function filterByCategorie(categorieId) {
+            currentCategorie = categorieId;
+            updateArticleList();
+        }
+        function resetSearch() {
+            currentQuery = "";
+            currentCategorie = "";
+
+            // Réinitialiser le champ de recherche
+            document.getElementById('searchInput').value = "";
+
+            // Recharger les articles initiaux
+            updateArticleList();
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const inputRemise = document.getElementById('input-remise');
+        const inputMontant = document.querySelector('input[name="montant"]');
+        const afficheRemise = document.getElementById('affiche-remise');
+        const afficheMontantAPayer = document.getElementById('affiche-montant-a-payer');
+        const panierTotalEl = document.getElementById('panier-total');
+        const form = document.getElementById('quickForm');
+        const boutonValider = document.querySelector('#quickForm button[type="submit"]');
+
+        // Initialisation du total
+        total = parseFloat(panierTotalEl.textContent.replace(',', '.')) || 0;
+
+        // Rendre accessible globalement
+        window.calculerEtAfficher = function () {
+            let remiseStr = inputRemise.value.trim().replace(',', '.');
+            let remise = parseFloat(remiseStr);
+            if (isNaN(remise) || remise < 0) remise = 0;
+            else if (remise > total) remise = total;
+
+            let montantApresRemise = total - remise;
+            afficheRemise.textContent = remise.toFixed(2);
+            afficheMontantAPayer.textContent = montantApresRemise.toFixed(2);
+            return montantApresRemise;
+        };
+
+        inputRemise.addEventListener('input', calculerEtAfficher);
+
+        form.addEventListener('submit', function(e) {
+            const montantApresRemise = calculerEtAfficher();
+            let montantStr = inputMontant.value.trim().replace(',', '.');
+            let montantPaye = parseFloat(montantStr);
+
+            if (isNaN(montantPaye) || montantPaye < montantApresRemise) {
+                e.preventDefault();
+                alert(`Le montant payé doit être au moins égal à ${montantApresRemise.toFixed(2)}.`);
+                inputMontant.focus();
+            }
+        });
+
+        // Initialisation si panier vide
+        if (total === 0) {
+                afficheMontantAPayer.textContent = '0.00';
+                boutonValider.disabled = true;
+                boutonValider.classList.remove('btn-outline-success');
+                boutonValider.classList.add('btn-outline-danger');
+            } else {
+                calculerEtAfficher();
+            }
+        });
+    </script>
+
+
+   
+
+{% endblock main_content %}
+
+

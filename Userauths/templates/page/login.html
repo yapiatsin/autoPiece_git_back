@@ -1,0 +1,58 @@
+{% extends 'page/base_compt.html' %}
+{% load static %}
+
+{% block title %}Connexion — AUTO-PIECE{% endblock title %}
+
+{% block auth_frame_class %}auth-panel__frame--deco auth-panel__frame--login{% endblock %}
+
+{% block auth_deco_left %}
+<img class="auth-panel__deco auth-panel__deco--left" src="{% static 'ex_or.png' %}" alt="" aria-hidden="true" loading="lazy">
+{% endblock auth_deco_left %}
+
+{% block auth_deco_right %}
+<img class="auth-panel__deco auth-panel__deco--right" src="{% static 'car_icon.png' %}" alt="" aria-hidden="true" loading="lazy">
+{% endblock auth_deco_right %}
+
+{% block auth_content %}
+<h1 class="auth-panel__title"><span>Connectez-vous</span></h1>
+<p class="auth-panel__subtitle">Accédez à votre espace</p>
+
+<form method="post" id="loginForm" class="auth-login__form" novalidate>
+    {% csrf_token %}
+    <div class="auth-form-group">
+        <input type="text" class="auth-input" name="username" id="signin-username"
+            placeholder="Nom d'utilisateur" required autocomplete="username">
+    </div>
+    <div class="auth-form-group">
+        <div class="auth-input-wrap">
+            <input type="password" class="auth-input" name="password" id="signin-password"
+                placeholder="Mot de passe" required autocomplete="current-password">
+            <button type="button" class="auth-toggle-pwd" data-toggle-password="signin-password" aria-label="Afficher le mot de passe">
+                <i class="fa fa-eye"></i>
+            </button>
+        </div>
+    </div>
+    <div class="auth-form-meta">
+        <label class="auth-checkbox">
+            <input type="checkbox" name="remember"> Se souvenir de moi
+        </label>
+        <a href="{% url 'forgot' %}" class="auth-link">Mot de passe oublié ?</a>
+    </div>
+    <button type="submit" class="auth-btn-primary">Se connecter</button>
+</form>
+
+{% if show_resend %}
+<p class="auth-footer-text">
+    Compte non activé ?
+    <a href="{% url 'resend-activation' %}" class="auth-link">Renvoyer l'email d'activation</a>
+</p>
+{% endif %}
+
+<p class="auth-footer-text">
+    Pas encore de compte client ?
+    <a href="{% url 'register' %}" class="auth-link">S'inscrire</a>
+</p>
+<p class="auth-footer-text" style="margin-top:0.5rem;">
+    <a href="{% url 'ecom_index' %}" class="auth-link"><i class="fa fa-arrow-left"></i> Retour au site</a>
+</p>
+{% endblock auth_content %}

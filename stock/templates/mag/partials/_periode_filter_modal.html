@@ -1,0 +1,123 @@
+{% load static %}
+<style>
+    .btn-periode-filter {
+        background: var(--dash-filter-bg, linear-gradient(135deg, #f97316 0%, #ea580c 55%, #dc2626 100%));
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.5rem 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.28);
+    }
+    .btn-periode-filter:hover, .btn-periode-filter:focus { color: #fff; filter: brightness(1.08); }
+    .page-header-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+    .badge-periode-resume {
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fed7aa;
+        font-weight: 500;
+        white-space: normal;
+        text-align: left;
+        max-width: min(100%, 520px);
+    }
+    #{{ filter_modal_id }} .modal-content {
+        border: none;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(249, 115, 22, 0.18);
+    }
+    #{{ filter_modal_id }} .modal-header {
+        background: var(--dash-filter-bg, linear-gradient(135deg, #f97316 0%, #ea580c 55%, #dc2626 100%));
+        color: #fff;
+        border: none;
+        padding: 1rem 1.25rem;
+    }
+    #{{ filter_modal_id }} .modal-header .close { color: #fff; opacity: 0.92; }
+    #{{ filter_modal_id }} .modal-title { color: #fff; font-weight: 700; letter-spacing: 0.06em; }
+    .periode-option { cursor: pointer; }
+    .periode-option.active {
+        border-color: #f97316 !important;
+        background: #fff7ed;
+    }
+    #filtrePersonnaliseFields-{{ filter_modal_id }} { display: none; }
+    #filtrePersonnaliseFields-{{ filter_modal_id }}.show { display: flex; }
+</style>
+
+<div class="modal fade" id="{{ filter_modal_id }}" tabindex="-1" role="dialog" aria-labelledby="{{ filter_modal_id }}Label">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="{{ filter_modal_id }}Label">FILTRE</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer"><span>&times;</span></button>
+            </div>
+            <form method="get" id="periode-filter-form-{{ filter_modal_id }}">
+                <div class="modal-body">
+                    <label class="font-weight-bold text-muted small text-uppercase">Période</label>
+                    <div class="row mb-3">
+                        <div class="col-6 col-md-4 mb-2">
+                            <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'aujourdhui' or periode_active == 'jour' %}active{% endif %}">
+                                <input type="radio" name="periode" value="aujourdhui" class="d-none" {% if periode_active == 'aujourdhui' or periode_active == 'jour' %}checked{% endif %}>
+                                <small>Aujourd'hui</small>
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-4 mb-2">
+                            <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'semaine' %}active{% endif %}">
+                                <input type="radio" name="periode" value="semaine" class="d-none" {% if periode_active == 'semaine' %}checked{% endif %}>
+                                <small>Cette semaine</small>
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-4 mb-2">
+                            <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'mois' %}active{% endif %}">
+                                <input type="radio" name="periode" value="mois" class="d-none" {% if periode_active == 'mois' %}checked{% endif %}>
+                                <small>Ce mois</small>
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-4 mb-2">
+                            <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'annee' %}active{% endif %}">
+                                <input type="radio" name="periode" value="annee" class="d-none" {% if periode_active == 'annee' %}checked{% endif %}>
+                                <small>Cette année</small>
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-4 mb-2">
+                            <label class="periode-option card p-2 mb-0 text-center {% if periode_active == 'personnalise' %}active{% endif %}">
+                                <input type="radio" name="periode" value="personnalise" class="d-none periode-perso-radio" {% if periode_active == 'personnalise' %}checked{% endif %}>
+                                <small>Personnalisé</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row mb-3 {% if periode_active == 'personnalise' %}show{% endif %}" id="filtrePersonnaliseFields-{{ filter_modal_id }}">
+                        <div class="col-6">
+                            <label>Date début</label>
+                            {{ form.date_debut }}
+                        </div>
+                        <div class="col-6">
+                            <label>Date fin</label>
+                            {{ form.date_fin }}
+                        </div>
+                    </div>
+                    {% if can_choose_localite %}
+                    <div class="form-group mb-0">
+                        <label>Localité</label>
+                        {{ form.localite }}
+                    </div>
+                    {% endif %}
+                    {% if filter_hidden_fields %}
+                        {% for name, value in filter_hidden_fields.items %}
+                        <input type="hidden" name="{{ name }}" value="{{ value }}">
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <a href="{{ filter_reset_url }}" class="btn btn-outline-secondary">Réinitialiser</a>
+                    <button type="submit" class="btn btn-success">Appliquer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

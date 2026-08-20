@@ -1,0 +1,352 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+
+{% block title %}Mon profil — AUTO-PIECE{% endblock title %}
+{% block page_title %}Mon profil{% endblock page_title %}
+{% block page %}Profil & mot de passe{% endblock page %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/profile.css' %}">
+{% endblock extra_head %}
+
+{% block main_content %}
+<div class="col-12 profile-page"
+    x-data="{
+        tab: '{{ active_tab|default:'info'|escapejs }}',
+        photoPreview: null,
+        pickPhoto() { $refs.photoInput.click(); },
+        onPhotoChange(e) {
+            const file = e.target.files && e.target.files[0];
+            if (file) photoPreview = URL.createObjectURL(file);
+        }
+    }">
+
+    <div class="profile-layout grid w-full grid-cols-1 gap-4 xl:grid-cols-[220px_minmax(0,1fr)] xl:items-start xl:gap-5">
+        <aside class="profile-sidebar xl:sticky xl:top-3">
+            <div class="profile-sidebar-panel">
+                <div class="profile-sidebar-user">
+                    {% if has_custom_photo %}
+                    <img src="{{ photo_url }}" alt="{{ display_name }}" class="profile-sidebar-user__avatar profile-sidebar-user__avatar--img">
+                    {% else %}
+                    <span class="profile-sidebar-user__avatar" aria-hidden="true">{{ user_initials }}</span>
+                    {% endif %}
+                    <div class="profile-sidebar-user__meta">
+                        <p class="profile-sidebar-user__name">{{ display_name }}</p>
+                        <p class="profile-sidebar-user__role">{% if user.is_superuser %}Administrateur{% else %}{{ user.get_role_display }}{% endif %}</p>
+                    </div>
+                </div>
+                <p class="profile-sidebar-label">Menu</p>
+                <nav class="profile-sidebar-nav">
+                    <button type="button" @click="tab = 'info'"
+                        :class="tab === 'info' ? 'is-active' : ''"
+                        class="profile-sidebar-btn">
+                        <span class="profile-sidebar-btn__icon"><i class="fa fa-user-o"></i></span>
+                        <span class="profile-sidebar-btn__text">Informations</span>
+                    </button>
+                    <button type="button" @click="tab = 'coords'"
+                        :class="tab === 'coords' ? 'is-active' : ''"
+                        class="profile-sidebar-btn">
+                        <span class="profile-sidebar-btn__icon"><i class="fa fa-map-marker"></i></span>
+                        <span class="profile-sidebar-btn__text">Coordonnées</span>
+                    </button>
+                    <button type="button" @click="tab = 'security'"
+                        :class="tab === 'security' ? 'is-active' : ''"
+                        class="profile-sidebar-btn">
+                        <span class="profile-sidebar-btn__icon"><i class="fa fa-lock"></i></span>
+                        <span class="profile-sidebar-btn__text">Sécurité</span>
+                    </button>
+                    <button type="button" @click="tab = 'permissions'"
+                        :class="tab === 'permissions' ? 'is-active' : ''"
+                        class="profile-sidebar-btn">
+                        <span class="profile-sidebar-btn__icon"><i class="fa fa-shield"></i></span>
+                        <span class="profile-sidebar-btn__text">Permissions</span>
+                    </button>
+                </nav>
+            </div>
+        </aside>
+
+        <div class="profile-main min-w-0 w-full space-y-3">
+            <div class="profile-hero">
+                <div class="profile-hero__inner">
+                    <span class="profile-hero__badge">Espace utilisateur</span>
+                    <div class="profile-hero__body">
+                        <div class="profile-hero__avatar-wrap">
+                            <template x-if="photoPreview">
+                                <img :src="photoPreview" alt="Aperçu" class="profile-hero__avatar">
+                            </template>
+                            <div x-show="!photoPreview">
+                                {% if has_custom_photo %}
+                                <img src="{{ photo_url }}" alt="{{ display_name }}" class="profile-hero__avatar">
+                                {% else %}
+                                <span class="profile-hero__avatar profile-hero__avatar--initials">{{ user_initials }}</span>
+                                {% endif %}
+                            </div>
+                            <button type="button"
+                                @click="pickPhoto()"
+                                title="Changer la photo"
+                                class="profile-hero__camera profile-avatar-btn"
+                                x-show="tab === 'info' || tab === 'coords'">
+                                <i class="fa fa-camera"></i>
+                            </button>
+                        </div>
+                        <div class="profile-hero__info">
+                            <h2 class="profile-hero__title">Bonjour, {{ display_name }} !</h2>
+                            <p class="profile-hero__meta">
+                                {{ user.genre }} &bull;
+                                {% if user.is_superuser %}Administrateur{% else %}{{ user.get_role_display }}{% endif %}
+                                {% if user.local_entrepot %} &bull; {{ user.local_entrepot.nom }}{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-summary-grid" x-show="tab === 'info' || tab === 'coords'" x-cloak>
+                <div class="profile-summary-card">
+                    <div class="profile-summary-card__head">
+                        <span class="profile-summary-card__icon"><i class="fa fa-user"></i></span>
+                        <h3 class="profile-summary-card__title">Mon compte</h3>
+                    </div>
+                    <dl class="profile-summary-card__list">
+                        <div class="profile-summary-card__row"><dt>E-mail</dt><dd class="text-right break-all">{{ user.email }}</dd></div>
+                        <div class="profile-summary-card__row"><dt>Téléphone</dt><dd>{{ user.contact|default:"—" }}</dd></div>
+                        <div class="profile-summary-card__row"><dt>Adresse</dt><dd class="text-right">{{ profil.adresse|default:"—" }}</dd></div>
+                    </dl>
+                </div>
+                <div class="profile-summary-card">
+                    <div class="profile-summary-card__head">
+                        <span class="profile-summary-card__icon"><i class="fa fa-shield"></i></span>
+                        <h3 class="profile-summary-card__title">Accès & rôle</h3>
+                    </div>
+                    <dl class="profile-summary-card__list">
+                        <div class="profile-summary-card__row"><dt>Rôle</dt><dd>{% if user.is_superuser %}Administrateur{% else %}{{ user.get_role_display }}{% endif %}</dd></div>
+                        <div class="profile-summary-card__row profile-summary-card__row--center"><dt>Compte</dt><dd>{% if compte_actif %}<span class="profile-badge profile-badge--active">Actif</span>{% else %}<span class="profile-badge profile-badge--inactive">Inactif</span>{% endif %}</dd></div>
+                        <div class="profile-summary-card__row"><dt>Identifiant</dt><dd>{{ user.username }}</dd></div>
+                    </dl>
+                </div>
+                <div class="profile-summary-card">
+                    <div class="profile-summary-card__head">
+                        <span class="profile-summary-card__icon"><i class="fa fa-building-o"></i></span>
+                        <h3 class="profile-summary-card__title">Affectation</h3>
+                    </div>
+                    <dl class="profile-summary-card__list">
+                        <div class="profile-summary-card__row"><dt>Localité</dt><dd>{% if user.local_entrepot %}{{ user.local_entrepot.nom }}{% else %}—{% endif %}</dd></div>
+                        <div class="profile-summary-card__row"><dt>Permissions</dt><dd>{{ permissions_count }}</dd></div>
+                        <div class="profile-summary-card__row"><dt>N° employé</dt><dd>{{ profil.numero_employe|default:"—" }}</dd></div>
+                    </dl>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'change_password' %}" enctype="multipart/form-data"
+                class="profile-panel w-full"
+                x-show="tab === 'info' || tab === 'coords'" x-cloak>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="save_profile">
+                <input type="hidden" name="active_tab" :value="tab">
+                <input type="file" name="photo" id="id_photo" x-ref="photoInput" class="hidden"
+                    accept="image/jpeg,image/png,image/webp,image/gif" @change="onPhotoChange($event)">
+
+                <div x-show="tab === 'info'">
+                    <div class="profile-section-head">
+                        <span class="profile-section-head__icon"><i class="fa fa-vcard"></i></span>
+                        <div>
+                            <h3 class="profile-section-head__title">Modifier mes informations</h3>
+                            <p class="profile-section-head__desc">Complétez ou mettez à jour vos informations personnelles.</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-form-grid profile-form-grid--3">
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ user_form.first_name.id_for_label }}">{{ user_form.first_name.label }}</label>
+                            {{ user_form.first_name }}
+                            {% if user_form.first_name.errors %}<p class="profile-field-error">{{ user_form.first_name.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ user_form.last_name.id_for_label }}">{{ user_form.last_name.label }}</label>
+                            {{ user_form.last_name }}
+                            {% if user_form.last_name.errors %}<p class="profile-field-error">{{ user_form.last_name.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label">Nom d'utilisateur</label>
+                            <div class="profile-readonly">{{ user.username }}</div>
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ user_form.genre.id_for_label }}">{{ user_form.genre.label }}</label>
+                            {{ user_form.genre }}
+                            {% if user_form.genre.errors %}<p class="profile-field-error">{{ user_form.genre.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ profil_form.poste.id_for_label }}">{{ profil_form.poste.label }}</label>
+                            {{ profil_form.poste }}
+                            {% if profil_form.poste.errors %}<p class="profile-field-error">{{ profil_form.poste.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ profil_form.date_naissance.id_for_label }}">{{ profil_form.date_naissance.label }}</label>
+                            {{ profil_form.date_naissance }}
+                            {% if profil_form.date_naissance.errors %}<p class="profile-field-error">{{ profil_form.date_naissance.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field profile-field--full">
+                            <label class="profile-field-label" for="{{ profil_form.bio.id_for_label }}">{{ profil_form.bio.label }}</label>
+                            {{ profil_form.bio }}
+                            {% if profil_form.bio.errors %}<p class="profile-field-error">{{ profil_form.bio.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label">Rôle</label>
+                            <div class="profile-readonly">{% if user.is_superuser %}Administrateur{% else %}{{ user.get_role_display }}{% endif %}</div>
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label">Localité</label>
+                            <div class="profile-readonly">{% if user.local_entrepot %}{{ user.local_entrepot.nom }}{% else %}—{% endif %}</div>
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label">N° employé</label>
+                            <div class="profile-readonly">{{ profil.numero_employe|default:"—" }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="tab === 'coords'">
+                    <div class="profile-section-head">
+                        <span class="profile-section-head__icon"><i class="fa fa-map-marker"></i></span>
+                        <div>
+                            <h3 class="profile-section-head__title">Coordonnées</h3>
+                            <p class="profile-section-head__desc">E-mail, téléphone et adresse postale.</p>
+                        </div>
+                    </div>
+                    <div class="profile-form-grid profile-form-grid--3">
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ user_form.email.id_for_label }}">{{ user_form.email.label }}</label>
+                            {{ user_form.email }}
+                            {% if user_form.email.errors %}<p class="profile-field-error">{{ user_form.email.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ user_form.contact.id_for_label }}">{{ user_form.contact.label }}</label>
+                            {{ user_form.contact }}
+                            {% if user_form.contact.errors %}<p class="profile-field-error">{{ user_form.contact.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field profile-field--full">
+                            <label class="profile-field-label" for="{{ profil_form.adresse.id_for_label }}">{{ profil_form.adresse.label }}</label>
+                            {{ profil_form.adresse }}
+                            {% if profil_form.adresse.errors %}<p class="profile-field-error">{{ profil_form.adresse.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ profil_form.ville.id_for_label }}">{{ profil_form.ville.label }}</label>
+                            {{ profil_form.ville }}
+                            {% if profil_form.ville.errors %}<p class="profile-field-error">{{ profil_form.ville.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ profil_form.code_postal.id_for_label }}">{{ profil_form.code_postal.label }}</label>
+                            {{ profil_form.code_postal }}
+                            {% if profil_form.code_postal.errors %}<p class="profile-field-error">{{ profil_form.code_postal.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-field-label" for="{{ profil_form.pays.id_for_label }}">{{ profil_form.pays.label }}</label>
+                            {{ profil_form.pays }}
+                            {% if profil_form.pays.errors %}<p class="profile-field-error">{{ profil_form.pays.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if user_form.non_field_errors or profil_form.non_field_errors %}
+                <div class="profile-field-error mt-2">
+                    {% for err in user_form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
+                    {% for err in profil_form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="profile-form-actions">
+                    <button type="submit" class="profile-btn-primary">
+                        <i class="fa fa-save" aria-hidden="true"></i>
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+
+            <form method="post" action="{% url 'change_password' %}"
+                class="profile-panel w-full"
+                x-show="tab === 'security'" x-cloak>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="change_password">
+                <input type="hidden" name="active_tab" value="security">
+                <div class="profile-section-head">
+                    <span class="profile-section-head__icon"><i class="fa fa-lock"></i></span>
+                    <div>
+                        <h3 class="profile-section-head__title">Modifier mon mot de passe</h3>
+                        <p class="profile-section-head__desc">Choisissez un mot de passe fort et unique.</p>
+                    </div>
+                </div>
+                <div class="profile-form-grid profile-form-grid--1 profile-form-grid--narrow">
+                    <div class="profile-field">
+                        <label class="profile-field-label" for="{{ password_form.old_password.id_for_label }}">{{ password_form.old_password.label }} <span class="profile-required">*</span></label>
+                        {{ password_form.old_password }}
+                        {% if password_form.old_password.errors %}<p class="profile-field-error">{{ password_form.old_password.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div class="profile-field">
+                        <label class="profile-field-label" for="{{ password_form.new_password1.id_for_label }}">{{ password_form.new_password1.label }} <span class="profile-required">*</span></label>
+                        {{ password_form.new_password1 }}
+                        {% if password_form.new_password1.errors %}<p class="profile-field-error">{{ password_form.new_password1.errors.0 }}</p>{% endif %}
+                        {% if password_form.new_password1.help_text %}<p class="profile-field-hint">{{ password_form.new_password1.help_text|safe }}</p>{% endif %}
+                    </div>
+                    <div class="profile-field">
+                        <label class="profile-field-label" for="{{ password_form.new_password2.id_for_label }}">{{ password_form.new_password2.label }} <span class="profile-required">*</span></label>
+                        {{ password_form.new_password2 }}
+                        {% if password_form.new_password2.errors %}<p class="profile-field-error">{{ password_form.new_password2.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+                <div class="profile-form-actions">
+                    <button type="submit" class="profile-btn-primary">
+                        <i class="fa fa-save" aria-hidden="true"></i>
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+
+            <div class="profile-panel w-full"
+                x-show="tab === 'permissions'" x-cloak>
+                <div class="profile-section-head">
+                    <span class="profile-section-head__icon"><i class="fa fa-shield"></i></span>
+                    <div>
+                        <h3 class="profile-section-head__title">Permissions</h3>
+                        <p class="profile-section-head__desc">{{ permissions_count }} droit(s) d'accès attribué(s) — lecture seule.</p>
+                    </div>
+                </div>
+                <div class="profile-perms-grid">
+                    <div class="profile-perms-card">
+                        <h4>Personnalisées</h4>
+                        {% if custom_permissions %}
+                        <ul>
+                            {% for perm in custom_permissions %}
+                            <li>
+                                <span><i class="fa fa-check-circle"></i> {{ perm.name }}</span>
+                                <em>{{ perm.categorie.categorie }}</em>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}<p class="profile-perms-empty">Aucune.</p>{% endif %}
+                    </div>
+                    <div class="profile-perms-card">
+                        <h4>Système</h4>
+                        {% if django_permissions %}
+                        <ul>
+                            {% for perm in django_permissions %}
+                            <li><span><i class="fa fa-check-circle"></i> {{ perm.name }}</span></li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}<p class="profile-perms-empty">Aucune.</p>{% endif %}
+                    </div>
+                    <div class="profile-perms-card">
+                        <h4>Via groupes</h4>
+                        {% if group_permissions %}
+                        <ul>
+                            {% for perm in group_permissions %}
+                            <li><span><i class="fa fa-check-circle"></i> {{ perm.name }}</span></li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}<p class="profile-perms-empty">Aucune.</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}

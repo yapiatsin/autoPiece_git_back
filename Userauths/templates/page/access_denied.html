@@ -1,0 +1,47 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Accès interdit — AUTO-PIÈCE</title>
+    <link rel="icon" href="{% static 'medicon/favicon.ico' %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="{% static 'apps/assets/vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/mag-ecom.css' %}">
+</head>
+<body class="access-denied-standalone">
+    <div class="modal fade show access-denied-modal" id="accessDeniedModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="accessDeniedTitle" style="display: block;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content access-denied-modal__content">
+                <div class="access-denied-modal__header">
+                    <span class="access-denied-modal__header-icon" aria-hidden="true">
+                        <i class="fa fa-exclamation-triangle"></i>
+                    </span>
+                    <h1 class="access-denied-modal__header-title" id="accessDeniedTitle">Accès interdit</h1>
+                </div>
+                <div class="access-denied-modal__body">
+                    <div class="access-denied-modal__lock" aria-hidden="true">
+                        <i class="fa fa-lock"></i>
+                    </div>
+                    <p class="access-denied-modal__eyebrow">Sécurité</p>
+                    <h2 class="access-denied-modal__heading">Accès interdit</h2>
+                    <p class="access-denied-modal__text">
+                        {{ message|default:"Vous n'avez pas la permission d'accéder à cette page." }}
+                    </p>
+                    <p class="access-denied-modal__hint">
+                        Contactez un administrateur pour obtenir les droits nécessaires, ou déconnectez-vous.
+                    </p>
+                </div>
+                <div class="access-denied-modal__footer">
+                    <a href="{% url 'deconnexion' %}" class="access-denied-btn access-denied-btn--logout">
+                        <i class="fa fa-sign-out" aria-hidden="true"></i>
+                        Déconnexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show access-denied-backdrop"></div>
+</body>
+</html>

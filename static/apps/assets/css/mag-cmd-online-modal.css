@@ -1,0 +1,117 @@
+/* Commandes / livraisons en ligne — badges + modal facture compact */
+
+.badge-outline-info {
+    background: transparent !important;
+    color: var(--mag-primary, #ea580c) !important;
+    border: 1px solid var(--mag-primary, #ea580c);
+    font-weight: 600;
+}
+
+#modal-cmd-line-detail .modal-dialog,
+#modal-livraison-cmd-detail .modal-dialog {
+    max-width: 720px;
+}
+
+#modal-cmd-line-detail .modal-header,
+#modal-cmd-line-detail .modal-footer,
+#modal-livraison-cmd-detail .modal-header,
+#modal-livraison-cmd-detail .modal-footer {
+    padding: 0.65rem 1rem;
+}
+
+#modal-cmd-line-detail .modal-title,
+#modal-livraison-cmd-detail .modal-title {
+    font-size: 1rem;
+}
+
+#modal-cmd-line-detail .modal-body,
+#modal-livraison-cmd-detail .modal-body {
+    background: #f5f5f5;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.mag-cmd-invoice-modal .ecom-invoice-card,
+.mag-cmd-invoice-modal .mag-cmd-invoice-card {
+    margin: 0 auto !important;
+    max-width: 100%;
+    padding: 1rem 1.15rem !important;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-top {
+    margin-bottom: 1rem;
+    gap: 0.75rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-title {
+    font-size: 1.75rem !important;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-brand {
+    font-size: 0.9rem !important;
+    margin-top: 0.25rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-logo {
+    max-width: 88px;
+    max-height: 46px;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-meta-row {
+    gap: 1rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-field {
+    margin-bottom: 0.35rem;
+    font-size: 0.82rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-label {
+    font-size: 0.78rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-value {
+    font-size: 0.82rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-section-title {
+    font-size: 0.95rem !important;
+    margin: 0.75rem 0 0.5rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-table thead th,
+.mag-cmd-invoice-modal .ecom-inv-table tbody td {
+    font-size: 0.8rem !important;
+    padding: 0.4rem 0.35rem !important;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-item-name {
+    font-size: 0.82rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-item-code {
+    font-size: 0.72rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-total-label {
+    font-size: 0.8rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-total-amount {
+    font-size: 1.35rem !important;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-footer {
+    font-size: 0.78rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-footer-title {
+    font-size: 0.85rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-rule {
+    margin: 0.75rem 0;
+}

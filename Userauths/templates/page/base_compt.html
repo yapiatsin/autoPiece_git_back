@@ -1,0 +1,99 @@
+{% load static %}
+{% if not user.is_authenticated %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}AUTO-PIECE{% endblock title %}</title>
+    <link rel="icon" href="{% static 'icn.png' %}" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/auth.css' %}">
+    {% block extra_head %}{% endblock extra_head %}
+</head>
+<body class="auth-page">
+    <div class="auth-shell">
+        <aside class="auth-showcase">
+            {% include 'page/partials/auth_showcase.html' %}
+        </aside>
+        <main class="auth-panel {% block auth_panel_class %}{% endblock %}">
+            <div class="auth-panel__frame {% block auth_frame_class %}{% endblock %}">
+                {% block auth_deco_left %}{% endblock auth_deco_left %}
+                <div class="auth-panel__inner">
+                    <a href="{% url 'ecom_index' %}" class="auth-panel__brand">
+                        <img src="{% static 'logo.png' %}" alt="AUTO-PIECE" class="logo ecom-logo-img">
+                    </a>
+                    {% if messages %}
+                        {% for msg in messages %}
+                        <div class="auth-alert auth-alert--{{ msg.tags|default:'info' }}" role="alert">
+                            {{ msg }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% block auth_content %}{% endblock auth_content %}
+                </div>
+                {% block auth_deco_right %}{% endblock auth_deco_right %}
+            </div>
+        </main>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        /* ── Showcase : cartes animées ── */
+        var cards = document.querySelectorAll('[data-auth-card]');
+        var floatDurations = [5.2, 4.6, 5.8];
+        cards.forEach(function (card, i) {
+            var delay = (parseInt(card.getAttribute('data-delay'), 10) || 0) * 180;
+            card.style.animationDelay = delay + 'ms';
+            card.style.setProperty('--float-dur', floatDurations[i % 3] + 's');
+            card.style.setProperty('--float-delay', (0.7 + delay / 1000) + 's');
+            setTimeout(function () {
+                card.classList.add('is-visible', 'is-floating');
+            }, delay + 80);
+        });
+
+        var footer = document.querySelector('.auth-showcase__footer');
+        if (footer) {
+            setTimeout(function () { footer.classList.add('is-visible'); }, 700);
+        }
+
+        document.querySelectorAll('[data-count-up]').forEach(function (el) {
+            var target = parseInt(el.getAttribute('data-target'), 10) || 0;
+            var prefix = el.getAttribute('data-prefix') || '';
+            var suffix = el.getAttribute('data-suffix') || '';
+            var start = 0;
+            var duration = 1200;
+            var t0 = performance.now() + 600;
+            function tick(now) {
+                if (now < t0) { requestAnimationFrame(tick); return; }
+                var p = Math.min((now - t0) / duration, 1);
+                var eased = 1 - Math.pow(1 - p, 3);
+                var val = Math.round(start + (target - start) * eased);
+                el.textContent = prefix + val.toLocaleString('fr-FR') + suffix;
+                if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        });
+
+        /* ── Formulaires ── */
+        document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = document.getElementById(btn.getAttribute('data-toggle-password'));
+                if (!input) return;
+                var isPwd = input.type === 'password';
+                input.type = isPwd ? 'text' : 'password';
+                btn.querySelector('i').className = isPwd ? 'fa fa-eye-slash' : 'fa fa-eye';
+            });
+        });
+        var loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function () {
+                var btn = loginForm.querySelector('.auth-btn-primary');
+                if (btn) { btn.disabled = true; btn.textContent = 'Connexion…'; }
+            });
+        }
+    });
+    </script>
+    {% block extra_js %}{% endblock extra_js %}
+</body>
+</html>
+{% endif %}

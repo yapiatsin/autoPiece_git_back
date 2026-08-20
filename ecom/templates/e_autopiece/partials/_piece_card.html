@@ -1,0 +1,55 @@
+{% load static i18n %}
+{# Carte produit avec stock par localité. Parent fournit la colonne (col-*). #}
+<div class="{{ col_class|default:'col-md-6 col-xl-4' }}">
+    <div class="single-shopping-card-one tranding-product h-100">
+        <a href="{{ piece.get_absolute_url }}" class="thumbnail-preview">
+            {% if piece.image %}
+            <img src="{{ piece.image.url }}" alt="{{ piece.designation }}">
+            {% else %}
+            <img src="{% static 'e_assets/images/grocery/07.html' %}" alt="{{ piece.designation }}">
+            {% endif %}
+        </a>
+        <div class="body-content">
+            {% if piece.categorie %}
+            <a href="{% url 'ecom_shop' %}?categorie={{ piece.categorie_id }}" class="ecom-piece-category">
+                {{ piece.categorie.categorie }}
+            </a>
+            {% endif %}
+            <a href="{{ piece.get_absolute_url }}">
+                <h4 class="title">{{ piece.designation }}</h4>
+            </a>
+            <span class="availability">{{ piece.numero_piece }}</span>
+            <div class="stock-par-localite mt-2 mb-2">
+                {% for stock in piece.stocks_disponibles %}
+                <span class="d-inline-block badge bg-light text-dark border me-1 mb-1">
+                    {{ stock.local_entrepot.nom }}: <strong>{{ stock.quantite_disponible }}</strong>
+                </span>
+                {% empty %}
+                <span class="text-muted small">{% trans "Aucun stock" %}</span>
+                {% endfor %}
+            </div>
+            {% if piece.stock_total %}
+            <p class="small mb-1"><strong>{% trans "Total toutes localités" %} :</strong> {{ piece.stock_total }}</p>
+            {% endif %}
+            <div class="price-area">
+                <span class="current">{{ piece.prix_affiche|floatformat:0 }} FCFA</span>
+                {% if not local_selectionne %}
+                <small class="d-block text-muted">{% trans "Prix catalogue" %}</small>
+                {% endif %}
+            </div>
+            {% if user.is_authenticated %}
+                {% if local_selectionne %}
+                    <form method="post" action="{% url 'ecom_add_to_cart' piece.pk %}" class="mt-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ next_url|default:request.path }}">
+                        <button type="submit" class="rts-btn btn-primary radious-sm w-100">{% trans "Ajouter au panier" %}</button>
+                    </form>
+                {% else %}
+                <p class="small text-muted mt-2 mb-0">{% trans "Sélectionnez une localité pour commander." %}</p>
+                {% endif %}
+            {% else %}
+            <a href="{% url 'connexion' %}?next={{ request.path }}" class="rts-btn btn-primary border-only radious-sm w-100 mt-2">{% trans "Se connecter pour commander" %}</a>
+            {% endif %}
+        </div>
+    </div>
+</div>

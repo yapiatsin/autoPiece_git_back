@@ -1,0 +1,134 @@
+<div class="page">
+    <table class="header-bar" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="55%">
+                <div class="brand-name">P&amp;B AUTO-PIECE</div>
+                <div class="brand-sub">Proforma — Pièces détachées</div>
+            </td>
+            <td width="45%" class="header-contact">
+                Proforma en attente<br>
+                {{ panier.date_creation|date:"d/m/Y" }}{% if panier.date_save %} {{ panier.date_save|date:"H:i" }}{% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <div class="body-pad">
+        <h1 class="doc-title">PROFORMA</h1>
+
+        <table class="meta-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td>
+                    <div class="field">
+                        <div class="field-label">N° proforma</div>
+                        <div class="field-value">{{ panier.ticket }}</div>
+                    </div>
+                    {% if commande %}
+                    <div class="field">
+                        <div class="field-label">N° commande</div>
+                        <div class="field-value">{{ commande.numero_commande }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="field">
+                        <div class="field-label">Date</div>
+                        <div class="field-value">{{ panier.date_creation|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="field">
+                        <div class="field-label">Client</div>
+                        <div class="field-value">{{ panier.nom_client|default:"—" }}</div>
+                    </div>
+                </td>
+                <td class="meta-right">
+                    <div class="field">
+                        <div class="field-label">Agence / Localité</div>
+                        <div class="field-value">{% if localite %}{{ localite.nom }}{% else %}—{% endif %}</div>
+                    </div>
+                    <div class="field">
+                        <div class="field-label">Statut</div>
+                        <div class="field-value"><span class="statut-badge">En attente</span></div>
+                    </div>
+                    <div class="field">
+                        <div class="field-label">Créé par</div>
+                        <div class="field-value">{% if panier.utilisateur %}{{ panier.utilisateur.username }}{% else %}—{% endif %}</div>
+                    </div>
+                    <div class="field">
+                        <div class="field-label">Remise</div>
+                        <div class="field-value">{{ remise_pourcent }}</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="items-table" cellpadding="0" cellspacing="0">
+            <thead>
+                <tr>
+                    <th width="18%">N° pièce</th>
+                    <th>Désignation</th>
+                    <th width="12%" class="text-center">Quantité</th>
+                    <th width="14%" class="text-right">Prix unit.</th>
+                    <th width="14%" class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in lignes %}
+                <tr>
+                    <td>{{ ligne.piece.numero_piece }}</td>
+                    <td>{{ ligne.piece.designation }}</td>
+                    <td class="text-center">{{ ligne.quantite }}</td>
+                    <td class="text-right">{{ ligne.prix_unitaire_affiche|floatformat:0 }} F</td>
+                    <td class="text-right">{{ ligne.total_ligne|floatformat:0 }} F</td>
+                </tr>
+                {% endfor %}
+                {% for i in empty_rows %}
+                <tr class="empty-row">
+                    <td>&nbsp;</td><td></td><td></td><td></td><td></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <table class="footer-table" cellpadding="0" cellspacing="0">
+            <tr>
+                <td class="footer-left">
+                    <div class="field-label">Notes / Motif</div>
+                    <div class="notes-box">
+                        Proforma pour <strong>{{ panier.nom_client|default:"client" }}</strong>.
+                        <br/>Validité limitée — les prix peuvent être modifiés sans préavis.
+                        <br/>Merci de votre confiance.
+                    </div>
+                </td>
+                <td class="footer-right">
+                    <table class="summary-table" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td>Nombre de lignes</td>
+                            <td>{{ lignes|length }}</td>
+                        </tr>
+                        <tr>
+                            <td>Quantité totale</td>
+                            <td>{{ total_quantite }}</td>
+                        </tr>
+                        <tr>
+                            <td>Sous-total</td>
+                            <td>{{ total_valeur|floatformat:0 }} Fcfa</td>
+                        </tr>
+                        {% if montant_remise and montant_remise > 0 %}
+                        <tr>
+                            <td>Remise</td>
+                            <td>-{{ remise_pourcent }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td>À payer</td>
+                            <td>{{ total_apres_remise|floatformat:0 }} Fcfa</td>
+                        </tr>
+                    </table>
+                    <div class="sig-block">
+                        <div>Date : _______________</div>
+                        <div style="margin-top:8px;">À : _______________</div>
+                        <div style="margin-top:6px;">Signature :</div>
+                        <div class="sig-line"></div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

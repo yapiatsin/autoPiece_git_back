@@ -1,0 +1,50 @@
+<div class="row dashboard-kpi-row w-100 mx-0">
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--revenue">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-pie-chart"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Revenu &amp; bénéfice</div>
+                    <h4 class="number mb-0">Rev: {{ vente_mens }} — Ben: {{ benefice_mensuel }} <span class="kpi-value-muted">frs</span></h4>
+                    <small class="text-muted">{{ annee }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--entry">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-shopping-cart"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Vente journalière</div>
+                    <h4 class="number mb-0">{{ nb_piece_vendu_day }} <span class="kpi-value-muted">Val {{ vente_day }} frs</span></h4>
+                    <small class="text-muted">{{ day|date:"d-m-Y" }} — {{ annee }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-money"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Vente mensuelle</div>
+                    <h4 class="number mb-0">{{ nb_piece_vendu }} <span class="kpi-value-muted">Val {{ vente_mens }} frs</span></h4>
+                    <small class="text-muted">{{ moislib }} — {{ annee }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
+        <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
+            <div class="body">
+                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-line-chart"></i></span></div>
+                <div class="content">
+                    <div class="text mb-1 text-uppercase">Vente annuelle</div>
+                    <h4 class="number mb-0">{{ nb_piece_vendu_year }} <span class="kpi-value-muted">Val {{ vente_year }} frs</span></h4>
+                    <small class="text-muted">{{ annee }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

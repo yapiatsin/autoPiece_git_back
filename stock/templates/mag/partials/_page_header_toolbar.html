@@ -1,0 +1,12 @@
+{# Toolbar filtre / export — sans blocs Django (inclusion seulement) #}
+<div class="page-header-actions">
+    {% if page_header_action_buttons %}{{ page_header_action_buttons|safe }}{% endif %}
+    {% if page_export_url %}
+    <a href="{{ page_export_url }}" class="btn btn-outline-secondary" title="{{ page_export_title|default:'Télécharger' }}"{% if page_export_download %} download="{{ page_export_download }}"{% endif %}>
+        <i class="fa fa-download"></i>
+    </a>
+    {% endif %}
+    {% if filter_modal_id %}
+    {% include "mag/partials/_periode_filter_header.html" %}
+    {% endif %}
+</div>

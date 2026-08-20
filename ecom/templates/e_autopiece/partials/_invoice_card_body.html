@@ -1,0 +1,184 @@
+{% load static i18n %}
+<div class="invoice-main-wrapper-1 ecom-invoice-card{% if invoice_card_extra_class %} {{ invoice_card_extra_class }}{% endif %}"{% if invoice_card_id %} id="{{ invoice_card_id }}"{% endif %}>
+
+    {# ——— En-tête ——— #}
+    <div class="ecom-inv-top">
+        <div class="ecom-inv-top-left">
+            <h1 class="ecom-inv-title">{% trans "Facture" %}</h1>
+            <p class="ecom-inv-brand">Auto-Pièce{% if commande.panier.local_entrepot %} — {{ commande.panier.local_entrepot.nom }}{% endif %}</p>
+        </div>
+        <div class="ecom-inv-top-right">
+            <img src="{% static 'logo.png' %}" alt="AUTO-PIECE" class="ecom-inv-logo">
+        </div>
+    </div>
+
+    {# ——— Infos en 2 colonnes ——— #}
+    <div class="ecom-inv-meta-row">
+        <div class="ecom-inv-col">
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Client" %}</span>
+                <span class="ecom-inv-value ecom-inv-value--strong">
+                    {{ commande.panier.utilisateur.get_full_name|default:commande.panier.nom_client|default:commande.panier.utilisateur.username }}
+                </span>
+            </div>
+            {% if commande.panier.utilisateur.email %}
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Email" %}</span>
+                <span class="ecom-inv-value">{{ commande.panier.utilisateur.email }}</span>
+            </div>
+            {% endif %}
+            {% if commande.panier.telephone_livraison or commande.panier.utilisateur.contact %}
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Tél." %}</span>
+                <span class="ecom-inv-value">
+                    {{ commande.panier.telephone_livraison|default:commande.panier.utilisateur.contact }}
+                </span>
+            </div>
+            {% endif %}
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Réception" %}</span>
+                <span class="ecom-inv-value ecom-inv-value--strong">
+                    {{ commande.panier.get_mode_reception_display|default:"—" }}
+                </span>
+            </div>
+            {% if commande.panier.mode_reception == 'livraison' %}
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Adresse" %}</span>
+                <span class="ecom-inv-value">
+                    {% if commande.panier.livraison_pays %}{{ commande.panier.livraison_pays.nom }}{% endif %}
+                    {% if commande.panier.livraison_ville %}{% if commande.panier.livraison_pays %}, {% endif %}{{ commande.panier.livraison_ville.nom }}{% endif %}
+                    {% if commande.panier.livraison_commune %}, {{ commande.panier.livraison_commune.nom }}{% endif %}
+                    {% if commande.panier.adresse_domicile %}<br>{{ commande.panier.adresse_domicile }}{% endif %}
+                    {% if not commande.panier.livraison_ville and not commande.panier.adresse_domicile %}—{% endif %}
+                </span>
+            </div>
+            {% if commande.panier.instruction_livraison %}
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Instructions" %}</span>
+                <span class="ecom-inv-value">{{ commande.panier.instruction_livraison }}</span>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Retrait" %}</span>
+                <span class="ecom-inv-value">{{ commande.panier.local_entrepot.nom|default:"—" }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="ecom-inv-col ecom-inv-col--right">
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "N° facture" %}</span>
+                <span class="ecom-inv-value ecom-inv-value--strong">{{ commande.numero_commande }}</span>
+            </div>
+            {% if commande.panier.ticket %}
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Ticket" %}</span>
+                <span class="ecom-inv-value">{{ commande.panier.ticket }}</span>
+            </div>
+            {% endif %}
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Date" %}</span>
+                <span class="ecom-inv-value">
+                    {% if commande.date %}{{ commande.date|date:"d/m/Y H:i" }}{% else %}{{ commande.date_creation|date:"d/m/Y" }}{% endif %}
+                </span>
+            </div>
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Livreur" %}</span>
+                <span class="ecom-inv-value ecom-inv-value--strong">
+                    {% if commande.livreur %}
+                        {{ commande.livreur.get_full_name|default:commande.livreur.username }}
+                        {% if commande.livreur.contact %}<br>{% trans "Tél." %} {{ commande.livreur.contact }}{% endif %}
+                    {% else %}
+                        {% trans "Non assigné" %}
+                    {% endif %}
+                </span>
+            </div>
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Paiement" %}</span>
+                <span class="ecom-inv-value">
+                    {% if commande.paye %}{% trans "Payée" %}{% else %}{% trans "Non payée" %}{% endif %}
+                    {% if commande.moyen_paiement %} — {{ commande.moyen_paiement.nom }}{% endif %}
+                </span>
+            </div>
+            <div class="ecom-inv-field">
+                <span class="ecom-inv-label">{% trans "Statut" %}</span>
+                <span class="ecom-inv-value">{{ commande.get_statut_commande_display }}</span>
+            </div>
+        </div>
+    </div>
+
+    <hr class="ecom-inv-rule">
+
+    {# ——— Articles ——— #}
+    <h2 class="ecom-inv-section-title">{% trans "Détail des articles" %}</h2>
+
+    <div class="ecom-inv-table-wrap">
+        <table class="ecom-inv-table">
+            <thead>
+                <tr>
+                    <th class="ecom-inv-th-desc">{% trans "Description" %}</th>
+                    <th class="ecom-inv-th-num">{% trans "Quantité" %}</th>
+                    <th class="ecom-inv-th-num">{% trans "Prix unitaire" %}</th>
+                    <th class="ecom-inv-th-num">{% trans "Total" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td class="ecom-inv-td-desc">
+                        <span class="ecom-inv-item-name">{{ item.piece.designation }}</span>
+                        {% if item.piece.categorie %}
+                        <span class="ecom-inv-item-category">{{ item.piece.categorie.categorie }}</span>
+                        {% endif %}
+                        {% if item.piece.numero_piece %}
+                        <span class="ecom-inv-item-code">{{ item.piece.numero_piece }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="ecom-inv-td-num">{{ item.quantite }}</td>
+                    <td class="ecom-inv-td-num">{{ item.prix_unitaire_applique|floatformat:0 }} FCFA</td>
+                    <td class="ecom-inv-td-num">{{ item.prix_total|floatformat:0 }} FCFA</td>
+                </tr>
+                {% endfor %}
+                {% if frais_livraison %}
+                <tr>
+                    <td class="ecom-inv-td-desc">{% trans "Livraison" %}</td>
+                    <td class="ecom-inv-td-num">1</td>
+                    <td class="ecom-inv-td-num">{{ frais_livraison|floatformat:0 }} FCFA</td>
+                    <td class="ecom-inv-td-num">{{ frais_livraison|floatformat:0 }} FCFA</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="ecom-inv-total-block">
+        <span class="ecom-inv-total-label">{% trans "Montant total :" %}</span>
+        <span class="ecom-inv-total-amount">{{ commande.total|floatformat:0 }} FCFA</span>
+    </div>
+
+    <hr class="ecom-inv-rule">
+
+    {# ——— Pied ——— #}
+    <div class="ecom-inv-footer">
+        <p class="ecom-inv-footer-title">{% trans "Informations" %}</p>
+        <p>
+            {% trans "Agence" %} : {{ commande.panier.local_entrepot.nom|default:"—" }}
+        </p>
+        <p>
+            {% trans "Statut" %} : {{ commande.get_statut_commande_display }}
+            — {% if commande.paye %}{% trans "Payée" %}{% else %}{% trans "Non payée" %}{% endif %}
+            {% if commande.paye and commande.montant_paye %}
+            — {% trans "Montant payé" %} : {{ commande.montant_paye|floatformat:0 }} FCFA
+            {% endif %}
+        </p>
+        {% if commande.client_confirme_reception %}
+        <p>
+            {% trans "Réception confirmée par le client" %}
+            {% if commande.date_reception_client %}
+            ({{ commande.date_reception_client|date:"d/m/Y H:i" }})
+            {% endif %}
+        </p>
+        {% endif %}
+    </div>
+</div>

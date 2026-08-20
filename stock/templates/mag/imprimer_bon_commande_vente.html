@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ print_title }}</title>
+    {% include 'mag/partials/_bon_commande_vente_styles.html' %}
+</head>
+<body class="bon-commande-vente-print">
+    <div class="toolbar">
+        <button type="button" onclick="imprimerSansEntetes()">Imprimer</button>
+        <a href="{% url 'imprimer_bon_commande_vente' bon.ticket_numero %}?format=pdf" target="_blank" class="btn-pdf" download="{{ pdf_filename }}">PDF (recommandé)</a>
+        <button type="button" class="btn-secondary" onclick="window.close()">Fermer</button>
+        <p class="print-hint">
+            PDF : affichage identique sans en-têtes navigateur. Impression HTML : décocher
+            « En-têtes et pieds de page » dans la boîte de dialogue.
+        </p>
+    </div>
+
+    {% include 'mag/partials/_bon_commande_vente_body.html' %}
+
+    <script>
+    (function () {
+        var titreImpression = '{{ print_title|escapejs }}';
+        document.title = titreImpression;
+        function imprimerSansEntetes() {
+            document.title = titreImpression;
+            window.print();
+        }
+        window.imprimerSansEntetes = imprimerSansEntetes;
+        {% if auto_print %}
+        window.addEventListener('load', function () {
+            setTimeout(imprimerSansEntetes, 300);
+        });
+        {% endif %}
+    })();
+    </script>
+</body>
+</html>

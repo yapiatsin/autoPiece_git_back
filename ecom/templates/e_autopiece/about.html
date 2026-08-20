@@ -1,0 +1,237 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "À propos" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h ecom-about-page{% endblock body_class %}
+{% block content %}
+<div class="rts-navigation-area-breadcrumb bg_light-1">
+    <div class="container">
+        <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span class="current">{% trans "À propos" %}</span>
+        </div>
+    </div>
+</div>
+
+<section class="ecom-about-stats rts-section-gapTop">
+    <div class="container">
+        <div class="ecom-about-stats-grid">
+            <div class="ecom-about-stat-card">
+                <span class="ecom-about-stat-icon"><i class="fa-solid fa-store"></i></span>
+                <p class="ecom-about-stat-value">{{ about_stats.nb_localites|default:"—" }}</p>
+                <p class="ecom-about-stat-label">{% trans "Localités actives" %}</p>
+            </div>
+            <div class="ecom-about-stat-card">
+                <span class="ecom-about-stat-icon"><i class="fa-solid fa-gears"></i></span>
+                <p class="ecom-about-stat-value">{{ about_stats.nb_pieces|default:"—" }}+</p>
+                <p class="ecom-about-stat-label">{% trans "Pièces au catalogue" %}</p>
+            </div>
+            <div class="ecom-about-stat-card">
+                <span class="ecom-about-stat-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                <p class="ecom-about-stat-value">{% trans "Livraison" %}</p>
+                <p class="ecom-about-stat-label">{% trans "Ou retrait en agence" %}</p>
+            </div>
+            <div class="ecom-about-stat-card">
+                <span class="ecom-about-stat-icon"><i class="fa-solid fa-headset"></i></span>
+                <p class="ecom-about-stat-value">8h–18h</p>
+                <p class="ecom-about-stat-label">{% trans "Support lun. – sam." %}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="ecom-about-story rts-section-gap">
+    <div class="container">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-5">
+                <div class="ecom-about-story-visual">
+                    <span class="ecom-about-story-icon" aria-hidden="true"><i class="fa-solid fa-car-side"></i></span>
+                    <h2 class="ecom-about-story-brand">Auto-Pièce</h2>
+                    <p class="ecom-about-story-tagline">{% trans "Pièces auto · Localités · Commande en ligne" %}</p>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="ecom-about-story-content">
+                    <span class="ecom-about-eyebrow">{% trans "Notre histoire" %}</span>
+                    <h1 class="ecom-about-section-title ecom-about-story-heading">
+                        {% trans "Auto-Pièce, votre partenaire pièces auto en Côte d'Ivoire" %}
+                    </h1>
+                    <p class="ecom-about-section-text">
+                        {% trans "Nous facilitons l'achat de pièces automobiles en ligne : stock par localité, commande simple, retrait ou livraison selon votre zone." %}
+                    </p>
+                    <p class="ecom-about-section-text">
+                        {% trans "Auto-Pièce met à disposition un catalogue de pièces automobiles réparti sur plusieurs points de vente. Choisissez votre localité, vérifiez la disponibilité en stock, puis commandez en ligne pour un retrait ou une livraison." %}
+                    </p>
+                    <p class="ecom-about-section-text">
+                        {% trans "Notre objectif : réduire les allers-retours inutiles, clarifier les prix et accélérer l'accès aux pièces dont vous avez besoin." %}
+                    </p>
+                    <ul class="ecom-about-checklist">
+                        <li><i class="fa-solid fa-circle-check"></i> {% trans "Stock consultable par localité" %}</li>
+                        <li><i class="fa-solid fa-circle-check"></i> {% trans "Commande en ligne simple et suivie" %}</li>
+                        <li><i class="fa-solid fa-circle-check"></i> {% trans "Retrait en agence ou livraison à domicile" %}</li>
+                        <li><i class="fa-solid fa-circle-check"></i> {% trans "Équipe magasin et livreurs dédiés" %}</li>
+                        <li><i class="fa-solid fa-circle-check"></i> {% trans "Assistance commande et disponibilité pièces" %}</li>
+                        <li><i class="fa-solid fa-circle-check"></i> {% trans "Présence à Abidjan et dans nos localités partenaires" %}</li>
+                    </ul>
+                    <div class="ecom-about-hero-actions ecom-about-story-actions">
+                        <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary">{% trans "Voir la boutique" %}</a>
+                        <a href="{% url 'ecom_contact' %}" class="rts-btn btn-primary border-only">{% trans "Nous contacter" %}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="ecom-about-values rts-section-gap bg_light-1">
+    <div class="container">
+        <div class="ecom-about-section-head">
+            <h2 class="ecom-about-section-title text-center">{% trans "Ce qui nous guide" %}</h2>
+            <p class="ecom-about-section-text text-center">
+                {% trans "Des engagements concrets pour une expérience d'achat claire et fiable." %}
+            </p>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-lg-4 col-md-6">
+                <div class="ecom-about-value-card">
+                    <span class="ecom-about-value-num">01</span>
+                    <span class="ecom-about-value-icon"><i class="fa-solid fa-map-location-dot"></i></span>
+                    <h3 class="ecom-about-value-title">{% trans "Proximité locale" %}</h3>
+                    <p class="ecom-about-value-text">
+                        {% trans "Chaque commande est liée à une localité : vous savez où se trouve la pièce et comment la récupérer." %}
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="ecom-about-value-card">
+                    <span class="ecom-about-value-num">02</span>
+                    <span class="ecom-about-value-icon"><i class="fa-solid fa-boxes-stacked"></i></span>
+                    <h3 class="ecom-about-value-title">{% trans "Disponibilité réelle" %}</h3>
+                    <p class="ecom-about-value-text">
+                        {% trans "Le catalogue affiche le stock disponible pour éviter les commandes impossibles à honorer." %}
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="ecom-about-value-card">
+                    <span class="ecom-about-value-num">03</span>
+                    <span class="ecom-about-value-icon"><i class="fa-solid fa-handshake"></i></span>
+                    <h3 class="ecom-about-value-title">{% trans "Service client" %}</h3>
+                    <p class="ecom-about-value-text">
+                        {% trans "Notre équipe vous accompagne pour le suivi, la livraison, le retrait et les questions de disponibilité." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="ecom-about-howto rts-section-gap">
+    <div class="container">
+        <div class="ecom-about-section-head">
+            <h2 class="ecom-about-section-title text-center">{% trans "Comment ça marche ?" %}</h2>
+            <p class="ecom-about-section-text text-center">
+                {% trans "Quatre étapes pour commander vos pièces en toute simplicité." %}
+            </p>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-lg-3 col-md-6">
+                <div class="ecom-about-step">
+                    <span class="ecom-about-step-num">1</span>
+                    <h3 class="ecom-about-step-title">{% trans "Choisir une localité" %}</h3>
+                    <p class="ecom-about-step-text">{% trans "Sélectionnez l'agence la plus proche pour voir le stock correspondant." %}</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="ecom-about-step">
+                    <span class="ecom-about-step-num">2</span>
+                    <h3 class="ecom-about-step-title">{% trans "Ajouter au panier" %}</h3>
+                    <p class="ecom-about-step-text">{% trans "Parcourez le catalogue, filtrez par catégorie et ajoutez les pièces nécessaires." %}</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="ecom-about-step">
+                    <span class="ecom-about-step-num">3</span>
+                    <h3 class="ecom-about-step-title">{% trans "Valider la commande" %}</h3>
+                    <p class="ecom-about-step-text">{% trans "Choisissez retrait ou livraison, puis confirmez vos informations." %}</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="ecom-about-step">
+                    <span class="ecom-about-step-num">4</span>
+                    <h3 class="ecom-about-step-title">{% trans "Suivre et recevoir" %}</h3>
+                    <p class="ecom-about-step-text">{% trans "Suivez l'avancement depuis votre compte jusqu'à la réception." %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="ecom-about-cta rts-section-gapBottom">
+    <div class="container">
+        <div class="ecom-about-cta-box">
+            <div>
+                <h2 class="ecom-about-cta-title">{% trans "Prêt à trouver votre pièce ?" %}</h2>
+                <p class="ecom-about-cta-text">
+                    {% trans "Explorez le catalogue ou contactez-nous pour une disponibilité spécifique." %}
+                </p>
+            </div>
+            <div class="ecom-about-cta-actions">
+                <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary">{% trans "Parcourir la boutique" %}</a>
+                <a href="{% url 'ecom_localites' %}" class="rts-btn btn-primary border-only">{% trans "Voir les localités" %}</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="rts-shorts-service-area rts-section-gap bg_primary">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                <div class="single-short-service-area-start">
+                    <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-tags"></i></span>
+                    </div>
+                    <div class="information">
+                        <h4 class="title">{% trans "Prix compétitifs" %}</h4>
+                        <p class="disc">{% trans "Des pièces auto au juste prix, par localité." %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                <div class="single-short-service-area-start">
+                    <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-rotate-left"></i></span>
+                    </div>
+                    <div class="information">
+                        <h4 class="title">{% trans "Assistance commande" %}</h4>
+                        <p class="disc">{% trans "Aide pour vos commandes en ligne et retraits." %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                <div class="single-short-service-area-start">
+                    <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-headset"></i></span>
+                    </div>
+                    <div class="information">
+                        <h4 class="title">{% trans "Support réactif" %}</h4>
+                        <p class="disc">{% trans "Une équipe disponible pour vos questions." %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                <div class="single-short-service-area-start">
+                    <div class="icon-area">
+                        <span class="ecom-contact-service-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                    </div>
+                    <div class="information">
+                        <h4 class="title">{% trans "Livraison locale" %}</h4>
+                        <p class="disc">{% trans "Retrait ou livraison selon votre localité." %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

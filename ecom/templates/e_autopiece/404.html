@@ -1,0 +1,135 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Page introuvable" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+{% block content %}
+    <div class="rts-navigation-area-breadcrumb bg_light-1">
+        <div class="container">
+            <div class="navigator-breadcrumb-wrapper">
+                <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span class="current">{% trans "404" %}</span>
+                    </div>
+                </div>
+            </div>
+
+    <section class="ecom-contact-hero ecom-404-hero">
+        <div class="container">
+            <div class="ecom-contact-hero-inner">
+                <span class="ecom-contact-eyebrow">{% trans "Erreur 404" %}</span>
+                <h1 class="ecom-contact-hero-title">{% trans "Page introuvable" %}</h1>
+                <p class="ecom-contact-hero-text">
+                    {% trans "La page que vous cherchez n’existe pas ou a été déplacée. Revenez à l’accueil ou explorez notre catalogue." %}
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="ecom-contact-info rts-section-gap">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <a href="{% url 'ecom_index' %}" class="ecom-contact-card ecom-404-card-link">
+                        <div class="ecom-contact-card-icon"><i class="fa-solid fa-house"></i></div>
+                        <h3 class="ecom-contact-card-title">{% trans "Accueil" %}</h3>
+                        <p class="ecom-contact-card-text">{% trans "Retour à la page d’accueil Auto-Pièce" %}</p>
+                        <span class="ecom-contact-card-link">{% trans "Aller à l’accueil" %}</span>
+                    </a>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <a href="{% url 'ecom_shop' %}" class="ecom-contact-card ecom-404-card-link">
+                        <div class="ecom-contact-card-icon"><i class="fa-solid fa-store"></i></div>
+                        <h3 class="ecom-contact-card-title">{% trans "Boutique" %}</h3>
+                        <p class="ecom-contact-card-text">{% trans "Parcourir les pièces disponibles" %}</p>
+                        <span class="ecom-contact-card-link">{% trans "Voir le catalogue" %}</span>
+                    </a>
+                </div>
+                <div class="col-lg-4 col-md-12">
+                    <a href="{% url 'ecom_contact' %}" class="ecom-contact-card ecom-404-card-link">
+                        <div class="ecom-contact-card-icon"><i class="fa-solid fa-headset"></i></div>
+                        <h3 class="ecom-contact-card-title">{% trans "Contact" %}</h3>
+                        <p class="ecom-contact-card-text">{% trans "Besoin d’aide ? Écrivez-nous" %}</p>
+                        <span class="ecom-contact-card-link">{% trans "Nous contacter" %}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="ecom-contact-main rts-section-gapBottom">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-7">
+                    <div class="ecom-contact-form-card ecom-contact-form-modern ecom-404-panel">
+                        <div class="ecom-404-code" aria-hidden="true">404</div>
+                        <h2 class="ecom-contact-form-title">{% trans "Cette page n’est pas disponible" %}</h2>
+                        <p class="ecom-contact-form-text">
+                            {% trans "Désolé, nous n’avons pas trouvé la page demandée. Vous pouvez revenir à l’accueil ou continuer vos achats." %}
+                        </p>
+                        <div class="ecom-404-actions">
+                            <a href="{% url 'ecom_index' %}" class="ecom-contact-submit-pill">
+                                {% trans "Retour à l’accueil" %}
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                            <a href="{% url 'ecom_shop' %}" class="ecom-404-btn-secondary">
+                                {% trans "Voir la boutique" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rts-shorts-service-area rts-section-gap bg_primary">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-tags"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Prix compétitifs" %}</h4>
+                            <p class="disc">{% trans "Des pièces auto au juste prix, par localité." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-rotate-left"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Assistance commande" %}</h4>
+                            <p class="disc">{% trans "Aide pour vos commandes en ligne et retraits." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-headset"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Support réactif" %}</h4>
+                            <p class="disc">{% trans "Une équipe disponible pour vos questions." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Livraison locale" %}</h4>
+                            <p class="disc">{% trans "Retrait ou livraison selon votre localité." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}
+    

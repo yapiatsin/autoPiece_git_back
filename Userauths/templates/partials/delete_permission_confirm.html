@@ -1,0 +1,37 @@
+<div class="modal-body">
+    <p>Êtes-vous sûr de vouloir supprimer la permission <strong>"{{ object.name }}"</strong> ?</p>
+    <p class="text-danger"><small>Cette action est irréversible.</small></p>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-info" data-dismiss="modal">Annuler</button>
+    <form id="deletePermissionForm" method="post" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger">Supprimer</button>
+    </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#deletePermissionForm').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var url = '/permissions/{{ object.pk }}/delete/';
+        var formData = form.serialize();
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            success: function(data) {
+                if (data.success) {
+                    $('#addPermissionModal').modal('hide');
+                    location.reload();
+                }
+            },
+            error: function() {
+                alert('Une erreur est survenue. Veuillez réessayer.');
+            }
+        });
+    });
+});
+</script>
+

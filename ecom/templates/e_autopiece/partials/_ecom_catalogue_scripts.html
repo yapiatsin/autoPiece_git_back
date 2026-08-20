@@ -1,0 +1,128 @@
+{% load static i18n %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var mapEl = document.getElementById('ecom-map');
+    var form = document.getElementById('ecom-local-form');
+    var localInput = document.getElementById('ecom-local-id');
+    var localLabel = document.getElementById('ecom-local-label');
+    var locs = {{ localites_json|safe }};
+    var markers = {};
+    var map;
+
+    function activateTab(code) {
+        var tabBtn = document.querySelector('[data-loc-tab="' + code + '"]');
+        if (tabBtn && typeof bootstrap !== 'undefined') {
+            bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+        }
+        Object.keys(markers).forEach(function (c) {
+            if (markers[c]) {
+                markers[c].setOpacity(c === code || code === 'all' ? 1 : 0.45);
+            }
+        });
+    }
+
+    function saveLocalite(code, nom) {
+        if (!form || code === 'all') return;
+        localInput.value = code;
+        var fd = new FormData(form);
+        fd.set('local_id', code);
+        fetch(form.action, {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success && localLabel) {
+                localLabel.textContent = data.local || nom;
+            }
+        })
+        .catch(function () {});
+    }
+
+    function selectLocalite(code, nom) {
+        activateTab(code);
+        if (code !== 'all') {
+            saveLocalite(code, nom);
+        }
+    }
+
+    if (mapEl && typeof L !== 'undefined') {
+        map = L.map('ecom-map', { scrollWheelZoom: false }).setView([5.3453, -4.0244], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+        var bounds = [];
+        locs.forEach(function (loc) {
+            if (loc.lat == null || loc.lng == null) return;
+            var m = L.marker([loc.lat, loc.lng]).addTo(map);
+            m.bindPopup('<strong>' + loc.nom + '</strong><br><small>{% trans "Cliquer pour voir le stock" %}</small>');
+            m.on('click', function () {
+                selectLocalite(loc.code, loc.nom);
+            });
+            markers[loc.code] = m;
+            bounds.push([loc.lat, loc.lng]);
+        });
+        if (bounds.length) {
+            map.fitBounds(bounds, { padding: [30, 30] });
+        } else {
+            mapEl.innerHTML = '<p class="p-4 text-muted mb-0">{% trans "Aucune coordonnée GPS configurée pour les localités." %}</p>';
+        }
+        setTimeout(function () { map.invalidateSize(); }, 200);
+        {% if local_selectionne %}
+        if (markers['{{ local_selectionne.code }}']) {
+            markers['{{ local_selectionne.code }}'].openPopup();
+        }
+        {% endif %}
+    }
+
+    document.querySelectorAll('[data-loc-tab]').forEach(function (btn) {
+        btn.addEventListener('shown.bs.tab', function (e) {
+            var code = e.target.getAttribute('data-loc-tab');
+            var nom = e.target.textContent.trim();
+            Object.keys(markers).forEach(function (c) {
+                if (markers[c]) markers[c].setOpacity(code === 'all' ? 1 : (c === code ? 1 : 0.45));
+            });
+            if (code !== 'all') saveLocalite(code, nom);
+        });
+    });
+
+    document.querySelectorAll('.ecom-add-cart-form .quantity-edit').forEach(function (wrap) {
+        var input = wrap.querySelector('.input');
+        var minus = wrap.querySelector('.qty-minus');
+        var plus = wrap.querySelector('.qty-plus');
+        if (!input || !minus || !plus) return;
+        var max = parseInt(input.getAttribute('data-max') || input.getAttribute('max') || '99', 10);
+
+        function stopThemeHandler(event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }
+
+        function setQty(next) {
+            var v = parseInt(String(next), 10);
+            if (isNaN(v) || v < 1) v = 1;
+            if (v > max) v = max;
+            input.value = String(v);
+        }
+
+        minus.addEventListener('click', function (event) {
+            stopThemeHandler(event);
+            setQty(parseInt(input.value || '1', 10) - 1);
+        }, true);
+
+        plus.addEventListener('click', function (event) {
+            stopThemeHandler(event);
+            setQty(parseInt(input.value || '1', 10) + 1);
+        }, true);
+
+        input.addEventListener('change', function () {
+            setQty(input.value);
+        });
+    });
+});
+</script>

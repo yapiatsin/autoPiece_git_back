@@ -1,0 +1,13 @@
+{% load static i18n %}
+{% for cat in ecom_categories %}
+<a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="single-category-one ecom-hero-category-card">
+    {% if cat.image %}
+    <img src="{{ cat.image.url }}" alt="{{ cat.categorie }}">
+    {% else %}
+    <span class="ecom-cat-swiper-icon"><i class="fa-solid fa-gears"></i></span>
+    {% endif %}
+    <p>{{ cat.categorie }}</p>
+</a>
+{% empty %}
+    <p class="text-muted mb-0 text-center">{% trans "Aucune catégorie disponible." %}</p>
+{% endfor %}

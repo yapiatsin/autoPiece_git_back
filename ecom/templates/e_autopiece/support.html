@@ -1,0 +1,151 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Centre d'aide" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+{% block content %}
+<div class="rts-navigation-area-breadcrumb bg_light-1">
+    <div class="container">
+        <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span class="current">{% trans "Centre d'aide" %}</span>
+        </div>
+    </div>
+</div>
+
+<section class="ecom-support-section rts-section-gapBottom">
+    <div class="container">
+        <div class="row g-4 ecom-support-layout" id="ecomSupportRoot" data-active-theme="{{ active_theme.slug }}">
+            <div class="col-lg-4">
+                <nav class="ecom-support-nav" aria-label="{% trans 'Thèmes d’aide' %}">
+                    <p class="ecom-support-nav-title">{% trans "Thèmes" %}</p>
+                    <ul class="ecom-support-nav-list">
+                        {% for theme in support_themes %}
+                        <li>
+                            <a href="?theme={{ theme.slug }}"
+                               class="ecom-support-nav-link{% if theme.slug == active_theme.slug %} is-active{% endif %}"
+                               data-support-theme="{{ theme.slug }}"
+                               role="tab"
+                               aria-selected="{% if theme.slug == active_theme.slug %}true{% else %}false{% endif %}">
+                                <span class="ecom-support-nav-icon" aria-hidden="true">
+                                    <i class="fa-solid {{ theme.icon }}"></i>
+                                </span>
+                                <span class="ecom-support-nav-label">{{ theme.label }}</span>
+                                <i class="fa-solid fa-chevron-right ecom-support-nav-chevron" aria-hidden="true"></i>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="ecom-support-nav-help">
+                        <p>{% trans "Vous ne trouvez pas votre réponse ?" %}</p>
+                        <a href="{% url 'ecom_contact' %}">{% trans "Écrire au service client" %}</a>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="ecom-support-panel">
+                    {% for theme in support_themes %}
+                    <div class="ecom-support-theme-panel{% if theme.slug == active_theme.slug %} is-active{% endif %}"
+                         data-support-panel="{{ theme.slug }}"
+                         {% if theme.slug != active_theme.slug %}hidden{% endif %}>
+                        <div class="ecom-support-panel-head">
+                            <h2 class="ecom-support-panel-title">{{ theme.label }}</h2>
+                            <p class="ecom-support-panel-text">
+                                {% blocktrans with label=theme.label %}
+                                Questions fréquentes sur « {{ label }} ».
+                                {% endblocktrans %}
+                            </p>
+                        </div>
+
+                        <div class="accordion ecom-support-accordion" id="supportAccordion-{{ theme.slug }}">
+                            {% for faq in theme.faqs %}
+                            <div class="accordion-item ecom-support-item">
+                                <h3 class="accordion-header" id="supportHeading-{{ theme.slug }}-{{ forloop.counter }}">
+                                    <button class="accordion-button ecom-support-question{% if not forloop.first %} collapsed{% endif %}"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#supportCollapse-{{ theme.slug }}-{{ forloop.counter }}"
+                                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                            aria-controls="supportCollapse-{{ theme.slug }}-{{ forloop.counter }}">
+                                        <span class="ecom-support-question-meta">
+                                            <span class="ecom-support-question-cat">{{ theme.label }}</span>
+                                            <span class="ecom-support-question-text">{{ faq.q }}</span>
+                                        </span>
+                                    </button>
+                                </h3>
+                                <div id="supportCollapse-{{ theme.slug }}-{{ forloop.counter }}"
+                                     class="accordion-collapse collapse{% if forloop.first %} show{% endif %}"
+                                     aria-labelledby="supportHeading-{{ theme.slug }}-{{ forloop.counter }}"
+                                     data-bs-parent="#supportAccordion-{{ theme.slug }}">
+                                    <div class="accordion-body ecom-support-answer">
+                                        {{ faq.a }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="ecom-support-empty">{% trans "Aucune question pour ce thème." %}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <div class="ecom-support-quicklinks">
+                        <a href="{% url 'ecom_shop' %}"><i class="fa-solid fa-car-side" aria-hidden="true"></i> {% trans "Boutique" %}</a>
+                        <a href="{% url 'ecom_localites' %}"><i class="fa-solid fa-store" aria-hidden="true"></i> {% trans "Agences" %}</a>
+                        <a href="{% url 'ecom_account' %}"><i class="fa-solid fa-user" aria-hidden="true"></i> {% trans "Mon compte" %}</a>
+                        <a href="{% url 'ecom_terms_condition' %}"><i class="fa-solid fa-file-lines" aria-hidden="true"></i> {% trans "CGV" %}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var root = document.getElementById('ecomSupportRoot');
+    if (!root) return;
+
+    var links = root.querySelectorAll('[data-support-theme]');
+    var panels = root.querySelectorAll('[data-support-panel]');
+
+    function activateTheme(slug, updateUrl) {
+        if (!slug) return;
+
+        links.forEach(function (link) {
+            var active = link.getAttribute('data-support-theme') === slug;
+            link.classList.toggle('is-active', active);
+            link.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+
+        panels.forEach(function (panel) {
+            var active = panel.getAttribute('data-support-panel') === slug;
+            panel.classList.toggle('is-active', active);
+            if (active) {
+                panel.removeAttribute('hidden');
+            } else {
+                panel.setAttribute('hidden', '');
+            }
+        });
+
+        root.setAttribute('data-active-theme', slug);
+
+        if (updateUrl && window.history && window.history.replaceState) {
+            var url = new URL(window.location.href);
+            url.searchParams.set('theme', slug);
+            window.history.replaceState({}, '', url.pathname + '?' + url.searchParams.toString() + url.hash);
+        }
+    }
+
+    links.forEach(function (link) {
+        link.addEventListener('click', function (event) {
+            event.preventDefault();
+            activateTheme(link.getAttribute('data-support-theme'), true);
+        });
+    });
+})();
+</script>
+{% endblock extra_js %}

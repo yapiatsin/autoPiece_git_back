@@ -1,0 +1,195 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% block title %}AUTO-PIECE — Archives{% endblock title %}
+{% block page_title %}Pièces archivées{% endblock page_title %}
+{% block page %}Archives{% endblock page %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
+<li class="breadcrumb-item"><a href="{% url 'stock' %}">Stock</a></li>
+<li class="breadcrumb-item active">Archives</li>
+{% endblock breadcrumb %}
+
+{% block page_action_buttons %}
+<a href="{% url 'stock' %}" class="btn btn-outline-success" title="Retour au stock actif">
+    <i class="fa fa-cubes"></i> Stock actif
+</a>
+{% endblock page_action_buttons %}
+
+{% block page_action_suffix %}
+{% if not can_choose_localite and localite_active %}
+<span class="badge badge-info">
+    <i class="fa fa-map-marker"></i> {{ localite_active.nom }}
+</span>
+{% endif %}
+{% endblock page_action_suffix %}
+
+{% block main_content %}
+    {% include "mag/partials/_periode_filter_modal.html" %}
+
+    <div class="col-lg-12 mb-2">
+        <div class="alert alert-secondary mb-0" role="status">
+            <i class="fa fa-archive"></i>
+            {{ count_archive }} pièce(s) archivée(s).
+            Utilisez <strong>Restaurer</strong> pour les réafficher dans le
+            <a href="{% url 'stock' %}">stock actif</a>.
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Pièces archivées</h2>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter()">
+                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mag-data-table">
+                        <thead>
+                            <tr class='text-info'>
+                                <th>N°#</th>
+                                <th>N°Pièce</th>
+                                <th>Designation</th>
+                                <th>Categorie</th>
+                                <th class="text-center">Prix vente</th>
+                                <th class="text-center">Prix vente local</th>
+                                <th class="text-center">Quantite stock</th>
+                                <th class="text-center">Type archive</th>
+                                <th>Archivé par</th>
+                                <th>Localité</th>
+                                <th>Date archive</th>
+                                <th>Motif</th>
+                                <th class="text-center">Action</th>
+                                <th class="text-center">Restaurer</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr class='text-info'>
+                                <th>N°#</th>
+                                <th>N°Pièce</th>
+                                <th>Designation</th>
+                                <th>Categorie</th>
+                                <th class="text-center">Prix vente</th>
+                                <th class="text-center">Prix vente local</th>
+                                <th class="text-center">Quantite stock</th>
+                                <th class="text-center">Type archive</th>
+                                <th>Archivé par</th>
+                                <th>Localité</th>
+                                <th>Date archive</th>
+                                <th>Motif</th>
+                                <th class="text-center">Action</th>
+                                <th class="text-center">Restaurer</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            {% for d in piece_queryset %}
+                                <tr>
+                                    <th>{{ forloop.counter }}</th>
+                                    <th>{{ d.numero_piece }}</th>
+                                    <th>{{ d.designation }}</th>
+                                    <th><a href="{% url "add_piece" d.categorie.pk %}">{{ d.categorie.categorie }}</a></th>
+                                    <th class="text-center text-success">{{ d.prix_unitaire }} F</th>
+                                    <th class="text-center text-info">
+                                        {% if d.prix_unitaire_local_valeur is not None %}
+                                            {{ d.prix_unitaire_local_valeur }} F
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </th>
+                                    <th class="text-center">
+                                        <span class="badge badge-secondary">{{ d.quantite_disponible|default:0 }}</span>
+                                    </th>
+                                    <th class="text-center">
+                                        {% if d.active_sortie is False %}
+                                            <span class="badge badge-danger">Catalogue</span>
+                                        {% elif not d.active_sortie_local|default:True %}
+                                            <span class="badge badge-warning">Localité</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">—</span>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        {% if d.active_sortie is False %}
+                                            {% if d.archive_par %}{{ d.archive_par.username }}{% else %}<span class="text-muted">—</span>{% endif %}
+                                        {% elif d.archive_par_local_username %}
+                                            {{ d.archive_par_local_username }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        {% if d.active_sortie is False %}
+                                            <span class="text-muted">Toutes</span>
+                                        {% elif d.archive_local_nom %}
+                                            {{ d.archive_local_nom }}
+                                        {% elif localite_active %}
+                                            {{ localite_active.nom }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        {% if d.active_sortie is False and d.archive_le %}
+                                            {{ d.archive_le|date:"d/m/Y H:i" }}
+                                        {% elif d.archive_le_local %}
+                                            {{ d.archive_le_local|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        {% if d.active_sortie is False and d.archive_motif %}
+                                            <span title="{{ d.archive_motif }}">{{ d.archive_motif|truncatechars:60 }}</span>
+                                        {% elif d.archive_motif_local %}
+                                            <span title="{{ d.archive_motif_local }}">{{ d.archive_motif_local|truncatechars:60 }}</span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </th>
+                                    <th class="text-center">
+                                        <a href="{% url "info_piece" d.pk %}" title="Historique des entrées">
+                                            <i class="icon-eye text-info"></i>
+                                        </a>
+                                    </th>
+                                    <th class="text-center">
+                                        {% if d.active_sortie is False %}
+                                            <a href="{% url 'activate_sortie' d.pk %}"
+                                               class="btn btn-sm btn-outline-success"
+                                               title="Réactiver au catalogue (toutes localités)"
+                                               onclick="return confirm('Restaurer {{ d.numero_piece }} — {{ d.designation }} dans le stock actif ?');">
+                                                <i class="fa fa-undo"></i> Restaurer
+                                            </a>
+                                        {% elif not d.active_sortie_local|default:True %}
+                                            <a href="{% url 'activate_sortie_local' d.pk %}"
+                                               class="btn btn-sm btn-outline-success"
+                                               title="Réactiver dans votre localité"
+                                               onclick="return confirm('Restaurer {{ d.numero_piece }} — {{ d.designation }} dans le stock actif ?');">
+                                                <i class="fa fa-undo"></i> Restaurer
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </th>
+                                </tr>
+                            {% empty %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="15" class="text-center text-muted p-4">
+                                        <p>Aucune pièce archivée pour les critères sélectionnés.</p>
+                                        <a href="{% url 'stock' %}" class="btn btn-outline-primary btn-sm mt-2">
+                                            <i class="fa fa-cubes"></i> Voir le stock actif
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

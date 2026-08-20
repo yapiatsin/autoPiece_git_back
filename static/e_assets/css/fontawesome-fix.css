@@ -1,0 +1,29 @@
+/* Bibliothèque d'icônes unique : Font Awesome 6 Free (CDN).
+   Force la famille Free par-dessus l'ancien Font Awesome Pro embarqué
+   dans plugins.css (dont les polices sont absentes du bundle HTTrack). */
+.fa,
+.fa-solid,
+.fas {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+}
+
+.fa-regular,
+.fa-light,
+.far,
+.fal {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+}
+
+.fa-brands,
+.fab {
+    font-family: "Font Awesome 6 Brands" !important;
+    font-weight: 400 !important;
+}
+
+[class^="fa-"]::before,
+[class*=" fa-"]::before {
+    font-family: inherit;
+    font-weight: inherit;
+}

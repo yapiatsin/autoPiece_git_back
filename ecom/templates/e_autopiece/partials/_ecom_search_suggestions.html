@@ -1,0 +1,34 @@
+{% load i18n %}
+{% if ecom_recherches_recentes or ecom_recherches_populaires %}
+<div class="ecom-search-suggest-panel" hidden data-ecom-search-panel>
+    {% csrf_token %}
+    {% if ecom_recherches_recentes %}
+    <section class="ecom-search-suggest-section" data-ecom-recent-section>
+        <div class="ecom-search-suggest-head">
+            <p class="ecom-search-suggest-title">{% trans "Recherches récentes" %}</p>
+            <button type="button" class="ecom-search-suggest-clear" data-ecom-clear-recent>
+                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                <span>{% trans "Tout effacer" %}</span>
+            </button>
+        </div>
+        <div class="ecom-search-suggest-pills" data-ecom-recent-pills>
+            {% for terme in ecom_recherches_recentes %}
+            <a href="{% url 'ecom_shop' %}?q={{ terme|urlencode }}" class="ecom-search-suggest-pill" data-ecom-suggest="{{ terme }}">{{ terme }}</a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+    {% if ecom_recherches_populaires %}
+    <section class="ecom-search-suggest-section ecom-search-suggest-section--popular">
+        <div class="ecom-search-suggest-head">
+            <p class="ecom-search-suggest-title">{% trans "Recherches populaires" %}</p>
+        </div>
+        <div class="ecom-search-suggest-pills">
+            {% for terme in ecom_recherches_populaires %}
+            <a href="{% url 'ecom_shop' %}?q={{ terme|urlencode }}" class="ecom-search-suggest-pill" data-ecom-suggest="{{ terme }}">{{ terme }}</a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endif %}

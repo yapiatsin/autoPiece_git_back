@@ -1,0 +1,24 @@
+{% comment %} _liste_livraisons.html {% endcomment %}
+{% for item in liste_panier %}
+<tr data-ticket="{{ item.ticket }}">
+    <td>{{item.commands.first.numero_commande}}</td>
+    <td class="font-13">{{item.ticket}}</td>
+    <td>{{item.total}}</td>
+    <td>{{item.date_creation|date:"d/m/Y"}} à {{item.date_save|date:"H:i:s"}}</td>
+    <td>{{item.utilisateur.username}}</td>
+    <td>
+        {% if not item.panier_livre %}
+            <a href="{% url 'valider_livraison' item.ticket %}" onclick="return confirm('Êtes-vous sûr de vouloir valider cette livraison ?');">
+                <span class="badge badge-warning font-14">En attente</span>
+            </a>
+        {% else %}
+            <span class="badge badge-success font-14">Livré</span>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr class="mag-table-skip-filter">
+    <td colspan="6" class="text-center text-muted">Aucune commande en attente de livraison</td>
+</tr>
+{% endfor %}
+

@@ -1,0 +1,101 @@
+{% extends 'page/base_compt.html' %}
+{% load static %}
+
+{% block title %}Inscription — AUTO-PIECE{% endblock title %}
+{% block auth_panel_class %}auth-panel--compact{% endblock %}
+{% block auth_frame_class %}auth-panel__frame--deco auth-panel__frame--register{% endblock %}
+
+{% block auth_deco_left %}
+<img class="auth-panel__deco auth-panel__deco--left" src="{% static 'ex_or.png' %}" alt="" aria-hidden="true" loading="lazy">
+{% endblock auth_deco_left %}
+
+{% block auth_deco_right %}
+<img class="auth-panel__deco auth-panel__deco--right" src="{% static 'car_icon.png' %}" alt="" aria-hidden="true" loading="lazy">
+{% endblock auth_deco_right %}
+
+{% block auth_content %}
+<div class="auth-register">
+    <header class="auth-register__head">
+        <h1 class="auth-panel__title"><span>Créer un compte </span></h1>
+        <p class="auth-panel__subtitle">Activation par email requise après inscription</p>
+    </header>
+
+    <form method="post" class="auth-register__form" novalidate>
+        {% csrf_token %}
+
+        <div class="auth-form-group">
+            {{ form.username }}
+        </div>
+
+        <div class="auth-form-group">
+            {{ form.email }}
+        </div>
+
+        <div class="auth-form-group">
+            {{ form.contact }}
+        </div>
+
+        <div class="auth-form-group auth-form-group--gender">
+            <div class="auth-gender-group">
+                {% for radio in form.genre %}
+                <div class="auth-gender-option">
+                    {{ radio.tag }}
+                    <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="auth-form-group">
+            <div class="auth-input-wrap">
+                {{ form.password1 }}
+                <button type="button" class="auth-toggle-pwd" data-toggle-password="{{ form.password1.id_for_label }}" aria-label="Afficher le mot de passe">
+                    <i class="fa fa-eye"></i>
+                </button>
+            </div>
+            <div class="auth-strength" data-level="0" id="pwdStrength" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+            </div>
+            <p class="auth-hint">Au moins 8 caractères</p>
+        </div>
+
+        <div class="auth-form-group">
+            <div class="auth-input-wrap">
+                {{ form.password2 }}
+                <button type="button" class="auth-toggle-pwd" data-toggle-password="{{ form.password2.id_for_label }}" aria-label="Afficher le mot de passe">
+                    <i class="fa fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="auth-btn-primary">Créer mon compte</button>
+    </form>
+
+    <p class="auth-footer-text">
+        Déjà inscrit ?
+        <a href="{% url 'connexion' %}" class="auth-link">Se connecter</a>
+    </p>
+    <p class="auth-footer-text" style="margin-top:0.35rem;">
+        Lien expiré ?
+        <a href="{% url 'resend-activation' %}" class="auth-link">Renvoyer l'activation</a>
+    </p>
+</div>
+{% endblock auth_content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var pwd = document.getElementById('{{ form.password1.id_for_label }}');
+    var bar = document.getElementById('pwdStrength');
+    if (!pwd || !bar) return;
+    pwd.addEventListener('input', function () {
+        var v = pwd.value, level = 0;
+        if (v.length >= 8) level++;
+        if (/[A-Z]/.test(v) && /[a-z]/.test(v)) level++;
+        if (/\d/.test(v)) level++;
+        if (/[^A-Za-z0-9]/.test(v)) level++;
+        bar.setAttribute('data-level', level);
+    });
+});
+</script>
+{% endblock extra_js %}

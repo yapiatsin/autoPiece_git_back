@@ -1,0 +1,94 @@
+{% extends "mag/base_mag_ecom.html" %}
+<title>{% block title %} AUTO-PIECE || IMPORT PERMISSIONS {% endblock title %}</title>
+{% block header %}
+<div class="block-header">
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <h2>{% block page_title %}Importer Permissions depuis Excel{% endblock page_title %}</h2>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'list_permissions' %}">Permissions</a></li>
+                <li class="breadcrumb-item active">{% block page %}Importer{% endblock page %}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock header %}
+
+{% block main_content %}
+<div class="row clearfix">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card" style='border-radius:18px; box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;'>
+            <div class="header">
+                <h2>Importation depuis Excel</h2>
+            </div>
+            <div class="body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>{{ form.excel_file.label }}</label>
+                        {{ form.excel_file }}
+                        {% if form.excel_file.errors %}
+                        <div class="text-danger">{{ form.excel_file.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Format attendu: Colonne A = Nom, Colonne B = Catégorie, Colonne C = URL
+                        </small>
+                    </div>
+                    <div class="form-check mb-3">
+                        {{ form.update_existing }}
+                        <label class="form-check-label" for="{{ form.update_existing.id_for_label }}">
+                            {{ form.update_existing.label }}
+                        </label>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa fa-upload"></i> Importer
+                        </button>
+                        <a href="{% url 'list_permissions' %}" class="btn btn-secondary">
+                            <i class="fa fa-times"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3" style='border-radius:18px; box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;'>
+            <div class="header">
+                <h2>Aide</h2>
+            </div>
+            <div class="body">
+                <h5>Format du fichier Excel attendu:</h5>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Colonne A</th>
+                            <th>Colonne B</th>
+                            <th>Colonne C</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Nom de la Permission</td>
+                            <td>Catégorie</td>
+                            <td>URL/Name</td>
+                        </tr>
+                        <tr>
+                            <td>Ajouter Panier</td>
+                            <td>Paniers</td>
+                            <td>add_panier</td>
+                        </tr>
+                        <tr>
+                            <td>Tableau de Bord</td>
+                            <td>Gestion du Stock</td>
+                            <td>tbord</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p><strong>Note:</strong> La première ligne doit contenir les en-têtes (sera ignorée).</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+

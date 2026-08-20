@@ -1,0 +1,42 @@
+{% csrf_token %}
+<div class="row clearfix">
+    <div class="col-md-12">
+        <div class="form-group">
+            <label for="{{ form.nom.id_for_label }}">Nom de la localité <span class="text-danger">*</span></label>
+            {{ form.nom }}
+            {% if form.nom.errors %}<div class="text-danger small">{{ form.nom.errors }}</div>{% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="{{ form.latitude.id_for_label }}">Latitude</label>
+            {{ form.latitude }}
+            {% if form.latitude.errors %}<div class="text-danger small">{{ form.latitude.errors }}</div>{% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="{{ form.longitude.id_for_label }}">Longitude</label>
+            {{ form.longitude }}
+            {% if form.longitude.errors %}<div class="text-danger small">{{ form.longitude.errors }}</div>{% endif %}
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="form-group form-check mt-2 mb-3">
+            {{ form.statut }}
+            <label class="form-check-label" for="{{ form.statut.id_for_label }}">
+                Ouvert
+            </label>
+            <small class="form-text text-muted d-block">Décocher pour marquer la localité comme fermée.</small>
+            {% if form.statut.errors %}<div class="text-danger small">{{ form.statut.errors }}</div>{% endif %}
+        </div>
+    </div>
+    <div class="col-md-12">
+        <label class="d-block mb-1">Position sur la carte</label>
+        <small class="text-muted d-block mb-2">Cliquez sur la carte pour placer le curseur, ou saisissez lat/lng manuellement.</small>
+        <div id="localite-picker-map" class="localite-picker-map border rounded"></div>
+    </div>
+    <div class="col-md-12 mt-3">
+        {% include "partials/creneau_formset.html" %}
+    </div>
+</div>

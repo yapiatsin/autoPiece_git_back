@@ -1,0 +1,248 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}AUTO-PIECE{% endblock title %}
+{% block page_title %}Tableau de bord livraison{% endblock page_title %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href=""><i class="fa fa-chart-pie"></i> Tableau de bord</a></li>
+<li class="breadcrumb-item active">{% block page %}Livraison{% endblock page %}</li>
+{% endblock breadcrumb %}
+
+{% block main_content %}
+    {% include "mag/partials/_periode_filter_modal.html" %}
+    {% include "mag/partials/_dashboard_kpi_styles.html" %}
+    {% include "mag/partials/_kpi_row_livraison.html" %}
+
+    <div class="col-lg-12 mt-1">
+        <div class="card">
+            <div class="header">
+                <a class="m-4 btn-outline-success buttons-csv" tabindex="0" aria-controls="DataTables_Table_1" href="#"><span>Liste commandes</span></a> 
+                
+                <ul class="header-dropdown">
+                    <li class="dropdown">
+                    <span id="panier-quantite-total" class="badge badge-warning mb-0"><i class="icon-basket text"></i> {{tot_panier}} - Tot {{panier_items|length}}</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="body">
+                <form method="post" id="form-valider-panier">
+                    {% csrf_token %}
+                    <div class="cwidget-scroll" id="panier-contenu" style="border-radius:18px; height: 400px; overflow-y: auto;">
+                        <div class="body">
+                            <div class="mag-table-shell" x-data="magTableFilter()">
+                                {% include "mag/partials/_alpine_table_toolbar.html" %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover mag-data-table">
+                                    <thead>
+                                        <tr>
+                                            <th data-breakpoints="sm xs md">N°Cmd</th>
+                                            <th data-breakpoints="sm xs md">Ticket</th>
+                                            <th data-breakpoints="xs">Total</th>
+                                            <th data-breakpoints="sm xs md">Date commande</th>
+                                            <th data-breakpoints="sm xs md">Livrer par</th>
+                                            <th data-breakpoints="sm xs md">Statut Livraison</th>
+                                        </tr>
+                                    </thead>
+                                    <tfoot>
+                                        <tr>
+                                            <th data-breakpoints="sm xs md">N°Cmd</th>
+                                            <th data-breakpoints="sm xs md">Ticket</th>
+                                            <th data-breakpoints="xs">Total</th>
+                                            <th data-breakpoints="sm xs md">Date commande</th>
+                                            <th data-breakpoints="sm xs md">Livrer par</th>
+                                            <th data-breakpoints="sm xs md">Statut Livraison</th>
+                                        </tr>
+                                    </tfoot>
+                                    <tbody id="liste-livraisons-body">
+                                        {% include 'mag/partials/_liste_livraisons.html' %}
+                                    </tbody>
+                                </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <audio id="success-sound" src="{% static 'sons/success.mp3' %}" preload="auto"></audio>
+    <audio id="receive-livraison-sound" src="{% static 'sons/receive_l.mp3' %}" preload="auto"></audio>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("paiement") === "success") {
+                const audio = document.getElementById("success-sound");
+                if (audio) {
+                    audio.play().then(() => {
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        toastr.success("Paiement effectué avec succès !");
+                    }).catch((e) => {
+                        console.warn("Lecture automatique du son bloquée :", e);
+                    });
+                }
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const montantInput = document.getElementById("montant");
+            const montantAPayerEl = document.getElementById("affiche-montant-a-payer");
+            const resteEl = document.getElementById("affiche-montant-reste");
+            const btnValider = document.querySelector("#form-valider-panier button[type='submit']");
+            if (!montantInput || !montantAPayerEl || !resteEl || !btnValider) return;
+            btnValider.disabled = true;
+            montantInput.addEventListener("input", function () {
+                const montantPaye = parseFloat(montantInput.value || 0);
+                const montantAPayer = parseFloat(montantAPayerEl.textContent || 0);
+                const reste = montantPaye - montantAPayer;
+                resteEl.textContent = reste.toFixed(2);
+                if (reste < 0) {
+                    resteEl.style.color = "red";
+                    btnValider.disabled = true;
+                } else {
+                    resteEl.style.color = "green";
+                    btnValider.disabled = false;
+                }
+            });
+        });
+    </script>
+    {% include "mag/partials/_pusher_client_js.html" %}
+    <script>
+        // Localité du livreur connecté (null = admin, voit tout)
+        const CURRENT_USER_LOCAL_ID = {% if request.user.local_entrepot_id %}"{{ request.user.local_entrepot_id }}"{% else %}null{% endif %};
+        const CURRENT_USER_IS_ADMIN = {% if request.user.is_superuser or request.user.role == 'admin' %}true{% else %}false{% endif %};
+
+        // Ensemble des tickets déjà affichés — permet au polling de détecter les nouveautés
+        let knownLivraisonTickets = new Set();
+
+        function _extractLivraisonTickets(container) {
+            const tickets = new Set();
+            // Le partial _liste_livraisons.html rend un <tr> par livraison. On essaie d'abord
+            // un attribut data-ticket explicite, puis on retombe sur l'id du <tr> en dernier recours.
+            container.querySelectorAll('tr').forEach(tr => {
+                const t = tr.dataset.ticket || tr.id || '';
+                if (t) tickets.add(t);
+            });
+            return tickets;
+        }
+
+        function reloadLivraisons(options) {
+            options = options || {};
+            return fetch("{% url 'ajax_reload_livraisons' %}", { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => {
+                    if (!response.ok) throw new Error("Erreur lors du rechargement des livraisons");
+                    return response.json();
+                })
+                .then(data => {
+                    const tbody = document.getElementById("liste-livraisons-body");
+                    if (!tbody) return;
+
+                    // Détection des nouveaux tickets via diff avant mise à jour du DOM
+                    const tmp = document.createElement('tbody');
+                    tmp.innerHTML = data.html;
+                    const newTickets = _extractLivraisonTickets(tmp);
+                    const added = [];
+                    newTickets.forEach(t => { if (!knownLivraisonTickets.has(t)) added.push(t); });
+
+                    tbody.innerHTML = data.html;
+                    knownLivraisonTickets = newTickets;
+
+                    // Mise à jour des compteurs
+                    const totEnAttenteEl = document.querySelector('.top_widget:nth-child(2) .number');
+                    const totPanierDayEl = document.querySelector('.top_widget:nth-child(1) .number');
+                    if (totEnAttenteEl) {
+                        const oldValue = totEnAttenteEl.textContent;
+                        totEnAttenteEl.textContent = data.tot_en_at;
+                        if (parseInt(data.tot_en_at) > parseInt(oldValue)) {
+                            totEnAttenteEl.style.animation = "pulse 0.5s";
+                            setTimeout(() => { totEnAttenteEl.style.animation = ""; }, 500);
+                        }
+                    }
+                    if (totPanierDayEl) totPanierDayEl.textContent = data.tot_panier_day;
+
+                    // Notifier si de nouveaux tickets sont arrivés (fallback si Pusher n'a pas fonctionné)
+                    if (!options.silent && added.length > 0) {
+                        const receiveSound = document.getElementById("receive-livraison-sound");
+                        if (receiveSound) {
+                            receiveSound.currentTime = 0;
+                            receiveSound.play().catch(() => {});
+                        }
+                        if (typeof toastr !== 'undefined') {
+                            toastr.info(`${added.length} nouvelle(s) livraison(s) à préparer`, "Nouvelle livraison", {
+                                timeOut: 4000,
+                                progressBar: true
+                            });
+                        }
+                        tbody.style.transition = "background-color 0.5s";
+                        tbody.style.backgroundColor = "#c8f7c5";
+                        setTimeout(() => { tbody.style.backgroundColor = "transparent"; }, 500);
+                    }
+                })
+                .catch(error => {
+                    console.error("Erreur lors du rechargement:", error);
+                });
+        }
+
+        function handlePaiementValide(data) {
+            try {
+                if (!CURRENT_USER_IS_ADMIN && CURRENT_USER_LOCAL_ID !== null) {
+                    if (data.local_entrepot_id && String(data.local_entrepot_id) !== String(CURRENT_USER_LOCAL_ID)) {
+                        return;
+                    }
+                }
+                const receiveSound = document.getElementById("receive-livraison-sound");
+                if (receiveSound) {
+                    receiveSound.currentTime = 0;
+                    receiveSound.play().catch(() => {});
+                }
+                toastr.info(`Nouveau paiement validé ! Ticket: ${data.ticket_id} | Total: ${data.total} Fcfa`, "Nouvelle livraison", {
+                    timeOut: 5000,
+                    progressBar: true
+                });
+                reloadLivraisons({ silent: true });
+            } catch (error) {
+                console.error("Erreur traitement Pusher paiement:", error);
+            }
+        }
+
+        window.reloadLivraisons = reloadLivraisons;
+        window.handlePaiementValideLivraison = handlePaiementValide;
+
+        function bindPaiementChannel() {
+            if (!window.magPusher) return false;
+            const channel = window.magPusher.subscribe("magasin-paiement");
+            channel.bind("valide", handlePaiementValide);
+            return true;
+        }
+        if (!bindPaiementChannel()) {
+            console.warn("Pusher indisponible — retry…");
+            setTimeout(bindPaiementChannel, 400);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // Amorcer la liste des tickets visibles pour éviter un faux "nouveau" au premier poll
+            const tbody = document.getElementById("liste-livraisons-body");
+            if (tbody) knownLivraisonTickets = _extractLivraisonTickets(tbody);
+
+            // Polling de secours toutes les 8 s : garantit la mise à jour même si Pusher est coupé
+            setInterval(() => {
+                if (document.visibilityState === 'visible') reloadLivraisons();
+            }, 8000);
+
+            // Rafraîchit immédiatement au retour sur l'onglet
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') reloadLivraisons();
+            });
+        });
+    </script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+{% endblock extra_js %}

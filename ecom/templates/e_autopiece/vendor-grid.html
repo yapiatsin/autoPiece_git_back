@@ -1,0 +1,285 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Nos localités" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+{% block content %}
+    <div class="rts-navigation-area-breadcrumb bg_light-1">
+        <div class="container">
+                    <div class="navigator-breadcrumb-wrapper">
+                <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span class="current">{% trans "Localités" %}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="vendor-search-area">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="vendor-search-area-wrapper ecom-localites-search-hero">
+                        <h1 class="title">{% trans "Nos localités" %}</h1>
+                        <form method="get" action="{% url 'ecom_localites' %}" class="ecom-localite-search-form ecom-localites-grid-search">
+                            {% if localites_filters.sort %}
+                            <input type="hidden" name="sort" value="{{ localites_filters.sort }}">
+                            {% endif %}
+                            {% if localites_filters.view %}
+                            <input type="hidden" name="view" value="{{ localites_filters.view }}">
+                            {% endif %}
+                            <div class="ecom-localite-search-box">
+                                <input type="text" name="q" value="{{ localites_filters.q }}"
+                                    class="ecom-localite-search-input"
+                                    placeholder="{% trans 'Rechercher une localité…' %}"
+                                    autocomplete="off">
+                                <button type="submit" class="ecom-localite-search-btn" aria-label="{% trans 'Search' %}">
+                                    {% trans "Rechercher" %}
+                                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                </button>
+                                </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vendor-search-area rts-section-gap">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="filter-search-area-top-between filter-select-area">
+                        <div class="top-filter">
+                            {% with start=localites_page.start_index end=localites_page.end_index total=localites_total %}
+                            <span>
+                                {% if total %}
+                                {% blocktrans with start=start end=end total=total %}Affichage {{ start }}–{{ end }} sur {{ total }} résultats{% endblocktrans %}
+                                {% else %}
+                                {% trans "Aucun résultat" %}
+                                {% endif %}
+                            </span>
+                            {% endwith %}
+                            <div class="right-end">
+                                <div class="button-tab-area">
+                                    <ul class="nav nav-tabs" id="localitesTab" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link single-button {% if localites_filters.view != 'list' %}active{% endif %}"
+                                                id="localites-grid-tab" data-bs-toggle="tab"
+                                                data-bs-target="#localites-grid-pane" type="button" role="tab"
+                                                aria-controls="localites-grid-pane"
+                                                aria-selected="{% if localites_filters.view != 'list' %}true{% else %}false{% endif %}">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="0.5" y="0.5" width="6" height="6" rx="1.5" stroke="#2C3B28"></rect>
+                                                    <rect x="0.5" y="9.5" width="6" height="6" rx="1.5" stroke="#2C3B28"></rect>
+                                                    <rect x="9.5" y="0.5" width="6" height="6" rx="1.5" stroke="#2C3B28"></rect>
+                                                    <rect x="9.5" y="9.5" width="6" height="6" rx="1.5" stroke="#2C3B28"></rect>
+                                                </svg>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="localitesTabContent">
+                        <div class="mt--20 tab-pane fade {% if localites_filters.view != 'list' %}show active{% endif %}"
+                            id="localites-grid-pane" role="tabpanel" aria-labelledby="localites-grid-tab" tabindex="0">
+                            <div class="row g-4">
+                                {% for loc in localites %}
+                                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12">
+                                        <div class="single-vendor-area ecom-localite-card">
+                                            <a href="{% url 'ecom_localite_detail' loc.code %}" class="logo-vendor ecom-localite-grid-thumb-link">
+                                                <div class="ecom-localite-detail-thumb ecom-localite-grid-thumb">
+                                                    {% if loc.nb_pieces %}
+                                                    <span class="ecom-localite-status open">{% trans "Ouvert" %}</span>
+                                                    {% else %}
+                                                    <span class="ecom-localite-status closed">{% trans "Sans stock" %}</span>
+                                                    {% endif %}
+                                                    <span class="ecom-localite-thumb-icon" aria-hidden="true">
+                                                        <i class="fa-solid fa-store"></i>
+                                                    </span>
+                                                    <h3 class="ecom-localite-thumb-title">{{ loc.nom }}</h3>
+                                                </div>
+                                            </a>
+                                            <div class="ecom-localite-card-body">
+                                                <div class="ecom-localite-card-details">
+                                                    <div class="stars-area ecom-localite-meta">
+                                                        <i class="fa-solid fa-box"></i>
+                                                        <span>
+                                                            {% blocktrans count counter=loc.nb_pieces|default:0 %}{{ counter }} pièce disponible{% plural %}{{ counter }} pièces disponibles{% endblocktrans %}
+                                                        </span>
+                                                    </div>
+                                                    <div class="ecom-localite-contact-rows">
+                                                        <div class="location">
+                                                            <i class="fa-solid fa-location-dot"></i>
+                                                            <p>
+                                                                {% if loc.a_coordonnees %}
+                                                                {{ loc.latitude }}, {{ loc.longitude }}
+                                                                {% else %}
+                                                                {% trans "Abidjan, Côte d'Ivoire" %}
+                                                                {% endif %}
+                                                            </p>
+                                                        </div>
+                                                        <div class="location">
+                                                            <i class="fa-solid fa-phone-volume"></i>
+                                                                <p>+225 07 00 00 00 00</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <a href="{% url 'ecom_localite_detail' loc.code %}" class="rts-btn btn-primary radious-sm with-icon ecom-localite-card-cta">
+                                                <div class="btn-text">{% trans "Voir l'agence" %}</div>
+                                                <div class="arrow-icon">
+                                                    <i class="fa-solid fa-arrow-right"></i>
+                                                </div>
+                                                <div class="arrow-icon">
+                                                    <i class="fa-solid fa-arrow-right"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                    <div class="col-12">
+                                        <p class="text-muted text-center py-5">{% trans "Aucune localité trouvée." %}</p>
+                                    </div>
+                                {% endfor %}
+                                </div>
+                            </div>
+
+                        <div class="with-list mt--20 tab-pane fade {% if localites_filters.view == 'list' %}show active{% endif %}"
+                            id="localites-list-pane" role="tabpanel" aria-labelledby="localites-list-tab" tabindex="0">
+                            <div class="row g-4">
+                                {% for loc in localites %}
+                                <div class="col-lg-6">
+                                    <div class="single-vendor-area ecom-localite-card">
+                                        <a href="{% url 'ecom_localite_detail' loc.code %}" class="logo-vendor ecom-localite-grid-thumb-link">
+                                            <div class="ecom-localite-detail-thumb ecom-localite-grid-thumb">
+                                                {% if loc.nb_pieces %}
+                                                <span class="ecom-localite-status open">{% trans "Ouvert" %}</span>
+                                                {% else %}
+                                                <span class="ecom-localite-status closed">{% trans "Sans stock" %}</span>
+                                                {% endif %}
+                                                <span class="ecom-localite-thumb-icon" aria-hidden="true">
+                                                    <i class="fa-solid fa-store"></i>
+                                                </span>
+                                                <h3 class="ecom-localite-thumb-title">{{ loc.nom }}</h3>
+                                            </div>
+                                        </a>
+                                        <div class="inner ecom-localite-card-body">
+                                            <div class="ecom-localite-card-details">
+                                                <div class="stars-area ecom-localite-meta">
+                                                    <i class="fa-solid fa-box"></i>
+                                                    <span>
+                                                        {% blocktrans count counter=loc.nb_pieces|default:0 %}{{ counter }} pièce disponible{% plural %}{{ counter }} pièces disponibles{% endblocktrans %}
+                                                    </span>
+                                                </div>
+                                                <div class="ecom-localite-contact-rows">
+                                                <div class="location">
+                                                    <i class="fa-solid fa-location-dot"></i>
+                                                    <p>
+                                                        {% if loc.a_coordonnees %}
+                                                        {{ loc.latitude }}, {{ loc.longitude }}
+                                                        {% else %}
+                                                        {% trans "Abidjan, Côte d'Ivoire" %}
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+                                            <div class="location">
+                                                <i class="fa-solid fa-phone-volume"></i><p>+225 07 00 00 00 00</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a href="{% url 'ecom_localite_detail' loc.code %}" class="rts-btn btn-primary radious-sm with-icon ecom-localite-card-cta">
+                                        <div class="btn-text">{% trans "Voir l'agence" %}</div>
+                                        <div class="arrow-icon">
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </div>
+                                        <div class="arrow-icon">
+                                            <i class="fa-solid fa-arrow-right"></i>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <p class="text-muted text-center py-5">{% trans "Aucune localité trouvée." %}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {% if localites_page.paginator.num_pages > 1 %}
+            <div class="ecom-shop-pagination mt-5">
+                {% if localites_page.has_previous %}
+                <a class="ecom-page-btn" href="?{% if localites_query %}{{ localites_query }}&{% endif %}page={{ localites_page.previous_page_number }}">&lsaquo;</a>
+                {% endif %}
+                {% for num in localites_page.paginator.page_range %}
+                    {% if num == localites_page.number %}
+                    <span class="ecom-page-btn is-active">{{ num }}</span>
+                    {% elif num == 1 or num == localites_page.paginator.num_pages or num >= localites_page.number|add:'-2' and num <= localites_page.number|add:'2' %}
+                    <a class="ecom-page-btn" href="?{% if localites_query %}{{ localites_query }}&{% endif %}page={{ num }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if localites_page.has_next %}
+                <a class="ecom-page-btn" href="?{% if localites_query %}{{ localites_query }}&{% endif %}page={{ localites_page.next_page_number }}">&rsaquo;</a>
+                {% endif %}
+            </div>
+        {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+    <section class="rts-shorts-service-area rts-section-gap bg_primary">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-tags"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Prix compétitifs" %}</h4>
+                            <p class="disc">{% trans "Des pièces auto au juste prix, par localité." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-rotate-left"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Assistance commande" %}</h4>
+                            <p class="disc">{% trans "Aide pour vos commandes en ligne et retraits." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-headset"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Support réactif" %}</h4>
+                            <p class="disc">{% trans "Une équipe disponible pour vos questions." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Livraison locale" %}</h4>
+                            <p class="disc">{% trans "Retrait ou livraison selon votre localité." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}

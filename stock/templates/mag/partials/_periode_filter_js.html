@@ -1,0 +1,19 @@
+<script>
+(function () {
+    var modalId = '{{ filter_modal_id }}';
+    var persoId = 'filtrePersonnaliseFields-' + modalId;
+    document.querySelectorAll('#' + modalId + ' .periode-option').forEach(function (label) {
+        label.addEventListener('click', function () {
+            var radio = this.querySelector('input[type=radio]');
+            if (radio) radio.checked = true;
+            document.querySelectorAll('#' + modalId + ' .periode-option').forEach(function (l) { l.classList.remove('active'); });
+            this.classList.add('active');
+            var perso = document.getElementById(persoId);
+            if (perso) {
+                if (radio && radio.value === 'personnalise') perso.classList.add('show');
+                else perso.classList.remove('show');
+            }
+        });
+    });
+})();
+</script>

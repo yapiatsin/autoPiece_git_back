@@ -1,0 +1,111 @@
+{% extends 'page/base_compt.html' %}
+
+{% block title %}Vérification OTP — AUTO-PIECE{% endblock title %}
+
+{% block auth_content %}
+<h1 class="auth-panel__title">Vérification OTP</h1>
+<p class="auth-panel__subtitle">
+    {% if email %}Code envoyé à <strong>{{ email }}</strong>{% else %}Saisissez le code reçu par email{% endif %}
+</p>
+
+<form method="post" id="otp-form" novalidate>
+    {% csrf_token %}
+    <div class="auth-otp-row">
+        <input class="auth-otp-input" type="text" inputmode="numeric" maxlength="1" data-otp required aria-label="Chiffre 1"{% if otp_expired %} disabled{% endif %}>
+        <input class="auth-otp-input" type="text" inputmode="numeric" maxlength="1" data-otp required aria-label="Chiffre 2"{% if otp_expired %} disabled{% endif %}>
+        <input class="auth-otp-input" type="text" inputmode="numeric" maxlength="1" data-otp required aria-label="Chiffre 3"{% if otp_expired %} disabled{% endif %}>
+        <input class="auth-otp-input" type="text" inputmode="numeric" maxlength="1" data-otp required aria-label="Chiffre 4"{% if otp_expired %} disabled{% endif %}>
+        <input class="auth-otp-input" type="text" inputmode="numeric" maxlength="1" data-otp required aria-label="Chiffre 5"{% if otp_expired %} disabled{% endif %}>
+        <input class="auth-otp-input" type="text" inputmode="numeric" maxlength="1" data-otp required aria-label="Chiffre 6"{% if otp_expired %} disabled{% endif %}>
+    </div>
+    <input type="hidden" id="otp" name="otp">
+    <div class="auth-timer" id="otpTimerWrap">
+        {% if otp_expired %}
+        <strong id="otpTimer" style="color:#dc2626;">OTP expiré</strong>
+        {% else %}
+        Temps restant : <strong id="otpTimer">--:--</strong>
+        {% endif %}
+    </div>
+    <button type="submit" class="auth-btn-primary" id="otpSubmitBtn"{% if otp_expired %} disabled{% endif %}>Vérifier le code</button>
+</form>
+
+<p class="auth-footer-text">
+    <a href="{% url 'forgot' %}" class="auth-link">Demander un nouveau code</a>
+</p>
+<a href="{% url 'connexion' %}" class="auth-link auth-back-link"><i class="fa fa-arrow-left"></i> Retour à la connexion</a>
+{% endblock auth_content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var inputs = document.querySelectorAll('[data-otp]');
+    var form = document.getElementById('otp-form');
+    var submitBtn = document.getElementById('otpSubmitBtn');
+    var el = document.getElementById('otpTimer');
+    var remaining = {{ remaining_seconds|default:0 }};
+    var expired = {{ otp_expired|yesno:"true,false" }};
+
+    function setExpiredUI() {
+        expired = true;
+        if (el) {
+            el.textContent = 'OTP expiré';
+            el.style.color = '#dc2626';
+        }
+        inputs.forEach(function (input) { input.disabled = true; });
+        if (submitBtn) submitBtn.disabled = true;
+    }
+
+    function formatTime(seconds) {
+        var m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        var s = String(seconds % 60).padStart(2, '0');
+        return m + ':' + s;
+    }
+
+    inputs.forEach(function (input, index) {
+        input.addEventListener('input', function () {
+            if (expired) return;
+            input.value = input.value.replace(/\D/g, '').slice(0, 1);
+            if (input.value && index < inputs.length - 1) inputs[index + 1].focus();
+        });
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Backspace' && !input.value && index > 0) inputs[index - 1].focus();
+        });
+        input.addEventListener('paste', function (e) {
+            if (expired) return;
+            e.preventDefault();
+            var digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+            digits.split('').forEach(function (d, i) { if (inputs[i]) inputs[i].value = d; });
+            if (inputs[digits.length - 1]) inputs[Math.min(digits.length, 5)].focus();
+        });
+    });
+
+    form.addEventListener('submit', function (e) {
+        if (expired) {
+            e.preventDefault();
+            return;
+        }
+        var code = Array.from(inputs).map(function (i) { return i.value; }).join('');
+        document.getElementById('otp').value = code;
+        if (code.length !== 6) {
+            e.preventDefault();
+            alert('Veuillez saisir les 6 chiffres.');
+        }
+    });
+
+    if (expired || remaining <= 0) {
+        setExpiredUI();
+    } else {
+        if (el) el.textContent = formatTime(remaining);
+        setInterval(function () {
+            if (expired) return;
+            remaining--;
+            if (remaining <= 0) {
+                setExpiredUI();
+                return;
+            }
+            if (el) el.textContent = formatTime(remaining);
+        }, 1000);
+    }
+});
+</script>
+{% endblock extra_js %}

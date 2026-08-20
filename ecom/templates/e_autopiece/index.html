@@ -1,0 +1,333 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}Accueil - Auto-Pièce{% endblock title %}
+{% block content %}
+    <div class="ecom-index-hero-section ecom-hero-with-categories" style="background-image: url('{% static 'e_assets/images/feature/bg_d.png' %}');">
+        <div class="ecom-hero-banner-wrap category-area-main-wrapper-one">
+            <div class="swiper mySwiper-category-1 swiper-data ecom-hero-banner-swiper" data-swiper='{"spaceBetween":0, "slidesPerView":1, "loop": true, "speed": 900,
+                "autoplay":{"delay":4000}, "navigation":{ "nextEl":".ecom-hero-with-categories .swiper-button-next", "prevEl":".ecom-hero-with-categories .swiper-button-prev"}}'>
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <div class="ecom-hero-slide">
+                            <div class="container">
+                                <div class="banner-one-inner-content ecom-hero-banner-content">
+                                    <span class="pre">{% trans "Pièces auto de qualité, près de chez vous" %}</span>
+                                    <h1 class="title">
+                                        {% trans "Trouvez les meilleures pièces" %}<br>
+                                        {% trans "pour votre véhicule" %}
+                                    </h1>
+                                    <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary radious-sm with-icon">
+                                        <div class="btn-text">{% trans "Voir les pièces" %}</div>
+                                        <div class="arrow-icon"><i class="fa-solid fa-arrow-right"></i></div>
+                                        <div class="arrow-icon"><i class="fa-solid fa-arrow-right"></i></div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="ecom-hero-slide">
+                            <div class="container">
+                                <div class="banner-one-inner-content ecom-hero-banner-content">
+                                    <span class="pre">{% trans "Freins, filtres, courroies et plus encore" %}</span>
+                                    <h1 class="title">
+                                        {% trans "Entretien & réparation" %}<br>
+                                        {% trans "au juste prix" %}
+                                    </h1>
+                                    <a href="{% url 'ecom_localites' %}" class="rts-btn btn-primary radious-sm with-icon">
+                                        <div class="btn-text">{% trans "Nos localités" %}</div>
+                                        <div class="arrow-icon"><i class="fa-solid fa-arrow-right"></i></div>
+                                        <div class="arrow-icon"><i class="fa-solid fa-arrow-right"></i></div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="swiper-button-next" aria-label="{% trans 'Suivant' %}">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <button type="button" class="swiper-button-prev" aria-label="{% trans 'Précédent' %}">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+            </div>
+            <a href="#pieces-plus-commandees" class="home-banner-scroll" aria-label="{% trans 'Voir le contenu ci-dessous' %}">
+                <span class="home-banner-scroll__mouse" aria-hidden="true">
+                    <span class="home-banner-scroll__wheel"></span>
+                </span>
+                <span class="home-banner-scroll__chevron" aria-hidden="true"></span>
+            </a>
+            <div class="container ecom-hero-categories-bar">{% include 'e_autopiece/partials/_index_hero_categories.html' %}</div>
+        </div>
+    </div>
+
+    <!-- rts feature area start -->
+    <div class="rts-feature-area ecom-feature-circles rts-section-gap">
+        <div class="container">
+            <div class="row g-4 ecom-feature-animated-row justify-content-center">
+                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
+                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="0">
+                        <div class="ecom-feature-circle__visual">
+                            <div class="icon ecom-feature-circle__icon">
+                                <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+                            </div>
+                            <span class="ecom-feature-circle__badge" aria-hidden="true">
+                                <i class="fa-solid fa-star"></i>
+                            </span>
+                        </div>
+                        <div class="content">
+                            <h4 class="title">Wide Assortment</h4>
+                            <span>Orders $50 or more</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
+                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="1">
+                        <div class="ecom-feature-circle__visual">
+                            <div class="icon ecom-feature-circle__icon">
+                                <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+                            </div>
+                            <span class="ecom-feature-circle__badge" aria-hidden="true">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+                        </div>
+                        <div class="content">
+                            <h4 class="title">Easy Return Policy</h4>
+                            <span>Orders $50 or more</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
+                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="2">
+                        <div class="ecom-feature-circle__visual">
+                            <div class="icon ecom-feature-circle__icon">
+                                <i class="fa-solid fa-tags" aria-hidden="true"></i>
+                            </div>
+                            <span class="ecom-feature-circle__badge ecom-feature-circle__badge--flash" aria-hidden="true">
+                                <i class="fa-solid fa-bolt"></i>
+                            </span>
+                        </div>
+                        <div class="content">
+                            <h4 class="title">Best Prices & Offers</h4>
+                            <span>Orders $50 or more</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
+                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="3">
+                        <div class="ecom-feature-circle__visual">
+                            <div class="icon ecom-feature-circle__icon">
+                                <i class="fa-solid fa-headset" aria-hidden="true"></i>
+                            </div>
+                            <span class="ecom-feature-circle__badge" aria-hidden="true">
+                                <i class="fa-solid fa-clock"></i>
+                            </span>
+                        </div>
+                        <div class="content">
+                            <h4 class="title">Support 24/7</h4>
+                            <span>Orders $50 or more</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
+                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="4">
+                        <div class="ecom-feature-circle__visual">
+                            <div class="icon ecom-feature-circle__icon">
+                                <i class="fa-solid fa-percent" aria-hidden="true"></i>
+                            </div>
+                            <span class="ecom-feature-circle__badge ecom-feature-circle__badge--deal" aria-hidden="true">
+                                <i class="fa-solid fa-fire"></i>
+                            </span>
+                        </div>
+                        <div class="content">
+                            <h4 class="title">Best Prices & Offers</h4>
+                            <span>Orders $50 or more</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- rts featrure area end -->
+
+    {% include 'e_autopiece/partials/_pieces_plus_commandees.html' %}
+    {% include 'e_autopiece/partials/_index_map_catalogue_row.html' %}
+    
+    {% include 'e_autopiece/partials/_vues_recentes.html' %}
+        <!-- Vus récemment end -->
+
+
+    {% endblock content %}
+
+{% block overlays %}
+{{ block.super }}
+{% include 'e_autopiece/partials/_order_guide_modal.html' %}
+{% endblock overlays %}
+
+{% block extra_js %}
+<script>
+(function () {
+    function initFeatureAnimations() {
+        var cards = document.querySelectorAll('.rts-feature-area .ecom-feature-circle');
+        if (!cards.length) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        var icons = Array.prototype.map.call(cards, function (card) {
+            return card.querySelector('.ecom-feature-circle__icon');
+        }).filter(Boolean);
+
+        function pulseIcons() {
+            icons.forEach(function (icon, index) {
+                window.setTimeout(function () {
+                    icon.classList.remove('is-zooming');
+                    // force reflow to restart animation
+                    void icon.offsetWidth;
+                    icon.classList.add('is-zooming');
+                    window.setTimeout(function () {
+                        icon.classList.remove('is-zooming');
+                    }, 750);
+                }, index * 160);
+            });
+        }
+
+        // premier zoom après un court délai, puis toutes les 5s
+        window.setTimeout(pulseIcons, 800);
+        window.setInterval(pulseIcons, 5000);
+    }
+
+    function initOrderGuideModal() {
+        var el = document.getElementById('ecomOrderGuideModal');
+        if (!el) return;
+
+        var STORAGE_KEY = 'ecom_order_guide_last_shown';
+        var INTERVAL_MS = 15 * 60 * 1000;
+        var FORCE_AFTER_LOGIN = {{ force_order_guide|default:False|yesno:"true,false" }};
+        try {
+            if (new URLSearchParams(window.location.search).get('order_guide') === '1') {
+                FORCE_AFTER_LOGIN = true;
+            }
+        } catch (e) {}
+
+        function getLastShown() {
+            var raw = localStorage.getItem(STORAGE_KEY);
+            var ts = raw ? parseInt(raw, 10) : 0;
+            return Number.isFinite(ts) ? ts : 0;
+        }
+
+        function markShown() {
+            localStorage.setItem(STORAGE_KEY, String(Date.now()));
+        }
+
+        function canShow() {
+            return (Date.now() - getLastShown()) >= INTERVAL_MS;
+        }
+
+        function cleanGuideQuery() {
+            try {
+                var url = new URL(window.location.href);
+                if (!url.searchParams.has('order_guide')) return;
+                url.searchParams.delete('order_guide');
+                window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+            } catch (e) {}
+        }
+
+        function getModal() {
+            if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return null;
+            return bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true });
+        }
+
+        function showGuide(force) {
+            if (el.classList.contains('show')) return true;
+            if (!force && !canShow()) return true;
+            var modal = getModal();
+            if (!modal) return false;
+            modal.show();
+            markShown();
+            cleanGuideQuery();
+            return true;
+        }
+
+        function tryShow(force, attempt) {
+            attempt = attempt || 0;
+            if (showGuide(force)) return;
+            if (attempt < 50) {
+                window.setTimeout(function () { tryShow(force, attempt + 1); }, 100);
+            }
+        }
+
+        window.setTimeout(function () {
+            tryShow(FORCE_AFTER_LOGIN);
+        }, 200);
+
+        window.setInterval(function () {
+            showGuide(false);
+        }, 30000);
+    }
+
+    function initBannerSmoothScroll() {
+        var link = document.querySelector('.home-banner-scroll');
+        if (!link) return;
+
+        link.addEventListener('click', function (event) {
+            var hash = link.getAttribute('href');
+            if (!hash || hash.charAt(0) !== '#') return;
+
+            var target = document.querySelector(hash);
+            if (!target) return;
+
+            event.preventDefault();
+
+            var header = document.querySelector('.ap-sticky-header');
+            var headerOffset = header ? header.offsetHeight + 16 : 24;
+            var startY = window.pageYOffset || document.documentElement.scrollTop;
+            var targetY = Math.max(
+                0,
+                target.getBoundingClientRect().top + startY - headerOffset
+            );
+            var distance = targetY - startY;
+
+            if (Math.abs(distance) < 2) return;
+
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                window.scrollTo(0, targetY);
+                if (history.replaceState) {
+                    history.replaceState(null, '', hash);
+                }
+                return;
+            }
+
+            var duration = Math.min(1400, Math.max(850, Math.abs(distance) * 0.55));
+            var startTime = null;
+
+            function easeInOutCubic(t) {
+                return t < 0.5
+                    ? 4 * t * t * t
+                    : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            function step(now) {
+                if (startTime === null) startTime = now;
+                var progress = Math.min((now - startTime) / duration, 1);
+                var eased = easeInOutCubic(progress);
+                window.scrollTo(0, startY + distance * eased);
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else if (history.replaceState) {
+                    history.replaceState(null, '', hash);
+                }
+            }
+
+            requestAnimationFrame(step);
+        });
+    }
+
+    function boot() {
+        initFeatureAnimations();
+        initOrderGuideModal();
+        initBannerSmoothScroll();
+    }
+
+    window.addEventListener('load', boot);
+})();
+</script>
+{% endblock extra_js %}

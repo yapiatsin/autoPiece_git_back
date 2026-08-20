@@ -1,0 +1,61 @@
+{% load static i18n %}
+{% if pieces_plus_commandees_rows %}
+<div id="pieces-plus-commandees" class="rts-grocery-feature-area rts-section-gapBottom ecom-pieces-plus-commandees ecom-section-white">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="title-area-between">
+                    <h2 class="title-left">
+                        {% trans "Pièces les plus commandées" %}
+                    </h2>
+                    <div class="next-prev-swiper-wrapper">
+                        <div class="swiper-button-prev"><i class="fa-solid fa-chevron-left"></i></div>
+                        <div class="swiper-button-next"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="category-area-main-wrapper-one">
+                    <div class="swiper mySwiper-category-1 swiper-data ecom-pieces-plus-commandees-swiper" data-swiper='{
+                        "spaceBetween":16,
+                        "slidesPerView":6,
+                        "loop": {% if pieces_plus_commandees_rows|length > 5 %}true{% else %}false{% endif %},
+                        "speed": 600,
+                        "autoplay":{
+                            "delay":2500,
+                            "disableOnInteraction":false,
+                            "pauseOnMouseEnter":true
+                        },
+                        "navigation":{
+                            "nextEl":".ecom-pieces-plus-commandees .swiper-button-next",
+                            "prevEl":".ecom-pieces-plus-commandees .swiper-button-prev"
+                        },
+                        "breakpoints":{
+                        "0":{"slidesPerView":1,"spaceBetween":12},
+                        "320":{"slidesPerView":1,"spaceBetween":12},
+                        "480":{"slidesPerView":2,"spaceBetween":12},
+                        "640":{"slidesPerView":2,"spaceBetween":16},
+                        "840":{"slidesPerView":3,"spaceBetween":16},
+                        "1140":{"slidesPerView":5,"spaceBetween":16},
+                        "1540":{"slidesPerView":5,"spaceBetween":16},
+                        "1840":{"slidesPerView":6,"spaceBetween":16}
+                        }
+                    }'>
+                        <div class="swiper-wrapper">
+                            {% for row in pieces_plus_commandees_rows %}
+                            <div class="swiper-slide">
+                                {% include 'e_autopiece/partials/_piece_card_theme.html' with piece=row.piece prix_affiche=row.prix_affiche show_all_stocks=row.show_all_stocks quantite=row.quantite localite_code=row.localite_code localite_nom=row.localite_nom next_url=index_next_url|default:'/' hide_quantity=True col_class='ecom-swiper-piece-card' %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,65 @@
+<script>
+(function () {
+    const modalEl = document.getElementById('archiveMotifModal');
+    const form = document.getElementById('archiveMotifForm');
+    const labelEl = document.getElementById('archiveMotifPieceLabel');
+    const motifInput = document.getElementById('archiveMotifInput');
+    let pendingCheckbox = null;
+
+    if (!modalEl || !form) {
+        return;
+    }
+
+    function resetModal() {
+        pendingCheckbox = null;
+        if (motifInput) {
+            motifInput.value = '';
+        }
+    }
+
+  if (typeof $ !== 'undefined') {
+        $(modalEl).on('hidden.bs.modal', resetModal);
+    }
+
+    document.querySelectorAll('.toggle-checkbox').forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            if (this.checked) {
+                window.location.href = this.dataset.activeUrl;
+                return;
+            }
+            this.checked = true;
+            pendingCheckbox = this;
+            form.action = this.dataset.deactiveUrl || '';
+            if (labelEl) {
+                labelEl.textContent = this.dataset.pieceLabel || '—';
+            }
+            if (motifInput) {
+                motifInput.value = '';
+            }
+            if (typeof $ !== 'undefined') {
+                $(modalEl).modal('show');
+            } else {
+                modalEl.style.display = 'block';
+                modalEl.classList.add('show');
+            }
+        });
+    });
+
+    form.addEventListener('submit', function (e) {
+        const motif = (motifInput && motifInput.value || '').trim();
+        if (!motif) {
+            e.preventDefault();
+            if (motifInput) {
+                motifInput.focus();
+            }
+            return;
+        }
+        if (!form.action) {
+            e.preventDefault();
+            if (pendingCheckbox) {
+                pendingCheckbox.checked = true;
+            }
+        }
+    });
+})();
+</script>

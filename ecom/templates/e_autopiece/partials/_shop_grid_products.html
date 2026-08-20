@@ -1,0 +1,361 @@
+{% load static i18n %}
+<div class="rts-navigation-area-breadcrumb">
+    <div class="container">
+        <div class="navigator-breadcrumb-wrapper">
+            <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span class="current">{% trans "Boutique" %}</span>
+        </div>
+    </div>
+</div>
+
+<div class="shop-grid-sidebar-area rts-section-gap">
+    <div class="container">
+        <div class="row g-0">
+            <div class="col-xl-2 col-lg-12 pe-xl-3 pe-lg-2 rts-sticky-column-item ecom-shop-sidebar-col">
+                <div class="sidebar-filter-main theiaStickySidebar">
+                    <form method="get" action="{% url 'ecom_shop' %}" id="ecom-shop-filter-form" class="ecom-auto-filter-form">
+                        {% if shop_filters.q %}
+                        <input type="hidden" name="q" value="{{ shop_filters.q }}">
+                        {% endif %}
+                        {% if shop_filters.sort %}
+                        <input type="hidden" name="sort" value="{{ shop_filters.sort }}">
+                        {% endif %}
+                        <div class="single-filter-box">
+                            <h5 class="title">{% trans "Catégories" %}</h5>
+                            <div class="filterbox-body">
+                                <div class="category-wrapper">
+                                    {% for cat in categories %}
+                                    <div class="single-category">
+                                        <input id="cat-{{ cat.pk }}" name="categorie" type="checkbox"
+                                            value="{{ cat.pk }}" class="ecom-auto-filter-input"
+                                            {% if cat.pk|stringformat:"s" in selected_categories %}checked{% endif %}>
+                                        <label for="cat-{{ cat.pk }}">{{ cat.categorie }}</label>
+                                    </div>
+                                    {% empty %}
+                                    <p class="text-muted small mb-0">{% trans "Aucune catégorie." %}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="single-filter-box ecom-price-filter-box">
+                            <h5 class="title">{% trans "Prix" %}</h5>
+                            <div class="filterbox-body">
+                                <div class="price-input-area ecom-price-filter"
+                                     data-ecom-price-filter
+                                     data-min="{{ shop_price_bound_min|default:0 }}"
+                                     data-max="{{ shop_price_bound_max|default:500000 }}">
+                                    <div class="ecom-price-slider" aria-hidden="true">
+                                        <div class="ecom-price-slider-track">
+                                            <div class="ecom-price-slider-range" data-ecom-price-range></div>
+                                        </div>
+                                        <input type="range" class="ecom-price-slider-thumb ecom-price-slider-min"
+                                               min="{{ shop_price_bound_min|default:0 }}"
+                                               max="{{ shop_price_bound_max|default:500000 }}"
+                                               step="100"
+                                               value="{% if shop_filters.prix_min %}{{ shop_filters.prix_min }}{% else %}{{ shop_price_bound_min|default:0 }}{% endif %}"
+                                               aria-label="{% trans 'Prix minimum' %}">
+                                        <input type="range" class="ecom-price-slider-thumb ecom-price-slider-max"
+                                               min="{{ shop_price_bound_min|default:0 }}"
+                                               max="{{ shop_price_bound_max|default:500000 }}"
+                                               step="100"
+                                               value="{% if shop_filters.prix_max %}{{ shop_filters.prix_max }}{% else %}{{ shop_price_bound_max|default:500000 }}{% endif %}"
+                                               aria-label="{% trans 'Prix maximum' %}">
+                                    </div>
+                                    <div class="half-input-wrapper ecom-price-filter-row">
+                                        <div class="single ecom-price-field">
+                                            <label for="prix_min">{% trans "Min" %}</label>
+                                            <input id="prix_min" name="prix_min" type="number" min="0" step="100"
+                                                inputmode="numeric" placeholder="0"
+                                                value="{{ shop_filters.prix_min }}"
+                                                class="ecom-auto-filter-input ecom-price-input"
+                                                data-ecom-price-min-input>
+                                        </div>
+                                        <span class="ecom-price-filter-sep" aria-hidden="true">-</span>
+                                        <div class="single ecom-price-field">
+                                            <label for="prix_max">{% trans "Max" %}</label>
+                                            <input id="prix_max" name="prix_max" type="number" min="0" step="100"
+                                                inputmode="numeric" placeholder="0"
+                                                value="{{ shop_filters.prix_max }}"
+                                                class="ecom-auto-filter-input ecom-price-input"
+                                                data-ecom-price-max-input>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="single-filter-box">
+                            <h5 class="title">{% trans "Localités" %}</h5>
+                            <div class="filterbox-body">
+                                <div class="category-wrapper">
+                                    {% for loc in localites %}
+                                    <div class="single-category">
+                                        <input id="loc-{{ loc.code }}" name="localite" type="radio"
+                                            value="{{ loc.code }}" class="ecom-auto-filter-input"
+                                            {% if shop_filters.localite == loc.code|stringformat:'s' %}checked{% endif %}>
+                                        <label for="loc-{{ loc.code }}">{{ loc.nom }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="single-filter-box">
+                            <h5 class="title">{% trans "Statut" %}</h5>
+                            <div class="filterbox-body">
+                                <div class="category-wrapper">
+                                    <div class="single-category">
+                                        <input id="in-stock" type="checkbox" checked disabled>
+                                        <label for="in-stock">{% trans "En stock" %}</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap mt-3">
+                            <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary border-only">{% trans "Réinitialiser" %}</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xl-10 col-lg-12 ecom-shop-products-col" id="ecom-shop-results">
+                <div class="filter-select-area ecom-shop-filter-bar">
+                    <div class="ecom-shop-toolbar">
+                        <div class="top-filter ecom-shop-top-filter">
+                            <span class="ecom-shop-results">
+                                {% if shop_filters.q %}
+                                {% blocktrans with q=shop_filters.q %}Résultats pour « {{ q }} » — {% endblocktrans %}
+                                {% endif %}
+                                {% if shop_total %}
+                                {% blocktrans with start=shop_page.start_index end=shop_page.end_index total=shop_total %}
+                                Affichage {{ start }}–{{ end }} sur {{ total }} résultats
+                                {% endblocktrans %}
+                                {% else %}
+                                {% trans "Aucun résultat" %}
+                                {% endif %}
+                            </span>
+                            <div class="right-end">
+                                <form method="get" action="{% url 'ecom_shop' %}" id="ecom-shop-sort-form" class="ecom-shop-sort-form d-flex align-items-center gap-2 m-0">
+                                    {% if shop_filters.q %}
+                                    <input type="hidden" name="q" value="{{ shop_filters.q }}">
+                                    {% endif %}
+                                    {% for cat_id in selected_categories %}
+                                    <input type="hidden" name="categorie" value="{{ cat_id }}">
+                                    {% endfor %}
+                                    {% if shop_filters.prix_min %}<input type="hidden" name="prix_min" value="{{ shop_filters.prix_min }}">{% endif %}
+                                    {% if shop_filters.prix_max %}<input type="hidden" name="prix_max" value="{{ shop_filters.prix_max }}">{% endif %}
+                                    {% if shop_filters.localite %}<input type="hidden" name="localite" value="{{ shop_filters.localite }}">{% endif %}
+                                    <span class="ecom-shop-sort-label">{% trans "Trier :" %}</span>
+                                    <select name="sort" class="ecom-shop-ghost-select ecom-auto-filter-input" aria-label="{% trans 'Trier' %}">
+                                        <option value="designation" {% if shop_filters.sort == 'designation' %}selected{% endif %}>{% trans "Nom A-Z" %}</option>
+                                        <option value="price_asc" {% if shop_filters.sort == 'price_asc' %}selected{% endif %}>{% trans "Prix croissant" %}</option>
+                                        <option value="price_desc" {% if shop_filters.sort == 'price_desc' %}selected{% endif %}>{% trans "Prix décroissant" %}</option>
+                                    </select>
+                                </form>
+                                <div class="button-tab-area">
+                                    <ul class="nav nav-tabs" id="shopViewTab" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link single-button active" id="shop-grid-tab"
+                                                data-bs-toggle="tab" data-bs-target="#shop-grid-pane" type="button"
+                                                role="tab" aria-controls="shop-grid-pane" aria-selected="true">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="0.5" y="0.5" width="6" height="6" rx="1.5" stroke="#2C3B28" />
+                                                    <rect x="0.5" y="9.5" width="6" height="6" rx="1.5" stroke="#2C3B28" />
+                                                    <rect x="9.5" y="0.5" width="6" height="6" rx="1.5" stroke="#2C3B28" />
+                                                    <rect x="9.5" y="9.5" width="6" height="6" rx="1.5" stroke="#2C3B28" />
+                                                </svg>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form method="get" action="{% url 'ecom_shop' %}" id="ecom-shop-top-selects" class="ecom-shop-top-selects ecom-auto-filter-form">
+                            {% if shop_filters.q %}
+                            <input type="hidden" name="q" value="{{ shop_filters.q }}">
+                            {% endif %}
+                            {% if shop_filters.prix_min %}<input type="hidden" name="prix_min" value="{{ shop_filters.prix_min }}">{% endif %}
+                            {% if shop_filters.prix_max %}<input type="hidden" name="prix_max" value="{{ shop_filters.prix_max }}">{% endif %}
+                            {% if shop_filters.sort %}<input type="hidden" name="sort" value="{{ shop_filters.sort }}">{% endif %}
+                            <div class="ecom-shop-top-selects-row">
+                                <div class="ecom-shop-select-group">
+                                    <div class="ecom-shop-select-wrap">
+                                        <select name="categorie" class="ecom-shop-ghost-select ecom-auto-filter-input" aria-label="{% trans 'Catégories' %}">
+                                            <option value="">{% trans "Toutes les catégories" %}</option>
+                                            {% for cat in categories %}
+                                            <option value="{{ cat.pk }}"
+                                                {% if cat.pk|stringformat:"s" in selected_categories %}selected{% endif %}>
+                                                {{ cat.categorie }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="ecom-shop-select-wrap">
+                                        <select name="localite" class="ecom-shop-ghost-select ecom-auto-filter-input" aria-label="{% trans 'Localités' %}">
+                                            <option value="">{% trans "Toutes les localités" %}</option>
+                                            {% for loc in localites %}
+                                            <option value="{{ loc.code }}"
+                                                {% if shop_filters.localite == loc.code|stringformat:'s' %}selected{% endif %}>
+                                                {{ loc.nom }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <a href="{% url 'ecom_shop' %}" class="ecom-shop-reset-btn">{% trans "Réinitialiser" %}</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    {% if local_selectionne or filter_local %}
+                    <div class="ecom-shop-local-banner p-2">
+                        <span class="ecom-shop-local-banner__icon" aria-hidden="true">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </span>
+                        <p class="ecom-shop-local-banner__text mb-0">
+                            {% trans "Commande depuis" %}
+                            <strong>{% if filter_local %}{{ filter_local.nom }}{% else %}{{ local_selectionne.nom }}{% endif %}</strong>
+                        </p>
+                    </div>
+                    {% else %}
+                    <div class="ecom-shop-local-banner ecom-shop-local-banner--muted p-2">
+                        <span class="ecom-shop-local-banner__icon" aria-hidden="true">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                        </span>
+                        <p class="ecom-shop-local-banner__text mb-0">
+                            {% trans "Choisissez une localité sur l'accueil ou dans les filtres pour commander." %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-content" id="shopViewTabContent">
+                    <div class="product-area-wrapper-shopgrid-list ecom-shop-grid-5 mt--20 tab-pane fade show active"
+                        id="shop-grid-pane" role="tabpanel" aria-labelledby="shop-grid-tab" tabindex="0">
+                        <div class="row g-4">
+                            {% for row in shop_rows %}
+                            {% include 'e_autopiece/partials/_piece_card_theme.html' with piece=row.piece prix_affiche=row.prix_affiche show_all_stocks=row.show_all_stocks quantite=row.quantite localite_code=row.localite_code localite_nom=row.localite_nom next_url=shop_next_url col_class='col-xl-20 col-lg-20 col-md-4 col-sm-6 col-12' %}
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="ecom-shop-empty" role="status">
+                                    <span class="ecom-shop-empty__icon" aria-hidden="true">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </span>
+                                    <p class="ecom-shop-empty__title">
+                                        {% if shop_filters.q %}
+                                        {% blocktrans with q=shop_filters.q %}Aucun résultat pour « {{ q }} »{% endblocktrans %}
+                                        {% else %}
+                                        {% trans "Aucune pièce ne correspond à vos critères." %}
+                                        {% endif %}
+                                    </p>
+                                    <p class="ecom-shop-empty__hint text-muted">
+                                        {% trans "Essayez un autre mot-clé ou réinitialisez les filtres." %}
+                                    </p>
+                                    <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary border-only radious-sm">
+                                        {% trans "Réinitialiser" %}
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="product-area-wrapper-shopgrid-list with-list mt--20 tab-pane fade"
+                        id="shop-list-pane" role="tabpanel" aria-labelledby="shop-list-tab" tabindex="0">
+                        <div class="row g-4">
+                            {% for row in shop_rows %}
+                            <div class="col-lg-6">
+                                {% include 'e_autopiece/partials/_piece_card_shop_list.html' with piece=row.piece prix_affiche=row.prix_affiche show_all_stocks=row.show_all_stocks quantite=row.quantite localite_code=row.localite_code localite_nom=row.localite_nom next_url=shop_next_url %}
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="ecom-shop-empty" role="status">
+                                    <span class="ecom-shop-empty__icon" aria-hidden="true">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </span>
+                                    <p class="ecom-shop-empty__title">
+                                        {% if shop_filters.q %}
+                                        {% blocktrans with q=shop_filters.q %}Aucun résultat pour « {{ q }} »{% endblocktrans %}
+                                        {% else %}
+                                        {% trans "Aucune pièce ne correspond à vos critères." %}
+                                        {% endif %}
+                                    </p>
+                                    <p class="ecom-shop-empty__hint text-muted">
+                                        {% trans "Essayez un autre mot-clé ou réinitialisez les filtres." %}
+                                    </p>
+                                    <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary border-only radious-sm">
+                                        {% trans "Réinitialiser" %}
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if shop_page.has_other_pages %}
+                <div class="row mt--50">
+                    <div class="col-lg-12">
+                        <nav class="pagination-area-main-wrappper ecom-shop-pagination" aria-label="{% trans 'Pagination boutique' %}">
+                            <ul>
+                                <li>
+                                    {% if shop_page.has_previous %}
+                                    <a class="ecom-page-btn" href="?{% if shop_query %}{{ shop_query }}&{% endif %}page=1" aria-label="{% trans 'Première page' %}">
+                                        <i class="fa-regular fa-chevrons-left"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="ecom-page-btn disabled" aria-disabled="true">
+                                        <i class="fa-regular fa-chevrons-left"></i>
+                                    </span>
+                                    {% endif %}
+                                </li>
+                                <li>
+                                    {% if shop_page.has_previous %}
+                                    <a class="ecom-page-btn" href="?{% if shop_query %}{{ shop_query }}&{% endif %}page={{ shop_page.previous_page_number }}" aria-label="{% trans 'Page précédente' %}">
+                                        <i class="fa-regular fa-chevron-left"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="ecom-page-btn disabled" aria-disabled="true">
+                                        <i class="fa-regular fa-chevron-left"></i>
+                                    </span>
+                                    {% endif %}
+                                </li>
+                                {% for num in shop_page_numbers %}
+                                <li>
+                                    {% if num == shop_page.number %}
+                                    <span class="ecom-page-btn active" aria-current="page">{{ num }}</span>
+                                    {% else %}
+                                    <a class="ecom-page-btn" href="?{% if shop_query %}{{ shop_query }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                                <li>
+                                    {% if shop_page.has_next %}
+                                    <a class="ecom-page-btn" href="?{% if shop_query %}{{ shop_query }}&{% endif %}page={{ shop_page.next_page_number }}" aria-label="{% trans 'Page suivante' %}">
+                                        <i class="fa-regular fa-chevron-right"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="ecom-page-btn disabled" aria-disabled="true">
+                                        <i class="fa-regular fa-chevron-right"></i>
+                                    </span>
+                                    {% endif %}
+                                </li>
+                                <li>
+                                    {% if shop_page.has_next %}
+                                    <a class="ecom-page-btn" href="?{% if shop_query %}{{ shop_query }}&{% endif %}page={{ shop_page.paginator.num_pages }}" aria-label="{% trans 'Dernière page' %}">
+                                        <i class="fa-regular fa-chevrons-right"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="ecom-page-btn disabled" aria-disabled="true">
+                                        <i class="fa-regular fa-chevrons-right"></i>
+                                    </span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,27 @@
+{% load i18n %}
+<div class="ecom-mobile-cat-panel">
+    <div class="ecom-mobile-cat-head">
+        <span class="ecom-mobile-cat-head-title">{% trans "Catégories" %}</span>
+        <a href="{% url 'ecom_shop' %}" class="ecom-mobile-cat-head-link">{% trans "Tout voir" %}</a>
+    </div>
+    <ul class="ecom-mobile-cat-list" id="{{ menu_id|default:'category-active-menu' }}">
+        {% for cat in ecom_categories %}
+        <li>
+            <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="ecom-mobile-cat-item">
+                <span class="ecom-mobile-cat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-gears"></i>
+                </span>
+                <span class="ecom-mobile-cat-label">{{ cat.categorie }}</span>
+                <span class="ecom-mobile-cat-chevron" aria-hidden="true">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </span>
+            </a>
+        </li>
+        {% empty %}
+        <li class="ecom-mobile-cat-empty">
+            <p>{% trans "Aucune catégorie disponible pour le moment." %}</p>
+            <a href="{% url 'ecom_shop' %}" class="rts-btn btn-primary">{% trans "Voir la boutique" %}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>

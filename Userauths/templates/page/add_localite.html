@@ -1,0 +1,560 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+<title>{% block title %} AUTO-PIECE || LOCALITÉS {% endblock title %}</title>
+{% block header %}
+<div class="block-header">
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <h2>Localités</h2>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
+                <li class="breadcrumb-item active">Gestion des localités</li>
+            </ul>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="d-flex flex-row-reverse">
+                <div class="page_action">
+                    <button type="button" class="btn btn-outline-success" id="btn-nouvelle-localite" data-toggle="modal" data-target="#localiteModal">
+                        <i class="icon-plus"></i> Nouvelle localité
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock header %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="{% static 'apps/assets/css/localite.css' %}">
+{% endblock extra_head %}
+
+{% block main_content %}
+{# Parent appbases wraps main_content in .row.row-deck — colonnes directes #}
+<div class="col-lg-4 col-md-12 localite-list-col">
+    <div class="card localite-list-card">
+        <div class="header">
+            <h2>Liste des localités <small><span id="localite-count-label">{{ localites|length }}</span> site(s)</small></h2>
+            <div class="localite-search-wrap">
+                <i class="fa fa-search localite-search-icon" aria-hidden="true"></i>
+                <input type="search"
+                       id="localite-search"
+                       class="form-control localite-search-input"
+                       placeholder="Rechercher une localité…"
+                       autocomplete="off"
+                       {% if not localites %}disabled{% endif %}>
+            </div>
+        </div>
+        <div class="body">
+            {% if localites %}
+                <div id="localite-list" class="localite-list">
+                {% for loc in localites %}
+                <div class="localite-list-item d-flex justify-content-between align-items-start js-focus-localite"
+                     data-local-code="{{ loc.code }}"
+                     data-local-nom="{{ loc.nom|lower }}"
+                     data-local-statut="{% if loc.statut %}ouvert{% else %}ferme{% endif %}"
+                     data-has-gps="{% if loc.a_coordonnees %}1{% else %}0{% endif %}"
+                     id="localite-row-{{ loc.code }}"
+                     role="button"
+                     tabindex="0">
+                    <div class="localite-list-item-info">
+                        <span class="localite-name">{{ loc.nom }}</span>
+                        <div class="localite-list-meta">
+                            {% if loc.statut %}
+                            <span class="badge localite-badge-ouvert">Ouvert</span>
+                            {% else %}
+                            <span class="badge localite-badge-ferme">Fermé</span>
+                            {% endif %}
+                            {% if loc.a_coordonnees %}
+                                <span class="ml-1">{{ loc.latitude }}, {{ loc.longitude }}</span>
+                            {% else %}
+                                <span class="ml-1 text-warning">GPS non défini</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="localite-actions">
+                        <button type="button"
+                                class="btn btn-sm btn-outline-primary js-edit-localite"
+                                title="Modifier"
+                                data-url="{% url 'update_localite' loc.code %}">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <form method="post" action="{% url 'delete_localite' loc.code %}" class="d-inline js-delete-localite"
+                              onsubmit="return confirm('Supprimer la localité « {{ loc.nom|escapejs }} » ?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+                </div>
+                <p id="localite-search-empty" class="text-muted mb-0 localite-search-empty d-none">
+                    Aucune localité ne correspond à votre recherche.
+                </p>
+            {% else %}
+                <p class="text-muted mb-0">Aucune localité pour le moment. Créez-en une pour l’afficher sur la carte.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-8 col-md-12 localite-map-col">
+    <div class="card">
+        <div class="header">
+            <h2>Carte des localités <small>Cliquez une localité à gauche pour la centrer sur la carte</small></h2>
+        </div>
+        <div class="body">
+            <div id="localite-main-map" class="localite-page-map"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-12">
+{# Modal création / édition #}
+<div class="modal fade" id="localiteModal" tabindex="-1" role="dialog" aria-labelledby="localiteModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <form method="post" action="{% url 'add_localite' %}" id="localite-form" novalidate>
+                <div class="modal-header">
+                    <h6 class="title" id="localiteModalLabel">Nouvelle localité</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="localite-modal-body">
+                    {% include "partials/localite_form.html" %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary" id="localite-submit-btn">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+(function () {
+    var DEFAULT_CENTER = [5.3453, -4.0244];
+    var DEFAULT_ZOOM = 11;
+    var localites = {{ localites_json|safe }};
+    var markers = {};
+    var mainMap = null;
+    var pickerMap = null;
+    var pickerMarker = null;
+    var createFormHtml = null;
+
+    function escapeHtml(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function buildPopupHtml(loc) {
+        var html = '<div class="localite-popup">' +
+            '<strong>' + escapeHtml(loc.nom) + '</strong>' +
+            '<div class="mt-1"><span class="badge ' +
+            (loc.statut === 'Ouvert' ? 'localite-badge-ouvert' : 'localite-badge-ferme') +
+            '">' + escapeHtml(loc.statut) + '</span></div>';
+        if (loc.lat != null && loc.lng != null) {
+            html += '<div class="small text-muted mt-1">' + loc.lat + ', ' + loc.lng + '</div>';
+        }
+        if (loc.creneaux && loc.creneaux.length) {
+            html += '<ul class="pl-3 mb-1 mt-2 small">';
+            loc.creneaux.forEach(function (c) {
+                html += '<li>' + escapeHtml(c.jour) + ' : ' +
+                    escapeHtml(c.ouverture) + '–' + escapeHtml(c.fermeture) + '</li>';
+            });
+            html += '</ul>';
+        } else {
+            html += '<div class="small text-muted mt-2">Aucun créneau configuré</div>';
+        }
+        html += '</div>';
+        return html;
+    }
+
+    function focusLocalite(code) {
+        document.querySelectorAll('.localite-list-item').forEach(function (el) {
+            el.classList.toggle('is-active', el.getAttribute('data-local-code') === code);
+        });
+
+        Object.keys(markers).forEach(function (c) {
+            if (!markers[c]) return;
+            var iconEl = markers[c]._icon;
+            if (iconEl) {
+                iconEl.classList.toggle('localite-marker-active', c === code);
+            }
+            markers[c].setOpacity(c === code ? 1 : 0.45);
+        });
+
+        var marker = markers[code];
+        if (!marker || !mainMap) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top',
+                    icon: 'info',
+                    title: 'Cette localité n’a pas de coordonnées GPS',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+            }
+            return;
+        }
+
+        var latLng = marker.getLatLng();
+        mainMap.invalidateSize();
+        mainMap.flyTo(latLng, Math.max(mainMap.getZoom(), 15), { animate: true, duration: 0.7 });
+        marker.openPopup();
+        if (typeof marker.setZIndexOffset === 'function') {
+            Object.keys(markers).forEach(function (c) {
+                markers[c].setZIndexOffset(c === code ? 1000 : 0);
+            });
+        }
+    }
+
+    function filterLocalites(query) {
+        var q = String(query || '').trim().toLowerCase();
+        var items = document.querySelectorAll('.localite-list-item');
+        var visible = 0;
+        items.forEach(function (item) {
+            var nom = item.getAttribute('data-local-nom') || '';
+            var statut = item.getAttribute('data-local-statut') || '';
+            var meta = (item.querySelector('.localite-list-meta') || {}).textContent || '';
+            var haystack = (nom + ' ' + statut + ' ' + meta).toLowerCase();
+            var match = !q || haystack.indexOf(q) !== -1;
+            item.classList.toggle('is-hidden', !match);
+            if (match) visible += 1;
+        });
+        var countLabel = document.getElementById('localite-count-label');
+        if (countLabel) countLabel.textContent = String(visible);
+        var empty = document.getElementById('localite-search-empty');
+        if (empty) empty.classList.toggle('d-none', visible > 0 || items.length === 0);
+
+        // Sur recherche unique, centrer automatiquement la carte
+        if (q && visible === 1) {
+            var only = document.querySelector('.localite-list-item:not(.is-hidden)');
+            if (only) focusLocalite(only.getAttribute('data-local-code'));
+        } else if (!q) {
+            Object.keys(markers).forEach(function (c) {
+                if (!markers[c]) return;
+                markers[c].setOpacity(1);
+                if (markers[c]._icon) markers[c]._icon.classList.remove('localite-marker-active');
+            });
+        }
+    }
+
+    function initMainMap() {
+        var el = document.getElementById('localite-main-map');
+        if (!el || typeof L === 'undefined') return;
+
+        mainMap = L.map(el, { scrollWheelZoom: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(mainMap);
+
+        var bounds = [];
+        localites.forEach(function (loc) {
+            if (loc.lat == null || loc.lng == null) return;
+            var marker = L.marker([loc.lat, loc.lng]).addTo(mainMap);
+            marker.bindPopup(buildPopupHtml(loc));
+            marker.on('click', function () {
+                document.querySelectorAll('.localite-list-item').forEach(function (el) {
+                    el.classList.toggle('is-active', el.getAttribute('data-local-code') === loc.code);
+                });
+                Object.keys(markers).forEach(function (c) {
+                    if (!markers[c]) return;
+                    markers[c].setOpacity(c === loc.code ? 1 : 0.45);
+                    if (markers[c]._icon) {
+                        markers[c]._icon.classList.toggle('localite-marker-active', c === loc.code);
+                    }
+                });
+                var row = document.getElementById('localite-row-' + loc.code);
+                if (row && typeof row.scrollIntoView === 'function') {
+                    row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+            });
+            markers[loc.code] = marker;
+            bounds.push([loc.lat, loc.lng]);
+        });
+
+        if (bounds.length === 1) {
+            mainMap.setView(bounds[0], 14);
+        } else if (bounds.length > 1) {
+            mainMap.fitBounds(bounds, { padding: [40, 40] });
+        }
+        setTimeout(function () { mainMap.invalidateSize(); }, 200);
+        setTimeout(function () { if (mainMap) mainMap.invalidateSize(); }, 500);
+    }
+
+    function getLatLngInputs(root) {
+        root = root || document;
+        return {
+            lat: root.querySelector('#id_latitude') || root.querySelector('[name="latitude"]'),
+            lng: root.querySelector('#id_longitude') || root.querySelector('[name="longitude"]')
+        };
+    }
+
+    function setPickerPosition(lat, lng, pan) {
+        if (!pickerMap || lat == null || lng == null || isNaN(lat) || isNaN(lng)) return;
+        var ll = L.latLng(lat, lng);
+        if (!pickerMarker) {
+            pickerMarker = L.marker(ll, { draggable: true }).addTo(pickerMap);
+            pickerMarker.on('dragend', function () {
+                var pos = pickerMarker.getLatLng();
+                var inputs = getLatLngInputs(document.getElementById('localite-modal-body'));
+                if (inputs.lat) inputs.lat.value = pos.lat.toFixed(7);
+                if (inputs.lng) inputs.lng.value = pos.lng.toFixed(7);
+            });
+        } else {
+            pickerMarker.setLatLng(ll);
+        }
+        if (pan !== false) {
+            pickerMap.setView(ll, Math.max(pickerMap.getZoom(), 14));
+        }
+    }
+
+    function destroyPickerMap() {
+        if (pickerMap) {
+            pickerMap.remove();
+            pickerMap = null;
+            pickerMarker = null;
+        }
+    }
+
+    function initPickerMap(lat, lng) {
+        destroyPickerMap();
+        var el = document.getElementById('localite-picker-map');
+        if (!el || typeof L === 'undefined') return;
+
+        var start = DEFAULT_CENTER;
+        var zoom = DEFAULT_ZOOM;
+        if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
+            start = [lat, lng];
+            zoom = 14;
+        }
+
+        pickerMap = L.map(el, { scrollWheelZoom: true }).setView(start, zoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(pickerMap);
+
+        if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
+            setPickerPosition(lat, lng, false);
+        }
+
+        pickerMap.on('click', function (e) {
+            setPickerPosition(e.latlng.lat, e.latlng.lng, false);
+            var inputs = getLatLngInputs(document.getElementById('localite-modal-body'));
+            if (inputs.lat) inputs.lat.value = e.latlng.lat.toFixed(7);
+            if (inputs.lng) inputs.lng.value = e.latlng.lng.toFixed(7);
+        });
+
+        setTimeout(function () {
+            if (pickerMap) pickerMap.invalidateSize();
+        }, 250);
+    }
+
+    function bindLatLngManualSync() {
+        var body = document.getElementById('localite-modal-body');
+        var inputs = getLatLngInputs(body);
+        function syncFromInputs() {
+            var lat = parseFloat(inputs.lat && inputs.lat.value);
+            var lng = parseFloat(inputs.lng && inputs.lng.value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                setPickerPosition(lat, lng, true);
+            }
+        }
+        if (inputs.lat) {
+            inputs.lat.addEventListener('change', syncFromInputs);
+            inputs.lat.addEventListener('blur', syncFromInputs);
+        }
+        if (inputs.lng) {
+            inputs.lng.addEventListener('change', syncFromInputs);
+            inputs.lng.addEventListener('blur', syncFromInputs);
+        }
+    }
+
+    function initCreneauFormset(root) {
+        root = root || document;
+        var formset = root.querySelector('[data-ecom-creneau-formset]');
+        if (!formset || formset.getAttribute('data-inited') === '1') return;
+        formset.setAttribute('data-inited', '1');
+        var rows = formset.querySelector('[data-ecom-creneau-rows]');
+        var emptyTpl = formset.querySelector('[data-ecom-creneau-empty]');
+        var addBtn = formset.querySelector('[data-ecom-creneau-add]');
+        var totalInput = formset.querySelector('input[name$="-TOTAL_FORMS"]');
+        if (!rows || !emptyTpl || !addBtn || !totalInput) return;
+
+        addBtn.addEventListener('click', function () {
+            var index = parseInt(totalInput.value, 10) || 0;
+            var html = emptyTpl.innerHTML.replace(/__prefix__/g, String(index));
+            var wrap = document.createElement('div');
+            wrap.innerHTML = html.trim();
+            var row = wrap.firstElementChild;
+            if (row) rows.appendChild(row);
+            totalInput.value = String(index + 1);
+        });
+    }
+
+    function resetCreateModal() {
+        var form = document.getElementById('localite-form');
+        var body = document.getElementById('localite-modal-body');
+        var title = document.getElementById('localiteModalLabel');
+        if (!form || !body || !createFormHtml) return;
+        form.action = '{% url "add_localite" %}';
+        form.removeAttribute('data-ajax');
+        title.textContent = 'Nouvelle localité';
+        body.innerHTML = createFormHtml;
+        initCreneauFormset(body);
+        bindLatLngManualSync();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var modalBody = document.getElementById('localite-modal-body');
+        createFormHtml = modalBody ? modalBody.innerHTML : '';
+
+        initMainMap();
+        initCreneauFormset(document);
+        bindLatLngManualSync();
+
+        var searchInput = document.getElementById('localite-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                filterLocalites(searchInput.value);
+            });
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    searchInput.value = '';
+                    filterLocalites('');
+                    searchInput.blur();
+                }
+            });
+        }
+
+        document.querySelectorAll('.js-focus-localite').forEach(function (row) {
+            row.addEventListener('click', function (e) {
+                if (e.target.closest('.localite-actions')) return;
+                e.preventDefault();
+                focusLocalite(row.getAttribute('data-local-code'));
+            });
+            row.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    if (e.target.closest('.localite-actions')) return;
+                    e.preventDefault();
+                    focusLocalite(row.getAttribute('data-local-code'));
+                }
+            });
+        });
+
+        document.getElementById('btn-nouvelle-localite').addEventListener('click', function () {
+            resetCreateModal();
+        });
+
+        $('#localiteModal').on('shown.bs.modal', function () {
+            var inputs = getLatLngInputs(document.getElementById('localite-modal-body'));
+            var lat = parseFloat(inputs.lat && inputs.lat.value);
+            var lng = parseFloat(inputs.lng && inputs.lng.value);
+            initPickerMap(
+                isNaN(lat) ? null : lat,
+                isNaN(lng) ? null : lng
+            );
+            bindLatLngManualSync();
+            initCreneauFormset(document.getElementById('localite-modal-body'));
+        });
+
+        $('#localiteModal').on('hidden.bs.modal', function () {
+            destroyPickerMap();
+        });
+
+        document.querySelectorAll('.js-edit-localite').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var url = btn.getAttribute('data-url');
+                fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!data.success || !data.html) {
+                        Swal.fire({ icon: 'error', title: 'Impossible de charger la localité' });
+                        return;
+                    }
+                    var form = document.getElementById('localite-form');
+                    var body = document.getElementById('localite-modal-body');
+                    var title = document.getElementById('localiteModalLabel');
+                    form.action = url;
+                    form.setAttribute('data-ajax', '1');
+                    title.textContent = 'Modifier — ' + (data.nom || 'localité');
+                    body.innerHTML = data.html;
+                    initCreneauFormset(body);
+                    bindLatLngManualSync();
+                    $('#localiteModal').modal('show');
+                })
+                .catch(function () {
+                    Swal.fire({ icon: 'error', title: 'Erreur réseau' });
+                });
+            });
+        });
+
+        document.getElementById('localite-form').addEventListener('submit', function (e) {
+            var form = e.target;
+            if (form.getAttribute('data-ajax') !== '1') return;
+            e.preventDefault();
+            var fd = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    $('#localiteModal').modal('hide');
+                    Swal.fire({
+                        toast: true,
+                        position: 'top',
+                        icon: 'success',
+                        title: data.message || 'Enregistré',
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                    window.setTimeout(function () {
+                        window.location.href = data.redirect_url || window.location.href;
+                    }, 800);
+                    return;
+                }
+                if (data.html) {
+                    var body = document.getElementById('localite-modal-body');
+                    body.innerHTML = data.html;
+                    initCreneauFormset(body);
+                    bindLatLngManualSync();
+                    var inputs = getLatLngInputs(body);
+                    initPickerMap(
+                        parseFloat(inputs.lat && inputs.lat.value) || null,
+                        parseFloat(inputs.lng && inputs.lng.value) || null
+                    );
+                }
+            })
+            .catch(function () {
+                Swal.fire({ icon: 'error', title: 'Erreur lors de l’enregistrement' });
+            });
+        });
+
+        {% if open_modal %}
+        $('#localiteModal').modal('show');
+        {% endif %}
+    });
+})();
+</script>
+</div>
+{% endblock main_content %}
