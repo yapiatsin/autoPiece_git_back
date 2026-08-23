@@ -11,6 +11,11 @@ class StockConfig(AppConfig):
     name = 'stock'
 
     def ready(self):
+        from django.db.models.signals import post_migrate
+        from stock.default_seeders import seed_on_migrate
+
+        post_migrate.connect(seed_on_migrate, sender=self)
+
         # Planificateur local (runserver, processus enfant du reloader uniquement)
         if 'runserver' not in sys.argv:
             return

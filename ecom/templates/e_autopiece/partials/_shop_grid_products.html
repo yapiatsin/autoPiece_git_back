@@ -26,11 +26,30 @@
                             <div class="filterbox-body">
                                 <div class="category-wrapper">
                                     {% for cat in categories %}
-                                    <div class="single-category">
-                                        <input id="cat-{{ cat.pk }}" name="categorie" type="checkbox"
-                                            value="{{ cat.pk }}" class="ecom-auto-filter-input"
-                                            {% if cat.pk|stringformat:"s" in selected_categories %}checked{% endif %}>
-                                        <label for="cat-{{ cat.pk }}">{{ cat.categorie }}</label>
+                                    <div class="ecom-shop-cat">
+                                        <div class="single-category">
+                                            <input id="cat-{{ cat.pk }}" name="categorie" type="checkbox"
+                                                value="{{ cat.pk }}" class="ecom-auto-filter-input"
+                                                {% if cat.pk|stringformat:"s" in selected_categories %}checked{% endif %}>
+                                            <label for="cat-{{ cat.pk }}">{{ cat.categorie }}</label>
+                                        </div>
+                                        {% with sous_list=cat.sous_categories.all %}
+                                        {% if sous_list %}
+                                        <div class="ecom-shop-sous-card" data-cat-id="{{ cat.pk }}">
+                                            <p class="ecom-shop-sous-card__title">{% trans "Sous-catégories" %} {{ cat.categorie }}</p>
+                                            <div class="ecom-shop-sous-card__grid">
+                                                {% for sc in sous_list %}
+                                                <label class="ecom-shop-sous-card__item" for="sous-{{ sc.pk }}">
+                                                    <input id="sous-{{ sc.pk }}" name="sous_categorie" type="checkbox"
+                                                        value="{{ sc.pk }}" class="ecom-auto-filter-input"
+                                                        {% if sc.pk|stringformat:"s" in selected_sous_categories %}checked{% endif %}>
+                                                    <span>{{ sc.nom }}</span>
+                                                </label>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endwith %}
                                     </div>
                                     {% empty %}
                                     <p class="text-muted small mb-0">{% trans "Aucune catégorie." %}</p>
@@ -85,6 +104,13 @@
                             </div>
                         </div>
                         <div class="single-filter-box">
+                            <h5 class="title">{% trans "Ville / commune" %}</h5>
+                            <div class="filterbox-body">
+                                {% csrf_token %}
+                                {% include 'e_autopiece/partials/_ecom_ville_commune_selects.html' with geo_ville_id='shop-geo-ville' geo_commune_id='shop-geo-commune' %}
+                            </div>
+                        </div>
+                        <div class="single-filter-box">
                             <h5 class="title">{% trans "Localités" %}</h5>
                             <div class="filterbox-body">
                                 <div class="category-wrapper">
@@ -118,6 +144,7 @@
             </div>
 
             <div class="col-xl-10 col-lg-12 ecom-shop-products-col" id="ecom-shop-results">
+                <div id="ecom-shop-sous-host" class="ecom-shop-sous-host" hidden></div>
                 <div class="filter-select-area ecom-shop-filter-bar">
                     <div class="ecom-shop-toolbar">
                         <div class="top-filter ecom-shop-top-filter">
@@ -140,6 +167,9 @@
                                     {% endif %}
                                     {% for cat_id in selected_categories %}
                                     <input type="hidden" name="categorie" value="{{ cat_id }}">
+                                    {% endfor %}
+                                    {% for sc_id in selected_sous_categories %}
+                                    <input type="hidden" name="sous_categorie" value="{{ sc_id }}">
                                     {% endfor %}
                                     {% if shop_filters.prix_min %}<input type="hidden" name="prix_min" value="{{ shop_filters.prix_min }}">{% endif %}
                                     {% if shop_filters.prix_max %}<input type="hidden" name="prix_max" value="{{ shop_filters.prix_max }}">{% endif %}
@@ -187,6 +217,19 @@
                                                 {% if cat.pk|stringformat:"s" in selected_categories %}selected{% endif %}>
                                                 {{ cat.categorie }}
                                             </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="ecom-shop-select-wrap">
+                                        <select name="sous_categorie" class="ecom-shop-ghost-select ecom-auto-filter-input" aria-label="{% trans 'Sous-catégories' %}">
+                                            <option value="">{% trans "Toutes les sous-catégories" %}</option>
+                                            {% for cat in categories %}
+                                                {% for sc in cat.sous_categories.all %}
+                                                <option value="{{ sc.pk }}" data-cat="{{ cat.pk }}"
+                                                    {% if sc.pk|stringformat:"s" in selected_sous_categories %}selected{% endif %}>
+                                                    {{ sc.nom }}
+                                                </option>
+                                                {% endfor %}
                                             {% endfor %}
                                         </select>
                                     </div>

@@ -122,6 +122,9 @@
                                     <td>{{ c.montant_reste }}</td>
                                     <td class="text-center">
                                         {% if c.paye %}✅{% else %}❌{% endif %}
+                                        {% if c.libelle_paiement %}
+                                        <div class="small text-muted">{{ c.libelle_paiement }}</div>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if c.ticket %}

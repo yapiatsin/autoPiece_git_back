@@ -1,0 +1,26 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% block title %}AUTO-PIECE — Paiement GeniusPay{% endblock title %}
+{% block page_title %}Paiement numérique{% endblock page_title %}
+{% block page %}{% endblock page %}
+{% block main_content %}
+<div class="col-12 p-3">
+    <div class="card">
+        <div class="body text-center py-5">
+            {% if error %}
+            <h3 class="mb-3">Paiement non abouti</h3>
+            <p class="text-muted">Le paiement GeniusPay a été annulé ou a échoué. Vous pouvez fermer cet onglet et réessayer en caisse.</p>
+            {% elif paye %}
+            <h3 class="mb-3">Paiement confirmé</h3>
+            <p class="text-muted">
+                {% if ticket %}Ticket {{ ticket.numero }} — {% endif %}
+                vous pouvez fermer cet onglet. La caisse se met à jour automatiquement.
+            </p>
+            {% else %}
+            <h3 class="mb-3">Paiement en cours</h3>
+            <p class="text-muted">Si vous venez de payer, attendez quelques secondes puis revenez à la caisse.</p>
+            {% endif %}
+            <a href="{{ caisse_url }}" class="btn btn-primary mt-3">Retour à la caisse</a>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}

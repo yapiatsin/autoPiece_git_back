@@ -27,7 +27,7 @@ def build_mes_ventes_data(request):
     )
     n_cols = len(period_columns)
 
-    pieces = Piece.objects.select_related('categorie').all()
+    pieces = Piece.objects.select_related('categorie', 'sous_categorie').all()
     if localite:
         pieces = pieces.filter(stocks__local_entrepot=localite).distinct()
 

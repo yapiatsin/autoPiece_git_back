@@ -98,7 +98,7 @@
                 <span class="ecom-inv-label">{% trans "Paiement" %}</span>
                 <span class="ecom-inv-value">
                     {% if commande.paye %}{% trans "Payée" %}{% else %}{% trans "Non payée" %}{% endif %}
-                    {% if commande.moyen_paiement %} — {{ commande.moyen_paiement.nom }}{% endif %}
+                    {% if commande.libelle_paiement %} — {{ commande.libelle_paiement }}{% endif %}
                 </span>
             </div>
             <div class="ecom-inv-field">
@@ -129,7 +129,7 @@
                     <td class="ecom-inv-td-desc">
                         <span class="ecom-inv-item-name">{{ item.piece.designation }}</span>
                         {% if item.piece.categorie %}
-                        <span class="ecom-inv-item-category">{{ item.piece.categorie.categorie }}</span>
+                        <span class="ecom-inv-item-category">{{ item.piece.libelle_classification }}</span>
                         {% endif %}
                         {% if item.piece.numero_piece %}
                         <span class="ecom-inv-item-code">{{ item.piece.numero_piece }}</span>

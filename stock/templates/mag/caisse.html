@@ -107,6 +107,9 @@
                                         {% else %}
                                         <span class="badge badge-danger">Impayé</span>
                                         {% endif %}
+                                        {% if c.libelle_paiement %}
+                                        <div class="small text-muted mt-1">{{ c.libelle_paiement }}</div>
+                                        {% endif %}
                                     </td>
                                     <td>{{ c.utilisateur.username|default:"—" }}</td>
                                     <td>{{ c.date_creation|date:"d-m-y" }}</td>
@@ -144,7 +147,32 @@
             </div>
         </div>
     </div>
-    
+
+    <div class="modal fade" id="modalGeniusPayQr" tabindex="-1" role="dialog" aria-labelledby="modalGeniusPayQrLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content caisse-qr-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalGeniusPayQrLabel">Paiement numérique</h5>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-2 text-muted" id="caisse-qr-hint">Scannez ce QR code pour payer (Wave, Orange, MTN, carte).</p>
+                    <p class="caisse-qr-amount mb-3" id="caisse-qr-amount"></p>
+                    <div class="caisse-qr-frame">
+                        <img id="caisse-qr-img" alt="QR code de paiement" width="240" height="240">
+                    </div>
+                    <p class="small text-muted mt-3 mb-0" id="caisse-qr-ref"></p>
+                    <p class="small text-muted mt-2 mb-0">En attente de confirmation du paiement…</p>
+                    <a id="caisse-qr-link" class="d-inline-block mt-2" href="#" target="_blank" rel="noopener">Ouvrir la page de paiement</a>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-outline-danger" id="btn-annuler-geniuspay-qr">
+                        <i class="fa fa-times"></i> Annuler
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modalBonCommandeVente" tabindex="-1" role="dialog" aria-labelledby="modalBonCommandeVenteLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
@@ -200,6 +228,11 @@
         document.addEventListener("DOMContentLoaded", function () {
             defaultCaisseHTML = document.getElementById("caisse-panel").innerHTML;
             initMontantCalcul();
+            const caissePanel = document.getElementById("caisse-panel");
+            if (caissePanel && !caissePanel.dataset.submitBound) {
+                caissePanel.dataset.submitBound = "1";
+                caissePanel.addEventListener("submit", onCaisseFormSubmit);
+            }
 
             // Initialiser la liste des tickets déjà visibles (évite un faux "nouveau panier" au 1er poll)
             const initialContainer = document.getElementById("result-articles");
@@ -319,7 +352,6 @@
                 .then(data => {
                     document.getElementById("caisse-panel").innerHTML = data.html;
                     markSelectedPanier(ticket);
-                    bindCaisseFormSubmit();
                     initMontantCalcul();
                 })
                 .catch(err => toastr.error(err.message || "Erreur lors du chargement du formulaire"));
@@ -384,38 +416,152 @@
                 .catch(() => toastr.warning("Bon de commande non disponible pour ce ticket."));
         }
 
-        function bindCaisseFormSubmit() {
-            const form = document.getElementById("form-valider-panier");
-            if (!form) return;
-            form.addEventListener("submit", function (e) {
-                e.preventDefault();
-                const formData = new FormData(form);
-                fetch(form.action, {
-                    method: "POST",
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        const audio = document.getElementById("success-sound");
-                        if (audio) audio.play().catch(() => {});
-                        if (data.warning) {
-                            toastr.warning(data.warning);
-                        } else {
-                            toastr.success("Paiement effectué avec succès !");
-                        }
-                        resetCaissePanel();
-                        reloadPanierList();
-                        if (data.bon_commande_html) {
-                            ouvrirModalBonCommande(data);
-                        }
-                    } else {
-                        toastr.error(data.error || "Erreur lors du paiement");
-                    }
-                })
-                .catch(() => toastr.error("Erreur lors du paiement"));
+        function onCaisseFormSubmit(e) {
+            const form = e.target;
+            if (!form || form.id !== "form-valider-panier") return;
+            e.preventDefault();
+            const btnValider = form.querySelector("button[type='submit']");
+            if (btnValider) btnValider.disabled = true;
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: "POST",
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json().then(data => ({ ok: r.ok, data })).catch(() => ({
+                ok: false,
+                data: { success: false, error: "Erreur lors du paiement" },
+            })))
+            .then(({ data }) => {
+                if (data.pending && data.checkout_url) {
+                    ouvrirModalGeniusPayQr(data);
+                    pollGeniusPayCaisse(data.status_url);
+                    return;
+                }
+                handleCaissePaiementSuccess(data);
+            })
+            .catch(() => toastr.error("Erreur lors du paiement"))
+            .finally(() => {
+                if (btnValider && isGeniusPaySelected()) btnValider.disabled = false;
+                else if (typeof majResteCaisse === "function") majResteCaisse();
             });
+        }
+
+        function handleCaissePaiementSuccess(data) {
+            if (data.success && !data.pending) {
+                fermerModalGeniusPayQr();
+                const audio = document.getElementById("success-sound");
+                if (audio) audio.play().catch(() => {});
+                if (data.warning) {
+                    toastr.warning(data.warning);
+                } else {
+                    toastr.success("Paiement effectué avec succès !");
+                }
+                resetCaissePanel();
+                reloadPanierList();
+                if (data.bon_commande_html) {
+                    ouvrirModalBonCommande(data);
+                }
+            } else if (!data.success) {
+                toastr.error(data.error || "Erreur lors du paiement");
+            }
+        }
+
+        let geniusPayPollTimer = null;
+        function stopGeniusPayPoll() {
+            if (geniusPayPollTimer) {
+                clearInterval(geniusPayPollTimer);
+                geniusPayPollTimer = null;
+            }
+        }
+        function pollGeniusPayCaisse(statusUrl) {
+            if (!statusUrl) return;
+            stopGeniusPayPoll();
+            let n = 0;
+            geniusPayPollTimer = setInterval(function () {
+                n += 1;
+                if (n > 100) {
+                    stopGeniusPayPoll();
+                    toastr.error("Délai de paiement GeniusPay dépassé. Vérifiez le ticket.");
+                    return;
+                }
+                fetch(statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.failed) {
+                            stopGeniusPayPoll();
+                            fermerModalGeniusPayQr();
+                            toastr.error(data.error || "Paiement GeniusPay échoué");
+                            return;
+                        }
+                        if (data.success && !data.pending) {
+                            stopGeniusPayPoll();
+                            handleCaissePaiementSuccess(data);
+                        }
+                    })
+                    .catch(() => {});
+            }, 3000);
+        }
+
+        function ouvrirModalGeniusPayQr(data) {
+            const url = data.checkout_url || '';
+            const img = document.getElementById("caisse-qr-img");
+            const link = document.getElementById("caisse-qr-link");
+            const ref = document.getElementById("caisse-qr-ref");
+            const amount = document.getElementById("caisse-qr-amount");
+            const totalEl = document.getElementById("affiche-montant-a-payer");
+            if (img) {
+                img.src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(url);
+            }
+            if (link) link.href = url;
+            if (ref) ref.textContent = data.reference ? ("Réf. " + data.reference) : "";
+            if (amount && totalEl) amount.textContent = (totalEl.textContent || "").trim() + " Fcfa";
+            $("#modalGeniusPayQr").modal("show");
+        }
+
+        function fermerModalGeniusPayQr() {
+            stopGeniusPayPoll();
+            $("#modalGeniusPayQr").modal("hide");
+        }
+
+        document.getElementById("btn-annuler-geniuspay-qr")?.addEventListener("click", function () {
+            fermerModalGeniusPayQr();
+            toastr.info("Vous pouvez changer de moyen de paiement.");
+        });
+        $("#modalGeniusPayQr").on("hidden.bs.modal", function () {
+            stopGeniusPayPoll();
+        });
+
+        function getSelectedMoyenInput() {
+            return document.querySelector('input[name="moyen_paiement"]:checked');
+        }
+
+        function isGeniusPaySelected() {
+            const el = getSelectedMoyenInput();
+            return ((el && el.dataset.code) || "").toLowerCase() === "geniuspay";
+        }
+
+        function applyGeniusPayCaisseUi() {
+            const groupeMontant = document.getElementById("groupe-montant-verse");
+            const montantInput = document.getElementById("montant");
+            const label = document.getElementById("btn-valider-panier-label");
+            const btnValider = document.querySelector("#form-valider-panier button[type='submit']");
+            const genius = isGeniusPaySelected();
+            document.querySelectorAll(".caisse-pay-radio").forEach(function (lab) {
+                const input = lab.querySelector('input[name="moyen_paiement"]');
+                lab.classList.toggle("is-checked", !!(input && input.checked));
+            });
+            if (groupeMontant) groupeMontant.style.display = genius ? "none" : "";
+            if (label) label.textContent = "Valider le paiement";
+            if (montantInput) {
+                montantInput.required = !genius && !montantInput.disabled;
+                if (genius) {
+                    const totalEl = document.getElementById("affiche-montant-a-payer");
+                    const total = parseFloat(totalEl?.textContent || 0) || 0;
+                    montantInput.value = total.toFixed(2);
+                    if (btnValider) btnValider.disabled = false;
+                }
+            }
         }
 
         function resetCaissePanel() {
@@ -500,7 +646,7 @@
             resteEl.textContent = reste.toFixed(2);
             if (reste < 0) {
                 resteEl.style.color = "red";
-                btnValider.disabled = true;
+                if (!isGeniusPaySelected()) btnValider.disabled = true;
             } else {
                 resteEl.style.color = "green";
                 btnValider.disabled = false;
@@ -509,7 +655,7 @@
 
         function refreshTimbreCaisse() {
             const form = document.getElementById("form-valider-panier");
-            const selectMp = document.getElementById("moyen-paiement-select");
+            const selectMp = getSelectedMoyenInput();
             const montantAPayerEl = document.getElementById("affiche-montant-a-payer");
             const timbreEl = document.getElementById("affiche-timbre");
             const ligneTimbre = document.getElementById("ligne-timbre");
@@ -541,6 +687,7 @@
                 if (ligneTva) ligneTva.style.display = tva > 0 ? '' : 'none';
                 montantAPayerEl.textContent = totalAPayer.toFixed(2);
                 majResteCaisse();
+                applyGeniusPayCaisseUi();
             })
             .catch(() => {
                 montantAPayerEl.textContent = total.toFixed(2);
@@ -552,15 +699,18 @@
 
         function initMontantCalcul() {
             const montantInput = document.getElementById("montant");
-            const selectMp = document.getElementById("moyen-paiement-select");
             const btnValider = document.querySelector("#form-valider-panier button[type='submit']");
             if (!montantInput || !btnValider) return;
             btnValider.disabled = true;
 
-            if (selectMp && !selectMp.dataset.timbreBound) {
-                selectMp.dataset.timbreBound = '1';
-                selectMp.addEventListener('change', refreshTimbreCaisse);
-            }
+            document.querySelectorAll('input[name="moyen_paiement"]').forEach(function (radio) {
+                if (radio.dataset.timbreBound === '1') return;
+                radio.dataset.timbreBound = '1';
+                radio.addEventListener('change', function () {
+                    applyGeniusPayCaisseUi();
+                    refreshTimbreCaisse();
+                });
+            });
             const checkboxTva = document.getElementById("appliquer-tva");
             if (checkboxTva && !checkboxTva.dataset.tvaBound) {
                 checkboxTva.dataset.tvaBound = '1';
@@ -571,6 +721,7 @@
                 montantInput.addEventListener('input', majResteCaisse);
             }
             refreshTimbreCaisse();
+            applyGeniusPayCaisseUi();
         }
     </script>
     <!-- Recherche AJAX des paniers par ticket -->

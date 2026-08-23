@@ -19,5 +19,7 @@
     <a href="{% url 'register' %}" class="auth-link">Créer un compte</a>
 </p>
 
-<a href="{% url 'connexion' %}" class="auth-link auth-back-link"><i class="fa fa-arrow-left"></i> Retour à la connexion</a>
+<p class="auth-footer-text" style="margin-top:0.5rem;">
+    <a href="{% url 'connexion' %}" class="auth-link"><i class="fa fa-arrow-left"></i> Retour à la connexion</a>
+</p>
 {% endblock auth_content %}

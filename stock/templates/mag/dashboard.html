@@ -77,6 +77,10 @@
                             <label>Catégorie</label>
                             {{ form.categorie }}
                         </div>
+                        <div class="form-group">
+                            <label>Sous-catégorie</label>
+                            {{ form.sous_categorie }}
+                        </div>
                         {% if is_admin_like %}
                         <div class="form-group">
                             <label>Caissier(ère)</label>
@@ -626,4 +630,5 @@
 
 {% block extra_js %}
 {% include "mag/partials/_periode_filter_js.html" %}
+{% include "mag/partials/_sous_categorie_cascade.html" %}
 {% endblock extra_js %}

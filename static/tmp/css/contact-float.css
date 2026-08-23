@@ -1,0 +1,439 @@
+/* Floating WhatsApp + Chatbot */
+
+.contact-float {
+  position: fixed;
+  right: 18px;
+  bottom: 28px;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.contact-float__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-float__btn:hover,
+.contact-float__btn:focus {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  color: #fff;
+  text-decoration: none;
+  outline: none;
+}
+
+.contact-float__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.contact-float__label {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  white-space: nowrap;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.contact-float__label::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  margin-top: -5px;
+  border: 5px solid transparent;
+  border-left-color: #222;
+}
+
+.contact-float__btn:hover .contact-float__label,
+.contact-float__btn:focus .contact-float__label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.contact-float__btn--whatsapp {
+  background: linear-gradient(145deg, #25d366 0%, #128c7e 100%);
+}
+
+.contact-float__btn--chat {
+  background: #ff8b00;
+}
+
+.contact-float__btn--chat.is-open {
+  background: linear-gradient(145deg, #333 0%, #111 100%);
+}
+
+/* Go to top — stacked with float buttons */
+.contact-float .back-to-top {
+  position: relative;
+  right: auto;
+  bottom: auto !important;
+  left: auto;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #444;
+  color: #fff;
+  overflow: visible;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  z-index: auto;
+  opacity: 1;
+  transform: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.25s ease, background 0.2s ease;
+}
+
+.contact-float .back-to-top i {
+  font-size: 24px;
+  line-height: 1;
+  display: block;
+}
+
+.contact-float .back-to-top span.contact-float__label {
+  display: block;
+  line-height: normal;
+}
+
+.contact-float .back-to-top:hover {
+  background: #ff8b00;
+  transform: translateY(-2px) scale(1.04);
+}
+
+.contact-float .back-to-top.hidden-top {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.6);
+  width: 0;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+/* Chatbot panel — effet genie macOS fluide vers le bouton */
+.contact-chatbot {
+  position: fixed;
+  right: 18px;
+  bottom: 200px;
+  z-index: 1081;
+  width: min(340px, calc(100vw - 28px));
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform-origin: var(--genie-ox, 100%) var(--genie-oy, 120%);
+  transform: translate3d(0, 0, 0) scale(0.04);
+  /* 4 points identiques partout → interpolation fluide (pas de jump inset↔polygon) */
+  clip-path: polygon(47% 100%, 53% 100%, 53% 100%, 47% 100%);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.contact-chatbot[hidden] {
+  display: none !important;
+}
+
+.contact-chatbot.is-animating {
+  visibility: visible;
+}
+
+.contact-chatbot.is-open {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transform: translate3d(0, 0, 0) scale(1);
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+.contact-chatbot.is-opening {
+  animation: mac-genie-open 0.72s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.contact-chatbot.is-closing {
+  animation: mac-genie-close 0.62s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+/* Sort du bouton — courbes douces, mêmes polygones */
+@keyframes mac-genie-open {
+  0% {
+    opacity: 0.25;
+    transform: translate3d(0, 0, 0) scale(0.04);
+    clip-path: polygon(47% 100%, 53% 100%, 54% 100%, 46% 100%);
+  }
+  18% {
+    opacity: 0.55;
+    transform: translate3d(0, 0, 0) scale(0.18);
+    clip-path: polygon(34% 78%, 66% 78%, 62% 100%, 38% 100%);
+  }
+  38% {
+    opacity: 0.82;
+    transform: translate3d(0, 0, 0) scale(0.42);
+    clip-path: polygon(16% 42%, 84% 42%, 74% 100%, 26% 100%);
+  }
+  58% {
+    opacity: 0.95;
+    transform: translate3d(0, 0, 0) scale(0.72);
+    clip-path: polygon(4% 14%, 96% 14%, 100% 100%, 0% 100%);
+  }
+  78% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(0.94);
+    clip-path: polygon(0% 2%, 100% 2%, 100% 100%, 0% 100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  }
+}
+
+/* Se rétracte dans le bouton — miroir fluide */
+@keyframes mac-genie-close {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  }
+  18% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(0.94);
+    clip-path: polygon(0% 2%, 100% 2%, 100% 100%, 0% 100%);
+  }
+  40% {
+    opacity: 0.92;
+    transform: translate3d(0, 0, 0) scale(0.68);
+    clip-path: polygon(4% 14%, 96% 14%, 100% 100%, 0% 100%);
+  }
+  62% {
+    opacity: 0.7;
+    transform: translate3d(0, 0, 0) scale(0.38);
+    clip-path: polygon(16% 42%, 84% 42%, 74% 100%, 26% 100%);
+  }
+  82% {
+    opacity: 0.35;
+    transform: translate3d(0, 0, 0) scale(0.14);
+    clip-path: polygon(34% 78%, 66% 78%, 62% 100%, 38% 100%);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.04);
+    clip-path: polygon(47% 100%, 53% 100%, 54% 100%, 46% 100%);
+  }
+}
+
+.contact-chatbot__panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transform: translateZ(0);
+}
+
+.contact-chatbot__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  background: linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%);
+  color: #fff;
+}
+
+.contact-chatbot__avatar {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff8b00;
+  color: #fff;
+  font-size: 18px;
+}
+
+.contact-chatbot__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.contact-chatbot__meta strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.contact-chatbot__meta span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.contact-chatbot__close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.contact-chatbot__close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.contact-chatbot__body {
+  padding: 16px;
+  background:
+    linear-gradient(180deg, #f7f7f7 0%, #f0f0f0 100%);
+  min-height: 160px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.contact-chatbot__bubble {
+  display: inline-block;
+  max-width: 90%;
+  padding: 10px 12px;
+  border-radius: 14px 14px 14px 4px;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.contact-chatbot__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.contact-chatbot__chip {
+  display: inline-block;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #e4e4e4;
+  color: #333;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.contact-chatbot__chip:hover {
+  border-color: #ff8b00;
+  color: #ff8b00;
+  background: #fff8ef;
+  text-decoration: none;
+}
+
+.contact-chatbot__form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #ececec;
+  background: #fff;
+}
+
+.contact-chatbot__form input {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 999px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.contact-chatbot__form input:focus {
+  border-color: #ff8b00;
+}
+
+.contact-chatbot__form button {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: #ff8b00;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.contact-chatbot__form button:hover {
+  background: #ff8b00;
+  transform: scale(1.04);
+}
+
+@media (max-width: 767px) {
+  .contact-float {
+    right: 12px;
+    bottom: 18px;
+    gap: 10px;
+  }
+
+  .contact-float__btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .contact-float__icon {
+    font-size: 22px;
+  }
+
+  .contact-float__label {
+    display: none;
+  }
+
+  .contact-chatbot {
+    right: 12px;
+    bottom: 180px;
+    width: calc(100vw - 24px);
+  }
+}

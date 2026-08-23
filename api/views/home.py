@@ -43,10 +43,7 @@ class HomeView(APIView):
                 {'code': str(loc.code), 'nom': loc.nom}
                 for loc in localites
             ],
-            'categories': [
-                {'cid': c.cid, 'categorie': c.categorie}
-                for c in categories
-            ],
+            'categories': [c.as_dict() for c in categories],
             'top_products': top_products,
             'recent_products': recent_products,
             'cart_count': cart_count,

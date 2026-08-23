@@ -11,8 +11,8 @@
         </a>
         <div class="body-content">
             {% if piece.categorie %}
-            <a href="{% url 'ecom_shop' %}?categorie={{ piece.categorie_id }}" class="ecom-piece-category">
-                {{ piece.categorie.categorie }}
+            <a href="{% url 'ecom_shop' %}{% if piece.sous_categorie %}?categorie={{ piece.categorie_id }}&sous_categorie={{ piece.sous_categorie_id }}{% else %}?categorie={{ piece.categorie_id }}{% endif %}" class="ecom-piece-category">
+                {{ piece.libelle_classification }}
             </a>
             {% endif %}
             <a href="{{ piece.get_absolute_url }}">

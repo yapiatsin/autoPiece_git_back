@@ -98,6 +98,8 @@ class Command(BaseCommand):
             'stock': 'Stocks',
             'stocks/': 'Stocks',
             'categorie': 'Stocks',
+            'sous_categorie': 'Stocks',
+            'sous-categorie': 'Stocks',
             'fournisseur': 'Stocks',
             'piece': 'Stocks',
             'panier': 'Interfaces',

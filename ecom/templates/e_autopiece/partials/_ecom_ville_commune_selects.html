@@ -1,0 +1,25 @@
+{% load i18n %}
+<div class="ecom-geo-selects" data-communes-url="{% url 'ecom_ajax_communes_livraison' %}"
+     data-save-url="{% url 'ecom_ajax_set_livraison' %}">
+    <div class="ecom-geo-selects__field">
+        <label for="{{ geo_ville_id|default:'ecom-geo-ville' }}">{% trans "Ville" %}</label>
+        <select id="{{ geo_ville_id|default:'ecom-geo-ville' }}" name="livraison_ville"
+                class="ecom-auto-filter-input ecom-geo-select" data-geo-ville>
+            <option value="">{% trans "Choisir une ville" %}</option>
+            {% for v in livraison_villes %}
+            <option value="{{ v.pk }}" {% if livraison_ville_id == v.pk|stringformat:'s' %}selected{% endif %}>{{ v.nom }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="ecom-geo-selects__field">
+        <label for="{{ geo_commune_id|default:'ecom-geo-commune' }}">{% trans "Commune" %}</label>
+        <select id="{{ geo_commune_id|default:'ecom-geo-commune' }}" name="livraison_commune"
+                class="ecom-auto-filter-input ecom-geo-select" data-geo-commune
+                {% if not livraison_ville_id %}disabled{% endif %}>
+            <option value="">{% trans "Choisir une commune" %}</option>
+            {% for c in livraison_communes %}
+            <option value="{{ c.pk }}" {% if livraison_commune_id == c.pk|stringformat:'s' %}selected{% endif %}>{{ c.nom }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>

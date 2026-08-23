@@ -98,6 +98,8 @@ PERMISSION_MENU_ICONS = {
     'stock': 'fa fa-cubes',
     'pieces_archivees': 'fa fa-archive',
     'add_categorie': 'fa fa-folder-o',
+    'add_sous_categorie': 'fa fa-sitemap',
+    'import_sous_categories_excel': 'fa fa-file-excel-o',
     'add_piece': 'fa fa-cog',
     'entrestock': 'fa fa-plus-square-o',
     'liste_ventes': 'fa fa-line-chart',

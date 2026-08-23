@@ -1,0 +1,18 @@
+/* Ivoy'Shop brand — solid, no gradient */
+:root {
+  --brand-primary: #ff8b00;
+  --brand-accent: #feb800;
+  --brand-soft: #fff8ed;
+  --brand-border: #ffe0a8;
+}
+
+
+.type_10 .btn-primary,
+.type_10 button.btn-primary,
+.addToCart,
+.btn-addToCart,
+.button.btn-cart {
+  background-color: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+  background-image: none !important;
+}

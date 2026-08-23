@@ -10,6 +10,16 @@
 
 {% block page_action_buttons %}
 <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addinf">Nouvelle categorie <i class="fa fa-edit"></i></button>
+<button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#addSousCategorie">Nouvelle sous-catégorie <i class="fa fa-sitemap"></i></button>
+<a href="{% url 'download_modele_sous_categories_excel' %}" class="btn btn-outline-secondary" title="Télécharger le modèle Excel">
+    <i class="fa fa-download"></i> Modèle Excel
+</a>
+<form method="post" action="{% url 'import_sous_categories_excel' %}" enctype="multipart/form-data" class="d-inline-flex align-items-center flex-wrap">
+    {% csrf_token %}
+    <label class="mb-0 mr-2 small text-muted" for="excel_sous_categorie">Import :</label>
+    <input type="file" name="excel_file" id="excel_sous_categorie" accept=".xls,.xlsx" class="form-control form-control-sm mr-1" style="max-width:200px;" required>
+    <button type="submit" class="btn btn-outline-success btn-sm"><i class="fa fa-upload"></i> Importer</button>
+</form>
 {% endblock page_action_buttons %}
 
 {% block main_content %}
@@ -40,6 +50,60 @@
                             <div class="mf-field mb-0">
                                 <label>Image</label>
                                 {{ form.image }}
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade mag-form-modal" id="addSousCategorie" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="title">Nouvelle sous-catégorie</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="post" action="{% url 'add_sous_categorie' %}" novalidate enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <section class="mf-section mb-0">
+                            <h3 class="mf-section__title">
+                                <i class="fa fa-sitemap"></i> Informations
+                            </h3>
+                            <div class="mf-field">
+                                <label>Catégorie parente</label>
+                                {{ sous_form.categorie }}
+                            </div>
+                            <div class="mf-field">
+                                <label>Nom</label>
+                                {{ sous_form.nom }}
+                            </div>
+                            <div class="mf-field">
+                                <label>Description</label>
+                                {{ sous_form.description }}
+                            </div>
+                            <div class="mf-field">
+                                <label>Ordre</label>
+                                {{ sous_form.ordre }}
+                            </div>
+                            <div class="mf-field">
+                                <label for="{{ sous_form.actif.id_for_label }}">Active</label>
+                                <div class="mf-check">
+                                    {{ sous_form.actif }}
+                                    <span class="mf-hint mb-0">Visible dans le catalogue et la boutique</span>
+                                </div>
+                            </div>
+                            <div class="mf-field mb-0">
+                                <label>Image</label>
+                                {{ sous_form.image }}
                             </div>
                         </section>
                     </div>
@@ -98,6 +162,17 @@
                                             <span class="badge badge-primary ml-2">{{ c.total_quantite|default:0 }} pièces</span>
                                         </h6>
                                         <p class="dep"><span class="m-r-10">{{c.description}}</span></p>
+                                        <div class="mt-1">
+                                            {% for sc in c.sous_categories.all %}
+                                                <span class="badge badge-outline-secondary mr-1 mb-1">
+                                                    {{ sc.nom }}
+                                                    <a href="javascript:void(0);" class="text-warning ml-1" data-toggle="modal" data-target="#editSousCategorieModal{{ sc.pk }}" title="Modifier"><i class="icon-note"></i></a>
+                                                    <a href="{% url 'delete_sous_categorie' sc.pk %}" class="text-danger ml-1" title="Supprimer" onclick="return confirm('Supprimer la sous-catégorie {{ sc.nom }} ? Les pièces resteront, sans sous-catégorie.')"><i class="fa fa-times"></i></a>
+                                                </span>
+                                            {% empty %}
+                                                <span class="text-muted small">Aucune sous-catégorie</span>
+                                            {% endfor %}
+                                        </div>
                                         <span class="time">{{c.cid}}</span>
                                     </div>
                                     <div class="hover-action">
@@ -117,6 +192,9 @@
     {% if categories %}
         {% for c in categories %}
             {% include "mag/partials/_edit_categorie_piece.html" with categorie=c edit_form=edit_form %}
+            {% for sc in c.sous_categories.all %}
+                {% include "mag/partials/_edit_sous_categorie.html" with sous=sc categories=categories %}
+            {% endfor %}
         {% endfor %}
     {% endif %}
 {% endblock main_content %}

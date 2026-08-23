@@ -1,5 +1,6 @@
 from django.urls import path
 from stock.views import *
+from stock.geniuspay_views import caisse_geniuspay_statut, caisse_geniuspay_retour
 from stock.views import imprimer_bon_commande_vente
 from stock.export_views import (
     export_liste_ventes_excel, export_liste_ventes_pdf,
@@ -19,6 +20,8 @@ from ecom.views import (
     cmd_line,
     ajax_cmd_line_detail,
     ajax_livraison_cmd_detail,
+    cmd_line_assigner_livreur,
+    cmd_line_valider,
     LivraisonCmdOnlineView,
     ZonesLivraisonView,
     zones_livraison_delete,
@@ -39,6 +42,12 @@ urlpatterns = [
     
     path('Nouvelle categorie', AddCategorieView.as_view(), name="add_categorie"),
     path('modifier_categorie/<int:pk>/edit', UpdateCategorieView.as_view(), name='update_categorie'),
+    path('sous-categorie/nouvelle/', add_sous_categorie, name='add_sous_categorie'),
+    path('sous-categorie/modele-excel/', download_modele_sous_categories_excel, name='download_modele_sous_categories_excel'),
+    path('sous-categorie/import-excel/', import_sous_categories_excel, name='import_sous_categories_excel'),
+    path('sous-categorie/<int:pk>/edit', UpdateSousCategorieView.as_view(), name='update_sous_categorie'),
+    path('sous-categorie/<int:pk>/delete', delete_sous_categorie, name='delete_sous_categorie'),
+    path('ajax/sous-categories/', ajax_sous_categories, name='ajax_sous_categories'),
     path('produit/<int:pk>/pièce', AddPieceView.as_view(), name='add_piece'),
     path('produit/<int:pk>/modele-excel/', download_modele_pieces_excel, name='download_modele_pieces_excel'),
     path('Supprimer categorie /<int:pk>/fatme', delete_categorie, name="delet_categorie"),
@@ -87,6 +96,8 @@ urlpatterns = [
     path('ajax/calcul-timbre/', ajax_calcul_timbre, name='ajax_calcul_timbre'),
 
     path('caisse/paiement/', Caisse, name='caissiere'),
+    path('caisse/paiement/geniuspay/retour/', caisse_geniuspay_retour, name='caisse_geniuspay_retour'),
+    path('caisse/paiement/<str:ticket_id>/geniuspay/statut/', caisse_geniuspay_statut, name='caisse_geniuspay_statut'),
     path('caisse/paiement/<str:ticket_id>/', valider_panier_paiement, name='valid_pay_article'),
     path('caisse/bon-commande/<str:ticket_numero>/imprimer/', imprimer_bon_commande_vente, name='imprimer_bon_commande_vente'),
     path('caisse/reimprimer-recu/<str:ticket_numero>/', reimprimer_recu_paiement, name='reimprimer_recu_paiement'),
@@ -97,6 +108,8 @@ urlpatterns = [
     path('ajax/reload_livraisons/', ajax_reload_livraisons, name='ajax_reload_livraisons'),
     path('commandes-en-ligne/', cmd_line, name='cmd_line'),
     path('commandes-en-ligne/<str:commande_id>/detail/', ajax_cmd_line_detail, name='cmd_line_detail'),
+    path('commandes-en-ligne/<str:commande_id>/valider/', cmd_line_valider, name='cmd_line_valider'),
+    path('commandes-en-ligne/<str:commande_id>/assigner/', cmd_line_assigner_livreur, name='cmd_line_assigner'),
     path('livraison-en-ligne/', LivraisonCmdOnlineView.as_view(), name='livraison_cmd_online'),
     path('livraison-en-ligne/<str:commande_id>/detail/', ajax_livraison_cmd_detail, name='livraison_cmd_detail'),
     path('zones-livraison/', ZonesLivraisonView.as_view(), name='zones_livraison'),

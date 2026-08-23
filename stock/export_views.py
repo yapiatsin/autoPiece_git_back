@@ -165,7 +165,7 @@ def _qs_stock(request):
             stocks__local_entrepot=localite,
             stocks__active_sortie=True,
         ).distinct()
-    qs = qs.select_related('categorie', 'utilisateur').order_by('-date_creation')
+    qs = qs.select_related('categorie', 'sous_categorie', 'utilisateur').order_by('-date_creation')
     qs = annotate_pieces_for_localite(qs, localite)
     qs = annotate_provenance_derniere_entree(qs, localite)
     return qs, filt
@@ -176,7 +176,7 @@ def _qs_stock(request):
 def export_stock_excel(request):
     pieces, filt = _qs_stock(request)
     headers = [
-        'N°#', 'N°Pièce', 'Désignation', 'Catégorie', 'Prix achat',
+        'N°#', 'N°Pièce', 'Désignation', 'Catégorie', 'Sous-catégorie', 'Prix achat',
         'Prix vente', 'Prix vente local', 'Qté stock', 'Provenance',
         'Seuil', 'Emplacement', 'Auteur', 'Date',
     ]
@@ -194,6 +194,7 @@ def export_stock_excel(request):
             cell(p.numero_piece),
             cell(p.designation),
             cell(getattr(p.categorie, 'categorie', None)),
+            cell(getattr(p.sous_categorie, 'nom', None)),
             _fmt_money(p.prix_achat),
             _fmt_money(p.prix_unitaire),
             _fmt_money(prix_local) if prix_local is not None else '—',
@@ -215,7 +216,7 @@ def export_stock_excel(request):
 def export_stock_pdf(request):
     pieces, filt = _qs_stock(request)
     headers = [
-        'N°#', 'N°Pièce', 'Désignation', 'Catégorie', 'Prix vente',
+        'N°#', 'N°Pièce', 'Désignation', 'Catégorie', 'Sous-cat.', 'Prix vente',
         'Qté', 'Seuil', 'Emplacement', 'Date',
     ]
     rows = []
@@ -225,6 +226,7 @@ def export_stock_pdf(request):
             cell(p.numero_piece),
             cell(p.designation),
             cell(getattr(p.categorie, 'categorie', None)),
+            cell(getattr(p.sous_categorie, 'nom', None)),
             _fmt_money(p.prix_unitaire),
             getattr(p, 'quantite_disponible', 0),
             p.seuil,
@@ -645,7 +647,9 @@ def _qs_pieces_categorie(request, pk):
     from stock.views import get_user_localite
     categorie = get_object_or_404(Categorie, pk=pk)
     pieces = annotate_pieces_for_localite(
-        Piece.objects.filter(categorie=categorie).select_related('utilisateur').order_by('id'),
+        Piece.objects.filter(categorie=categorie).select_related(
+            'utilisateur', 'sous_categorie'
+        ).order_by('id'),
         get_user_localite(request.user),
     )
     return pieces, categorie
@@ -656,7 +660,7 @@ def _qs_pieces_categorie(request, pk):
 def export_pieces_categorie_excel(request, pk):
     pieces, categorie = _qs_pieces_categorie(request, pk)
     headers = [
-        'N°#', 'N°Pièce', 'Désignation', 'Prix achat', 'Prix vente',
+        'N°#', 'N°Pièce', 'Désignation', 'Sous-catégorie', 'Prix achat', 'Prix vente',
         'Qté stock', 'Seuil', 'Emplacement', 'Auteur', 'Date',
     ]
     rows = [
@@ -664,6 +668,7 @@ def export_pieces_categorie_excel(request, pk):
             i,
             cell(p.numero_piece),
             cell(p.designation),
+            cell(getattr(p.sous_categorie, 'nom', None)),
             _fmt_money(p.prix_achat),
             _fmt_money(p.prix_unitaire),
             getattr(p, 'quantite_disponible', 0),
@@ -684,12 +689,13 @@ def export_pieces_categorie_excel(request, pk):
 @require_GET
 def export_pieces_categorie_pdf(request, pk):
     pieces, categorie = _qs_pieces_categorie(request, pk)
-    headers = ['N°#', 'N°Pièce', 'Désignation', 'Prix vente', 'Qté', 'Seuil', 'Date']
+    headers = ['N°#', 'N°Pièce', 'Désignation', 'Sous-cat.', 'Prix vente', 'Qté', 'Seuil', 'Date']
     rows = [
         [
             i,
             cell(p.numero_piece),
             cell(p.designation),
+            cell(getattr(p.sous_categorie, 'nom', None)),
             _fmt_money(p.prix_unitaire),
             getattr(p, 'quantite_disponible', 0),
             p.seuil,

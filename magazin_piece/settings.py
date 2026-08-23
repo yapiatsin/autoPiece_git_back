@@ -106,16 +106,25 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    },
 
-    #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'magasin_piece',
-#         'USER': 'magasin_piece_user',
-#         'PASSWORD': 'kEz2jKPbm8U7os7mLwdMtqq7C8igzNQk',
-#         'HOST': 'dpg-cr8dbt23esus73b56la0-a.oregon-postgres.render.com',
-#         'PORT': '5432',
-#     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'magasin_piece',
+    #     'USER': 'magasin_piece_user',
+    #     'PASSWORD': 'kEz2jKPbm8U7os7mLwdMtqq7C8igzNQk',
+    #     'HOST': 'dpg-cr8dbt23esus73b56la0-a.oregon-postgres.render.com',
+    #     'PORT': '5432',
+    # }
+
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': config('DB_NAME'),
+    #     'USER':config('DB_USER'),
+    #     'PASSWORD': config('DB_PASSWORD'),
+    #     'HOST':config('DB_HOST'),
+    #     'PORT':config('DB_PORT'),
+    # }
 }
 
 # DATABASES = {
@@ -196,6 +205,17 @@ EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=30, cast=int)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
 FRONTEND_URL = config('FRONTEND_URL', default='http://127.0.0.1:8002')
+PUBLIC_BASE_URL = config('PUBLIC_BASE_URL', default='http://127.0.0.1:8000')
+
+# GeniusPay (paiements numériques e-com + caisse) — clés uniquement serveur
+GENIUSPAY_API_KEY = config('GENIUSPAY_API_KEY', default='').strip()
+GENIUSPAY_API_SECRET = config('GENIUSPAY_API_SECRET', default='').strip()
+GENIUSPAY_BASE_URL = config(
+    'GENIUSPAY_BASE_URL',
+    default='https://geniuspay.ci/api/v1/merchant',
+).strip().rstrip('/')
+GENIUSPAY_WEBHOOK_SECRET = config('GENIUSPAY_WEBHOOK_SECRET', default='').strip()
+GENIUSPAY_MIN_AMOUNT = 200
 
 # Pusher (temps réel magasin — remplace MQTT local)
 PUSHER_APP_ID = config('PUSHER_APP_ID', default='')

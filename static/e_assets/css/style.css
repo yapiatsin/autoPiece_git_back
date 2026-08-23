@@ -49,10 +49,10 @@
 
 :root {
     /* AUTO-PIECE — palette alignée sur auth.css */
-    --color-primary: #f97316;
-    --color-primary-light: #fb923c;
-    --color-primary-dark: #dc2626;
-    --color-secondary: #dc2626;
+    --color-primary: #ff8b00;
+    --color-primary-light: #ffb84d;
+    --color-primary-dark: #e07a00;
+    --color-secondary: #e07a00;
     --color-body: #6b7280;
     --color-heading-1: #1a1a1a;
     --color-heading: #1a1a1a;
@@ -62,8 +62,8 @@
     --color-white: #fff;
     --color-success: #16a34a;
     --color-danger: #DC2626;
-    --color-warning: #fb923c;
-    --gradient-primary: linear-gradient(90deg, #f97316 0%, #dc2626 100%);
+    --color-warning: #ff8b00;
+    --gradient-primary: #ff8b00;
     --color-info: #1BA2DB;
     --color-facebook: #3B5997;
     --color-twitter: #1BA1F2;
@@ -17138,7 +17138,7 @@ li.with-megamenu:hover .rts-megamenu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
-    box-shadow: #f9731610 0px 0px 6px 7px;
+    box-shadow: #ff8b0010 0px 0px 6px 7px;
 }
 
 .progress-wrap::after {
@@ -17607,7 +17607,7 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .banner-left-five-area-start .inner-content-banner-five span {
-    color: #f97316;
+    color: #ff8b00;
     font-size: 16px;
     font-weight: 600;
 }
@@ -18022,7 +18022,7 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .single-category-one:hover {
-    border: 1px solid #f97316;
+    border: 1px solid #ff8b00;
 }
 
 .cover-card-main-over {
@@ -18187,7 +18187,7 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .rts-btn.btn-primary {
-    background: #f97316;
+    background: #ff8b00;
     border-radius: 6px;
     display: block;
     max-width: max-content;
@@ -18623,8 +18623,8 @@ li.with-megamenu:hover .rts-megamenu {
     font-size: 14px;
     padding: 8px 16px !important;
     background: transparent;
-    color: #f97316;
-    border: 1px solid #f97316;
+    color: #ff8b00;
+    border: 1px solid #ff8b00;
 }
 
 .single-shopping-card-one .cart-counter-action .rts-btn i {
@@ -18690,9 +18690,9 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .single-shopping-card-one.deals-of-day .cart-counter-action .rts-btn {
-    background: #f97316;
-    color: #f97316;
-    border: 1px solid #f97316;
+    background: #ff8b00;
+    color: #ff8b00;
+    border: 1px solid #ff8b00;
     width: 100%;
     max-width: 100%;
     display: flex;
@@ -18703,7 +18703,7 @@ li.with-megamenu:hover .rts-megamenu {
 
 .single-shopping-card-one.deals-of-day .cart-counter-action .rts-btn:hover {
     background: var(--color-heading-1);
-    color: #f97316;
+    color: #ff8b00;
     border: 1px solid #1a1a1a;
 }
 
@@ -20096,7 +20096,7 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .comment-replay-area-start .single-comment-area .comment-information .top-area .replay {
-    color: #f97316;
+    color: #ff8b00;
     text-transform: uppercase;
     font-size: 14px;
     font-weight: 600;
@@ -20171,7 +20171,7 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .single-footer-wized .call-area .info .number {
-    color: #f97316;
+    color: #ff8b00;
     font-size: 24px;
     font-weight: 600;
 }
@@ -21257,7 +21257,7 @@ body.modal-open {
 
 .single-new-offer-area .new-offer-wized-title-between .rts-btn:hover {
     background: var(--color-heading-1);
-    color: #f97316;
+    color: #ff8b00;
     border: 1px solid #1a1a1a;
 }
 
@@ -22131,7 +22131,7 @@ body.modal-open {
 }
 
 .single-store-area-start .right-content .location-area .icon {
-    background: #f97316;
+    background: #ff8b00;
     height: 60px;
     width: 60px;
     border-radius: 50%;
@@ -22154,7 +22154,7 @@ body.modal-open {
     height: 60px;
     width: 60px;
     border-radius: 50%;
-    background: #f97316;
+    background: #ff8b00;
     content: "";
     position: absolute;
     left: 50%;
@@ -22609,8 +22609,8 @@ body.modal-open {
     font-size: 14px;
     padding: 6px 4px !important;
     background: transparent;
-    color: #f97316;
-    border: 1px solid #f97316;
+    color: #ff8b00;
+    border: 1px solid #ff8b00;
 }
 
 .category-active-menu-sidebar {
@@ -23431,7 +23431,7 @@ body.modal-open {
 }
 
 .cart-total-area-start-right {
-    border: 2px solid #f97316;
+    border: 2px solid #ff8b00;
     border-radius: 6px;
 }
 

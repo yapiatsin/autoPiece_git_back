@@ -7,15 +7,34 @@
     <ul class="ecom-mobile-cat-list" id="{{ menu_id|default:'category-active-menu' }}">
         {% for cat in ecom_categories %}
         <li>
-            <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="ecom-mobile-cat-item">
+            <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="ecom-mobile-cat-item has-arrow">
                 <span class="ecom-mobile-cat-icon" aria-hidden="true">
                     <i class="fa-solid fa-gears"></i>
                 </span>
                 <span class="ecom-mobile-cat-label">{{ cat.categorie }}</span>
-                <span class="ecom-mobile-cat-chevron" aria-hidden="true">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </span>
             </a>
+            {% if cat.sous_categories.all or cat.menu_pieces_sans_sous %}
+            <ul class="submenu mm-collapse ecom-mobile-cat-children">
+                {% for sc in cat.sous_categories.all %}
+                <li>
+                    <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}&sous_categorie={{ sc.pk }}" class="ecom-mobile-cat-item ecom-mobile-cat-item--child has-arrow">
+                        <span class="ecom-mobile-cat-label">{{ sc.nom }}</span>
+                    </a>
+                    {% if sc.menu_pieces %}
+                    <ul class="submenu mm-collapse ecom-mobile-cat-pieces">
+                        {% for piece in sc.menu_pieces|slice:":6" %}
+                        <li>
+                            <a href="{{ piece.get_absolute_url }}" class="ecom-mobile-cat-item ecom-mobile-cat-item--piece">
+                                {{ piece.designation }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
         </li>
         {% empty %}
         <li class="ecom-mobile-cat-empty">

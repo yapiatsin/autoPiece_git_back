@@ -83,15 +83,23 @@
             </div>
 
             <div class="panier-remise-field">
-                <label class="panier-remise-label" for="moyen-paiement-select">Moyen de paiement</label>
-                <div class="panier-remise-input-wrap">
-                    <span class="panier-remise-input-icon" aria-hidden="true"><i class="fa fa-credit-card"></i></span>
-                    <select name="moyen_paiement" id="moyen-paiement-select" class="form-control panier-remise-input"
-                            {% if not commande %}disabled{% else %}required{% endif %}>
-                        {% for mp in moyens_paiement %}
-                            <option value="{{ mp.id }}">{{ mp.nom }}</option>
-                        {% endfor %}
-                    </select>
+                <span class="panier-remise-label">Moyen de paiement</span>
+                <div class="caisse-pay-radios" role="radiogroup" aria-label="Moyen de paiement">
+                    {% for mp in moyens_paiement %}
+                    <label class="caisse-pay-radio{% if mp.code == 'geniuspay' %} is-default{% if commande %} is-checked{% endif %}{% endif %}">
+                        <input type="radio"
+                               name="moyen_paiement"
+                               value="{{ mp.id }}"
+                               data-code="{{ mp.code }}"
+                               {% if commande %}required{% endif %}
+                               {% if not commande %}disabled{% elif mp.code == 'geniuspay' %}checked{% endif %}>
+                        <span>
+                            {% if mp.code == 'geniuspay' %}Paiement numérique
+                            {% elif mp.code == 'espece' %}Espèce
+                            {% else %}{{ mp.nom }}{% endif %}
+                        </span>
+                    </label>
+                    {% endfor %}
                 </div>
             </div>
 
@@ -107,13 +115,13 @@
             </div>
             {% endif %}
 
-            <div class="panier-remise-field">
+            <div class="panier-remise-field" id="groupe-montant-verse">
                 <label class="panier-remise-label" for="montant">Montant versé</label>
                 <div class="panier-remise-input-wrap">
                     <span class="panier-remise-input-icon" aria-hidden="true"><i class="fa fa-money"></i></span>
                     <input type="number" name="montant" id="montant" value="0"
                            class="form-control panier-remise-input" placeholder="0.00" min="0" step="0.01"
-                           {% if commande %}required{% else %}disabled{% endif %}>
+                           {% if not commande %}disabled{% endif %}>
                     <span class="panier-remise-input-suffix">Fcfa</span>
                 </div>
             </div>
@@ -132,7 +140,7 @@
                         class="panier-btn-valider{% if commande %} panier-btn-valider--active{% endif %}"
                         {% if not commande %}disabled{% endif %}>
                     <i class="fa {% if commande %}fa-check-circle{% else %}fa-shopping-basket{% endif %}" aria-hidden="true"></i>
-                    <span>{% if commande %}Valider le paiement{% else %}Sélection requise{% endif %}</span>
+                    <span id="btn-valider-panier-label">{% if commande %}Valider le paiement{% else %}Sélection requise{% endif %}</span>
                 </button>
             </div>
         </div>

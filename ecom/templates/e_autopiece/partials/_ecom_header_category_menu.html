@@ -1,10 +1,58 @@
 {% load i18n %}
-<ul class="category-sub-menu ecom-cat-menu-label-only" id="{{ menu_id|default:'category-active-four' }}">
+<ul class="category-sub-menu ecom-mega-cats" id="{{ menu_id|default:'ecom-header-mega-cats' }}">
     {% for cat in ecom_categories %}
-    <li>
-        <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="menu-item">
+    <li class="ecom-mega-cats__item{% if forloop.first %} is-open{% endif %}">
+        <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="ecom-mega-cats__parent">
             <span>{{ cat.categorie }}</span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
         </a>
+        <div class="ecom-mega-cats__panel">
+            <div class="ecom-mega-cats__panel-head">
+                <strong>{{ cat.categorie }}</strong>
+                <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}">{% trans "Voir tout" %}</a>
+            </div>
+            <div class="ecom-mega-cats__grid">
+                {% for sc in cat.sous_categories.all %}
+                <section class="ecom-mega-col">
+                    <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}&sous_categorie={{ sc.pk }}" class="ecom-mega-col__title">
+                        {{ sc.nom }}
+                    </a>
+                    <ul class="ecom-mega-col__list">
+                        {% for piece in sc.menu_pieces|slice:":8" %}
+                        <li>
+                            <a href="{{ piece.get_absolute_url }}" class="ecom-mega-col__piece">{{ piece.designation }}</a>
+                        </li>
+                        {% empty %}
+                        <li class="ecom-mega-col__empty">{% trans "Aucune pièce en stock" %}</li>
+                        {% endfor %}
+                        {% if sc.menu_pieces|length > 8 %}
+                        <li>
+                            <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}&sous_categorie={{ sc.pk }}" class="ecom-mega-col__more">
+                                {% trans "Plus de pièces" %}
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </section>
+                {% empty %}
+                <p class="ecom-mega-cats__empty">{% trans "Aucune sous-catégorie pour ce véhicule." %}</p>
+                {% endfor %}
+                {% if cat.menu_pieces_sans_sous %}
+                <section class="ecom-mega-col">
+                    <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="ecom-mega-col__title">
+                        {% trans "Autres pièces" %}
+                    </a>
+                    <ul class="ecom-mega-col__list">
+                        {% for piece in cat.menu_pieces_sans_sous|slice:":8" %}
+                        <li>
+                            <a href="{{ piece.get_absolute_url }}" class="ecom-mega-col__piece">{{ piece.designation }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+                {% endif %}
+            </div>
+        </div>
     </li>
     {% empty %}
     <li>

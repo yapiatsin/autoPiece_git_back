@@ -2,6 +2,7 @@ from decimal import Decimal
 import json
 from datetime import date
 
+from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Min, Max, Count
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -297,22 +298,24 @@ SUPPORT_THEMES = (
             {
                 'q': 'Quels modes de paiement sont acceptés sur Auto-Pièce ?',
                 'a': (
-                    'Pour le moment, le paiement se fait principalement en espèces à la livraison '
-                    'ou au retrait en agence. D’autres moyens (Mobile Money, carte) seront ajoutés progressivement.'
+                    'Vous pouvez payer en espèces à la livraison ou au retrait en agence, '
+                    'ou en ligne via GeniusPay (Wave, Orange Money, MTN MoMo, carte bancaire).'
                 ),
             },
             {
                 'q': 'Mes informations de paiement sont-elles sécurisées ?',
                 'a': (
-                    'Oui. Nous ne stockons pas de données bancaires sur la plateforme. '
-                    'Le règlement se fait au moment de la réception ou en agence, sous contrôle du personnel Auto-Pièce.'
+                    'Oui. Le paiement en ligne passe par la page sécurisée GeniusPay : '
+                    'nous ne stockons pas de données bancaires ni de codes Mobile Money. '
+                    'Le règlement en espèces se fait à la réception ou en agence.'
                 ),
             },
             {
                 'q': 'Que faire si mon paiement est refusé ?',
                 'a': (
-                    'Vérifiez le montant dû sur votre bon de commande, puis contactez l’agence concernée '
-                    'ou le service client. Vous pouvez aussi consulter le détail dans « Mes commandes ».'
+                    'Pour un paiement en ligne, réessayez depuis « Mes commandes » ou choisissez un autre moyen '
+                    '(Wave, Orange, MTN, carte) sur la page GeniusPay. '
+                    'Pour un paiement en espèces, vérifiez le montant sur votre bon de commande puis contactez l’agence.'
                 ),
             },
             {
@@ -589,6 +592,7 @@ def localite_detail(request, local_code):
             Q(designation__icontains=q)
             | Q(numero_piece__icontains=q)
             | Q(categorie__categorie__icontains=q)
+            | Q(sous_categorie__nom__icontains=q)
         )
     cat_ids = []
     for raw in request.GET.getlist('categorie'):
@@ -601,6 +605,17 @@ def localite_detail(request, local_code):
             continue
     if cat_ids:
         qs = qs.filter(categorie_id__in=cat_ids)
+    sous_ids = []
+    for raw in request.GET.getlist('sous_categorie'):
+        raw = str(raw).strip()
+        if not raw:
+            continue
+        try:
+            sous_ids.append(int(raw))
+        except (TypeError, ValueError):
+            continue
+    if sous_ids:
+        qs = qs.filter(sous_categorie_id__in=sous_ids)
 
     sort = request.GET.get('sort', 'designation')
     if sort == 'price_asc':
@@ -654,6 +669,7 @@ def localite_detail(request, local_code):
         'shop_total': paginator.count,
         'shop_query': query.urlencode(),
         'selected_categories': [str(c) for c in cat_ids],
+        'selected_sous_categories': [str(s) for s in sous_ids],
         'localite_filters': {
             'q': q,
             'sort': sort,
@@ -723,6 +739,7 @@ def shop(request):
         'shop_query': shop_query,
         'shop_page_numbers': shop_page_numbers,
         'selected_categories': [c for c in request.GET.getlist('categorie') if str(c).strip()],
+        'selected_sous_categories': [c for c in request.GET.getlist('sous_categorie') if str(c).strip()],
         'shop_price_bound_min': bound_min,
         'shop_price_bound_max': bound_max,
         'shop_filters': {
@@ -734,6 +751,7 @@ def shop(request):
         },
         'shop_next_url': request.get_full_path(),
     })
+    ctx.update(_geo_livraison_context(request))
     return render(request, 'e_autopiece/shop-grid-sidebar.html', ctx)
 
 
@@ -892,7 +910,7 @@ def account(request):
     commandes_qs = Commande.objects.filter(
         commande_en_ligne=True,
         panier__utilisateur=request.user,
-    ).select_related('panier', 'panier__local_entrepot', 'livreur').order_by('-date')
+    ).select_related('panier', 'panier__local_entrepot', 'livreur', 'moyen_paiement').order_by('-date')
 
     today = date.today()
     annee_courante = today.year
@@ -973,7 +991,7 @@ def _facture_commande_items(request, commande_id):
         panier__utilisateur=request.user,
     )
     items = list(
-        PanierItem.objects.filter(panier=commande.panier).select_related('piece', 'piece__categorie')
+        PanierItem.objects.filter(panier=commande.panier).select_related('piece', 'piece__categorie', 'piece__sous_categorie')
     )
     return commande, items
 
@@ -1016,7 +1034,7 @@ def _commande_en_ligne_qs():
 
 def _commande_en_ligne_items(commande):
     items = list(
-        PanierItem.objects.filter(panier=commande.panier).select_related('piece', 'piece__categorie')
+        PanierItem.objects.filter(panier=commande.panier).select_related('piece', 'piece__categorie', 'piece__sous_categorie')
     )
     frais = getattr(commande.panier, 'frais_livraison', None) or Decimal('0')
     return items, (frais if frais > 0 else None)
@@ -1176,6 +1194,22 @@ def _cart_ajax_payload(request, local, *, piece_id=None, item_id=None, quantite=
 
 
 @login_required(login_url='connexion')
+def _geo_livraison_context(request):
+    ville_id = (request.GET.get('livraison_ville') or request.session.get('ecom_livraison_ville') or '').strip()
+    commune_id = (request.GET.get('livraison_commune') or request.session.get('ecom_livraison_commune') or '').strip()
+    if 'livraison_ville' in request.GET:
+        request.session['ecom_livraison_ville'] = ville_id
+        request.session['ecom_livraison_commune'] = commune_id
+    villes = list(liste_villes_actives())
+    communes = list(liste_communes_actives(ville_id)) if ville_id.isdigit() else []
+    return {
+        'livraison_villes': villes,
+        'livraison_communes': communes,
+        'livraison_ville_id': ville_id,
+        'livraison_commune_id': commune_id,
+    }
+
+
 def cart(request):
     if not _require_client(request.user):
         messages.error(request, 'Connectez-vous avec un compte client.')
@@ -1185,7 +1219,7 @@ def cart(request):
         messages.warning(request, 'Sélectionnez une localité pour voir votre panier.')
         return redirect('ecom_index')
     panier = queryset_panier_online_actif(request.user, local).first()
-    items = list(PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie')) if panier else []
+    items = list(PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie', 'piece__sous_categorie')) if panier else []
     for item in items:
         item.stock_disponible = quantite_disponible_piece(item.piece, local)
         enrichir_piece_stock(item.piece, local)
@@ -1197,6 +1231,7 @@ def cart(request):
         'items': items,
         'total': total,
     })
+    ctx.update(_geo_livraison_context(request))
     return render(request, 'e_autopiece/cart.html', ctx)
 
 
@@ -1378,7 +1413,7 @@ def checkout(request):
         messages.warning(request, 'Sélectionnez une localité.')
         return redirect('ecom_index')
     panier = queryset_panier_online_actif(request.user, local).first()
-    items = list(PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie')) if panier else []
+    items = list(PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie', 'piece__sous_categorie')) if panier else []
     if not items:
         messages.warning(request, 'Votre panier est vide.')
         return redirect('ecom_cart')
@@ -1390,7 +1425,12 @@ def checkout(request):
     pays_list = list(liste_pays_actifs())
     pays_defaut = next((p for p in pays_list if p.code == 'CI'), pays_list[0] if pays_list else None)
     villes_list = list(liste_villes_actives(pays_defaut.pk if pays_defaut else None))
-    ville_defaut = next((v for v in villes_list if v.nom.lower() == 'abidjan'), villes_list[0] if villes_list else None)
+    session_ville = (request.session.get('ecom_livraison_ville') or '').strip()
+    ville_defaut = None
+    if session_ville.isdigit():
+        ville_defaut = next((v for v in villes_list if str(v.pk) == session_ville), None)
+    if ville_defaut is None:
+        ville_defaut = next((v for v in villes_list if v.nom.lower() == 'abidjan'), villes_list[0] if villes_list else None)
     communes_list = list(liste_communes_actives(ville_defaut.pk if ville_defaut else None))
     frais = get_frais_livraison(ville_defaut, sous_total, 'livraison')
 
@@ -1410,6 +1450,7 @@ def checkout(request):
         'villes_list': villes_list,
         'ville_defaut': ville_defaut,
         'communes_list': communes_list,
+        'commune_defaut_id': (request.session.get('ecom_livraison_commune') or '').strip(),
         'telephone_defaut': request.user.contact or '',
         'adresse_defaut': getattr(profil, 'adresse', '') or '',
         'client_email': request.user.email,
@@ -1417,7 +1458,6 @@ def checkout(request):
     })
 
 
-@login_required(login_url='connexion')
 @require_GET
 def ajax_villes_livraison(request):
     pays_id = request.GET.get('pays_id')
@@ -1434,7 +1474,6 @@ def ajax_villes_livraison(request):
     })
 
 
-@login_required(login_url='connexion')
 @require_GET
 def ajax_communes_livraison(request):
     ville_id = request.GET.get('ville_id')
@@ -1442,6 +1481,13 @@ def ajax_communes_livraison(request):
     return JsonResponse({
         'results': [{'id': c.pk, 'nom': c.nom} for c in communes],
     })
+
+
+@require_POST
+def ajax_set_livraison_zone(request):
+    request.session['ecom_livraison_ville'] = (request.POST.get('ville_id') or '').strip()
+    request.session['ecom_livraison_commune'] = (request.POST.get('commune_id') or '').strip()
+    return JsonResponse({'ok': True})
 
 
 @login_required(login_url='connexion')
@@ -1516,6 +1562,9 @@ def confirm_order(request):
             return redirect('ecom_checkout')
 
     try:
+        moyen_code = (request.POST.get('moyen_paiement') or 'espece').strip().lower()
+        if moyen_code not in ('espece', 'geniuspay'):
+            moyen_code = 'espece'
         commande, ticket = valider_commande_online(
             request.user,
             local,
@@ -1526,7 +1575,39 @@ def confirm_order(request):
             adresse_domicile=request.POST.get('adresse_domicile', ''),
             telephone_livraison=request.POST.get('telephone_livraison', ''),
             instruction_livraison=request.POST.get('instruction_livraison', ''),
+            moyen_paiement=moyen_code,
         )
+        if moyen_code == 'geniuspay':
+            from django.conf import settings as dj_settings
+            from stock.geniuspay import GeniusPayError, montant_xof
+            from stock.paiement_service import initier_paiement_commande
+            min_amount = int(getattr(dj_settings, 'GENIUSPAY_MIN_AMOUNT', 200) or 200)
+            if montant_xof(commande.total) < min_amount:
+                from ecom.services import get_moyen_espece
+                commande.moyen_paiement = get_moyen_espece()
+                commande.save(update_fields=['moyen_paiement'])
+                messages.warning(
+                    request,
+                    f'Commande enregistrée. Le paiement en ligne est disponible à partir de {min_amount} FCFA : '
+                    'le règlement se fera en espèces à la livraison ou au retrait.',
+                )
+                return redirect('ecom_checkout')
+            try:
+                gp = initier_paiement_commande(
+                    commande,
+                    source='ecom',
+                    request=request,
+                )
+            except GeniusPayError as exc:
+                messages.error(
+                    request,
+                    f'La commande est enregistrée, mais GeniusPay n’a pas démarré : {exc}',
+                )
+                return redirect('ecom_checkout_pay', commande_id=commande.pk)
+            if not gp.checkout_url:
+                messages.error(request, 'URL de paiement GeniusPay manquante. Réessayez depuis cette page.')
+                return redirect('ecom_checkout_pay', commande_id=commande.pk)
+            return redirect(gp.checkout_url)
         messages.success(
             request,
             f'Commande {commande.numero_commande} enregistrée. Ticket {ticket.numero}.',
@@ -1535,6 +1616,211 @@ def confirm_order(request):
     except ValueError as exc:
         messages.error(request, str(exc))
         return redirect('ecom_checkout')
+
+
+def checkout_pay(request, commande_id):
+    """Paiement GeniusPay intégré à la page commande (pas depuis Mes commandes)."""
+    from stock.geniuspay import GeniusPayError
+    from stock.models import GeniusPayPaiement, PanierItem
+    from stock.paiement_service import synchroniser_paiement
+    from ecom.services import get_moyen_geniuspay
+
+    if not _require_client(request.user):
+        return redirect('connexion')
+    commande = get_object_or_404(
+        Commande,
+        pk=commande_id,
+        commande_en_ligne=True,
+        panier__utilisateur=request.user,
+    )
+    retour = (request.GET.get('retour') or '').strip().lower()
+    gp = (
+        GeniusPayPaiement.objects.filter(commande=commande)
+        .order_by('-date_creation')
+        .first()
+    )
+    if retour == 'ok' and gp:
+        try:
+            gp, _confirmed = synchroniser_paiement(gp, request=request)
+            commande.refresh_from_db()
+        except GeniusPayError as exc:
+            messages.error(request, str(exc))
+    elif retour == 'erreur' and gp and gp.statut in ('pending', 'processing'):
+        gp.statut = 'failed'
+        gp.save(update_fields=['statut'])
+        messages.error(request, 'Le paiement a été annulé ou a échoué. Vous pouvez réessayer ci-dessous.')
+
+    if commande.paye:
+        return render(request, 'e_autopiece/checkout.html', {
+            'geniuspay_paye': True,
+            'commande_paiement': commande,
+            'geniuspay_embed_url': '',
+            'items': list(
+                PanierItem.objects.filter(panier=commande.panier).select_related(
+                    'piece', 'piece__categorie',
+                )
+            ),
+            'sous_total': commande.total,
+            'frais_livraison': 0,
+            'total': commande.total,
+            'local': commande.panier.local_entrepot,
+            'client_email': request.user.email,
+            'client_nom': request.user.get_full_name() or request.user.username,
+        })
+
+    if commande.statut_commande == 'annuler':
+        messages.error(request, 'Cette commande est annulée.')
+        return redirect('ecom_checkout')
+
+    commande.moyen_paiement = get_moyen_geniuspay()
+    commande.save(update_fields=['moyen_paiement'])
+
+    embed_url = ''
+    try:
+        embed_url = _paiement_geniuspay_ecom(request, commande) or ''
+    except GeniusPayError as exc:
+        messages.error(request, str(exc))
+
+    if embed_url:
+        return redirect(embed_url)
+
+    items = list(
+        PanierItem.objects.filter(panier=commande.panier).select_related(
+            'piece', 'piece__categorie',
+        )
+    )
+    return render(request, 'e_autopiece/checkout.html', {
+        'geniuspay_embed_url': embed_url,
+        'commande_paiement': commande,
+        'geniuspay_paye': False,
+        'items': items,
+        'sous_total': commande.total,
+        'frais_livraison': 0,
+        'total': commande.total,
+        'local': commande.panier.local_entrepot,
+        'client_email': request.user.email,
+        'client_nom': request.user.get_full_name() or request.user.username,
+    })
+
+
+def _paiement_geniuspay_ecom(request, commande):
+    from stock.geniuspay import GeniusPayError
+    from stock.models import GeniusPayPaiement
+    from stock.paiement_service import initier_paiement_commande, synchroniser_paiement
+
+    gp = (
+        GeniusPayPaiement.objects.filter(commande=commande)
+        .order_by('-date_creation')
+        .first()
+    )
+    if gp and gp.statut in ('pending', 'processing') and gp.checkout_url:
+        try:
+            gp, confirmed = synchroniser_paiement(gp, request=request)
+            if confirmed or commande.paye:
+                commande.refresh_from_db()
+                return None
+            if gp.checkout_url:
+                return gp.checkout_url
+        except GeniusPayError as exc:
+            if getattr(exc, 'code', None) not in ('INVALID_API_KEY', 'MISSING_API_KEY'):
+                if gp.checkout_url:
+                    return gp.checkout_url
+    gp = initier_paiement_commande(commande, source='ecom', request=request)
+    return gp.checkout_url
+
+
+@login_required(login_url='connexion')
+def paiement_succes(request):
+    from stock.geniuspay import GeniusPayError
+    from stock.models import GeniusPayPaiement
+    from stock.paiement_service import synchroniser_paiement
+
+    commande_id = (request.GET.get('commande') or '').strip()
+    reference = (request.GET.get('reference') or request.GET.get('ref') or '').strip()
+    commande = None
+    gp = None
+    if reference:
+        gp = GeniusPayPaiement.objects.filter(reference=reference).select_related(
+            'commande', 'commande__panier',
+        ).first()
+        if gp:
+            commande = gp.commande
+    if commande is None and commande_id:
+        commande = Commande.objects.filter(
+            pk=commande_id,
+            commande_en_ligne=True,
+        ).select_related('panier').first()
+        if commande and gp is None:
+            gp = (
+                GeniusPayPaiement.objects.filter(commande=commande)
+                .order_by('-date_creation')
+                .first()
+            )
+    if commande is None:
+        messages.error(request, 'Paiement introuvable.')
+        return redirect('ecom_mes_commandes')
+    if commande.panier.utilisateur_id != request.user.pk and not _require_staff_cmd(request.user):
+        messages.error(request, 'Accès refusé.')
+        return redirect('ecom_mes_commandes')
+
+    confirmed = commande.paye
+    if gp and not confirmed:
+        try:
+            gp, confirmed = synchroniser_paiement(gp, request=request)
+            commande.refresh_from_db()
+            confirmed = commande.paye
+        except GeniusPayError as exc:
+            messages.error(request, str(exc))
+            return redirect('ecom_paiement_echec')
+
+    return render(request, 'e_autopiece/paiement_succes.html', {
+        'commande': commande,
+        'paye': commande.paye,
+        'reference': gp.reference if gp else '',
+    })
+
+
+@login_required(login_url='connexion')
+def paiement_echec(request):
+    from stock.models import GeniusPayPaiement
+
+    commande_id = (request.GET.get('commande') or '').strip()
+    commande = None
+    if commande_id:
+        commande = Commande.objects.filter(
+            pk=commande_id,
+            commande_en_ligne=True,
+            panier__utilisateur=request.user,
+        ).first()
+    if commande and not commande.paye:
+        gp = (
+            GeniusPayPaiement.objects.filter(commande=commande)
+            .order_by('-date_creation')
+            .first()
+        )
+        if gp and gp.statut in ('pending', 'processing'):
+            gp.statut = 'failed'
+            gp.save(update_fields=['statut'])
+    return render(request, 'e_autopiece/paiement_echec.html', {
+        'commande': commande,
+    })
+
+
+@login_required(login_url='connexion')
+@require_POST
+def relancer_paiement_en_ligne(request, commande_id):
+    if not _require_client(request.user):
+        return redirect('connexion')
+    commande = get_object_or_404(
+        Commande,
+        pk=commande_id,
+        commande_en_ligne=True,
+        panier__utilisateur=request.user,
+    )
+    if commande.statut_commande == 'annuler':
+        messages.error(request, 'Cette commande est annulée.')
+        return redirect('ecom_checkout')
+    return redirect('ecom_checkout_pay', commande_id=commande.pk)
 
 
 @login_required(login_url='connexion')
@@ -1546,7 +1832,7 @@ def mes_commandes(request):
             commande_en_ligne=True,
             panier__utilisateur=request.user,
         )
-        .select_related('panier', 'panier__local_entrepot', 'livreur')
+        .select_related('panier', 'panier__local_entrepot', 'livreur', 'moyen_paiement')
         .order_by('-date')
     )
     return render(request, 'e_autopiece/trackorder.html', {
@@ -1650,12 +1936,21 @@ def cmd_line(request):
     nb_payees = payees_qs.count()
     montant_paye = payees_qs.aggregate(s=Sum('total'))['s'] or Decimal('0')
 
+    paginator = Paginator(qs, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+    extra_query = query_params.urlencode()
+
     livreurs = CustomUser.objects.filter(role='livreur', is_active=True)
     if localite:
         livreurs = livreurs.filter(local_entrepot=localite)
 
     ctx = {
-        'commandes': qs,
+        'commandes': page_obj.object_list,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'cmd_line_extra_query': extra_query,
         'livreurs': livreurs,
         'local': localite,
         'filter_modal_id': 'cmdLineFilterModal',

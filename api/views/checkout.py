@@ -47,7 +47,7 @@ class CheckoutPreviewView(APIView):
             return err
         panier = queryset_panier_online_actif(request.user, local).first()
         items = list(
-            PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie')
+            PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie', 'piece__sous_categorie')
         ) if panier else []
         if not items:
             return Response({'detail': 'Votre panier est vide.'}, status=status.HTTP_400_BAD_REQUEST)

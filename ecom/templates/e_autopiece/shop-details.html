@@ -38,9 +38,8 @@ document.addEventListener('DOMContentLoaded', function () {
         cartQty = qty;
         inCart = qty > 0;
         if (addWrap) addWrap.classList.toggle('d-none', inCart);
-        if (qtyWrap) {
-            qtyWrap.classList.toggle('d-none', !inCart);
-        }
+        var addedLabel = document.getElementById('ecom-detail-added-label');
+        if (addedLabel) addedLabel.classList.toggle('d-none', !inCart);
         qtyDisplay.textContent = inCart ? String(qty) : '1';
         if (addedCount) addedCount.textContent = inCart ? String(qty) : '0';
         minus.disabled = !inCart;

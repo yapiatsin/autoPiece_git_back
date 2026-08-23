@@ -288,7 +288,7 @@ def creer_bon_commande_paiement(commande, panier, ticket, caissier):
         caissier=caissier,
         hote_accueil=hote,
         client_nom=panier.nom_client or '',
-        moyen_paiement_nom=commande.moyen_paiement.nom if commande.moyen_paiement_id else '',
+        moyen_paiement_nom=commande.libelle_paiement if commande.libelle_paiement != '—' else '',
         montant_paye=commande.montant_paye,
         montant_reste=commande.montant_reste,
         total_commande=commande.total,

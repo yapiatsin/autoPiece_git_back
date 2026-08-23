@@ -8,6 +8,7 @@ from .auth import (
 )
 from .piece import (
     CategorieSerializer,
+    SousCategorieSerializer,
     LocaliteSerializer,
     PieceCardSerializer,
     PieceDetailSerializer,
@@ -25,6 +26,7 @@ __all__ = [
     'ProfilClientSerializer',
     'ProfilClientWriteSerializer',
     'CategorieSerializer',
+    'SousCategorieSerializer',
     'LocaliteSerializer',
     'PieceCardSerializer',
     'PieceDetailSerializer',

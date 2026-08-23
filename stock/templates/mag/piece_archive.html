@@ -87,7 +87,7 @@
                                     <th>{{ forloop.counter }}</th>
                                     <th>{{ d.numero_piece }}</th>
                                     <th>{{ d.designation }}</th>
-                                    <th><a href="{% url "add_piece" d.categorie.pk %}">{{ d.categorie.categorie }}</a></th>
+                                    <th><a href="{% url "add_piece" d.categorie.pk %}">{{ d.libelle_classification }}</a></th>
                                     <th class="text-center text-success">{{ d.prix_unitaire }} F</th>
                                     <th class="text-center text-info">
                                         {% if d.prix_unitaire_local_valeur is not None %}

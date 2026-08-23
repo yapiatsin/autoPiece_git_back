@@ -45,6 +45,15 @@
                                                 onchange="this.form.submit()">
                                             <label for="loc-cat-{{ cat.pk }}">{{ cat.categorie }}</label>
                                         </div>
+                                        {% for sc in cat.sous_categories.all %}
+                                        <div class="single-category ps-3">
+                                            <input id="loc-sous-{{ sc.pk }}" type="checkbox" name="sous_categorie"
+                                                value="{{ sc.pk }}"
+                                                {% if sc.pk|stringformat:'s' in selected_sous_categories %}checked{% endif %}
+                                                onchange="this.form.submit()">
+                                            <label for="loc-sous-{{ sc.pk }}">{{ sc.nom }}</label>
+                                        </div>
+                                        {% endfor %}
                                         {% empty %}
                                         <p class="text-muted small mb-0">{% trans "Aucune catégorie pour cette localité." %}</p>
                                         {% endfor %}
@@ -178,26 +187,30 @@
                                     {% for cat_id in selected_categories %}
                                     <input type="hidden" name="categorie" value="{{ cat_id }}">
                                     {% endfor %}
+                                    {% for sc_id in selected_sous_categories %}
+                                    <input type="hidden" name="sous_categorie" value="{{ sc_id }}">
+                                    {% endfor %}
                                     {% if localite_filters.sort %}
                                     <input type="hidden" name="sort" value="{{ localite_filters.sort }}">
                                     {% endif %}
                                     <div class="ecom-localite-search-box">
                                         <input type="text" name="q" value="{{ localite_filters.q }}"
-                                            class="ecom-localite-search-input"
-                                            placeholder="{% trans 'Entrez le nom de la pièce' %}"
-                                            autocomplete="off">
+                                            class="ecom-localite-search-input" placeholder="{% trans 'Entrez le nom de la pièce' %}" autocomplete="off">
                                         <button type="submit" class="ecom-localite-search-btn" aria-label="{% trans 'Search' %}">
                                             {% trans "Rechercher" %}
                                             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                                         </button>
-                                                </div>
-                                        </form>
+                                    </div>
+                                </form>
                                 <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" class="ecom-localite-sort-form">
                                     {% if localite_filters.q %}
                                     <input type="hidden" name="q" value="{{ localite_filters.q }}">
                                     {% endif %}
                                     {% for cat_id in selected_categories %}
                                     <input type="hidden" name="categorie" value="{{ cat_id }}">
+                                    {% endfor %}
+                                    {% for sc_id in selected_sous_categories %}
+                                    <input type="hidden" name="sous_categorie" value="{{ sc_id }}">
                                     {% endfor %}
                                     <label class="ecom-localite-sort-wrap" for="localite-sort-select">
                                         <select id="localite-sort-select" name="sort"

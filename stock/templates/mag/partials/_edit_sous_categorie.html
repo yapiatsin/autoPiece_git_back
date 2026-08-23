@@ -1,0 +1,63 @@
+<div class="modal fade mag-form-modal" id="editSousCategorieModal{{ sous.pk }}" tabindex="-1" role="dialog" aria-labelledby="editSousCategorieModalLabel{{ sous.pk }}" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title" id="editSousCategorieModalLabel{{ sous.pk }}">Modifier la sous-catégorie</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{% url 'update_sous_categorie' sous.pk %}" novalidate enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <section class="mf-section mb-0">
+                        <h3 class="mf-section__title">
+                            <i class="fa fa-sitemap"></i> {{ sous.nom }}
+                        </h3>
+                        <div class="mf-field">
+                            <label>Catégorie parente <span class="mf-req">*</span></label>
+                            <select name="categorie" class="form-control" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat.pk }}" {% if sous.categorie_id == cat.pk %}selected{% endif %}>{{ cat.categorie }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mf-field">
+                            <label>Nom <span class="mf-req">*</span></label>
+                            <input type="text" name="nom" value="{{ sous.nom }}" class="form-control" placeholder="Nom de la sous-catégorie" required>
+                        </div>
+                        <div class="mf-field">
+                            <label>Description</label>
+                            <textarea name="description" class="form-control" placeholder="Description..." rows="3">{{ sous.description|default:'' }}</textarea>
+                        </div>
+                        <div class="mf-field">
+                            <label>Ordre</label>
+                            <input type="number" name="ordre" value="{{ sous.ordre }}" class="form-control" min="0">
+                        </div>
+                        <div class="mf-field">
+                            <label for="actif-{{ sous.pk }}">Active</label>
+                            <div class="mf-check">
+                                <input type="checkbox" name="actif" id="actif-{{ sous.pk }}" {% if sous.actif %}checked{% endif %}>
+                                <span class="mf-hint mb-0">Visible dans le catalogue et la boutique</span>
+                            </div>
+                        </div>
+                        <div class="mf-field mb-0">
+                            <label>Image</label>
+                            {% if sous.image %}
+                                <p class="mb-2">
+                                    <img src="{{ sous.image.url }}" alt="" style="max-height: 72px; max-width: 100%; border-radius: 8px;">
+                                </p>
+                            {% endif %}
+                            <input type="file" name="image" class="form-control" accept="image/*">
+                            <span class="mf-hint">Laisser vide pour conserver l’image actuelle.</span>
+                        </div>
+                    </section>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

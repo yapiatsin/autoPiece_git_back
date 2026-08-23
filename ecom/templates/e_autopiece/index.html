@@ -61,95 +61,6 @@
         </div>
     </div>
 
-    <!-- rts feature area start -->
-    <div class="rts-feature-area ecom-feature-circles rts-section-gap">
-        <div class="container">
-            <div class="row g-4 ecom-feature-animated-row justify-content-center">
-                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
-                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="0">
-                        <div class="ecom-feature-circle__visual">
-                            <div class="icon ecom-feature-circle__icon">
-                                <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
-                            </div>
-                            <span class="ecom-feature-circle__badge" aria-hidden="true">
-                                <i class="fa-solid fa-star"></i>
-                            </span>
-                        </div>
-                        <div class="content">
-                            <h4 class="title">Wide Assortment</h4>
-                            <span>Orders $50 or more</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
-                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="1">
-                        <div class="ecom-feature-circle__visual">
-                            <div class="icon ecom-feature-circle__icon">
-                                <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-                            </div>
-                            <span class="ecom-feature-circle__badge" aria-hidden="true">
-                                <i class="fa-solid fa-check"></i>
-                            </span>
-                        </div>
-                        <div class="content">
-                            <h4 class="title">Easy Return Policy</h4>
-                            <span>Orders $50 or more</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
-                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="2">
-                        <div class="ecom-feature-circle__visual">
-                            <div class="icon ecom-feature-circle__icon">
-                                <i class="fa-solid fa-tags" aria-hidden="true"></i>
-                            </div>
-                            <span class="ecom-feature-circle__badge ecom-feature-circle__badge--flash" aria-hidden="true">
-                                <i class="fa-solid fa-bolt"></i>
-                            </span>
-                        </div>
-                        <div class="content">
-                            <h4 class="title">Best Prices & Offers</h4>
-                            <span>Orders $50 or more</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
-                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="3">
-                        <div class="ecom-feature-circle__visual">
-                            <div class="icon ecom-feature-circle__icon">
-                                <i class="fa-solid fa-headset" aria-hidden="true"></i>
-                            </div>
-                            <span class="ecom-feature-circle__badge" aria-hidden="true">
-                                <i class="fa-solid fa-clock"></i>
-                            </span>
-                        </div>
-                        <div class="content">
-                            <h4 class="title">Support 24/7</h4>
-                            <span>Orders $50 or more</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-20 col-lg-6 col-md-6 col-sm-6 col-12">
-                    <div class="single-feature-area ecom-feature-circle ecom-feature-animated" data-feature-index="4">
-                        <div class="ecom-feature-circle__visual">
-                            <div class="icon ecom-feature-circle__icon">
-                                <i class="fa-solid fa-percent" aria-hidden="true"></i>
-                            </div>
-                            <span class="ecom-feature-circle__badge ecom-feature-circle__badge--deal" aria-hidden="true">
-                                <i class="fa-solid fa-fire"></i>
-                            </span>
-                        </div>
-                        <div class="content">
-                            <h4 class="title">Best Prices & Offers</h4>
-                            <span>Orders $50 or more</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- rts featrure area end -->
-
     {% include 'e_autopiece/partials/_pieces_plus_commandees.html' %}
     {% include 'e_autopiece/partials/_index_map_catalogue_row.html' %}
     
@@ -167,34 +78,6 @@
 {% block extra_js %}
 <script>
 (function () {
-    function initFeatureAnimations() {
-        var cards = document.querySelectorAll('.rts-feature-area .ecom-feature-circle');
-        if (!cards.length) return;
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-        var icons = Array.prototype.map.call(cards, function (card) {
-            return card.querySelector('.ecom-feature-circle__icon');
-        }).filter(Boolean);
-
-        function pulseIcons() {
-            icons.forEach(function (icon, index) {
-                window.setTimeout(function () {
-                    icon.classList.remove('is-zooming');
-                    // force reflow to restart animation
-                    void icon.offsetWidth;
-                    icon.classList.add('is-zooming');
-                    window.setTimeout(function () {
-                        icon.classList.remove('is-zooming');
-                    }, 750);
-                }, index * 160);
-            });
-        }
-
-        // premier zoom après un court délai, puis toutes les 5s
-        window.setTimeout(pulseIcons, 800);
-        window.setInterval(pulseIcons, 5000);
-    }
-
     function initOrderGuideModal() {
         var el = document.getElementById('ecomOrderGuideModal');
         if (!el) return;
@@ -322,7 +205,6 @@
     }
 
     function boot() {
-        initFeatureAnimations();
         initOrderGuideModal();
         initBannerSmoothScroll();
     }

@@ -70,6 +70,18 @@ document.addEventListener('DOMContentLoaded', function () {
             catSelect.value = checkedCats.length === 1 ? checkedCats[0] : '';
         }
 
+        var checkedSous = Array.prototype.map.call(
+            document.querySelectorAll('#ecom-shop-sous-host input[name="sous_categorie"]:checked, #ecom-shop-filter-form input[name="sous_categorie"]:checked'),
+            function (el) { return el.value; }
+        );
+        var sousSelect = topForm.querySelector('select[name="sous_categorie"]');
+        if (sousSelect) {
+            sousSelect.value = checkedSous.length === 1 ? checkedSous[0] : '';
+            if (window.jQuery && jQuery.fn.niceSelect) {
+                var $sous = jQuery(sousSelect);
+                if ($sous.next().hasClass('nice-select')) $sous.niceSelect('update');
+            }
+        }
         var checkedLoc = form.querySelector('input[name="localite"]:checked');
         var locSelect = topForm.querySelector('select[name="localite"]');
         if (locSelect) {
@@ -97,6 +109,12 @@ document.addEventListener('DOMContentLoaded', function () {
         form.querySelectorAll('input[name="localite"]').forEach(function (rb) {
             rb.checked = locVal ? rb.value === locVal : false;
         });
+
+        var sousSelect = topForm.querySelector('select[name="sous_categorie"]');
+        var sousVal = sousSelect ? sousSelect.value : '';
+        document.querySelectorAll('#ecom-shop-sous-host input[name="sous_categorie"], #ecom-shop-filter-form input[name="sous_categorie"]').forEach(function (cb) {
+            cb.checked = sousVal ? cb.value === sousVal : false;
+        });
     }
 
     function buildShopQuery(page) {
@@ -107,6 +125,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (value !== '' && value != null) params.append(key, value);
             });
         }
+        document.querySelectorAll('#ecom-shop-sous-host input[name="sous_categorie"]:checked').forEach(function (el) {
+            if (!params.getAll('sous_categorie').includes(el.value)) {
+                params.append('sous_categorie', el.value);
+            }
+        });
         var sortSel = document.querySelector('#ecom-shop-sort-form select[name="sort"]');
         if (sortSel && sortSel.value) {
             params.set('sort', sortSel.value);
@@ -142,6 +165,12 @@ document.addEventListener('DOMContentLoaded', function () {
         syncTopFromSidebar();
         bindQtyControls();
         initPriceRangeFilter();
+        document.querySelectorAll('.ecom-geo-selects').forEach(function (el) {
+            el.removeAttribute('data-geo-bound');
+            if (window.ecomBindVilleCommune) window.ecomBindVilleCommune(el);
+        });
+        bindCatSousCascade();
+        bindCatSousPanels();
         return true;
     }
 
@@ -226,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('change', function (event) {
         var el = event.target;
         if (!el || !el.matches) return;
-        if (el.matches('#ecom-shop-filter-form input.ecom-auto-filter-input[type="checkbox"], #ecom-shop-filter-form input.ecom-auto-filter-input[type="radio"]')) {
+        if (el.matches('#ecom-shop-filter-form input.ecom-auto-filter-input[type="checkbox"], #ecom-shop-filter-form input.ecom-auto-filter-input[type="radio"], #ecom-shop-sous-host input.ecom-auto-filter-input[type="checkbox"]')) {
             runFilter({});
         }
         if (el.matches('#ecom-shop-filter-form input.ecom-auto-filter-input[type="number"]')) {
@@ -348,8 +377,97 @@ document.addEventListener('DOMContentLoaded', function () {
         syncFromInputs(false);
     }
 
+    function bindCatSousCascade() {
+        var catSel = document.querySelector('#ecom-shop-top-selects select[name="categorie"]');
+        var sousSel = document.querySelector('#ecom-shop-top-selects select[name="sous_categorie"]');
+        if (!catSel || !sousSel) return;
+        var all = [];
+        Array.prototype.forEach.call(sousSel.querySelectorAll('option'), function (opt) {
+            all.push({
+                value: opt.value,
+                text: opt.textContent,
+                cat: opt.getAttribute('data-cat') || '',
+            });
+        });
+        function apply() {
+            var cat = catSel.value;
+            var current = sousSel.value;
+            sousSel.innerHTML = '';
+            all.forEach(function (item) {
+                if (item.value && cat && item.cat !== cat) return;
+                var opt = document.createElement('option');
+                opt.value = item.value;
+                opt.textContent = item.text;
+                if (item.cat) opt.setAttribute('data-cat', item.cat);
+                sousSel.appendChild(opt);
+            });
+            sousSel.value = current;
+            if (sousSel.value !== current) sousSel.value = '';
+            if (window.jQuery && jQuery.fn.niceSelect) {
+                var $el = jQuery(sousSel);
+                if ($el.next().hasClass('nice-select')) $el.niceSelect('update');
+            }
+        }
+        catSel.addEventListener('change', apply);
+        apply();
+    }
+
+    function bindCatSousPanels() {
+        var host = document.getElementById('ecom-shop-sous-host');
+        document.querySelectorAll('#ecom-shop-filter-form .ecom-shop-sous-card').forEach(function (card) {
+            if (host) host.appendChild(card);
+        });
+        document.querySelectorAll('#ecom-shop-filter-form .ecom-shop-cat').forEach(function (wrap) {
+            var catCb = wrap.querySelector('input[name="categorie"]');
+            if (!catCb) return;
+            var card = document.querySelector('.ecom-shop-sous-card[data-cat-id="' + catCb.value + '"]');
+            if (card) {
+                card.classList.toggle('is-open', !!catCb.checked);
+            }
+            if (wrap.getAttribute('data-sous-bound') === '1') return;
+            wrap.setAttribute('data-sous-bound', '1');
+            catCb.addEventListener('change', function () {
+                if (!catCb.checked && card) {
+                    card.querySelectorAll('input[name="sous_categorie"]').forEach(function (sc) {
+                        sc.checked = false;
+                    });
+                }
+                if (card) card.classList.toggle('is-open', catCb.checked);
+                syncSousHostVisibility();
+            });
+        });
+        if (host) {
+            host.querySelectorAll('input[name="sous_categorie"]').forEach(function (sc) {
+                if (sc.getAttribute('data-sous-bound') === '1') return;
+                sc.setAttribute('data-sous-bound', '1');
+                sc.addEventListener('change', function () {
+                    var catId = sc.closest('.ecom-shop-sous-card');
+                    catId = catId ? catId.getAttribute('data-cat-id') : '';
+                    var catCb = document.querySelector('#ecom-shop-filter-form input[name="categorie"][value="' + catId + '"]');
+                    if (sc.checked && catCb && !catCb.checked) {
+                        catCb.checked = true;
+                        if (sc.closest('.ecom-shop-sous-card')) {
+                            sc.closest('.ecom-shop-sous-card').classList.add('is-open');
+                        }
+                    }
+                });
+            });
+        }
+        syncSousHostVisibility();
+    }
+
+    function syncSousHostVisibility() {
+        var host = document.getElementById('ecom-shop-sous-host');
+        if (!host) return;
+        var open = host.querySelector('.ecom-shop-sous-card.is-open');
+        host.hidden = !open;
+    }
+
     bindQtyControls();
     initPriceRangeFilter();
+    bindCatSousCascade();
+    bindCatSousPanels();
 });
 </script>
+{% include 'e_autopiece/partials/_ecom_ville_commune_js.html' %}
 {% endblock extra_js %}

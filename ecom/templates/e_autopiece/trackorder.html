@@ -74,6 +74,11 @@
                                     <span class="ecom-orders-badge ecom-orders-badge--{{ cmd.statut_commande }}">
                                         {{ cmd.get_statut_commande_display }}
                                     </span>
+                                    {% if cmd.paye %}
+                                    <span class="ecom-orders-badge ecom-orders-badge--recu">{% trans "Payée" %}</span>
+                                    {% elif cmd.statut_commande != 'annuler' %}
+                                    <span class="ecom-orders-badge ecom-orders-badge--en_attente">{% trans "À payer" %}</span>
+                                    {% endif %}
                                     {% if cmd.client_confirme_reception %}
                                     <span class="ecom-orders-badge ecom-orders-badge--recu">{% trans "Reçu" %}</span>
                                     {% endif %}
@@ -100,8 +105,8 @@
                                         {% trans "Annulée" %}
                                     </span>
                                     {% elif cmd.statut_commande == 'en_attente' or cmd.statut_commande == 'valider' %}
-                                    {% if not cmd.paye %}
-                                    <form method="post" action="{% url 'ecom_annuler_commande' cmd.pk %}">
+                                            {% if not cmd.paye %}
+                                            <form method="post" action="{% url 'ecom_annuler_commande' cmd.pk %}">
                                         {% csrf_token %}
                                         <input type="hidden" name="next" value="{% url 'ecom_mes_commandes' %}">
                                         <button type="submit" class="rts-btn btn-primary border-only radious-sm with-icon ecom-orders-action-btn ecom-orders-cancel-btn"

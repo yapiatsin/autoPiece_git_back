@@ -28,7 +28,7 @@ def _client_orders_qs(user):
 
 def build_order_detail(request, commande):
     panier = commande.panier
-    items_qs = PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie')
+    items_qs = PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie', 'piece__sous_categorie')
     items = []
     for item in items_qs:
         pu = item.prix_unitaire_applique
@@ -142,7 +142,7 @@ class OrderInvoiceView(APIView):
             pk=commande_id,
         )
         items = list(
-            PanierItem.objects.filter(panier=commande.panier).select_related('piece', 'piece__categorie')
+            PanierItem.objects.filter(panier=commande.panier).select_related('piece', 'piece__categorie', 'piece__sous_categorie')
         )
         panier = commande.panier
         frais = getattr(panier, 'frais_livraison', None) or Decimal('0')

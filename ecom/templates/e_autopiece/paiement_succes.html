@@ -1,0 +1,63 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Paiement confirmé" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h{% endblock body_class %}
+{% block content %}
+    <div class="rts-navigation-area-breadcrumb bg_light-1">
+        <div class="container">
+            <div class="navigator-breadcrumb-wrapper">
+                <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <a href="{% url 'ecom_mes_commandes' %}">{% trans "Mes commandes" %}</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span class="current">{% trans "Paiement" %}</span>
+            </div>
+        </div>
+    </div>
+
+    <section class="ecom-contact-hero">
+        <div class="container">
+            <div class="ecom-contact-hero-inner">
+                {% if paye %}
+                <span class="ecom-contact-eyebrow">{% trans "Paiement" %}</span>
+                <h1 class="ecom-contact-hero-title">{% trans "Paiement confirmé" %}</h1>
+                <p class="ecom-contact-hero-text">
+                    {% if commande %}
+                    {% blocktrans with numero=commande.numero_commande %}La commande {{ numero }} a bien été payée. L’agence prépare votre colis.{% endblocktrans %}
+                    {% else %}
+                    {% trans "Votre paiement a bien été enregistré." %}
+                    {% endif %}
+                </p>
+                {% else %}
+                <span class="ecom-contact-eyebrow">{% trans "Paiement" %}</span>
+                <h1 class="ecom-contact-hero-title">{% trans "Paiement en cours" %}</h1>
+                <p class="ecom-contact-hero-text">
+                    {% trans "Nous n’avons pas encore reçu la confirmation. Actualisez cette page dans quelques instants ou consultez Mes commandes." %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="ecom-contact-main rts-section-gapBottom">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-7">
+                    <div class="ecom-contact-form-card ecom-contact-form-modern">
+                        <div class="ecom-404-actions">
+                            <a href="{% url 'ecom_mes_commandes' %}" class="ecom-contact-submit-pill">
+                                {% trans "Voir mes commandes" %}
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                            {% if commande %}
+                            <a href="{% url 'ecom_invoice' commande.pk %}" class="ecom-404-btn-secondary">
+                                {% trans "Voir la facture" %}
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}

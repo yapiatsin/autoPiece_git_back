@@ -10,6 +10,7 @@ from django.utils import timezone
 from Userauths.models import CustomUser, LocalEntrepot
 from stock.models import (
     Categorie,
+    SousCategorie,
     Commande,
     MoyenPaiement,
     Notification,
@@ -204,7 +205,7 @@ def enrichir_piece_stock(piece: Piece, local: LocalEntrepot | None = None) -> Pi
 def queryset_pieces_local(local: LocalEntrepot):
     from stock.models import Piece as PieceModel
 
-    qs = PieceModel.objects.select_related('categorie')
+    qs = PieceModel.objects.select_related('categorie', 'sous_categorie')
     qs = annotate_pieces_for_localite(qs, local)
     return filter_pieces_avec_stock(qs, local).order_by('designation')
 
@@ -221,7 +222,7 @@ def queryset_piece_fiche():
         quantite_disponible__gt=0,
     ).select_related('local_entrepot').order_by('local_entrepot__nom')
 
-    qs = Piece.objects.select_related('categorie').prefetch_related(
+    qs = Piece.objects.select_related('categorie', 'sous_categorie').prefetch_related(
         Prefetch('stocks', queryset=stocks_qs, to_attr='stocks_disponibles'),
     )
     return filter_piece_catalogue_actif(qs).annotate(
@@ -340,7 +341,7 @@ def lignes_pieces_plus_commandees(
 
     # Inclure aussi les pièces encore référencées même si stock épuisé
     pieces_qs = (
-        Piece.objects.select_related('categorie')
+        Piece.objects.select_related('categorie', 'sous_categorie')
         .prefetch_related(
             Prefetch(
                 'stocks',
@@ -375,6 +376,19 @@ def lignes_pieces_plus_commandees(
     return rows
 
 
+def _qs_pieces_menu_boutique():
+    return (
+        Piece.objects.filter(
+            Q(active_sortie=True) | Q(active_sortie__isnull=True),
+            stocks__active_sortie=True,
+            stocks__quantite_disponible__gt=0,
+        )
+        .distinct()
+        .only('id', 'designation', 'numero_piece', 'categorie_id', 'sous_categorie_id')
+        .order_by('designation')
+    )
+
+
 def queryset_categories_catalogue():
     """Catégories uniques ayant au moins une pièce en stock (toutes localités)."""
     pieces_en_stock = Piece.objects.filter(
@@ -384,7 +398,29 @@ def queryset_categories_catalogue():
         stocks__active_sortie=True,
         stocks__quantite_disponible__gt=0,
     )
-    return Categorie.objects.filter(Exists(pieces_en_stock)).order_by('categorie')
+    sous_qs = (
+        SousCategorie.objects.filter(actif=True)
+        .order_by('ordre', 'nom')
+        .prefetch_related(
+            Prefetch(
+                'pieces',
+                queryset=_qs_pieces_menu_boutique(),
+                to_attr='menu_pieces',
+            )
+        )
+    )
+    return (
+        Categorie.objects.filter(Exists(pieces_en_stock))
+        .prefetch_related(
+            Prefetch('sous_categories', queryset=sous_qs),
+            Prefetch(
+                'piece_set',
+                queryset=_qs_pieces_menu_boutique().filter(sous_categorie__isnull=True),
+                to_attr='menu_pieces_sans_sous',
+            ),
+        )
+        .order_by('categorie')
+    )
 
 
 def catalogue_groupe_par_localite(pieces, localites):
@@ -436,6 +472,7 @@ def filtrer_pieces_boutique(request):
             Q(designation__icontains=q)
             | Q(numero_piece__icontains=q)
             | Q(categorie__categorie__icontains=q)
+            | Q(sous_categorie__nom__icontains=q)
         )
     # Mobile API envoie `cid` (ex. c214b4) ; le web boutique envoie le pk numérique.
     pk_ids = []
@@ -455,6 +492,17 @@ def filtrer_pieces_boutique(request):
         if cids:
             q_cat |= Q(categorie__cid__in=cids)
         qs = qs.filter(q_cat)
+    sous_ids = []
+    for raw in request.GET.getlist('sous_categorie'):
+        raw = str(raw).strip()
+        if not raw:
+            continue
+        try:
+            sous_ids.append(int(raw))
+        except (TypeError, ValueError):
+            continue
+    if sous_ids:
+        qs = qs.filter(sous_categorie_id__in=sous_ids)
     prix_min = request.GET.get('prix_min', '').strip()
     prix_max = request.GET.get('prix_max', '').strip()
     try:
@@ -532,6 +580,7 @@ def filtrer_localites_catalogue(request):
 
 def categories_pour_localite(local: LocalEntrepot):
     """Catégories ayant du stock dans une localité donnée."""
+    sous_qs = SousCategorie.objects.filter(actif=True).order_by('ordre', 'nom')
     return (
         Categorie.objects.filter(
             piece__stocks__local_entrepot=local,
@@ -539,6 +588,7 @@ def categories_pour_localite(local: LocalEntrepot):
             piece__stocks__quantite_disponible__gt=0,
         )
         .distinct()
+        .prefetch_related(Prefetch('sous_categories', queryset=sous_qs))
         .order_by('categorie')
     )
 
@@ -578,6 +628,21 @@ def get_moyen_espece() -> MoyenPaiement:
         defaults={'nom': 'Espèces', 'actif': True},
     )
     return moyen
+
+
+def get_moyen_geniuspay() -> MoyenPaiement:
+    moyen, _ = MoyenPaiement.objects.get_or_create(
+        code='geniuspay',
+        defaults={'nom': 'Paiement numérique', 'actif': True},
+    )
+    return moyen
+
+
+def moyen_depuis_code(code: str | None) -> MoyenPaiement:
+    code = (code or 'espece').strip().lower()
+    if code == 'geniuspay':
+        return get_moyen_geniuspay()
+    return get_moyen_espece()
 
 
 @transaction.atomic
@@ -743,6 +808,7 @@ def valider_commande_online(
     adresse_domicile: str = '',
     telephone_livraison: str = '',
     instruction_livraison: str = '',
+    moyen_paiement: str | MoyenPaiement | None = 'espece',
 ):
     panier = queryset_panier_online_actif(user, local, for_update=True).first()
     if not panier:
@@ -790,7 +856,10 @@ def valider_commande_online(
         panier.instruction_livraison = None
 
     panier.frais_livraison = frais
-    moyen = get_moyen_espece()
+    if isinstance(moyen_paiement, MoyenPaiement):
+        moyen = moyen_paiement
+    else:
+        moyen = moyen_depuis_code(moyen_paiement)
     panier.mode_reception = mode_reception
     panier.valide = True
     panier.commande_en_ligne = True
@@ -853,8 +922,6 @@ def assigner_livreur(commande: Commande, livreur: CustomUser) -> Commande:
         raise ValueError('Commande annulée : assignation impossible.')
     if commande.statut_commande not in ('valider', 'en_attente'):
         raise ValueError('Commande non eligible.')
-    if commande.paye:
-        raise ValueError('Commande déjà payée : réassignation impossible.')
 
     was_same_livreur = commande.livreur_id == livreur.pk
     commande.livreur = livreur
@@ -880,17 +947,30 @@ def assigner_livreur(commande: Commande, livreur: CustomUser) -> Commande:
 
 
 @transaction.atomic
-def payer_commande_livreur(commande: Commande, livreur: CustomUser) -> Commande:
+def confirmer_paiement_en_ligne(
+    commande: Commande,
+    moyen=None,
+    montant_paye=None,
+    staff_user=None,
+    *,
+    silent_if_paid: bool = True,
+) -> Commande:
+    """Marque une commande e-com comme payée et décrémente le stock (idempotent)."""
     from django.core.exceptions import ValidationError
 
-    if commande.livreur_id != livreur.pk:
-        raise ValueError('Cette commande ne vous est pas assignée.')
+    commande = (
+        Commande.objects.select_for_update()
+        .select_related('panier', 'panier__local_entrepot', 'moyen_paiement')
+        .get(pk=commande.pk)
+    )
     if commande.paye:
+        if silent_if_paid:
+            return commande
         raise ValueError('Commande déjà payée.')
     if commande.statut_commande == 'annuler':
         raise ValueError('Commande annulée.')
 
-    panier = commande.panier
+    panier = Panier.objects.select_for_update().get(pk=commande.panier_id)
     local = panier.local_entrepot
     if not local:
         raise ValueError('Localité de la commande introuvable.')
@@ -903,13 +983,22 @@ def payer_commande_livreur(commande: Commande, livreur: CustomUser) -> Commande:
         for item in items:
             decrementer_stock(item.piece, local, item.quantite)
     except ValidationError as exc:
-        raise ValueError('; '.join(exc.messages) if getattr(exc, 'messages', None) else str(exc)) from exc
+        raise ValueError(
+            '; '.join(exc.messages) if getattr(exc, 'messages', None) else str(exc)
+        ) from exc
 
-    moyen = commande.moyen_paiement or get_moyen_espece()
+    moyen = moyen or commande.moyen_paiement or get_moyen_geniuspay()
+    paye = montant_paye if montant_paye is not None else commande.total
     commande.paye = True
     commande.moyen_paiement = moyen
-    commande.montant_paye = commande.total
+    commande.montant_paye = paye
     commande.montant_reste = Decimal('0')
+    if commande.statut_commande == 'en_attente':
+        commande.statut_commande = 'valider'
+    if staff_user is not None:
+        ticket_user = staff_user
+    else:
+        ticket_user = commande.utilisateur
     commande.save()
 
     panier.panier_paye = True
@@ -921,10 +1010,31 @@ def payer_commande_livreur(commande: Commande, livreur: CustomUser) -> Commande:
     ticket = Ticket.objects.filter(commande=commande).first()
     if ticket:
         ticket.utilise = True
-        ticket.utilisateur = livreur
-        ticket.save(update_fields=['utilise', 'utilisateur'])
+        if ticket_user is not None:
+            ticket.utilisateur = ticket_user
+            ticket.save(update_fields=['utilise', 'utilisateur'])
+        else:
+            ticket.save(update_fields=['utilise'])
     _publish_cmd_ligne_mqtt(commande, 'payer')
     return commande
+
+
+@transaction.atomic
+def payer_commande_livreur(commande: Commande, livreur: CustomUser) -> Commande:
+    if commande.livreur_id != livreur.pk:
+        raise ValueError('Cette commande ne vous est pas assignée.')
+    if commande.paye:
+        raise ValueError('Commande déjà payée.')
+    if commande.statut_commande == 'annuler':
+        raise ValueError('Commande annulée.')
+
+    moyen = commande.moyen_paiement or get_moyen_espece()
+    return confirmer_paiement_en_ligne(
+        commande,
+        moyen=moyen,
+        staff_user=livreur,
+        silent_if_paid=False,
+    )
 
 
 @transaction.atomic
@@ -1172,7 +1282,7 @@ def queryset_vues_recentes(user):
         return VueRecentePiece.objects.none()
     return (
         VueRecentePiece.objects.filter(utilisateur=user)
-        .select_related('piece', 'piece__categorie')
+        .select_related('piece', 'piece__categorie', 'piece__sous_categorie')
         .order_by('-date_vue')
     )
 
@@ -1208,7 +1318,7 @@ def lignes_favoris(user, local=None):
 
     favoris = (
         FavoriPiece.objects.filter(utilisateur=user)
-        .select_related('piece', 'piece__categorie')
+        .select_related('piece', 'piece__categorie', 'piece__sous_categorie')
         .order_by('-date_ajout')
     )
     rows = []

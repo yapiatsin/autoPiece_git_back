@@ -287,7 +287,7 @@ def _context_fiche_compte_client(compte):
 
     favoris = (
         FavoriPiece.objects.filter(utilisateur=compte)
-        .select_related('piece', 'piece__categorie')
+        .select_related('piece', 'piece__categorie', 'piece__sous_categorie')
         .order_by('-date_ajout')
     )
 

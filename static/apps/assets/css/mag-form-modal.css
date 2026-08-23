@@ -112,6 +112,25 @@
     box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.18);
     outline: none;
 }
+.mf-field .mf-check {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 42px;
+    margin: 0;
+    padding: 0;
+}
+.mf-field .mf-check input[type="checkbox"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+    flex-shrink: 0;
+    accent-color: var(--mf-primary);
+    cursor: pointer;
+}
+.mf-field .mf-check .mf-hint {
+    margin: 0;
+}
 .mf-hint {
     display: block;
     margin-top: 0.3rem;

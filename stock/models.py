@@ -1,5 +1,6 @@
 import random
 import uuid
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -26,6 +27,65 @@ class Categorie(models.Model):
     def __str__(self):
         return f"{self.categorie}"
 
+    def as_dict(self, *, with_sous=True):
+        data = {
+            'id': self.pk,
+            'cid': self.cid,
+            'categorie': self.categorie,
+        }
+        if with_sous:
+            data['sous_categories'] = [
+                sc.as_dict()
+                for sc in self.sous_categories.all()
+                if getattr(sc, 'actif', True)
+            ]
+        return data
+
+
+class SousCategorie(models.Model):
+    sid = ShortUUIDField(unique=True, length=6, alphabet="abcd1234", editable=False)
+    categorie = models.ForeignKey(
+        Categorie,
+        on_delete=models.CASCADE,
+        related_name='sous_categories',
+    )
+    nom = models.CharField(max_length=80)
+    slug = models.SlugField(max_length=100, blank=True)
+    image = models.ImageField(upload_to='sous_categories', blank=True, null=True)
+    description = models.TextField(max_length=2000, null=True, blank=True)
+    ordre = models.PositiveIntegerField(default=0)
+    actif = models.BooleanField(default=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ['ordre', 'nom']
+        verbose_name = 'Sous-catégorie'
+        verbose_name_plural = 'Sous-catégories'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['categorie', 'nom'],
+                name='souscategorie_categorie_nom_unique',
+            ),
+        ]
+
+    def __str__(self):
+        parent = self.categorie.categorie if self.categorie_id else ''
+        return f"{parent} / {self.nom}" if parent else self.nom
+
+    def as_dict(self):
+        return {
+            'id': self.pk,
+            'sid': self.sid,
+            'nom': self.nom,
+            'slug': self.slug,
+        }
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.nom) or 'sous-categorie'
+        super().save(*args, **kwargs)
+
+
 class Fournisseur(models.Model):
     nom = models.CharField(max_length=255)
     contact = models.CharField(max_length=255, blank=True)
@@ -35,6 +95,14 @@ class Fournisseur(models.Model):
 class Piece(models.Model):
     """Catalogue produit — une référence unique (numero_piece)."""
     categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE)
+    sous_categorie = models.ForeignKey(
+        SousCategorie,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pieces',
+        help_text="Sous-catégorie optionnelle, rattachée à la catégorie.",
+    )
     numero_piece = models.CharField(unique=True, max_length=100)
     designation = models.CharField(max_length=255)
     image = models.ImageField(upload_to="pieces", blank=True, null=True)
@@ -66,6 +134,32 @@ class Piece(models.Model):
     history = HistoricalRecords()
     def __str__(self):
         return f"{self.designation} - {self.numero_piece}"
+
+    def clean(self):
+        super().clean()
+        if self.sous_categorie_id:
+            parent_id = self.sous_categorie.categorie_id
+            if self.categorie_id and parent_id != self.categorie_id:
+                raise ValidationError({
+                    'sous_categorie': (
+                        "La sous-catégorie doit appartenir à la catégorie de la pièce."
+                    ),
+                })
+            if not self.categorie_id:
+                self.categorie_id = parent_id
+
+    def save(self, *args, **kwargs):
+        if self.sous_categorie_id:
+            parent_id = self.sous_categorie.categorie_id
+            if parent_id and self.categorie_id != parent_id:
+                self.categorie_id = parent_id
+        super().save(*args, **kwargs)
+
+    @property
+    def libelle_classification(self):
+        if self.sous_categorie_id:
+            return f"{self.categorie.categorie} / {self.sous_categorie.nom}"
+        return self.categorie.categorie if self.categorie_id else ''
 
     @property
     def slug(self):
@@ -511,6 +605,12 @@ class Commande(models.Model):
             + (self.montant_tva or Decimal('0'))
         )
 
+    @property
+    def libelle_paiement(self):
+        """Espèce, ou Paiement numérique (Wave / Orange Money / …)."""
+        from stock.paiement_labels import libelle_moyen_paiement_commande
+        return libelle_moyen_paiement_commande(self)
+
 
 class Ticket(models.Model):
     id = models.CharField(primary_key=True, unique=True, max_length=10, default=generate_numeric_id, editable=False)
@@ -523,6 +623,55 @@ class Ticket(models.Model):
     fichier_pdf = models.FileField(upload_to='tickets/', null=True, blank=True)
     date_save = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
+
+
+class GeniusPayPaiement(models.Model):
+    SOURCE_ECOM = 'ecom'
+    SOURCE_CAISSE = 'caisse'
+    SOURCE_CHOICES = (
+        (SOURCE_ECOM, 'E-commerce'),
+        (SOURCE_CAISSE, 'Caisse'),
+    )
+    STATUT_CHOICES = (
+        ('pending', 'En attente'),
+        ('processing', 'En cours'),
+        ('completed', 'Complété'),
+        ('failed', 'Échoué'),
+        ('cancelled', 'Annulé'),
+        ('expired', 'Expiré'),
+    )
+    commande = models.ForeignKey(
+        Commande,
+        on_delete=models.CASCADE,
+        related_name='paiements_geniuspay',
+    )
+    reference = models.CharField(max_length=64, unique=True, db_index=True)
+    source = models.CharField(max_length=16, choices=SOURCE_CHOICES)
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='pending')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    checkout_url = models.TextField(blank=True, default='')
+    payment_method = models.CharField(max_length=64, blank=True, default='')
+    environment = models.CharField(max_length=20, blank=True, default='')
+    appliquer_tva = models.BooleanField(default=False)
+    caissier = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='paiements_geniuspay_caisse',
+    )
+    metadata = models.JSONField(default=dict, blank=True)
+    raw_response = models.JSONField(default=dict, blank=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_maj = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date_creation']
+        verbose_name = 'Paiement GeniusPay'
+        verbose_name_plural = 'Paiements GeniusPay'
+
+    def __str__(self):
+        return f'{self.reference} ({self.get_statut_display()})'
 
 
 class BonCommandePaiement(models.Model):

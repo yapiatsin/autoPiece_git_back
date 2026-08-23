@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from .models import (
-    Categorie, EntrePiece, Piece, Fournisseur, Panier, PanierItem, Commande, Ticket,
+    Categorie, SousCategorie, EntrePiece, Piece, Fournisseur, Panier, PanierItem, Commande, Ticket,
     MoyenPaiement, Notification, StockLocal, TransfertStock,
     DemandeTransfert, LigneDemandeTransfert, BonCommandePaiement,
 )
@@ -56,7 +56,10 @@ from .stock_transfers import (
 )
 from .demande_transfert_pdf import generate_demande_transfert_pdf, titre_bon_commande
 from Userauths.models import LocalEntrepot
-from .forms import (CategorieForm, EntrePieceForm, PieceForm, DateForm, FournisseurForm, UpdatePieceForm, StockLocalPrixForm,)
+from .forms import (
+    CategorieForm, SousCategorieForm, EntrePieceForm, PieceForm, DateForm,
+    FournisseurForm, UpdatePieceForm, StockLocalPrixForm,
+)
 from django.contrib import messages 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -67,6 +70,7 @@ from django.db.models.functions import Coalesce
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from Userauths.mixins import CustomPermissionRequiredMixin
+from Userauths.permissions_utils import user_has_permission
 from decimal import Decimal, InvalidOperation
 import pandas as pd
 import textwrap
@@ -128,9 +132,19 @@ def pieces_queryset_for_user(user, base=None):
     """Pièces du catalogue avec quantite_disponible annotée pour la localité de l'utilisateur."""
     localite = get_user_localite(user)
     qs = filter_piece_catalogue_actif(base if base is not None else Piece.objects.all())
+    qs = qs.select_related('categorie', 'sous_categorie')
     if localite:
         qs = qs.filter(stocks__local_entrepot=localite, stocks__active_sortie=True).distinct()
     return annotate_pieces_for_localite(qs, localite)
+
+
+def queryset_categories_avec_sous(actif_only=True):
+    sous_qs = SousCategorie.objects.order_by('ordre', 'nom')
+    if actif_only:
+        sous_qs = sous_qs.filter(actif=True)
+    return Categorie.objects.prefetch_related(
+        Prefetch('sous_categories', queryset=sous_qs)
+    ).order_by('categorie')
 
 
 def utilisateur_peut_fixer_prix_local(user):
@@ -369,7 +383,7 @@ class TableauBordsView(LoginRequiredMixin, CustomPermissionRequiredMixin, Templa
             })
         return label_days, datasets
     
-    def get_base_queryset(self, date_debut, date_fin, categorie=None, caissier=None, moyen_paiement=None, user_role=None, localite=None):
+    def get_base_queryset(self, date_debut, date_fin, categorie=None, caissier=None, moyen_paiement=None, user_role=None, localite=None, sous_categorie=None):
         """Get base queryset with all filters applied"""
         # Base queryset for PanierItem
         queryset = PanierItem.objects.filter(
@@ -381,6 +395,8 @@ class TableauBordsView(LoginRequiredMixin, CustomPermissionRequiredMixin, Templa
         # Filter by category
         if categorie:
             queryset = queryset.filter(piece__categorie=categorie)
+        if sous_categorie:
+            queryset = queryset.filter(piece__sous_categorie=sous_categorie)
 
         # Filter by caissier (user who validated the payment)
         if caissier:
@@ -415,6 +431,7 @@ class TableauBordsView(LoginRequiredMixin, CustomPermissionRequiredMixin, Templa
         date_debut, date_fin, periode_active = self.get_date_range(self.request)
 
         categorie = form.cleaned_data.get('categorie') if form.is_valid() else None
+        sous_categorie = form.cleaned_data.get('sous_categorie') if form.is_valid() else None
         caissier = form.cleaned_data.get('caissier') if form.is_valid() else None
         moyen_paiement = form.cleaned_data.get('moyen_paiement') if form.is_valid() else None
 
@@ -424,7 +441,10 @@ class TableauBordsView(LoginRequiredMixin, CustomPermissionRequiredMixin, Templa
             localite = getattr(self.request.user, 'local_entrepot', None)
 
         # Get base queryset with filters
-        panier_items_queryset = self.get_base_queryset(date_debut, date_fin, categorie, caissier, moyen_paiement, user_role, localite)
+        panier_items_queryset = self.get_base_queryset(
+            date_debut, date_fin, categorie, caissier, moyen_paiement, user_role, localite,
+            sous_categorie=sous_categorie,
+        )
 
         # Base queryset for Commande
         commande_queryset = Commande.objects.filter(
@@ -450,6 +470,8 @@ class TableauBordsView(LoginRequiredMixin, CustomPermissionRequiredMixin, Templa
             piece_queryset = piece_queryset.filter(stocks__local_entrepot=localite).distinct()
         if categorie:
             piece_queryset = piece_queryset.filter(categorie=categorie)
+        if sous_categorie:
+            piece_queryset = piece_queryset.filter(sous_categorie=sous_categorie)
         
         piece_queryset = annotate_pieces_for_localite(piece_queryset, localite)
         count_piece = sum(getattr(p, 'quantite_disponible', 0) for p in piece_queryset)
@@ -568,6 +590,8 @@ class TableauBordsView(LoginRequiredMixin, CustomPermissionRequiredMixin, Templa
         piece_alerte_queryset = filter_pieces_sous_seuil(Piece.objects.all(), localite)
         if categorie:
             piece_alerte_queryset = piece_alerte_queryset.filter(categorie=categorie)
+        if sous_categorie:
+            piece_alerte_queryset = piece_alerte_queryset.filter(sous_categorie=sous_categorie)
         piece_alerte = piece_alerte_queryset.count()
         liste_piece_alerte = list(piece_alerte_queryset[:8])
 
@@ -709,7 +733,7 @@ def details_commande(request, commande_id):
     commande = get_object_or_404(Commande, id=commande_id)
     return render(request, 'details_commande.html', {'commande': commande})
 
-class AddCategorieView(CreateView):
+class AddCategorieView(LoginRequiredMixin, CustomPermissionRequiredMixin, CreateView):
     login_url = 'connexion'
     model = Categorie
     form_class = CategorieForm
@@ -732,8 +756,13 @@ class AddCategorieView(CreateView):
         form = self.get_form()
         # Annoter chaque catégorie avec le nombre de pièces et la somme des quantités disponibles
         categories = Categorie.objects.annotate(
-            nb_pieces=Count('piece'),
+            nb_pieces=Count('piece', distinct=True),
             total_quantite=Sum('piece__stocks__quantite_disponible')
+        ).prefetch_related(
+            Prefetch(
+                'sous_categories',
+                queryset=SousCategorie.objects.order_by('ordre', 'nom'),
+            )
         ).all()
         # Créer un formulaire vide pour l'édition (sera rempli par le partial)
         edit_form = CategorieForm()
@@ -742,6 +771,7 @@ class AddCategorieView(CreateView):
             'categories': categories,
             'form': form,
             'edit_form': edit_form,
+            'sous_form': SousCategorieForm(),
             'count_medoc': count_medoc,
         })
         return context
@@ -771,8 +801,13 @@ class UpdateCategorieView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         # Annoter chaque catégorie avec le nombre de pièces et la somme des quantités disponibles
         categories = Categorie.objects.annotate(
-            nb_pieces=Count('piece'),
+            nb_pieces=Count('piece', distinct=True),
             total_quantite=Sum('piece__stocks__quantite_disponible')
+        ).prefetch_related(
+            Prefetch(
+                'sous_categories',
+                queryset=SousCategorie.objects.order_by('ordre', 'nom'),
+            )
         ).all()
         edit_form = CategorieForm(instance=self.get_object())
         count_medoc = Piece.objects.count()
@@ -780,6 +815,7 @@ class UpdateCategorieView(LoginRequiredMixin, UpdateView):
             'categories': categories,
             'form': CategorieForm(),
             'edit_form': edit_form,
+            'sous_form': SousCategorieForm(),
             'count_medoc': count_medoc,
         })
         return context
@@ -795,10 +831,276 @@ def delete_categorie(request, pk):
         messages.error(request, f"Erreur lors de la suppression : {str(e)}")
     return redirect('add_categorie')
 
+
+@login_required(login_url='connexion')
+def add_sous_categorie(request):
+    if request.method != 'POST':
+        return redirect('add_categorie')
+    form = SousCategorieForm(request.POST, request.FILES)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Sous-catégorie enregistrée avec succès✓✓')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field}: {error}")
+        messages.error(request, "Erreur de saisie ✘✘")
+    return redirect('add_categorie')
+
+
+class UpdateSousCategorieView(LoginRequiredMixin, UpdateView):
+    login_url = 'connexion'
+    model = SousCategorie
+    form_class = SousCategorieForm
+    success_message = 'Sous-catégorie modifiée avec succès✓✓'
+
+    def get(self, request, *args, **kwargs):
+        return redirect('add_categorie')
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, self.success_message)
+        return redirect('add_categorie')
+
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
+        messages.error(self.request, "Erreur de saisie ✘✘")
+        return redirect('add_categorie')
+
+
+@login_required(login_url='connexion')
+def delete_sous_categorie(request, pk):
+    try:
+        sous = get_object_or_404(SousCategorie, pk=pk)
+        nom = str(sous)
+        sous.delete()
+        messages.success(request, f'La sous-catégorie {nom} a été supprimée.')
+    except Exception as e:
+        messages.error(request, f"Erreur lors de la suppression : {str(e)}")
+    return redirect('add_categorie')
+
+
+def _excel_cell_str(value):
+    if value is None:
+        return ''
+    text = str(value).strip()
+    if not text or text.lower() in ('nan', 'none', 'nat'):
+        return ''
+    return ' '.join(text.split())
+
+
+def _excel_cell_bool(value, default=True):
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return default
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in ('', 'nan', 'none'):
+        return default
+    if text in ('1', 'true', 'vrai', 'oui', 'yes', 'o', 'x'):
+        return True
+    if text in ('0', 'false', 'faux', 'non', 'no', 'n'):
+        return False
+    return default
+
+
+def _trouver_categorie_insensible_casse(nom):
+    """Accepte « DZIRE » et « dzire » si la catégorie existe déjà."""
+    nom = _excel_cell_str(nom)
+    if not nom:
+        return None
+    exacte = Categorie.objects.filter(categorie=nom).first()
+    if exacte:
+        return exacte
+    return Categorie.objects.filter(categorie__iexact=nom).first()
+
+
+SOUS_CATEGORIE_IMPORT_COLONNES = ('categorie', 'nom')
+SOUS_CATEGORIE_EXEMPLES_NOMS = (
+    'Moteur',
+    'Freinage',
+    'Suspension & Direction',
+    'Transmission',
+    'Électricité & Électronique',
+    'Éclairage',
+    'Carrosserie',
+    'Climatisation & Chauffage',
+    'Échappement',
+    'Pneus & Jantes',
+    'Refroidissement',
+    'Accessoires & Intérieur',
+)
+
+
+@login_required(login_url='connexion')
+def download_modele_sous_categories_excel(request):
+    premiere = Categorie.objects.order_by('categorie').first()
+    exemple_cat = premiere.categorie if premiere else 'Dzire'
+    lignes = [
+        {
+            'categorie': exemple_cat,
+            'nom': nom,
+            'description': '',
+            'ordre': index,
+            'actif': True,
+        }
+        for index, nom in enumerate(SOUS_CATEGORIE_EXEMPLES_NOMS, start=1)
+    ]
+    exemple = pd.DataFrame(lignes)
+    instructions = pd.DataFrame([
+        {
+            'Colonne': 'categorie',
+            'Description': 'Obligatoire — nom de la catégorie parente. Majuscules/minuscules indifférentes (DZIRE = dzire). La catégorie doit déjà exister.',
+        },
+        {'Colonne': 'nom', 'Description': 'Obligatoire — nom de la sous-catégorie'},
+        {'Colonne': 'description', 'Description': 'Optionnel'},
+        {'Colonne': 'ordre', 'Description': 'Optionnel — entier (affichage). Défaut 0'},
+        {'Colonne': 'actif', 'Description': 'Optionnel — oui/non, true/false, 1/0. Défaut oui'},
+    ], columns=['Colonne', 'Description'])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="modele_import_sous_categories.xlsx"'
+    try:
+        with pd.ExcelWriter(response, engine='openpyxl') as writer:
+            exemple.to_excel(writer, sheet_name='SousCategories', index=False)
+            instructions.to_excel(writer, sheet_name='Instructions', index=False)
+            for sheet_name in ('SousCategories', 'Instructions'):
+                ws = writer.sheets[sheet_name]
+                for column in ws.columns:
+                    max_len = max((len(str(cell.value or '')) for cell in column), default=8)
+                    ws.column_dimensions[column[0].column_letter].width = min(max_len + 2, 70)
+    except Exception as exc:
+        return HttpResponse(f"Erreur lors de la génération du modèle Excel : {exc}", status=500)
+    return response
+
+
+@login_required(login_url='connexion')
+def import_sous_categories_excel(request):
+    if request.method != 'POST':
+        return redirect('add_categorie')
+    if not (
+        request.user.is_superuser
+        or user_has_permission(request.user, 'add_sous_categorie')
+        or user_has_permission(request.user, 'add_categorie')
+    ):
+        messages.error(request, "Vous n'avez pas la permission d'importer des sous-catégories.")
+        return redirect('add_categorie')
+
+    excel_file = request.FILES.get('excel_file')
+    if not excel_file:
+        messages.error(request, "Aucun fichier Excel n'a été sélectionné.")
+        return redirect('add_categorie')
+
+    try:
+        df = pd.read_excel(excel_file)
+    except Exception as exc:
+        messages.error(request, f"Impossible de lire le fichier Excel : {exc}")
+        return redirect('add_categorie')
+
+    df.columns = [_excel_cell_str(col).lower() for col in df.columns]
+    alias = {
+        'catégorie': 'categorie',
+        'categorie parente': 'categorie',
+        'catégorie parente': 'categorie',
+        'sous_categorie': 'nom',
+        'sous-categorie': 'nom',
+        'sous categorie': 'nom',
+        'sous-catégorie': 'nom',
+    }
+    df.rename(columns={k: v for k, v in alias.items() if k in df.columns}, inplace=True)
+
+    manquantes = [col for col in SOUS_CATEGORIE_IMPORT_COLONNES if col not in df.columns]
+    if manquantes:
+        messages.error(request, f"Colonnes manquantes : {', '.join(manquantes)}")
+        return redirect('add_categorie')
+
+    created_count = 0
+    updated_count = 0
+    refused = []
+
+    for index, row in df.iterrows():
+        ligne = int(index) + 2
+        categorie_nom = _excel_cell_str(row.get('categorie'))
+        sous_nom = _excel_cell_str(row.get('nom'))
+        if not categorie_nom and not sous_nom:
+            continue
+        if not categorie_nom:
+            refused.append(f"Ligne {ligne} : catégorie parente vide — enregistrement refusé")
+            continue
+        if not sous_nom:
+            refused.append(f"Ligne {ligne} : nom de sous-catégorie vide — enregistrement refusé")
+            continue
+
+        parent = _trouver_categorie_insensible_casse(categorie_nom)
+        if parent is None:
+            refused.append(
+                f"Ligne {ligne} : catégorie « {categorie_nom} » introuvable — enregistrement refusé"
+            )
+            continue
+
+        description = _excel_cell_str(row.get('description')) if 'description' in df.columns else ''
+        ordre = 0
+        if 'ordre' in df.columns:
+            try:
+                raw_ordre = row.get('ordre', 0)
+                if raw_ordre is not None and not (isinstance(raw_ordre, float) and pd.isna(raw_ordre)):
+                    ordre = max(0, int(float(raw_ordre)))
+            except (TypeError, ValueError):
+                ordre = 0
+        actif = _excel_cell_bool(row.get('actif'), default=True) if 'actif' in df.columns else True
+
+        existante = SousCategorie.objects.filter(
+            categorie=parent, nom__iexact=sous_nom,
+        ).first()
+        if existante:
+            existante.description = description or existante.description
+            existante.ordre = ordre
+            existante.actif = actif
+            existante.save()
+            updated_count += 1
+        else:
+            SousCategorie.objects.create(
+                categorie=parent,
+                nom=sous_nom,
+                description=description or None,
+                ordre=ordre,
+                actif=actif,
+            )
+            created_count += 1
+
+    if created_count or updated_count:
+        messages.success(
+            request,
+            f"{created_count} sous-catégorie(s) créée(s), {updated_count} mise(s) à jour.",
+        )
+    if refused:
+        apercu = ' | '.join(refused[:8])
+        extra = f" (+{len(refused) - 8} autre(s))" if len(refused) > 8 else ''
+        messages.error(request, f"{len(refused)} ligne(s) refusée(s). {apercu}{extra}")
+    if not created_count and not updated_count and not refused:
+        messages.warning(request, "Le fichier ne contient aucune ligne à importer.")
+    return redirect('add_categorie')
+
+
+@login_required(login_url='connexion')
+def ajax_sous_categories(request):
+    categorie_id = request.GET.get('categorie', '').strip()
+    qs = SousCategorie.objects.filter(actif=True).order_by('ordre', 'nom')
+    if categorie_id:
+        qs = qs.filter(categorie_id=categorie_id)
+    return JsonResponse({
+        'results': [{'id': s.pk, 'nom': s.nom} for s in qs],
+    })
+
+
 PIECE_IMPORT_EXCEL_COLUMNS = [
     'numero_piece', 'designation', 'prix_achat', 'prix_unitaire', 'seuil', 'emplacement',
 ]
-PIECE_IMPORT_EXCEL_OPTIONAL_COLUMNS = ['fournisseur']
+PIECE_IMPORT_EXCEL_OPTIONAL_COLUMNS = ['fournisseur', 'sous_categorie']
 
 
 @login_required(login_url='connexion')
@@ -813,6 +1115,7 @@ def download_modele_pieces_excel(request, pk):
             'prix_unitaire': 22000,
             'seuil': 5,
             'emplacement': 'Rayon A1',
+            'sous_categorie': '',
             'fournisseur': '',
         },
         {
@@ -822,6 +1125,7 @@ def download_modele_pieces_excel(request, pk):
             'prix_unitaire': 6000,
             'seuil': 10,
             'emplacement': 'Rayon B2',
+            'sous_categorie': '',
             'fournisseur': '',
         },
     ])
@@ -832,6 +1136,7 @@ def download_modele_pieces_excel(request, pk):
         {'Colonne': 'prix_unitaire', 'Description': 'Obligatoire — prix de vente (nombre)'},
         {'Colonne': 'seuil', 'Description': 'Obligatoire — seuil d\'alerte stock (entier)'},
         {'Colonne': 'emplacement', 'Description': 'Obligatoire — emplacement en magasin'},
+        {'Colonne': 'sous_categorie', 'Description': 'Optionnel — nom d\'une sous-catégorie de cette catégorie'},
         {'Colonne': 'fournisseur', 'Description': 'Optionnel — nom du fournisseur (doit exister dans le système)'},
     ], columns=['Colonne', 'Description'])
     meta = pd.DataFrame([
@@ -868,27 +1173,52 @@ class AddPieceView(View):
     error_message = "Erreur de saisie✘✘"
     def get(self, request, pk=None):
         categories = Categorie.objects.annotate(nb_produits=Count('piece')).order_by('id')
+        sous_categorie_id = request.GET.get('sous_categorie', '').strip()
+        sous_categorie = None
         if pk:
             categorie = get_object_or_404(Categorie, pk=pk)
+            pieces_qs = Piece.objects.filter(categorie=categorie).select_related(
+                'categorie', 'sous_categorie', 'utilisateur'
+            ).order_by('id')
+            total_pieces_categorie = pieces_qs.count()
+            if sous_categorie_id:
+                sous_categorie = SousCategorie.objects.filter(
+                    pk=sous_categorie_id, categorie=categorie,
+                ).first()
+                if sous_categorie:
+                    pieces_qs = pieces_qs.filter(sous_categorie=sous_categorie)
             pieces = annotate_pieces_for_localite(
-                Piece.objects.filter(categorie=categorie).order_by('id'),
+                pieces_qs,
                 get_user_localite(request.user),
             )
-            form = PieceForm()
+            form = PieceForm(
+                categorie=categorie,
+                initial={'sous_categorie': sous_categorie.pk} if sous_categorie else None,
+            )
         else:
             categorie = None
             pieces = Piece.objects.none()
             form = PieceForm()
+            total_pieces_categorie = 0
 
         entre_stock_form = EntrePieceForm()
         edit_piece_form = UpdatePieceForm()
         fournisseurs = Fournisseur.objects.all()
+        sous_categories = (
+            SousCategorie.objects.filter(categorie=categorie, actif=True)
+            .annotate(nb_pieces=Count('pieces'))
+            .order_by('ordre', 'nom')
+            if categorie else SousCategorie.objects.none()
+        )
 
         return render(request, self.template_name, {
             'form': form,
             'pieces': pieces,
             'categorie': categorie,
             'categories': categories,
+            'sous_categories': sous_categories,
+            'sous_categorie_active': sous_categorie,
+            'total_pieces_categorie': total_pieces_categorie,
             'entre_stock_form': entre_stock_form,
             'edit_piece_form': edit_piece_form,
             'fournisseurs': fournisseurs,
@@ -935,6 +1265,14 @@ class AddPieceView(View):
                         'categorie': categorie,
                         'utilisateur': request.user,
                     }
+                    if 'sous_categorie' in df.columns:
+                        sous_nom = str(row.get('sous_categorie', '')).strip()
+                        if sous_nom and sous_nom.lower() != 'nan':
+                            sous = SousCategorie.objects.filter(
+                                categorie=categorie, nom__iexact=sous_nom,
+                            ).first()
+                            if sous:
+                                piece_data['sous_categorie'] = sous
                     # Gestion fournisseur (optionnel, si colonne "fournisseur" existe)
                     if 'fournisseur' in df.columns:
                         fournisseur_nom = str(row['fournisseur']).strip()
@@ -961,7 +1299,7 @@ class AddPieceView(View):
                 return redirect('add_piece', pk=pk)
 
         # Traitement du formulaire manuel
-        form = PieceForm(request.POST, request.FILES)
+        form = PieceForm(request.POST, request.FILES, categorie=categorie)
         if form.is_valid():
             piece = form.save(commit=False)
             piece.utilisateur = request.user
@@ -977,7 +1315,7 @@ class AddPieceView(View):
             pieces = annotate_pieces_for_localite(
                 Piece.objects.filter(
                     categorie=categorie,
-                ).order_by('-id'),
+                ).select_related('categorie', 'sous_categorie', 'utilisateur').order_by('-id'),
                 get_user_localite(request.user),
             )
             return render(request, self.template_name,{
@@ -985,6 +1323,9 @@ class AddPieceView(View):
                 'pieces': pieces,
                 'categorie': categorie,
                 'categories': categories,
+                'sous_categories': SousCategorie.objects.filter(
+                    categorie=categorie, actif=True,
+                ).order_by('ordre', 'nom'),
                 'entre_stock_form': entre_stock_form,
                 'edit_piece_form': edit_piece_form,
                 'fournisseurs': fournisseurs,
@@ -1014,7 +1355,7 @@ class AddPanierView(LoginRequiredMixin, View):
             pieces_queryset_for_user(request.user),
             localite,
         ).order_by("date_creation")[:8]
-        categories = Categorie.objects.all()
+        categories = queryset_categories_avec_sous()
         return render(request, 'mag/add_panier.html', {
             'panier': panier,
             'items': items,
@@ -1257,6 +1598,7 @@ supprimer_panier_ajax = panier_action
 def ajax_search_articles(request):
     query = request.GET.get('q', '')
     categorie_id = request.GET.get('categorie', '')
+    sous_categorie_id = request.GET.get('sous_categorie', '')
     localite = get_user_localite(request.user)
     articles = filter_pieces_avec_stock(
         pieces_queryset_for_user(request.user), localite
@@ -1265,11 +1607,14 @@ def ajax_search_articles(request):
         articles = articles.filter(
             Q(designation__icontains=query) |
             Q(numero_piece__icontains=query) |
-            Q(categorie__categorie__icontains=query) | 
+            Q(categorie__categorie__icontains=query) |
+            Q(sous_categorie__nom__icontains=query) |
             Q(prix_unitaire__icontains=query)
         )
     if categorie_id:
         articles = articles.filter(categorie__id=categorie_id)
+    if sous_categorie_id:
+        articles = articles.filter(sous_categorie__id=sous_categorie_id)
 
     articles = articles.order_by("-date_creation")[:12]
     html = render_to_string('mag/partials/_article_list.html', {'articles': articles})
@@ -1279,6 +1624,7 @@ def ajax_search_articles_proforma(request):
     """Recherche d'articles pour la proforma"""
     query = request.GET.get('q', '')
     categorie_id = request.GET.get('categorie', '')
+    sous_categorie_id = request.GET.get('sous_categorie', '')
     localite = get_user_localite(request.user)
     articles = filter_pieces_avec_stock(
         pieces_queryset_for_user(request.user), localite
@@ -1287,11 +1633,14 @@ def ajax_search_articles_proforma(request):
         articles = articles.filter(
             Q(designation__icontains=query) |
             Q(numero_piece__icontains=query) |
-            Q(categorie__categorie__icontains=query) | 
+            Q(categorie__categorie__icontains=query) |
+            Q(sous_categorie__nom__icontains=query) |
             Q(prix_unitaire__icontains=query)
         )
     if categorie_id:
         articles = articles.filter(categorie__id=categorie_id)
+    if sous_categorie_id:
+        articles = articles.filter(sous_categorie__id=sous_categorie_id)
 
     articles = articles.order_by("-date_creation")[:12]
     html = render_to_string('mag/partials/_article_proforma_list.html', {'articles': articles})
@@ -1389,10 +1738,12 @@ class AddProformaView(LoginRequiredMixin, View):
         total_quantite = PanierItem.objects.filter(panier=panier).aggregate(total=Sum('quantite'))['total'] or 0 if panier else 0
         total_apres_remise = total  # Par défaut, pas de remise
         articles = filter_pieces_avec_stock(
-            annotate_pieces_for_localite(Piece.objects.all(), localite),
+            annotate_pieces_for_localite(
+                Piece.objects.select_related('categorie', 'sous_categorie'), localite
+            ),
             localite,
         ).order_by("date_creation")[:8]
-        categories = Categorie.objects.all()
+        categories = queryset_categories_avec_sous()
         return render(request, 'mag/add_proforma.html', {
             'panier': panier,
             'items': items,
@@ -1939,6 +2290,29 @@ def printer_test_view(request):
 
     return JsonResponse({'success': True, 'message': "Page de test envoyée à l'imprimante."})
 
+
+def _moyens_paiement_caisse():
+    """Caisse : uniquement Espèce et Paiement numérique (GeniusPay)."""
+    from ecom.services import get_moyen_espece, get_moyen_geniuspay
+
+    espece = get_moyen_espece()
+    if not espece.actif:
+        espece.actif = True
+        espece.save(update_fields=['actif'])
+    gp = get_moyen_geniuspay()
+    gp_fields = []
+    if gp.nom != 'Paiement numérique':
+        gp.nom = 'Paiement numérique'
+        gp_fields.append('nom')
+    if not gp.actif:
+        gp.actif = True
+        gp_fields.append('actif')
+    if gp_fields:
+        gp.save(update_fields=gp_fields)
+    MoyenPaiement.objects.exclude(code__in=['espece', 'geniuspay']).update(actif=False)
+    return [gp, espece]
+
+
 def _paniers_caisse_en_attente(localite=None, q=None):
     """Paniers validés en attente d'encaissement, avec lignes et pièces préchargées.
 
@@ -1957,7 +2331,9 @@ def _paniers_caisse_en_attente(localite=None, q=None):
         .prefetch_related(
             Prefetch(
                 'panier_items',
-                queryset=PanierItem.objects.select_related('piece', 'piece__categorie').order_by('pk'),
+                queryset=PanierItem.objects.select_related(
+                'piece', 'piece__categorie', 'piece__sous_categorie'
+            ).order_by('pk'),
             )
         )
         .order_by('-date_save')
@@ -2050,6 +2426,7 @@ def Caisse(request):
     cmdes = (
         Commande.objects.filter(date_creation=dates, commande_en_ligne=False)
         .select_related('utilisateur', 'panier', 'ticket', 'bon_paiement', 'moyen_paiement')
+        .prefetch_related('paiements_geniuspay')
         .order_by('-date_creation')
     )
     if localite:
@@ -2065,7 +2442,7 @@ def Caisse(request):
     context = {
         'paniers_non_valides': paniers_non_valides,
         'cmdes': cmdes,
-        'moyens_paiement': MoyenPaiement.objects.filter(actif=True),
+        'moyens_paiement': _moyens_paiement_caisse(),
         'bon_commande_print_url_tpl': bon_commande_print_url_tpl,
         'tva_active': tva_est_active(),
         'taux_tva': get_taux_tva(),
@@ -2097,7 +2474,7 @@ def ajax_caisse_detail(request, ticket_id):
         )
     from .tva_service import get_taux_tva, tva_est_active
     context = {
-        'moyens_paiement': MoyenPaiement.objects.filter(actif=True),
+        'moyens_paiement': _moyens_paiement_caisse(),
         'panier_items': panier_items,
         'commande': commande,
         'ticket': ticket,
@@ -2438,6 +2815,49 @@ def valider_panier_paiement(request, ticket_id):
         bareme = totals['bareme']
         total_a_payer = totals['total_a_payer']
 
+        if (moyen_paiement.code or '').lower() == 'geniuspay':
+            from django.conf import settings as dj_settings
+            from stock.geniuspay import GeniusPayError, montant_xof
+            from stock.paiement_service import initier_paiement_commande
+
+            min_amount = int(getattr(dj_settings, 'GENIUSPAY_MIN_AMOUNT', 200) or 200)
+            if montant_xof(total_a_payer) < min_amount:
+                msg = f'Paiement numérique : montant minimum {min_amount} FCFA.'
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': msg}, status=400)
+                messages.error(request, msg)
+                return redirect('caissiere')
+            try:
+                gp = initier_paiement_commande(
+                    commande,
+                    source='caisse',
+                    request=request,
+                    appliquer_tva=appliquer_tva,
+                    caissier=request.user,
+                    amount=total_a_payer,
+                )
+            except GeniusPayError as exc:
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': str(exc)}, status=400)
+                messages.error(request, str(exc))
+                return redirect('caissiere')
+            if not gp.checkout_url:
+                msg = 'URL de paiement GeniusPay manquante.'
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': msg}, status=400)
+                messages.error(request, msg)
+                return redirect('caissiere')
+            status_url = reverse('caisse_geniuspay_statut', kwargs={'ticket_id': ticket.numero})
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'pending': True,
+                    'checkout_url': gp.checkout_url,
+                    'reference': gp.reference,
+                    'status_url': status_url,
+                })
+            return redirect(gp.checkout_url)
+
         if montant_paye < total_a_payer:
             details = []
             if montant_tva > 0:
@@ -2464,110 +2884,52 @@ def valider_panier_paiement(request, ticket_id):
                 messages.error(request, "Vous devez être connecté pour valider un paiement.")
                 return redirect('connexion')
 
-            commande.moyen_paiement = moyen_paiement
-            commande.paye = True
-            commande.montant_tva = montant_tva
-            commande.tva_appliquee = appliquer_tva and montant_tva > 0
-            commande.montant_timbre = montant_timbre
-            commande.bareme_timbre = bareme
-            commande.utilisateur = request.user
-            commande.montant_paye = montant_paye
-            commande.montant_reste = montant_paye - total_a_payer
-            commande.save()
-
-            ticket.utilise = True
-            ticket.utilisateur = request.user
-            ticket.save()
-
-            panier.panier_paye = True
-            panier.date_paie_panier = timezone.now().date()
-            panier.save()
-
-            # Publier un message MQTT pour notifier la page livraison
-            _loc = getattr(panier, 'local_entrepot', None)
-            publish_paiement_valide(
-                ticket.numero,
-                panier.id,
-                float(commande.total),
-                commande.id,
-                local_entrepot_id=_loc.pk if _loc else None,
-                local_entrepot_nom=str(_loc) if _loc else None,
+            from stock.paiement_service import (
+                finaliser_encaissement_caisse,
+                payload_succes_caisse,
             )
-            loc_paiement = panier.local_entrepot or get_user_localite(request.user)
-            if loc_paiement:
-                for item in panier_items:
-                    decrementer_stock(item.piece, loc_paiement, item.quantite)
-            # Impression automatique du reçu (imprimante USB mémorisée ou détectée)
             try:
-                generate_receipt_pdf(request, commande, panier_items)
-                messages.success(request, "Reçu imprimé sur l'imprimante thermique.")
-            except RuntimeError as e:
-                messages.warning(
-                    request,
-                    f"Paiement enregistré, mais impression impossible : {e}",
+                result = finaliser_encaissement_caisse(
+                    request=request,
+                    commande=commande,
+                    panier=panier,
+                    ticket=ticket,
+                    moyen_paiement=moyen_paiement,
+                    appliquer_tva=appliquer_tva,
+                    montant_paye=montant_paye,
+                    panier_items=list(panier_items),
+                    caissier=request.user,
                 )
-            except Exception as e:
-                import traceback
-                print(f"Erreur d'impression :\n{traceback.format_exc()}")
-                messages.warning(
-                    request,
-                    f"Paiement enregistré, mais erreur d'impression : {e}",
-                )
-            
-            # Génération du fichier PDF pour sauvegarde
-            try:
-                pdf_relative_path = generate_receipt_pdf_file(commande, panier_items)
-                ticket.fichier_pdf = pdf_relative_path
-                ticket.save()
-            except Exception as e:
-                print(f"⚠️ Erreur lors de la génération du PDF : {str(e)}")
-
-            bon_paiement = None
-            try:
-                bon_paiement = creer_bon_commande_paiement(
-                    commande, panier, ticket, request.user
-                )
-            except Exception as e:
-                import traceback
-                print(f"Erreur bon de commande caisse :\n{traceback.format_exc()}")
+            except ValueError as exc:
                 if is_ajax:
-                    return JsonResponse({
-                        'success': True,
-                        'warning': f"Paiement OK, bon de commande non généré : {e}",
-                    })
+                    return JsonResponse({'success': False, 'error': str(exc)}, status=400)
+                messages.error(request, str(exc))
+                return redirect('caissiere')
+
+            bon_paiement = result['bon_paiement']
+            if is_ajax:
+                payload = payload_succes_caisse(
+                    request,
+                    result['commande'],
+                    result['panier'],
+                    result['panier_items'],
+                    result['ticket'],
+                    bon_paiement,
+                )
+                if not bon_paiement:
+                    payload['warning'] = payload.get('warning') or (
+                        "Paiement OK, bon de commande non généré."
+                    )
+                return JsonResponse(payload)
+            if not bon_paiement:
                 messages.warning(
                     request,
-                    f"Paiement enregistré, bon de commande non généré : {e}",
+                    "Paiement enregistré, bon de commande non généré.",
                 )
                 return redirect(f"{reverse('caissiere')}?paiement=success")
-
-            ctx_bon = context_bon_commande_vente(
-                bon_paiement, commande, panier, panier_items
-            )
-            bon_html = (
-                render_to_string('mag/partials/_bon_commande_vente_styles.html', request=request)
-                + render_to_string(
-                    'mag/partials/_bon_commande_vente_body.html', ctx_bon, request=request
-                )
-            )
-            try:
-                print_url = reverse(
-                    'imprimer_bon_commande_vente', kwargs={'ticket_numero': ticket.numero}
-                )
-            except Exception:
-                print_url = f'/stocks/caisse/bon-commande/{ticket.numero}/imprimer/'
-            if is_ajax:
-                return JsonResponse({
-                    'success': True,
-                    'bon_commande_html': bon_html,
-                    'print_url': print_url + '?print=1',
-                    'pdf_url': print_url + '?format=pdf',
-                    'print_title': ctx_bon['print_title'],
-                    'numero_bon': bon_paiement.numero_bon,
-                })
             return redirect(f"{reverse('caissiere')}?paiement=success&bon_ticket={ticket.numero}")
     context = {
-        'moyens_paiement': MoyenPaiement.objects.filter(actif=True),
+        'moyens_paiement': _moyens_paiement_caisse(),
         'paniers_non_valides': Panier.objects.filter(
             valide=True,
             panier_paye=False,
@@ -2747,7 +3109,7 @@ def imprimer_ticket_pdf(request, ticket_id):
     write(f"{'Total Net':<22}{int(commande.total):>10}", align='left')
     write(f"{'Payé':<22}{int(commande.montant_paye):>10}", align='left')
     write(f"{'Rendu':<22}{int(commande.montant_reste):>10}", align='left')
-    moyen_nom = commande.moyen_paiement.nom if commande.moyen_paiement_id else "—"
+    moyen_nom = commande.libelle_paiement or "—"
     label_mp = "Payer par"
     space_mp = INNER_WIDTH - len(label_mp) - len(moyen_nom)
     write(f"{label_mp}{' ' * max(1, space_mp)}{moyen_nom}", align='left')
@@ -2910,6 +3272,7 @@ class ListeVentesView(LoginRequiredMixin, TemplateView):
         cmdes = (
             base.filter(date_creation__range=[filt['date_debut'], filt['date_fin']])
             .select_related('utilisateur', 'ticket', 'bon_paiement', 'moyen_paiement')
+            .prefetch_related('paiements_geniuspay')
             .order_by('-date_creation', '-date')
         )
 
@@ -3669,9 +4032,11 @@ class MonStockView(TemplateView):
         entre_stock_form = EntrePieceForm()
         edit_piece_form = UpdatePieceForm()
         fournisseurs = Fournisseur.objects.all()
-        categories = Categorie.objects.all()
+        categories = queryset_categories_avec_sous()
 
-        piece_queryset = filter_piece_catalogue_actif(Piece.objects.all())
+        piece_queryset = filter_piece_catalogue_actif(
+            Piece.objects.select_related('categorie', 'sous_categorie', 'utilisateur')
+        )
         if localite:
             piece_queryset = piece_queryset.filter(
                 stocks__local_entrepot=localite,
@@ -3763,7 +4128,7 @@ class PieceArchiveView(TemplateView):
         localite = filt['localite_active'] or get_user_localite(user)
 
         piece_queryset = filter_pieces_archivees(Piece.objects.all(), localite)
-        piece_queryset = piece_queryset.select_related('categorie').order_by('-date_creation')
+        piece_queryset = piece_queryset.select_related('categorie', 'sous_categorie').order_by('-date_creation')
         piece_queryset = annotate_pieces_for_localite(piece_queryset, localite)
         piece_queryset = annotate_archive_info(piece_queryset, localite)
 
@@ -4383,6 +4748,7 @@ def historique_entrees_piece(request, pk):
     pieces_categorie = (
         Piece.objects
         .filter(categorie=piece.categorie)
+        .select_related('categorie', 'sous_categorie')
         .order_by('designation')
     )
     # Statistiques simples pour les cartes du haut

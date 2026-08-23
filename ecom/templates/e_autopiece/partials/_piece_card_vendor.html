@@ -47,9 +47,9 @@
 
         <div class="body-content">
             {% if piece.categorie %}
-            <a href="{% url 'ecom_shop' %}?categorie={{ piece.categorie_id }}{% if localite_code %}&localite={{ localite_code }}{% endif %}"
+            <a href="{% url 'ecom_shop' %}?categorie={{ piece.categorie_id }}{% if piece.sous_categorie %}&sous_categorie={{ piece.sous_categorie_id }}{% endif %}{% if localite_code %}&localite={{ localite_code }}{% endif %}"
                 class="ecom-vendor-piece-category">
-                {{ piece.categorie.categorie }}
+                {{ piece.libelle_classification }}
             </a>
             {% endif %}
 

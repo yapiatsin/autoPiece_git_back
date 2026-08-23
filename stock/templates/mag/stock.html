@@ -43,7 +43,7 @@
                                 <th>N°Pièce</th>
                                 <th>Designation</th>
                                 <th>Categorie</th>
-                                <th>Prix</th>
+                                <th>Prix achat</th>
                                 <th class="text-center">Prix vente</th>
                                 <th class="text-center">Prix vente local</th>
                                 <th class="text-center">Quantite stock</th>
@@ -62,7 +62,7 @@
                                 <th>N°Pièce</th>
                                 <th>Designation</th>
                                 <th>Categorie</th>
-                                <th>Prix</th>
+                                <th>Prix achat</th>
                                 <th class="text-center">Prix vente</th>
                                 <th class="text-center">Prix vente local</th>
                                 <th class="text-center">Quantite stock</th>
@@ -82,7 +82,7 @@
                                         <th><a>{{forloop.counter}} </a></th>
                                         <th><a>{{d.numero_piece}}</a></th>
                                         <th>{{d.designation}}</th>
-                                        <th><a href="{% url "add_piece" d.categorie.pk %}">{{d.categorie.categorie}}</a></th>
+                                        <th><a href="{% url "add_piece" d.categorie.pk %}">{{ d.libelle_classification }}</a></th>
                                         <th>{{d.prix_achat}}</th>
                                         <th class="text-center text-success">{{ d.prix_unitaire }} F</th>
                                         <th class="text-center text-info">
@@ -206,6 +206,7 @@
         });
     </script>
     {% include "mag/partials/_archive_toggle_js.html" %}
+    {% include "mag/partials/_sous_categorie_cascade.html" %}
 {% endblock main_content %}
 
 {% block extra_js %}

@@ -119,8 +119,7 @@ def build_receipt_body_lines(commande, panier_items):
     add(total_line("Payé", commande.montant_paye))
     add(total_line("Rendu", commande.montant_reste))
 
-    moyen = getattr(commande.moyen_paiement, "nom", None) if commande.moyen_paiement_id else None
-    moyen = moyen or "—"
+    moyen = getattr(commande, "libelle_paiement", None) or "—"
     add(spaced_line("Payer par", moyen))
 
     add("-" * RECEIPT_INNER, "center")

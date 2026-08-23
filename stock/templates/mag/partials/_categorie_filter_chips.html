@@ -17,3 +17,17 @@
     </button>
     {% endfor %}
 </nav>
+<nav class="piece-cat-filters piece-subcat-filters mt-1" id="piece-subcat-filters" aria-label="Filtrer par sous-catégorie">
+    {% for cat in categories %}
+        {% for sc in cat.sous_categories.all %}
+        <button type="button"
+                class="piece-cat-chip piece-subcat-chip d-none"
+                data-parent="{{ cat.id }}"
+                data-sous="{{ sc.id }}"
+                onclick="filterBySousCategorie('{{ sc.id }}')"
+                title="{{ sc.nom }}">
+            <span>{{ sc.nom }}</span>
+        </button>
+        {% endfor %}
+    {% endfor %}
+</nav>

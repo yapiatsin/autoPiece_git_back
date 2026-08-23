@@ -90,16 +90,51 @@
     transform: none;
 }
 
-#moyen-paiement-select.panier-remise-input {
-    appearance: auto;
-    padding-right: 0.75rem;
+.caisse-pay-radios {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
 }
 
-/* Select dans le wrap icône : pleine largeur */
-.panier-remise-input-wrap select.panier-remise-input {
-    flex: 1;
-    width: 100%;
-    min-width: 0;
+.caisse-pay-radio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.caisse-pay-radio:has(input:checked),
+.caisse-pay-radio.is-checked {
+    border-color: #ff8b00;
+    background: #fff7ed;
+    color: #9a3412;
+}
+
+.caisse-pay-radio input {
+    margin: 0;
+    accent-color: #ff8b00;
+}
+
+.caisse-qr-modal .caisse-qr-frame {
+    display: inline-flex;
+    padding: 12px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid #eee;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.caisse-qr-amount {
+    font-size: 20px;
+    font-weight: 800;
+    color: #16a34a;
 }
 
 #btn-valider-panier:disabled,

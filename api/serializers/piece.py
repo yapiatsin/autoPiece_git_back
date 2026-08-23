@@ -1,12 +1,20 @@
 from rest_framework import serializers
 
-from stock.models import Categorie, Piece
+from stock.models import Categorie, SousCategorie, Piece
+
+
+class SousCategorieSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SousCategorie
+        fields = ['id', 'sid', 'nom', 'slug']
 
 
 class CategorieSerializer(serializers.ModelSerializer):
+    sous_categories = SousCategorieSerializer(many=True, read_only=True)
+
     class Meta:
         model = Categorie
-        fields = ['cid', 'categorie']
+        fields = ['id', 'cid', 'categorie', 'sous_categories']
 
 
 class LocaliteSerializer(serializers.Serializer):
@@ -26,6 +34,7 @@ class PieceCardSerializer(serializers.Serializer):
     quantite_stock = serializers.IntegerField(allow_null=True)
     en_stock = serializers.BooleanField()
     categorie = CategorieSerializer()
+    sous_categorie = SousCategorieSerializer(allow_null=True)
     url_path = serializers.CharField()
     est_favori = serializers.BooleanField(default=False)
     quantite_panier = serializers.IntegerField(default=0)
@@ -62,7 +71,8 @@ def build_piece_card(
         'prix_affiche': prix_affiche,
         'quantite_stock': quantite,
         'en_stock': en_stock,
-        'categorie': {'cid': piece.categorie.cid, 'categorie': piece.categorie.categorie},
+        'categorie': piece.categorie.as_dict(with_sous=False) if piece.categorie_id else None,
+        'sous_categorie': piece.sous_categorie.as_dict() if piece.sous_categorie_id else None,
         'url_path': piece.get_absolute_url(),
         'est_favori': est_favori,
         'quantite_panier': quantite_panier,

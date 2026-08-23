@@ -5,7 +5,7 @@ Exempt : auth publique, profil/mdp, ecom, api, admin, static/media.
 """
 from django.apps import apps
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 
 from .permissions_utils import (
@@ -18,21 +18,23 @@ from .permissions_utils import (
 
 class CustomPermissionMiddleware:
     """
-    Vérifie CustomPermission sur les requêtes authentifiées
-    uniquement dans le périmètre magasin / comptes staff.
+    Magasin /stocks/ et comptes staff : connexion obligatoire,
+    puis CustomPermission pour les utilisateurs authentifiés.
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        url_name = get_permission_name_from_url(request)
+
         if not getattr(request, 'user', None) or not request.user.is_authenticated:
+            if should_enforce_custom_permission(request, url_name):
+                return redirect('connexion')
             return self.get_response(request)
 
         if request.user.is_superuser:
             return self.get_response(request)
-
-        url_name = get_permission_name_from_url(request)
 
         if is_permission_check_exempt(request, url_name):
             return self.get_response(request)

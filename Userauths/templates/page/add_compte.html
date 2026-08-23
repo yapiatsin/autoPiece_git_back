@@ -188,6 +188,7 @@
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Genre</th>
+                                    <th>Localité</th>
                                     <th class="text-center">Permissions</th>
                                     <th class="text-center">Activer/Desactiver compte</th>
                                     <th class="text-center">Action</th>
@@ -199,6 +200,7 @@
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Genre</th>
+                                    <th>Localité</th>
                                     <th class="text-center">Permissions</th>
                                     <th class="text-center">Activer/Desactiver compte</th>
                                     <th class="text-center">Action</th>
@@ -211,6 +213,7 @@
                                     <td>{{ c.email }}</td>
                                     <td>{{ c.get_role_display|default:c.role }}</td>
                                     <td>{{ c.genre }}</td>
+                                    <td>{{ c.local_entrepot.nom }}</td>
                                     <td class="text-center">
                                         <a href="#largeModal" class="edit-permission-btn" data-id="{{ c.id }}" data-url="{% url 'update_permissions' c.id %}">
                                             <i class="icon-lock text-info"></i>

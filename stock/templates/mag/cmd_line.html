@@ -22,7 +22,7 @@
     <div class="card">
         <div class="header d-flex justify-content-between align-items-center flex-wrap">
             <h2 class="mb-0">
-                {{ commandes|length }} commande{% if commandes|length != 1 %}s{% endif %} en ligne
+                {{ stats_cmd_line.nb_total }} commande{% if stats_cmd_line.nb_total != 1 %}s{% endif %} en ligne
                 {% if filtre_resume %}
                 <small class="text-muted font-weight-normal">· {{ filtre_resume }}</small>
                 {% endif %}
@@ -69,7 +69,7 @@
                         <tbody>
                             {% for cmd in commandes %}
                             <tr>
-                                <td>{{ forloop.counter }}</td>
+                                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
                                 <td>
                                     <strong>{{ cmd.numero_commande }}</strong>
                                     {% if cmd.panier.ticket %}
@@ -119,33 +119,30 @@
                                         {% if cmd.statut_commande == 'annuler' %}
                                         <span class="badge badge-danger">Annulée</span>
                                         {% else %}
-                                        {% if cmd.statut_commande == 'en_attente' and not cmd.paye %}
-                                        <form method="post" action="{% url 'ecom_cmd_line_valider' cmd.pk %}">
+                                        {% if cmd.statut_commande == 'en_attente' %}
+                                        <form method="post" action="{% url 'cmd_line_valider' cmd.pk %}">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm btn-success btn-block">Valider</button>
                                         </form>
                                         {% endif %}
-                                        {% if cmd.statut_commande == 'en_attente' or cmd.statut_commande == 'valider' %}
-                                        <form method="post" action="{% url 'ecom_cmd_line_assigner' cmd.pk %}"
-                                              class="d-flex align-items-center{% if cmd.paye %} opacity-50{% endif %}"
-                                              style="gap:6px;{% if cmd.paye %} pointer-events:none;{% endif %}">
+                                        {% if cmd.panier.mode_reception == 'livraison' and cmd.statut_commande != 'livrer' %}
+                                        <form method="post" action="{% url 'cmd_line_assigner' cmd.pk %}"
+                                              class="d-flex align-items-center"
+                                              style="gap:6px;">
                                             {% csrf_token %}
                                             <select name="livreur_id"
                                                     class="form-control form-control-sm"
-                                                    {% if not cmd.paye %}required{% endif %}
-                                                    {% if cmd.paye %}disabled{% endif %}>
+                                                    required>
                                                 <option value="">Livreur…</option>
                                                 {% for l in livreurs %}
                                                 <option value="{{ l.pk }}" {% if cmd.livreur_id == l.pk %}selected{% endif %}>{{ l.username }}</option>
                                                 {% endfor %}
                                             </select>
-                                            <button type="submit"
-                                                    class="btn btn-sm btn-primary{% if cmd.paye %} disabled{% endif %}"
-                                                    {% if cmd.paye %}disabled aria-disabled="true"{% endif %}>
+                                            <button type="submit" class="btn btn-sm btn-primary">
                                                 Assigner
                                             </button>
                                         </form>
-                                        {% else %}
+                                        {% elif cmd.statut_commande != 'en_attente' %}
                                         <span class="text-muted small">—</span>
                                         {% endif %}
                                         {% endif %}
@@ -160,6 +157,41 @@
                         </tbody>
                     </table>
                 </div>
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav class="d-flex justify-content-between align-items-center flex-wrap mt-3" aria-label="Pagination commandes">
+                    <small class="text-muted">
+                        {{ page_obj.start_index }}–{{ page_obj.end_index }}
+                        / {{ page_obj.paginator.count }} résultat(s)
+                    </small>
+                    <ul class="pagination mb-0">
+                        <li class="page-item{% if not page_obj.has_previous %} disabled{% endif %}">
+                            {% if page_obj.has_previous %}
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if cmd_line_extra_query %}&amp;{{ cmd_line_extra_query }}{% endif %}">Previous</a>
+                            {% else %}
+                            <span class="page-link">Previous</span>
+                            {% endif %}
+                        </li>
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if num == page_obj.number %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if cmd_line_extra_query %}&amp;{{ cmd_line_extra_query }}{% endif %}">{{ num }}</a>
+                            </li>
+                            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item{% if not page_obj.has_next %} disabled{% endif %}">
+                            {% if page_obj.has_next %}
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if cmd_line_extra_query %}&amp;{{ cmd_line_extra_query }}{% endif %}">Next</a>
+                            {% else %}
+                            <span class="page-link">Next</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
             </div>
         </div>
     </div>

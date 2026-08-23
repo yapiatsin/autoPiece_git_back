@@ -1,8 +1,9 @@
 from django.contrib import admin
 from .models import (
-    Categorie, Piece, Fournisseur, PanierItem, Panier, Ticket, Commande,
+    Categorie, SousCategorie, Piece, Fournisseur, PanierItem, Panier, Ticket, Commande,
     MoyenPaiement, EntrePiece, Notification, StockLocal, TransfertStock,
     DemandeTransfert, LigneDemandeTransfert, BaremeTimbre, ParametreTVA, BonCommandePaiement,
+    GeniusPayPaiement,
     TarifLivraison, PalierLivraison, BonLivraison,
 )
 
@@ -11,11 +12,27 @@ class CategorieAdmin(admin.ModelAdmin):
     list_display = ['cid', 'categorie']
     search_fields = ['cid', 'categorie']
 
+
+@admin.register(SousCategorie)
+class SousCategorieAdmin(admin.ModelAdmin):
+    list_display = ['sid', 'nom', 'categorie', 'ordre', 'actif']
+    list_filter = ['categorie', 'actif']
+    search_fields = ['sid', 'nom', 'categorie__categorie']
+    list_editable = ['ordre', 'actif']
+
 @admin.register(MoyenPaiement)
 class MoyenPaiementAdmin(admin.ModelAdmin):
     list_display = ['nom', 'code', 'actif', 'date_creation']
     search_fields = ['nom', 'code']
     list_filter = ['actif']
+
+
+@admin.register(GeniusPayPaiement)
+class GeniusPayPaiementAdmin(admin.ModelAdmin):
+    list_display = ['reference', 'commande', 'source', 'statut', 'payment_method', 'amount', 'environment', 'date_creation']
+    list_filter = ['source', 'statut', 'payment_method', 'environment']
+    search_fields = ['reference', 'commande__numero_commande']
+    readonly_fields = ['reference', 'raw_response', 'metadata', 'date_creation', 'date_maj']
 
 
 @admin.register(BaremeTimbre)
@@ -42,11 +59,12 @@ class StockLocalInline(admin.TabularInline):
 @admin.register(Piece)
 class PieceAdmin(admin.ModelAdmin):
     list_display = [
-        'categorie', 'numero_piece', 'designation', 'prix_achat', 'prix_unitaire',
+        'categorie', 'sous_categorie', 'numero_piece', 'designation', 'prix_achat', 'prix_unitaire',
         'seuil', 'emplacement', 'active_sortie', 'archive_par', 'archive_le', 'utilisateur',
     ]
     search_fields = ['numero_piece', 'designation']
-    list_filter = ['categorie', 'active_sortie']
+    list_filter = ['categorie', 'sous_categorie', 'active_sortie']
+    autocomplete_fields = ['categorie', 'sous_categorie']
     inlines = [StockLocalInline]
 
 @admin.register(StockLocal)

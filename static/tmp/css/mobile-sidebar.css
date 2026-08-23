@@ -1,0 +1,190 @@
+/* Mobile sidebar — Jumia look, Cdiscount-style off-canvas layout */
+.mobile-sidebar,
+.mobile-sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .mobile-sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+
+  .mobile-sidebar-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .mobile-sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1101;
+    width: min(86vw, 360px);
+    max-width: 360px;
+    height: 100%;
+    background: #fff;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.18);
+    transform: translateX(-105%);
+    transition: transform 0.28s ease;
+    overflow: hidden;
+  }
+
+  .mobile-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .mobile-sidebar__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #ededed;
+    flex-shrink: 0;
+  }
+
+  .mobile-sidebar__close {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    color: #313133;
+    font-size: 22px;
+    line-height: 1;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .mobile-sidebar__logo {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 auto 0 0;
+  }
+
+  .mobile-sidebar__logo img {
+    max-height: 26px;
+    width: auto;
+    display: block;
+  }
+
+  .mobile-sidebar__body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 24px;
+  }
+
+  .mobile-sidebar__section {
+    border-bottom: 8px solid #f5f5f5;
+    padding-bottom: 6px;
+  }
+
+  .mobile-sidebar__section--last {
+    border-bottom: 0;
+  }
+
+  .mobile-sidebar__section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 16px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #313133;
+    text-transform: uppercase;
+  }
+
+  .mobile-sidebar__see-more {
+    color: #f68b1e;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    text-decoration: none;
+  }
+
+  .mobile-sidebar__see-more:hover,
+  .mobile-sidebar__see-more:focus {
+    color: #e07b12;
+    text-decoration: none;
+  }
+
+  .mobile-sidebar__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mobile-sidebar__link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 16px;
+    color: #313133;
+    font-size: 14px;
+    line-height: 1.3;
+    text-decoration: none;
+    background: #fff;
+  }
+
+  .mobile-sidebar__link i.fa {
+    width: 22px;
+    text-align: center;
+    font-size: 18px;
+    color: #75757a;
+    flex-shrink: 0;
+  }
+
+  .mobile-sidebar__link span {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-sidebar__link:hover,
+  .mobile-sidebar__link:focus {
+    background: #fafafa;
+    color: #313133;
+    text-decoration: none;
+  }
+
+  .mobile-sidebar__link--row {
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #ededed;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  .mobile-sidebar__link--row > .fa-angle-right {
+    color: #75757a;
+    font-size: 16px;
+    width: auto;
+  }
+
+  .mobile-sidebar__link--section-title {
+    border-bottom: 0;
+    padding-bottom: 8px;
+  }
+
+  body.mobile-sidebar-open {
+    overflow: hidden;
+  }
+}

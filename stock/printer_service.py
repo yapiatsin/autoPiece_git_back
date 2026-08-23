@@ -362,8 +362,7 @@ def print_receipt(commande, panier_items, vid=None, pid=None):
         w.write(total_line("Payé", commande.montant_paye, w.inner), align="left")
         w.write(total_line("Rendu", commande.montant_reste, w.inner), align="left")
 
-        moyen = getattr(commande.moyen_paiement, "nom", None) if commande.moyen_paiement_id else None
-        moyen = moyen or "—"
+        moyen = getattr(commande, "libelle_paiement", None) or "—"
         w.write(spaced_line("Payer par", moyen, w.inner), align="left")
 
         w.raw(b"\x1b\x33\x1e")

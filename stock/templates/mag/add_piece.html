@@ -60,9 +60,16 @@
                                     </div>
                                 </div>
                                 <div class="col-12">
-                                    <div class="mf-field mb-0">
+                                    <div class="mf-field">
                                         <label>Image <span class="text-muted font-weight-normal">(facultatif)</span></label>
                                         {{ form.image }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mf-field mb-0 mf-field--sous">
+                                        <label>Sous-catégorie <span class="text-muted font-weight-normal">(facultatif)</span></label>
+                                        {{ form.sous_categorie }}
+                                        <p class="mf-hint mb-0">Famille de pièce pour {{ categorie.categorie }} (Moteur, Freinage…)</p>
                                     </div>
                                 </div>
                             </div>
@@ -137,15 +144,33 @@
                     </div>
                 </div>
                 <div class="mail-right">
-                    <div class="header d-flex align-center">
-                        <h2>Liste des pièces de {{categorie.categorie}} </h2>
-                        <form class="ml-auto">
-                            <div class="input-group">
-                                <div class="input-group-append" >
-                                    <span class="input-group-text" id="search-mail" style="height:100px;width:200px;{% if categorie.image.url %}background-image: url('{{ categorie.image.url }}'); background-size: cover;{% endif %}"></span>
-                                </div>
+                    <div class="header piece-list-head">
+                        <div class="piece-list-head__copy">
+                            <h2>Liste des pièces de {{ categorie.categorie }}</h2>
+                            {% if sous_categorie_active %}
+                            <p class="piece-list-head__meta">Filtre : {{ sous_categorie_active.nom }}</p>
+                            {% endif %}
+                        </div>
+                        {% if categorie.image %}
+                        <div class="piece-list-head__thumb" style="background-image: url('{{ categorie.image.url }}');" role="img" aria-label="{{ categorie.categorie }}"></div>
+                        {% endif %}
+                        {% if sous_categories %}
+                        <nav class="scat-filter" aria-label="Filtrer par sous-catégorie">
+                            <p class="scat-filter__label"><i class="fa fa-sitemap" aria-hidden="true"></i> Sous-catégories</p>
+                            <div class="scat-filter__chips">
+                                <a href="{% url 'add_piece' categorie.pk %}" class="scat-chip{% if not sous_categorie_active %} is-active{% endif %}">
+                                    Toutes
+                                    <span class="scat-chip__count">{{ total_pieces_categorie }}</span>
+                                </a>
+                                {% for sc in sous_categories %}
+                                <a href="{% url 'add_piece' categorie.pk %}?sous_categorie={{ sc.pk }}" class="scat-chip{% if sous_categorie_active.pk == sc.pk %} is-active{% endif %}" title="{{ sc.nom }}">
+                                    {{ sc.nom }}
+                                    <span class="scat-chip__count">{{ sc.nb_pieces|default:0 }}</span>
+                                </a>
+                                {% endfor %}
                             </div>
-                        </form>
+                        </nav>
+                        {% endif %}
                     </div>
                     <div class="body">
                         <div class="mag-table-shell" x-data="magTableFilter()">
@@ -157,6 +182,7 @@
                                         <th>N°#</th>
                                         <th>N°Pièce</th>
                                         <th>Designation</th>
+                                        <th>Sous-catégorie</th>
                                         <th>Prix Achat</th>
                                         <th>Prix Vente</th>
                                         <th class="text-center">Quantite stock</th>
@@ -173,6 +199,7 @@
                                         <th>N°#</th>
                                         <th>N°Pièce</th>
                                         <th>Designation</th>
+                                        <th>Sous-catégorie</th>
                                         <th>Prix Achat</th>
                                         <th>Prix Vente</th>
                                         <th class="text-center">Quantite stock</th>
@@ -190,9 +217,8 @@
                                             <tr>
                                                 <th><a title="cliquer pour modifier">{{forloop.counter}}</a></th>
                                                 <th><a title="cliquer pour modifier">{{d.numero_piece}}</a></th>
-                                                <th>
-                                                    {{d.designation}}
-                                                </th>
+                                                <th>{{d.designation}}</th>
+                                                <td>{% if d.sous_categorie %}<span class="scat-pill" title="{{ d.sous_categorie.nom }}">{{ d.sous_categorie.nom }}</span>{% else %}<span class="scat-pill scat-pill--empty">Non classée</span>{% endif %}</td>
                                                 <th>{{d.prix_achat}}</th>
                                                 <th class="text-center">{{d.prix_unitaire}}</th>
                                                 <th class="text-center"><span class="badge badge-{{ d.color_status }}" aria-hidden="true">{{d.quantite_disponible}}</span></th>
@@ -254,6 +280,7 @@
 
     {% include "mag/partials/_modal_archive_motif.html" %}
     {% include "mag/partials/_archive_toggle_js.html" %}
+    {% include "mag/partials/_sous_categorie_cascade.html" %}
 
 {% endblock main_content %}
 

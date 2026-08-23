@@ -1,0 +1,41 @@
+<script>
+(function () {
+    var endpoint = "{% url 'ajax_sous_categories' %}";
+    function fillSousSelect(sousSelect, categorieId, selectedId) {
+        if (!sousSelect) return;
+        var keep = selectedId || sousSelect.getAttribute('data-selected') || '';
+        sousSelect.innerHTML = '<option value="">Aucune</option>';
+        if (!categorieId) return;
+        fetch(endpoint + '?categorie=' + encodeURIComponent(categorieId), {
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                (data.results || []).forEach(function (item) {
+                    var opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.nom;
+                    if (String(item.id) === String(keep)) opt.selected = true;
+                    sousSelect.appendChild(opt);
+                });
+            })
+            .catch(function () {});
+    }
+    function bindPair(catSelect, sousSelect) {
+        if (!catSelect || !sousSelect || catSelect.dataset.sousBound === '1') return;
+        catSelect.dataset.sousBound = '1';
+        fillSousSelect(sousSelect, catSelect.value, sousSelect.getAttribute('data-selected') || sousSelect.value);
+        catSelect.addEventListener('change', function () {
+            sousSelect.removeAttribute('data-selected');
+            fillSousSelect(sousSelect, catSelect.value, '');
+        });
+    }
+    document.querySelectorAll('select[data-sous-target]').forEach(function (catSelect) {
+        bindPair(catSelect, document.querySelector(catSelect.getAttribute('data-sous-target')));
+    });
+    document.querySelectorAll('form').forEach(function (form) {
+        bindPair(form.querySelector('select[name="categorie"]'), form.querySelector('select[name="sous_categorie"]'));
+    });
+})();
+</script>

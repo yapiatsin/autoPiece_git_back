@@ -47,7 +47,7 @@ def _build_cart_response(request, panier, local):
             'local_selected': local_payload(local),
         }
     items = list(
-        PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie')
+        PanierItem.objects.filter(panier=panier).select_related('piece', 'piece__categorie', 'piece__sous_categorie')
     )
     for item in items:
         item.stock_disponible = quantite_disponible_piece(item.piece, local)

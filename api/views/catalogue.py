@@ -30,10 +30,7 @@ class CategoryListView(APIView):
     def get(self, request):
         categories = queryset_categories_catalogue()
         return Response({
-            'results': [
-                {'cid': c.cid, 'categorie': c.categorie}
-                for c in categories
-            ],
+            'results': [c.as_dict() for c in categories],
         })
 
 

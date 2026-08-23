@@ -1,3 +1,4 @@
+{% load l10n %}
 <div class="modal fade mag-form-modal" id="editPieceModal{{ piece.pk }}" tabindex="-1" role="dialog" aria-labelledby="editPieceModalLabel{{ piece.pk }}" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -15,6 +16,12 @@
                         <br>
                         Stock actuel :
                         <span class="badge badge-{{ piece.color_status }}">{{ piece.quantite_disponible }}</span>
+                        {% if piece.categorie %}
+                        <span class="scat-pill ml-1">{{ piece.categorie.categorie }}</span>
+                        {% endif %}
+                        {% if piece.sous_categorie %}
+                        <span class="scat-pill">{{ piece.sous_categorie.nom }}</span>
+                        {% endif %}
                     </div>
 
                     <section class="mf-section">
@@ -26,22 +33,39 @@
                                 <div class="mf-field">
                                     <label>N° Pièce <span class="mf-req">*</span></label>
                                     <input type="text" name="numero_piece" value="{{ piece.numero_piece }}" class="form-control" placeholder="N°000A" required>
-                                    {% if edit_piece_form.numero_piece.errors %}
-                                        <div class="text-danger">{{ edit_piece_form.numero_piece.errors }}</div>
-                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mf-field">
                                     <label>Désignation <span class="mf-req">*</span></label>
                                     <input type="text" name="designation" value="{{ piece.designation }}" class="form-control" placeholder="Nom..." required>
-                                    {% if edit_piece_form.designation.errors %}
-                                        <div class="text-danger">{{ edit_piece_form.designation.errors }}</div>
-                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mf-field">
+                                    <label>Catégorie <span class="mf-req">*</span></label>
+                                    <select name="categorie" id="id_edit_categorie_{{ piece.pk }}" class="form-control" data-sous-target="#id_edit_sous_categorie_{{ piece.pk }}" required>
+                                        {% for categorie in categories %}
+                                            <option value="{{ categorie.pk }}" {% if piece.categorie.pk == categorie.pk %}selected{% endif %}>
+                                                {{ categorie.categorie }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mf-field mf-field--sous">
+                                    <label>Sous-catégorie <span class="text-muted font-weight-normal">(facultatif)</span></label>
+                                    <select name="sous_categorie" id="id_edit_sous_categorie_{{ piece.pk }}" class="form-control" data-selected="{{ piece.sous_categorie_id|default:'' }}">
+                                        <option value="">Aucune</option>
+                                        {% if piece.sous_categorie %}
+                                            <option value="{{ piece.sous_categorie.pk }}" selected>{{ piece.sous_categorie.nom }}</option>
+                                        {% endif %}
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-12">
-                                <div class="mf-field">
+                                <div class="mf-field mb-0">
                                     <label>Image <span class="text-muted font-weight-normal">(facultatif)</span></label>
                                     {% if piece.image %}
                                         <p class="mb-2">
@@ -50,28 +74,10 @@
                                     {% endif %}
                                     <input type="file" name="image" class="form-control" accept="image/*">
                                     {% if piece.image %}
-                                        <div class="form-check mt-2">
-                                            <input class="form-check-input" type="checkbox" name="image-clear" id="image-clear-{{ piece.pk }}">
-                                            <label class="form-check-label" for="image-clear-{{ piece.pk }}">Supprimer l'image actuelle</label>
+                                        <div class="mf-check mt-2">
+                                            <input type="checkbox" name="image-clear" id="image-clear-{{ piece.pk }}">
+                                            <label for="image-clear-{{ piece.pk }}" class="mb-0">Supprimer l'image actuelle</label>
                                         </div>
-                                    {% endif %}
-                                    {% if edit_piece_form.image.errors %}
-                                        <div class="text-danger">{{ edit_piece_form.image.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="mf-field mb-0">
-                                    <label>Catégorie <span class="mf-req">*</span></label>
-                                    <select name="categorie" class="form-control" required>
-                                        {% for categorie in categories %}
-                                            <option value="{{ categorie.pk }}" {% if piece.categorie.pk == categorie.pk %}selected{% endif %}>
-                                                {{ categorie.categorie }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                    {% if edit_piece_form.categorie.errors %}
-                                        <div class="text-danger">{{ edit_piece_form.categorie.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -86,47 +92,32 @@
                             <div class="col-md-6">
                                 <div class="mf-field">
                                     <label>Prix d'achat <span class="mf-req">*</span></label>
-                                    <input type="number" name="prix_achat" value="{{ piece.prix_achat }}" class="form-control" placeholder="0" min="0" step="0.01" required>
-                                    {% if edit_piece_form.prix_achat.errors %}
-                                        <div class="text-danger">{{ edit_piece_form.prix_achat.errors }}</div>
-                                    {% endif %}
+                                    <input type="number" name="prix_achat" value="{{ piece.prix_achat|unlocalize }}" class="form-control" placeholder="0" min="0" step="0.01" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mf-field">
                                     <label>Prix de vente <span class="mf-req">*</span></label>
-                                    <input type="number" name="prix_unitaire" value="{{ piece.prix_unitaire }}" class="form-control" placeholder="0" min="0" step="0.01" required>
-                                    {% if edit_piece_form.prix_unitaire.errors %}
-                                        <div class="text-danger">{{ edit_piece_form.prix_unitaire.errors }}</div>
-                                    {% endif %}
+                                    <input type="number" name="prix_unitaire" value="{{ piece.prix_unitaire|unlocalize }}" class="form-control" placeholder="0" min="0" step="0.01" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mf-field">
                                     <label>Quantité disponible</label>
-                                    <input type="number" name="quantite_disponible" value="{{ piece.quantite_disponible }}" class="form-control" min="0" readonly>
+                                    <input type="number" value="{{ piece.quantite_disponible }}" class="form-control" min="0" readonly tabindex="-1">
                                     <span class="mf-hint">Mise à jour via les entrées en stock.</span>
-                                    {% if edit_piece_form.quantite_disponible.errors %}
-                                        <div class="text-danger">{{ edit_piece_form.quantite_disponible.errors }}</div>
-                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mf-field">
                                     <label>Seuil <span class="mf-req">*</span></label>
                                     <input type="number" name="seuil" value="{{ piece.seuil }}" class="form-control" placeholder="0" min="0" required>
-                                    {% if edit_piece_form.seuil.errors %}
-                                        <div class="text-danger">{{ edit_piece_form.seuil.errors }}</div>
-                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="mf-field mb-0">
-                                    <label>Emplacement <span class="mf-req">*</span></label>
-                                    <input type="text" name="emplacement" value="{{ piece.emplacement }}" class="form-control" placeholder="E1 R1" required>
-                                    {% if edit_piece_form.emplacement.errors %}
-                                        <div class="text-danger">{{ edit_piece_form.emplacement.errors }}</div>
-                                    {% endif %}
+                                    <label>Emplacement</label>
+                                    <input type="text" name="emplacement" value="{{ piece.emplacement }}" class="form-control" placeholder="E1 R1">
                                 </div>
                             </div>
                         </div>

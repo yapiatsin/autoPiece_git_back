@@ -11,6 +11,7 @@ ALWAYS_EXEMPT_PATH_PREFIXES = (
     '/__debug__/',
     '/api/',
     '/i18n/',
+    '/webhooks/',
 )
 
 # Auth publique + compte personnel (Userauths urls L5–18) — jamais CustomPermission
@@ -28,6 +29,7 @@ EXEMPT_URL_NAMES = frozenset({
     'password_change',
     'password_change_done',
     'change_password',
+    'ajax_sous_categories',
 })
 
 # Comptes staff/clients mag + permissions + localités (Userauths urls L19–50)

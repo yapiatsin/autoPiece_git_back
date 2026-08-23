@@ -1,0 +1,85 @@
+<script>
+(function () {
+    function csrfToken() {
+        var el = document.querySelector('[name=csrfmiddlewaretoken]');
+        return el ? el.value : '';
+    }
+    function refreshNice(select) {
+        if (!(window.jQuery && jQuery.fn.niceSelect) || !select) return;
+        var $el = jQuery(select);
+        if ($el.next().hasClass('nice-select')) $el.niceSelect('update');
+        else $el.niceSelect();
+    }
+    function fillCommunes(select, items, selectedId, placeholder) {
+        if (!select) return;
+        select.innerHTML = '';
+        var opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.textContent = placeholder || 'Choisir une commune';
+        select.appendChild(opt0);
+        (items || []).forEach(function (item) {
+            var opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.nom;
+            if (selectedId && String(item.id) === String(selectedId)) opt.selected = true;
+            select.appendChild(opt);
+        });
+        select.disabled = !items || !items.length;
+        refreshNice(select);
+    }
+    function saveZone(root, villeId, communeId) {
+        var url = root.getAttribute('data-save-url');
+        if (!url) return;
+        var body = new FormData();
+        body.set('csrfmiddlewaretoken', csrfToken());
+        body.set('ville_id', villeId || '');
+        body.set('commune_id', communeId || '');
+        fetch(url, { method: 'POST', body: body, credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    }
+    function onVilleChange(root, ville, commune, url) {
+        var villeId = ville.value;
+        commune.disabled = !villeId;
+        if (!villeId) {
+            fillCommunes(commune, [], '', 'Choisir une commune');
+            saveZone(root, '', '');
+            return;
+        }
+        fetch(url + '?ville_id=' + encodeURIComponent(villeId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                fillCommunes(commune, data.results || [], '', 'Choisir une commune');
+                saveZone(root, villeId, '');
+            });
+    }
+    window.ecomBindVilleCommune = function (root) {
+        if (!root || root.getAttribute('data-geo-bound') === '1') return;
+        var ville = root.querySelector('[data-geo-ville]');
+        var commune = root.querySelector('[data-geo-commune]');
+        var url = root.getAttribute('data-communes-url');
+        if (!ville || !commune || !url) return;
+        root.setAttribute('data-geo-bound', '1');
+        refreshNice(ville);
+        refreshNice(commune);
+        function handleVille() { onVilleChange(root, ville, commune, url); }
+        function handleCommune() { saveZone(root, ville.value, commune.value); }
+        if (window.jQuery) {
+            jQuery(ville).off('change.ecomGeo').on('change.ecomGeo', handleVille);
+            jQuery(commune).off('change.ecomGeo').on('change.ecomGeo', handleCommune);
+        } else {
+            ville.addEventListener('change', handleVille);
+            commune.addEventListener('change', handleCommune);
+        }
+    };
+    function bindAll() {
+        document.querySelectorAll('.ecom-geo-selects').forEach(window.ecomBindVilleCommune);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindAll);
+    } else {
+        bindAll();
+    }
+})();
+</script>

@@ -279,12 +279,21 @@
     <script>
         let currentQuery = "";
         let currentCategorie = "";
+        let currentSousCategorie = "";
+        function updateSubcatChips() {
+            document.querySelectorAll('.piece-subcat-chip').forEach(function (chip) {
+                var show = !!currentCategorie && chip.getAttribute('data-parent') === currentCategorie;
+                chip.classList.toggle('d-none', !show);
+                chip.classList.toggle('is-active', chip.getAttribute('data-sous') === currentSousCategorie);
+            });
+        }
         function updateArticleList() {
             $.ajax({
                 url: "{% url 'ajax_search_articles_proforma' %}",
                 data: {
                     q: currentQuery,
-                    categorie: currentCategorie
+                    categorie: currentCategorie,
+                    sous_categorie: currentSousCategorie
                 },
                 dataType: "json",
                 success: function (data) {
@@ -311,20 +320,29 @@
         });
         function filterByCategorie(categorieId) {
             currentCategorie = categorieId || "";
-            document.querySelectorAll('.piece-cat-chip').forEach(function (chip) {
+            currentSousCategorie = "";
+            document.querySelectorAll('.piece-cat-chip:not(.piece-subcat-chip)').forEach(function (chip) {
                 var id = chip.getAttribute('data-categorie') || "";
                 chip.classList.toggle('is-active', id === currentCategorie);
             });
+            updateSubcatChips();
+            updateArticleList();
+        }
+        function filterBySousCategorie(sousId) {
+            currentSousCategorie = (currentSousCategorie === sousId) ? "" : (sousId || "");
+            updateSubcatChips();
             updateArticleList();
         }
         function resetSearch() {
             currentQuery = "";
             currentCategorie = "";
+            currentSousCategorie = "";
             document.getElementById('searchInput').value = "";
-            document.querySelectorAll('.piece-cat-chip').forEach(function (chip) {
+            document.querySelectorAll('.piece-cat-chip:not(.piece-subcat-chip)').forEach(function (chip) {
                 var id = chip.getAttribute('data-categorie') || "";
                 chip.classList.toggle('is-active', id === "");
             });
+            updateSubcatChips();
             updateArticleList();
         }
     </script>

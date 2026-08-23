@@ -136,7 +136,7 @@
                                 </span>
                                 <div class="mag-mobile-menu-user-meta">
                                     <strong>{% if user.is_superuser %}Super Admin{% else %}{{ user.get_full_name|default:user.username }}{% endif %}</strong>
-                                    <span>{{ user.get_role_display|default:user.role }}</span>
+                                    <span>{% if user.is_authenticated %}{{ user.get_role_display }}{% endif %}</span>
                                     {% if user.local_entrepot %}
                                     <span class="mag-mobile-menu-local"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.local_entrepot.nom }}</span>
                                     {% endif %}
@@ -462,7 +462,7 @@
             </span>
             <div class="mag-settings-user-meta">
                 <strong>{% if user.is_superuser %}Super Admin{% else %}{{ user.get_full_name|default:user.username }}{% endif %}</strong>
-                <span>{{ user.get_role_display|default:user.role }}</span>
+                <span>{% if user.is_authenticated %}{{ user.get_role_display }}{% endif %}</span>
                 {% if user.local_entrepot %}
                 <span class="mag-settings-local"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.local_entrepot.nom }}</span>
                 {% endif %}
