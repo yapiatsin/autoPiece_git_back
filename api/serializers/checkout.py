@@ -10,6 +10,7 @@ class CheckoutConfirmSerializer(serializers.Serializer):
     telephone_livraison = serializers.CharField(required=False, allow_blank=True, max_length=20)
     instruction_livraison = serializers.CharField(required=False, allow_blank=True)
     accepte_cgv = serializers.BooleanField()
+    moyen_paiement = serializers.CharField(required=False, allow_blank=True, default='geniuspay')
 
     def validate(self, attrs):
         if not attrs.get('accepte_cgv'):

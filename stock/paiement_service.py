@@ -169,18 +169,33 @@ def initier_paiement_commande(
         )
         description = f'Caisse ticket {ticket.numero if ticket else commande.numero_commande}'
     else:
-        success_url = abs_url(
-            'ecom_checkout_pay',
-            request,
-            query={'retour': 'ok'},
-            commande_id=str(commande.pk),
-        )
-        error_url = abs_url(
-            'ecom_checkout_pay',
-            request,
-            query={'retour': 'erreur'},
-            commande_id=str(commande.pk),
-        )
+        path = getattr(request, 'path', '') or ''
+        if request is not None and '/api/' in path:
+            success_url = abs_url(
+                'v1_order_payment_return',
+                request,
+                query={'retour': 'ok'},
+                commande_id=str(commande.pk),
+            )
+            error_url = abs_url(
+                'v1_order_payment_return',
+                request,
+                query={'retour': 'erreur'},
+                commande_id=str(commande.pk),
+            )
+        else:
+            success_url = abs_url(
+                'ecom_checkout_pay',
+                request,
+                query={'retour': 'ok'},
+                commande_id=str(commande.pk),
+            )
+            error_url = abs_url(
+                'ecom_checkout_pay',
+                request,
+                query={'retour': 'erreur'},
+                commande_id=str(commande.pk),
+            )
         description = f'Commande {commande.numero_commande}'
 
     data = initier_paiement(

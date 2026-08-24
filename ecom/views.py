@@ -860,10 +860,13 @@ def account(request):
         messages.error(request, 'Accès réservé aux clients.')
         return redirect('connexion')
 
+    if request.GET.get('tab') == 'dashboard':
+        return redirect('ecom_dashboard')
+
     profil, _ = ProfilUser.objects.get_or_create(user=request.user)
-    active_tab = request.GET.get('tab', 'dashboard')
-    if active_tab not in {'dashboard', 'orders', 'address', 'details', 'password'}:
-        active_tab = 'dashboard'
+    active_tab = request.GET.get('tab', 'orders')
+    if active_tab not in {'orders', 'address', 'details', 'password'}:
+        active_tab = 'orders'
 
     profile_form = EcomAccountProfileForm(instance=profil, user=request.user)
     address_form = EcomAccountAddressForm(instance=profil)
@@ -972,6 +975,34 @@ def account(request):
         'nb_commandes_periode': nb_commandes_periode,
     })
     return render(request, 'e_autopiece/account.html', ctx)
+
+
+@login_required(login_url='connexion')
+def dashboard(request):
+    if not _require_client(request.user):
+        messages.error(request, 'Accès réservé aux clients.')
+        return redirect('connexion')
+
+    from ecom.dashboard import MOIS_LABELS, build_client_dashboard, parse_dashboard_period
+
+    mois, annee, annees_disponibles = parse_dashboard_period(
+        request.GET.get('mois'),
+        request.GET.get('annee'),
+    )
+    data = build_client_dashboard(request.user, mois, annee)
+    ctx = _ecom_context(request)
+    ctx.update({
+        'dash': data,
+        'mois_achats': mois,
+        'annee_achats': annee,
+        'mois_labels': list(MOIS_LABELS.items()),
+        'annees_disponibles': annees_disponibles,
+        'commandes_recentes': next(
+            (v for k, v in data.items() if k.startswith('commandes_obj')),
+            [],
+        ),
+    })
+    return render(request, 'e_autopiece/dashboard.html', ctx)
 
 
 def _facture_commande_items(request, commande_id):
@@ -1193,7 +1224,6 @@ def _cart_ajax_payload(request, local, *, piece_id=None, item_id=None, quantite=
     return payload
 
 
-@login_required(login_url='connexion')
 def _geo_livraison_context(request):
     ville_id = (request.GET.get('livraison_ville') or request.session.get('ecom_livraison_ville') or '').strip()
     commune_id = (request.GET.get('livraison_commune') or request.session.get('ecom_livraison_commune') or '').strip()

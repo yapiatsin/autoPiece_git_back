@@ -21,7 +21,7 @@
                     <p class="ecom-account-nav-title">{% trans "Mon compte" %}</p>
                     <ul class="ecom-account-nav-list">
                         <li>
-                            <a href="?tab=dashboard&mois={{ mois_achats }}&annee={{ annee_achats }}" data-tab="dashboard" class="ecom-account-nav-link{% if active_tab == 'dashboard' %} is-active{% endif %}">
+                            <a href="{% url 'ecom_dashboard' %}" class="ecom-account-nav-link">
                                 <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
                                 <span>{% trans "Tableau de bord" %}</span>
                             </a>
@@ -72,129 +72,6 @@
 
             <div class="col-lg-9 pl--50 pl_md--10 pl_sm--10 pt_md--30 pt_sm--30">
                 <div class="ecom-account-panels">
-                <div data-account-panel="dashboard" class="dashboard-account-area ecom-account-panel{% if active_tab != 'dashboard' %} d-none{% endif %}">
-                    <div class="ecom-account-dash-top">
-                        <div class="ecom-account-dash-intro">
-                            <h2 class="title">
-                                {% trans "Bonjour" %}
-                                {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %} !
-                                <a href="{% url 'deconnexion' %}">{% trans "Déconnexion" %}</a>
-                            </h2>
-                            <p class="disc">
-                                {% trans "Depuis votre espace client, consultez vos commandes, gérez votre adresse de livraison, mettez à jour votre profil et modifiez votre mot de passe." %}
-                            </p>
-                        </div>
-                        <form method="get" class="ecom-account-period-filter" action="{% url 'ecom_account' %}">
-                            <input type="hidden" name="tab" value="dashboard">
-                            <span class="ecom-account-period-icon" aria-hidden="true">
-                                <i class="fa-solid fa-calendar-days"></i>
-                            </span>
-                            <div class="ecom-account-period-field">
-                                <label class="visually-hidden" for="ecomAccountMonthFilter">{% trans "Mois" %}</label>
-                                <select
-                                    id="ecomAccountMonthFilter"
-                                    class="ecom-account-period-select"
-                                    name="mois"
-                                    aria-label="{% trans 'Mois' %}"
-                                    onchange="this.form.submit()">
-                                    {% for num, label in mois_labels %}
-                                    <option value="{{ num }}" {% if num == mois_achats %}selected{% endif %}>{{ label }}</option>
-                                    {% endfor %}
-                                </select>
-                                <i class="fa-solid fa-chevron-down ecom-account-period-chevron" aria-hidden="true"></i>
-                            </div>
-                            <div class="ecom-account-period-field ecom-account-period-field--year">
-                                <label class="visually-hidden" for="ecomAccountYearFilter">{% trans "Année" %}</label>
-                                <select
-                                    id="ecomAccountYearFilter"
-                                    class="ecom-account-period-select ecom-account-period-select--year"
-                                    name="annee"
-                                    aria-label="{% trans 'Année' %}"
-                                    onchange="this.form.submit()">
-                                    {% for y in annees_disponibles %}
-                                    <option value="{{ y }}" {% if y == annee_achats %}selected{% endif %}>{{ y }}</option>
-                                    {% endfor %}
-                                </select>
-                                <i class="fa-solid fa-chevron-down ecom-account-period-chevron" aria-hidden="true"></i>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="row g-3 ecom-account-stats">
-                        <div class="col-md-6 col-xl-3">
-                            <div class="ecom-account-stat-card ecom-account-stat-card--purchases">
-                                <span class="ecom-account-stat-icon"><i class="fa-solid fa-wallet"></i></span>
-                                <div class="ecom-account-stat-purchases-body">
-                                    <p class="ecom-account-stat-label">{% trans "Total des achats" %}</p>
-                                    <p class="ecom-account-stat-value ecom-account-stat-value--money">
-                                        {{ total_achats_periode|floatformat:0 }} FCFA
-                                    </p>
-                                    <p class="ecom-account-stat-meta">
-                                        {% blocktrans count counter=nb_commandes_periode with month=mois_achats_label year=annee_achats %}{{ counter }} commande en {{ month }} {{ year }}{% plural %}{{ counter }} commandes en {{ month }} {{ year }}{% endblocktrans %}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-xl-3">
-                            <div class="ecom-account-stat-card">
-                                <span class="ecom-account-stat-icon"><i class="fa-solid fa-box"></i></span>
-                                <div>
-                                    <p class="ecom-account-stat-label">{% trans "Commandes" %}</p>
-                                    <p class="ecom-account-stat-value">{{ stats_commandes }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-xl-3">
-                            <div class="ecom-account-stat-card">
-                                <span class="ecom-account-stat-icon"><i class="fa-solid fa-heart"></i></span>
-                                <div>
-                                    <p class="ecom-account-stat-label">{% trans "Favoris" %}</p>
-                                    <p class="ecom-account-stat-value">{{ stats_favoris }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-xl-3">
-                            <div class="ecom-account-stat-card">
-                                <span class="ecom-account-stat-icon"><i class="fa-solid fa-eye"></i></span>
-                                <div>
-                                    <p class="ecom-account-stat-label">{% trans "Vues récentes" %}</p>
-                                    <p class="ecom-account-stat-value">{{ stats_vues }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% if commandes_recentes %}
-                        <div class="order-table-account mt-5">
-                            <div class="h2 title">{% trans "Commandes récentes" %}</div>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>{% trans "Commande" %}</th>
-                                            <th>{% trans "Date" %}</th>
-                                            <th>{% trans "Statut" %}</th>
-                                            <th>{% trans "Total" %}</th>
-                                            <th>{% trans "Actions" %}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for cmd in commandes_recentes %}
-                                        <tr>
-                                            <td>{{ cmd.numero_commande }}</td>
-                                            <td>{{ cmd.date_creation|date:"d/m/Y" }}</td>
-                                            <td>{{ cmd.get_statut_commande_display }}</td>
-                                            <td>{{ cmd.total|floatformat:0 }} FCFA</td>
-                                            <td><a href="{% url 'ecom_invoice' cmd.pk %}" class="btn-small d-block">{% trans "Facture" %}</a></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-
                 <div data-account-panel="orders" class="order-table-account ecom-account-panel{% if active_tab != 'orders' %} d-none{% endif %}">
                     <div class="ecom-account-orders-top">
                         <div class="ecom-account-orders-heading">
@@ -531,7 +408,7 @@
     window.addEventListener('popstate', function (event) {
         var tab = (event.state && event.state.tab)
             || new URL(window.location.href).searchParams.get('tab')
-            || 'dashboard';
+            || 'orders';
         switchTab(tab, false);
     });
 

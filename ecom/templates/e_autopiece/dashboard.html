@@ -1,0 +1,137 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Dashboard" %} — Auto-Pièce{% endblock title %}
+{% block extra_css %}
+<style>
+  .ecom-dash { background: #f4f6f8; color: #1a1a1a; padding: 36px 0 72px; min-height: 80vh; }
+  .ecom-dash__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+  .ecom-dash__brand { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; color: #1a1a1a; }
+  .ecom-dash__brand span { color: #ff8b00; }
+  .ecom-dash__filter { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 999px; padding: 8px 14px; }
+  .ecom-dash__filter select { background: transparent; color: #1a1a1a; border: 0; font-weight: 700; }
+  .ecom-dash__filter i { color: #ff8b00; }
+  .ecom-dash__hero { color: #1a1a1a; background: #fff; border: 1px solid #e8edf3; border-radius: 28px; padding: 28px 28px 22px; box-shadow: 0 12px 32px rgba(15, 23, 42, .06); }
+  .ecom-dash__hero-label { color: #64748b; font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+  .ecom-dash__hero-value { font-size: clamp(28px, 5vw, 42px); font-weight: 800; margin: 0; letter-spacing: -0.04em; color: #1a1a1a; }
+  .ecom-dash__hero-sub { margin: 8px 0 18px; font-weight: 600; color: #475569; }
+  .ecom-dash__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ecom-dash__chip { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700; }
+  .ecom-dash__actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+  .ecom-dash__action { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #1a1a1a; text-decoration: none; background: #f8fafc; border: 1px solid #e8edf3; border-radius: 16px; padding: 12px 8px; font-size: 12px; font-weight: 700; transition: border-color .15s, color .15s; }
+  .ecom-dash__action:hover { border-color: #ff8b00; color: #ff8b00; }
+  .ecom-dash__action i { font-size: 16px; color: #ff8b00; }
+  .ecom-dash__grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; margin-top: 16px; }
+  .ecom-dash__card { background: #fff; border: 1px solid #e8edf3; border-radius: 24px; padding: 18px 18px 14px; box-shadow: 0 8px 24px rgba(15, 23, 42, .06); }
+  .ecom-dash__card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .ecom-dash__card-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #1a1a1a; }
+  .ecom-dash__see { color: #ff8b00; font-weight: 700; font-size: 13px; text-decoration: none; }
+  .ecom-dash__chart { position: relative; height: 240px; padding: 12px 8px 0; border-radius: 18px; background:
+    linear-gradient(to top, transparent 39px, #eef2f6 39px, #eef2f6 40px, transparent 40px),
+    linear-gradient(to top, transparent 99px, #eef2f6 99px, #eef2f6 100px, transparent 100px),
+    linear-gradient(to top, transparent 159px, #eef2f6 159px, #eef2f6 160px, transparent 160px),
+    #f8fafc; }
+  .ecom-dash__bars { display: flex; align-items: flex-end; gap: 6px; height: 220px; }
+  .ecom-dash__bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; gap: 8px; position: relative; cursor: pointer; }
+  .ecom-dash__bar-track { width: 100%; max-width: 28px; height: 180px; background: #e8edf3; border-radius: 999px; display: flex; align-items: flex-end; overflow: visible; }
+  .ecom-dash__bar { width: 100%; border-radius: 999px; background: linear-gradient(180deg, #ffb347 0%, #ff8b00 100%); min-height: 8px; position: relative; transition: filter .15s; }
+  .ecom-dash__bar-col:hover .ecom-dash__bar { filter: brightness(1.08); }
+  .ecom-dash__bar-label { font-size: 11px; color: #94a3b8; font-weight: 600; }
+  .ecom-dash__bar-col:hover .ecom-dash__bar-label { color: #ff8b00; }
+  .ecom-dash__tip { position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); background: #1a1a1a; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; padding: 6px 10px; border-radius: 8px; opacity: 0; pointer-events: none; box-shadow: 0 8px 20px rgba(15,23,42,.18); transition: opacity .15s; z-index: 3; }
+  .ecom-dash__bar-col:hover .ecom-dash__tip { opacity: 1; transform: translate(-50%, 0); }
+  .ecom-dash__order { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eef2f6; }
+  .ecom-dash__order:last-child { border-bottom: 0; }
+  .ecom-dash__order a { color: #1a1a1a; font-weight: 800; text-decoration: none; }
+  .ecom-dash__muted { color: #64748b; font-size: 12px; margin: 2px 0 0; }
+  .ecom-dash__status { font-size: 12px; font-weight: 700; color: #ff8b00; }
+  @media (max-width: 991px) {
+    .ecom-dash__grid { grid-template-columns: 1fr; }
+    .ecom-dash__actions { grid-template-columns: 1fr 1fr 1fr; }
+  }
+</style>
+{% endblock extra_css %}
+{% block content %}
+<section class="ecom-dash">
+  <div class="container">
+    <div class="ecom-dash__head">
+      <h1 class="ecom-dash__brand">Auto-<span>Pièce</span></h1>
+      <form method="get" class="ecom-dash__filter" action="{% url 'ecom_dashboard' %}">
+        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+        <label class="visually-hidden" for="dashMois">{% trans "Mois" %}</label>
+        <select id="dashMois" name="mois" onchange="this.form.submit()">
+          {% for num, label in mois_labels %}
+          <option value="{{ num }}" {% if num == mois_achats %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <label class="visually-hidden" for="dashAnnee">{% trans "Année" %}</label>
+        <select id="dashAnnee" name="annee" onchange="this.form.submit()">
+          {% for y in annees_disponibles %}
+          <option value="{{ y }}" {% if y == annee_achats %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+    <div class="ecom-dash__hero">
+      <p class="ecom-dash__hero-label">{% trans "Total des achats" %} · {{ dash.mois_label }} {{ dash.annee }}</p>
+      <p class="ecom-dash__hero-value">{{ dash.total_achats_periode|floatformat:0 }} FCFA</p>
+      <p class="ecom-dash__hero-sub">
+        {% blocktrans count counter=dash.nb_commandes_periode %}{{ counter }} commande payée{% plural %}{{ counter }} commandes payées{% endblocktrans %}
+      </p>
+      <div class="ecom-dash__chips">
+        <span class="ecom-dash__chip">{% trans "Commandes" %} {{ dash.annee }} : {{ dash.commandes_annuelles }}</span>
+        <span class="ecom-dash__chip">{% trans "Annulées" %} : {{ dash.commandes_annulees_annuelles }}</span>
+        <span class="ecom-dash__chip">{% trans "Favoris" %} : {{ dash.favoris }}</span>
+        <span class="ecom-dash__chip">{% trans "Vues récentes" %} : {{ dash.vues_recentes }}</span>
+      </div>
+      <div class="ecom-dash__actions">
+        <a class="ecom-dash__action" href="{% url 'ecom_wishlist' %}"><i class="fa-regular fa-heart"></i>{% trans "Favoris" %}</a>
+        <a class="ecom-dash__action" href="{% url 'ecom_vues_recentes' %}"><i class="fa-regular fa-eye"></i>{% trans "Vues" %}</a>
+        <a class="ecom-dash__action" href="{% url 'ecom_mes_commandes' %}"><i class="fa-solid fa-bag-shopping"></i>{% trans "Commandes" %}</a>
+      </div>
+    </div>
+
+    <div class="ecom-dash__grid">
+      <div class="ecom-dash__card">
+        <div class="ecom-dash__card-head">
+          <h3>{% trans "Montants par mois" %} · {{ dash.annee }}</h3>
+        </div>
+        <div class="ecom-dash__chart">
+          <div class="ecom-dash__bars">
+            {% for row in dash.montant_par_mois %}
+            <div class="ecom-dash__bar-col">
+              <div class="ecom-dash__bar-track">
+                <div class="ecom-dash__bar" style="height: {% widthratio row.montant dash.max_montant_mois 180 %}px;">
+                  <span class="ecom-dash__tip">{{ row.montant|floatformat:0 }} FCFA</span>
+                </div>
+              </div>
+              <span class="ecom-dash__bar-label">{{ row.label }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="ecom-dash__card">
+        <div class="ecom-dash__card-head">
+          <h3>{% trans "Dernières commandes" %}</h3>
+          <a class="ecom-dash__see" href="{% url 'ecom_mes_commandes' %}">{% trans "Voir tout" %}</a>
+        </div>
+        {% for cmd in commandes_recentes %}
+        <div class="ecom-dash__order">
+          <div>
+            <a href="{% url 'ecom_invoice' cmd.pk %}">{{ cmd.numero_commande }}</a>
+            <p class="ecom-dash__muted">{{ cmd.date|date:"d M Y" }}</p>
+          </div>
+          <div style="text-align:right;">
+            <div>{{ cmd.total|floatformat:0 }} FCFA</div>
+            <div class="ecom-dash__status">{{ cmd.get_statut_commande_display }}</div>
+          </div>
+        </div>
+        {% empty %}
+        <p class="ecom-dash__muted">{% trans "Aucune commande pour le moment." %}</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

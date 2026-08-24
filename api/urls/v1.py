@@ -48,13 +48,21 @@ urlpatterns = [
 
     # Commandes
     path('orders/', orders.OrderListView.as_view(), name='v1_orders'),
-    path('orders/<str:commande_id>/', orders.OrderDetailView.as_view(), name='v1_order_detail'),
+    path('orders/<str:commande_id>/pay/', orders.OrderPayView.as_view(), name='v1_order_pay'),
+    path(
+        'orders/<str:commande_id>/payment/return/',
+        orders.OrderPaymentReturnView.as_view(),
+        name='v1_order_payment_return',
+    ),
+    path('orders/<str:commande_id>/payment/', orders.OrderPaymentStatusView.as_view(), name='v1_order_payment'),
     path('orders/<str:commande_id>/cancel/', orders.OrderCancelView.as_view(), name='v1_order_cancel'),
     path('orders/<str:commande_id>/confirm-receipt/', orders.OrderConfirmReceiptView.as_view(), name='v1_order_confirm'),
     path('orders/<str:commande_id>/invoice/', orders.OrderInvoiceView.as_view(), name='v1_order_invoice'),
+    path('orders/<str:commande_id>/', orders.OrderDetailView.as_view(), name='v1_order_detail'),
 
     # Compte
     path('account/', account.AccountView.as_view(), name='v1_account'),
+    path('dashboard/', account.DashboardView.as_view(), name='v1_dashboard'),
     path('account/address/', account.AccountAddressView.as_view(), name='v1_account_address'),
     path('account/photo/', account.AccountPhotoView.as_view(), name='v1_account_photo'),
 

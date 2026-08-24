@@ -493,6 +493,7 @@ def filtrer_pieces_boutique(request):
             q_cat |= Q(categorie__cid__in=cids)
         qs = qs.filter(q_cat)
     sous_ids = []
+    sous_sids = []
     for raw in request.GET.getlist('sous_categorie'):
         raw = str(raw).strip()
         if not raw:
@@ -500,9 +501,14 @@ def filtrer_pieces_boutique(request):
         try:
             sous_ids.append(int(raw))
         except (TypeError, ValueError):
-            continue
-    if sous_ids:
-        qs = qs.filter(sous_categorie_id__in=sous_ids)
+            sous_sids.append(raw)
+    if sous_ids or sous_sids:
+        q_sous = Q()
+        if sous_ids:
+            q_sous |= Q(sous_categorie_id__in=sous_ids)
+        if sous_sids:
+            q_sous |= Q(sous_categorie__sid__in=sous_sids)
+        qs = qs.filter(q_sous)
     prix_min = request.GET.get('prix_min', '').strip()
     prix_max = request.GET.get('prix_max', '').strip()
     try:

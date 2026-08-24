@@ -1,7 +1,7 @@
 """Checkout livraison / retrait."""
 from decimal import Decimal
 
-from django.shortcuts import get_object_or_404
+from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,13 +19,18 @@ from ecom.services import (
     queryset_panier_online_actif,
     valider_commande_online,
 )
-from stock.models import MoyenPaiement, Panier, PanierItem
+from stock.models import Commande, PanierItem
 from stock.stock_local_service import total_panier_items
 
 from api.context import get_local_from_request, local_payload
 from api.permissions import IsClient
 from api.serializers.cart import CartItemSerializer
 from api.serializers.checkout import CheckoutConfirmSerializer
+from api.services.paiement import (
+    initier_paiement_ecom_api,
+    moyens_paiement_client,
+    resolve_moyen_paiement,
+)
 
 
 def _local_required(request):
@@ -93,10 +98,9 @@ class CheckoutPreviewView(APIView):
                 'email': request.user.email,
                 'nom': request.user.get_full_name() or request.user.username,
             },
-            'moyens_paiement': [
-                {'id': m.pk, 'nom': m.nom, 'code': m.code}
-                for m in MoyenPaiement.objects.filter(actif=True)
-            ],
+            'moyens_paiement': moyens_paiement_client(),
+            'moyen_defaut_code': 'geniuspay',
+            'geniuspay_min_amount': int(getattr(settings, 'GENIUSPAY_MIN_AMOUNT', 200) or 200),
         })
 
 
@@ -157,6 +161,7 @@ class CheckoutConfirmView(APIView):
                     {'telephone_livraison': ['Téléphone requis.']},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+        moyen = resolve_moyen_paiement(data.get('moyen_paiement'))
         try:
             commande, ticket = valider_commande_online(
                 request.user,
@@ -168,13 +173,23 @@ class CheckoutConfirmView(APIView):
                 adresse_domicile=data.get('adresse_domicile', ''),
                 telephone_livraison=data.get('telephone_livraison', ''),
                 instruction_livraison=data.get('instruction_livraison', ''),
+                moyen_paiement=moyen,
             )
         except ValueError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         from api.views.orders import build_order_detail
+
+        paiement = None
+        if (moyen.code or '').lower() == 'geniuspay':
+            paiement = initier_paiement_ecom_api(request, commande)
+            commande = Commande.objects.select_related('moyen_paiement').prefetch_related(
+                'paiements_geniuspay'
+            ).get(pk=commande.pk)
+
         return Response({
             'success': True,
             'commande': build_order_detail(request, commande),
             'ticket_numero': ticket.numero,
+            'paiement': paiement,
         }, status=status.HTTP_201_CREATED)

@@ -7876,28 +7876,26 @@ only screen and (max-width: 767px) {
 /* ——— Mes commandes (trackorder) — tableau + filtre live ——— */
 .ecom-orders-page {
     --ecom-orders-primary: #ff8b00;
-    --ecom-orders-primary-dark: #ff8b00;
+    --ecom-orders-primary-dark: #e67e00;
     --ecom-orders-accent-bg: #fff7ed;
-    --ecom-orders-border: #fed7aa;
-    --ecom-orders-muted: #6b7280;
+    --ecom-orders-border: #e8edf3;
+    --ecom-orders-muted: #64748b;
     --ecom-orders-heading: #1a1a1a;
 }
 
-.ecom-orders-header {
-    margin-bottom: 1.25rem;
-}
+.ecom-orders-header { margin-bottom: 1.25rem; }
 
 .ecom-orders-title {
     margin: 0;
-    font-size: 2.4rem;
+    font-size: 1.75rem;
     font-weight: 800;
+    letter-spacing: -0.03em;
     color: var(--ecom-orders-heading);
-    letter-spacing: -0.02em;
 }
 
 .ecom-orders-subtitle {
     margin: 0.35rem 0 0;
-    font-size: 1.25rem;
+    font-size: 0.95rem;
     color: var(--ecom-orders-muted);
     font-weight: 500;
 }
@@ -7906,6 +7904,11 @@ only screen and (max-width: 767px) {
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    background: #fff;
+    border: 1px solid var(--ecom-orders-border);
+    border-radius: 24px;
+    padding: 18px 18px 8px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .ecom-orders-toolbar {
@@ -7928,265 +7931,328 @@ only screen and (max-width: 767px) {
     left: 16px;
     top: 50%;
     transform: translateY(-50%);
-    color: #9ca3af;
+    color: #94a3b8;
     pointer-events: none;
-    font-size: 1.15rem;
+    font-size: 0.9rem;
 }
 
 .ecom-orders-search {
     width: 100%;
-    height: 54px;
-    padding: 0.55rem 1.15rem 0.55rem 2.9rem;
-    border: 1px solid #e5e7eb;
+    height: 46px;
+    padding: 0.55rem 1.15rem 0.55rem 2.6rem;
+    border: 1px solid var(--ecom-orders-border);
     border-radius: 999px;
-    background: #fff;
+    background: #f8fafc;
     color: var(--ecom-orders-heading);
-    font-size: 1.2rem;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .ecom-orders-search:focus {
     outline: none;
+    background: #fff;
     border-color: var(--ecom-orders-primary);
-    box-shadow: 0 0 0 3px rgba(255, 139, 0, 0.18);
+    box-shadow: 0 0 0 3px rgba(255, 139, 0, 0.16);
 }
 
 .ecom-orders-count {
-    font-size: 1.15rem;
+    font-size: 0.88rem;
     font-weight: 600;
     color: var(--ecom-orders-muted);
     white-space: nowrap;
 }
 
-.ecom-orders-count strong {
-    color: var(--ecom-orders-primary-dark);
-}
+.ecom-orders-count strong { color: var(--ecom-orders-primary); }
 
 .ecom-orders-empty {
     text-align: center;
     color: var(--ecom-orders-muted);
-    padding: 1.5rem;
+    padding: 1rem;
     display: none;
     margin: 0 0 0.75rem;
-    background: #fff;
-    border-radius: 10px;
-    font-size: 1.2rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    font-size: 0.95rem;
 }
 
-.ecom-orders-empty.is-visible {
-    display: block;
-}
+.ecom-orders-empty.is-visible { display: block; }
 
 .ecom-orders-table-wrap {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(255, 139, 0, 0.08);
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    scrollbar-gutter: stable;
 }
 
 .ecom-orders-table {
     width: 100%;
-    min-width: 760px;
+    min-width: 820px;
     margin-bottom: 0;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
 }
 
 .ecom-orders-table thead th {
-    background: var(--ecom-orders-primary) !important;
-    color: #fff !important;
+    background: #f8fafc !important;
+    color: #64748b !important;
     font-weight: 700;
     border: none !important;
-    padding: 1.05rem 1.2rem;
+    border-bottom: 1px solid var(--ecom-orders-border) !important;
+    padding: 1.05rem 1.1rem;
     white-space: nowrap;
     vertical-align: middle;
     font-size: 1.05rem;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.ecom-orders-table thead tr:first-child th:first-child {
-    border-top-left-radius: 12px;
-}
-
-.ecom-orders-table thead tr:first-child th:last-child {
-    border-top-right-radius: 12px;
+    letter-spacing: 0.06em;
 }
 
 .ecom-orders-table tbody td {
-    padding: 1.15rem 1.2rem;
-    border-color: #ffe4cc !important;
+    padding: 1.15rem 1.1rem;
+    border-bottom: 1px solid #eef2f6 !important;
+    border-top: 0 !important;
     vertical-align: middle;
-    color: #374151;
+    color: #334155;
     background: #fff;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
 }
 
-.ecom-orders-table tbody tr:nth-child(even) td {
-    background: var(--ecom-orders-accent-bg);
-}
+.ecom-orders-table tbody tr:last-child td { border-bottom: 0 !important; }
 
-.ecom-orders-table tbody tr:hover td {
-    background: #ffedd5 !important;
-}
+.ecom-orders-table tbody tr:hover td { background: #fffaf5 !important; }
 
-.ecom-orders-table tbody tr.is-filtered-out {
-    display: none !important;
-}
+.ecom-orders-table tbody tr.is-filtered-out { display: none !important; }
 
 .ecom-orders-numero {
-    font-weight: 700;
+    display: inline-block;
+    font-weight: 800;
     color: var(--ecom-orders-heading);
-    letter-spacing: 0.01em;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+}
+
+.ecom-orders-numero:hover { color: var(--ecom-orders-primary); }
+
+.ecom-orders-date {
+    margin: 0.2rem 0 0;
+    font-size: 1.1rem;
+    color: var(--ecom-orders-muted);
+}
+
+.ecom-orders-localite,
+.ecom-orders-reception {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #475569;
+}
+
+.ecom-orders-localite i {
+    color: var(--ecom-orders-primary);
+    font-size: 1.05rem;
 }
 
 .ecom-orders-total {
-    font-weight: 700;
+    font-weight: 800;
     color: var(--ecom-orders-heading);
     white-space: nowrap;
 }
 
+.ecom-orders-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
 .ecom-orders-badge {
-    display: inline-block;
-    padding: 0.4rem 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.38rem 0.9rem;
     border-radius: 999px;
     font-size: 1.05rem;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.3;
     white-space: nowrap;
 }
 
-.ecom-orders-badge--en_attente {
-    background: #374151;
-    color: #fff;
+.ecom-orders-badge--en_attente { background: #f1f5f9; color: #475569; }
+.ecom-orders-badge--valider { background: #fff7ed; color: #c2410c; }
+.ecom-orders-badge--livrer { background: #dcfce7; color: #15803d; }
+.ecom-orders-badge--annuler { background: #fee2e2; color: #b91c1c; }
+.ecom-orders-badge--recu,
+.ecom-orders-badge--paye { background: #ecfdf5; color: #047857; }
+.ecom-orders-badge--impaye { background: #fff7ed; color: #9a3412; }
+
+.ecom-orders-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
 }
 
-.ecom-orders-badge--valider {
-    background: #2563eb;
-    color: #fff;
-}
+.ecom-orders-actions form { margin: 0; }
 
-.ecom-orders-badge--livrer {
-    background: #16a34a;
-    color: #fff;
-}
-
-.ecom-orders-badge--annuler {
-    background: #dc2626;
-    color: #fff;
-}
-
-.ecom-orders-badge--recu {
-    background: #dcfce7;
-    color: #15803d;
-    margin-left: 0.25rem;
-}
-
-.ecom-orders-action-btn {
+.ecom-orders-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    height: auto;
-    min-height: 38px;
+    gap: 0.4rem;
+    width: auto !important;
+    height: 44px;
+    padding: 0 1.05rem;
+    border-radius: 999px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
     white-space: nowrap;
-    font-size: 14px !important;
-    font-weight: 700;
-    line-height: 1.2;
-    padding: 8px 12px !important;
+    line-height: 1;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.ecom-orders-action-btn .btn-text {
-    font-size: 14px;
-    font-weight: 700;
+.ecom-orders-btn--ghost {
+    background: #f8fafc;
+    border-color: var(--ecom-orders-border);
+    color: #334155;
 }
 
-.ecom-orders-action-btn .arrow-icon,
-.ecom-orders-action-btn i {
-    font-size: 14px;
+.ecom-orders-btn--ghost:hover {
+    border-color: var(--ecom-orders-primary);
+    color: var(--ecom-orders-primary);
 }
 
-.ecom-orders-confirmed {
+.ecom-orders-btn--primary {
+    background: var(--ecom-orders-primary);
+    color: #fff;
+}
+
+.ecom-orders-btn--primary:hover {
+    background: var(--ecom-orders-primary-dark);
+    color: #fff;
+}
+
+.ecom-orders-btn--danger {
+    background: #fff;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.ecom-orders-btn--danger:hover { background: #fef2f2; }
+
+.ecom-orders-confirmed,
+.ecom-orders-cancelled {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    color: #16a34a;
-    font-weight: 600;
-    font-size: 1.2rem;
+    font-weight: 700;
+    font-size: 1.1rem;
 }
 
-.ecom-orders-dash {
-    color: #9ca3af;
+.ecom-orders-pager {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 1.1rem 0 1.25rem;
 }
+
+.ecom-orders-pager-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: auto !important;
+    min-width: 120px;
+    max-width: none;
+    flex: 0 0 auto;
+    height: 44px;
+    padding: 0 1.25rem !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--ecom-orders-border) !important;
+    background: #fff !important;
+    color: var(--ecom-orders-heading) !important;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ecom-orders-pager-btn:hover:not(:disabled) {
+    border-color: var(--ecom-orders-primary) !important;
+    color: var(--ecom-orders-primary) !important;
+    background: #fff7ed !important;
+}
+
+.ecom-orders-pager-btn:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+.ecom-orders-pager-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 140px;
+    height: 44px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid var(--ecom-orders-border);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ecom-orders-heading);
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+.ecom-orders-confirmed { color: #16a34a; }
+.ecom-orders-cancelled { color: #dc2626; }
 
 .ecom-orders-empty-state {
     background: #fff;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 8px 24px rgba(255, 139, 0, 0.06);
+    border: 1px solid var(--ecom-orders-border);
+    border-radius: 24px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.ecom-orders-empty-icon {
+    display: inline-flex;
+    width: 56px;
+    height: 56px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: #fff7ed;
+    color: var(--ecom-orders-primary);
+    font-size: 1.25rem;
+    margin-bottom: 0.85rem;
+}
+
+.ecom-orders-empty-title {
+    margin: 0;
+    font-weight: 800;
+    color: var(--ecom-orders-heading);
+}
+
+.ecom-orders-empty-text {
+    margin: 0.35rem 0 1.1rem;
+    color: var(--ecom-orders-muted);
 }
 
 @media (max-width: 767px) {
-    .ecom-orders-title {
-        font-size: 1.85rem;
-    }
-
-    .ecom-orders-subtitle {
-        font-size: 1.1rem;
-    }
-
-    .ecom-orders-search {
-        font-size: 1.1rem;
-        height: 50px;
-    }
-
-    .ecom-orders-search-wrap {
-        max-width: none;
-    }
-
-    .ecom-orders-table-wrap {
-        margin-inline: 0;
-        border-radius: 10px;
-        /* Indice visuel : un peu de fade à droite si contenu déborde */
-        background:
-            linear-gradient(90deg, #fff 85%, rgba(255, 255, 255, 0.4)) local,
-            #fff;
-    }
-
-    .ecom-orders-table {
-        min-width: 700px;
-        font-size: 1.05rem;
-    }
-
-    .ecom-orders-table thead th {
-        font-size: 0.9rem;
-        white-space: nowrap;
-    }
-
+    .ecom-orders-title { font-size: 1.45rem; }
+    .ecom-orders-shell { padding: 14px 12px 6px; border-radius: 18px; }
+    .ecom-orders-search { font-size: 0.95rem; height: 44px; }
+    .ecom-orders-search-wrap { max-width: none; }
+    .ecom-orders-table { min-width: 760px; }
     .ecom-orders-table thead th,
-    .ecom-orders-table tbody td {
-        padding: 0.85rem 0.9rem;
-        font-size: 1.05rem;
-        white-space: nowrap;
-    }
-
-    .ecom-orders-badge {
-        font-size: 0.9rem;
-        white-space: nowrap;
-    }
-
-    .ecom-orders-action-btn {
-        min-height: 36px;
-        padding: 7px 10px !important;
-        font-size: 13px !important;
-    }
+    .ecom-orders-table tbody td { padding: 0.8rem 0.75rem; }
 }
 
 /* ——— Facture e-com (style minimaliste type invoice) ——— */
@@ -8595,6 +8661,8 @@ only screen and (max-width: 767px) {
     body.ecom-invoice-body .rts-footer-area,
     body.ecom-invoice-body .rts-copyright-area,
     body.ecom-invoice-body .progress-wrap,
+    body.ecom-invoice-body .contact-float,
+    body.ecom-invoice-body .contact-chatbot,
     body.ecom-invoice-body #anywhere-home,
     body.ecom-invoice-body .rts-ltr-rtl-setting-button-area,
     body.ecom-invoice-body .product-details-popup-wrapper,
@@ -10021,15 +10089,23 @@ only screen and (max-width: 767px) {
 
 .ecom-pd__bar-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
     padding: 0 10px;
 }
 
 .ecom-pd__bar-item i {
-    color: #ff8b00;
-    font-size: 18px;
-    margin-top: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    margin-top: 0;
+    border-radius: 50%;
+    background: #ff8b00;
+    color: #fff;
+    font-size: 15px;
 }
 
 .ecom-pd__bar-item strong {

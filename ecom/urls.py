@@ -20,6 +20,7 @@ from .views import (
     confirmer_reception,
     contact,
     cookies_policy,
+    dashboard,
     ajax_set_livraison_zone,
     ajax_communes_livraison,
     ajax_frais_livraison,
@@ -71,6 +72,7 @@ urlpatterns = [
     path('conditions-generales/', terms_condition, name='ecom_terms_condition'),
     path('newsletter/', newsletter_subscribe, name='ecom_newsletter'),
     path('compte/', account, name='ecom_account'),
+    path('tableau-de-bord/', dashboard, name='ecom_dashboard'),
     path('facture/<str:commande_id>/', invoice, name='ecom_invoice'),
     path('facture/<str:commande_id>/imprimer/', imprimer_facture, name='ecom_imprimer_facture'),
     # Panier & commande

@@ -136,13 +136,16 @@ class ProductDetailView(APIView):
         )
 
         stocks = []
-        if not local:
-            for sl in piece.stocks.filter(active_sortie=True, quantite_disponible__gt=0).select_related('local_entrepot'):
-                stocks.append({
-                    'localite_code': str(sl.local_entrepot.code),
-                    'localite_nom': sl.local_entrepot.nom,
-                    'quantite': sl.quantite_disponible,
-                    'prix': get_prix_unitaire(piece, sl.local_entrepot),
-                })
+        for sl in piece.stocks.filter(
+            active_sortie=True, quantite_disponible__gt=0,
+        ).select_related('local_entrepot'):
+            stocks.append({
+                'localite_code': str(sl.local_entrepot.code),
+                'localite_nom': sl.local_entrepot.nom,
+                'quantite': sl.quantite_disponible,
+                'prix': get_prix_unitaire(piece, sl.local_entrepot),
+            })
         data['stocks_par_localite'] = stocks
+        data['prix_catalogue'] = piece.prix_unitaire
+        data['emplacement'] = piece.emplacement or ''
         return Response(data)
