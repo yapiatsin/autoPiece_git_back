@@ -9,6 +9,10 @@
 <li class="breadcrumb-item active">Archives</li>
 {% endblock breadcrumb %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
 {% block page_action_buttons %}
 <a href="{% url 'stock' %}" class="btn btn-outline-success" title="Retour au stock actif">
     <i class="fa fa-cubes"></i> Stock actif
@@ -24,9 +28,10 @@
 {% endblock page_action_suffix %}
 
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
     {% include "mag/partials/_periode_filter_modal.html" %}
 
-    <div class="col-lg-12 mb-2">
+    <div class="mag-cmd-line-section">
         <div class="alert alert-secondary mb-0" role="status">
             <i class="fa fa-archive"></i>
             {{ count_archive }} pièce(s) archivée(s).
@@ -35,18 +40,18 @@
         </div>
     </div>
 
-    <div class="col-lg-12">
-        <div class="card">
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
             <div class="header">
-                <h2>Pièces archivées</h2>
+                <h2 class="mb-0">Pièces archivées</h2>
             </div>
             <div class="body">
-                <div class="mag-table-shell" x-data="magTableFilter()">
-                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                <div class="mag-table-shell" x-data="magTableFilter(10)">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher pièce, motif, auteur…" %}
                     <div class="table-responsive">
-                        <table class="table table-hover mag-data-table">
+                        <table class="table mag-data-table mb-0">
                         <thead>
-                            <tr class='text-info'>
+                            <tr>
                                 <th>N°#</th>
                                 <th>N°Pièce</th>
                                 <th>Designation</th>
@@ -63,24 +68,6 @@
                                 <th class="text-center">Restaurer</th>
                             </tr>
                         </thead>
-                        <tfoot>
-                            <tr class='text-info'>
-                                <th>N°#</th>
-                                <th>N°Pièce</th>
-                                <th>Designation</th>
-                                <th>Categorie</th>
-                                <th class="text-center">Prix vente</th>
-                                <th class="text-center">Prix vente local</th>
-                                <th class="text-center">Quantite stock</th>
-                                <th class="text-center">Type archive</th>
-                                <th>Archivé par</th>
-                                <th>Localité</th>
-                                <th>Date archive</th>
-                                <th>Motif</th>
-                                <th class="text-center">Action</th>
-                                <th class="text-center">Restaurer</th>
-                            </tr>
-                        </tfoot>
                         <tbody>
                             {% for d in piece_queryset %}
                                 <tr>
@@ -184,10 +171,14 @@
                         </tbody>
                     </table>
                 </div>
+                {% if piece_queryset %}
+                {% include "mag/partials/_table_pager.html" %}
+                {% endif %}
                 </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}

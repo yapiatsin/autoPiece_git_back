@@ -9,50 +9,21 @@
 <li class="breadcrumb-item active">Historique des entrées</li>
 {% endblock breadcrumb %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+
     {% include "mag/partials/_periode_filter_modal.html" %}
     {% include "mag/partials/_dashboard_kpi_styles.html" %}
-    <div class="row dashboard-kpi-row w-100 mx-0">
-        <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
-            <div class="card top_widget dashboard-kpi dashboard-kpi--entry">
-                <div class="body">
-                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-archive"></i></span></div>
-                    <div class="content">
-                        <div class="text mb-1 text-uppercase">Total entrées en stock (pièce)</div>
-                        <h4 class="number mb-0">{{ total_entre_piece }} <span class="kpi-value-muted">Val {{ valeur_entre_piece }} frs</span></h4>
-                        <small class="text-muted">{{ moisact }} — {{ annee }}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
-            <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
-                <div class="body">
-                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-money"></i></span></div>
-                    <div class="content">
-                        <div class="text mb-1 text-uppercase">Pièces vendues (cette pièce)</div>
-                        <h4 class="number mb-0">{{ nb_piece_vendu }} <span class="kpi-value-muted">Val {{ val_piece_vendu }} frs</span></h4>
-                        <small class="text-muted">{{ moisact }} — {{ annee }}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
-            <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
-                <div class="body">
-                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-cubes"></i></span></div>
-                    <div class="content">
-                        <div class="text mb-1 text-uppercase">Stock actuel de la pièce</div>
-                        <h4 class="number mb-0">{{ count_piece }} <span class="kpi-value-muted">Val {{ valeur_piece }} frs</span></h4>
-                        <small class="text-muted">{{ annee }}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="mag-cmd-line-section">
+        {% include "mag/partials/_kpi_row_hist_entre.html" %}
     </div>
 
     <div class="col-lg-12">
-        <div class="card" style="overflow-y: auto">
+        <div class="card mag-cmd-line-card" style="overflow-y: auto">
             <div class="mobile-left">
                 <a class="btn btn-primary toggle-email-nav" data-toggle="collapse" href="#email-nav" role="button" aria-expanded="true" aria-controls="email-nav">
                     <span class="btn-label"><i class="la la-bars"></i></span>
@@ -93,13 +64,13 @@
                         <h2>Entrées de stock pour {{ piece.designation }} ({{ piece.numero_piece }})</h2>
                     </div>
                     <div class="body">
-                        <div class="mag-table-shell" x-data="magTableFilter()">
-                            {% include "mag/partials/_alpine_table_toolbar.html" %}
+                            <div class="mag-table-shell" x-data="magTableFilter(10)">
+                            {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher date, fournisseur…" %}
                             <div class="table-responsive">
-                                <table class="table table-hover mag-data-table">
+                                <table class="table mag-data-table mb-0">
                                 <thead>
-                                    <tr class='text'>
-                                        <th>N°#</th>
+                                    <tr>
+                                        <th>N°</th>
                                         <th>Date</th>
                                         <th>Quantité ajoutée</th>
                                         <th>Prix d'achat</th>
@@ -109,18 +80,6 @@
                                         <th>Ajouté par</th>
                                     </tr>
                                 </thead>
-                                <tfoot>
-                                    <tr class='text'>
-                                        <th>N°#</th>
-                                        <th>Date</th>
-                                        <th>Quantité ajoutée</th>
-                                        <th>Prix d'achat</th>
-                                        <th>Total</th>
-                                        <th>Provenance</th>
-                                        <th>Fournisseur</th>
-                                        <th>Ajouté par</th>
-                                    </tr>
-                                </tfoot>
                                 <tbody>
                                     {% for e in entrees_piece %}
                                         <tr>
@@ -131,9 +90,9 @@
                                             <th>{{ e.quantitajout|mul:e.prix_achat|floatformat:2 }} frs</th>
                                             <th>
                                                 {% if e.origine_type == 'transfert_local' and e.origine_local %}
-                                                <span class="badge badge-info">Agence {{ e.origine_local.nom }}</span>
+                                                <span class="mag-cmd-badge mag-cmd-badge--valider">Agence {{ e.origine_local.nom }}</span>
                                                 {% else %}
-                                                <span class="badge badge-secondary">Fournisseur</span>
+                                                <span class="mag-cmd-badge mag-cmd-badge--en-attente">Fournisseur</span>
                                                 {% endif %}
                                             </th>
                                             <th>{{ e.fournisseur.nom|default:"-" }}</th>
@@ -149,6 +108,8 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {% include "mag/partials/_table_pager.html" %}
                         </div>
                     </div>
                 </div>
@@ -178,6 +139,7 @@
             });
         });
     </script>
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}

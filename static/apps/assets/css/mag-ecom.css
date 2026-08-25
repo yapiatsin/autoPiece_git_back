@@ -35,11 +35,30 @@ body.mag-ecom-body > #wrapper {
 
 #main-content.mag-ecom-main {
     flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
     width: 100% !important;
     float: none !important;
     margin-right: 0 !important;
     background: linear-gradient(180deg, #fffaf5 0%, #f8fafc 45%, #f1f5f9 100%) !important;
     padding-bottom: 2rem;
+}
+
+#main-content.mag-ecom-main > .container-fluid {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+}
+
+#main-content.mag-ecom-main .app-page-header {
+    flex: 0 0 auto;
+}
+
+#main-content.mag-ecom-main > .container-fluid > .row {
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 /* Cards */
@@ -288,6 +307,22 @@ body.mag-ecom-body > #wrapper {
     background: var(--dash-filter-bg) !important;
     border: none !important;
     color: #fff !important;
+}
+
+body.mag-ecom-body [id$="FilterModal"] .modal-header {
+    background: #fff !important;
+    color: #1f2937 !important;
+    border: none;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+body.mag-ecom-body [id$="FilterModal"] .modal-header .close {
+    color: #6b7280 !important;
+    text-shadow: none;
+}
+
+body.mag-ecom-body [id$="FilterModal"] .modal-title {
+    color: #1f2937 !important;
 }
 
 .mag-ecom-body .text-primary {
@@ -1017,7 +1052,11 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-section-title,
 body.mag-ecom-body.h_menu .mag-mobile-menu-header-text,
 body.mag-ecom-body.h_menu .mag-mobile-menu-close,
 body.mag-ecom-body.h_menu .mag-mobile-menu-logout,
-body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
+body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn,
+body.mag-ecom-body.h_menu .mag-drawer-shortcuts,
+body.mag-ecom-body.h_menu .mag-drawer-cathead,
+body.mag-ecom-body.h_menu .mag-mobile-menu-brand,
+body.mag-ecom-body.h_menu .mag-mobile-menu-header-spacer {
     display: none;
 }
 
@@ -1309,14 +1348,16 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
     }
 
     body.mag-ecom-body.h_menu header .desk-menu .menu-container.mag-mobile-menu {
-        width: min(300px, 88vw) !important;
-        right: -320px !important;
+        width: min(320px, 88vw) !important;
+        left: -340px !important;
+        right: auto !important;
         top: 0 !important;
         padding: 0 !important;
         padding-top: env(safe-area-inset-top, 0px);
         background: #fff !important;
-        border-left: 1px solid #fed7aa;
-        box-shadow: -12px 0 32px rgba(15, 23, 42, 0.12);
+        border-right: 1px solid #e5e7eb;
+        border-left: 0 !important;
+        box-shadow: 12px 0 32px rgba(15, 23, 42, 0.12);
         height: 100vh !important;
         height: 100dvh !important;
         max-height: 100vh !important;
@@ -1326,13 +1367,17 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
         overflow: hidden !important;
         z-index: 1100 !important;
         isolation: isolate;
+        transition: left 0.28s ease;
     }
 
+    body.mag-ecom-body.h_menu.open-menu header .desk-menu .menu-container.mag-mobile-menu,
     body.mag-ecom-body.h_menu.open-menu header .desk-menu .menu-container.mag-mobile-menu {
-        right: 0 !important;
+        left: 0 !important;
+        right: auto !important;
     }
 
     /* Navbar ne doit plus se superposer au panneau (comme Paramètres) */
+    body.mag-ecom-body.h_menu.open-menu header,
     body.mag-ecom-body.h_menu.open-menu header {
         background: transparent !important;
         border-color: transparent !important;
@@ -1341,10 +1386,14 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
         pointer-events: none !important;
     }
 
+    body.mag-ecom-body.h_menu.open-menu header .desk-menu .menu-container.mag-mobile-menu,
     body.mag-ecom-body.h_menu.open-menu header .desk-menu .menu-container.mag-mobile-menu {
         pointer-events: auto !important;
     }
 
+    body.mag-ecom-body.h_menu.open-menu header .logo,
+    body.mag-ecom-body.h_menu.open-menu header .header-nav-actions,
+    body.mag-ecom-body.h_menu.open-menu header .hamburger-menu,
     body.mag-ecom-body.h_menu.open-menu header .logo,
     body.mag-ecom-body.h_menu.open-menu header .header-nav-actions,
     body.mag-ecom-body.h_menu.open-menu header .hamburger-menu {
@@ -1353,6 +1402,7 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
         pointer-events: none !important;
     }
 
+    body.mag-ecom-body.h_menu.open-menu .over-menu,
     body.mag-ecom-body.h_menu.open-menu .over-menu {
         z-index: 1090 !important;
         pointer-events: auto;
@@ -1360,12 +1410,12 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
 
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu-head.mag-mobile-menu-header {
         display: flex !important;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
-        gap: 0.75rem;
-        padding: 1.1rem 1.15rem 0.95rem !important;
-        background: linear-gradient(135deg, #fff7ed 0%, #fff 70%) !important;
-        border-bottom: 1px solid #fed7aa;
+        gap: 0.5rem;
+        padding: 0.85rem 1rem !important;
+        background: #fff !important;
+        border-bottom: 1px solid #e5e7eb;
         color: inherit !important;
         flex-shrink: 0;
         position: relative;
@@ -1373,49 +1423,52 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
     }
 
     body.mag-ecom-body.h_menu .mag-mobile-menu-header-text {
+        display: none !important;
+    }
+
+    body.mag-ecom-body.h_menu .mag-mobile-menu-brand {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+    }
+
+    body.mag-ecom-body.h_menu .mag-mobile-menu-logo {
         display: block;
+        height: 36px;
+        width: auto;
+        max-width: 160px;
+        object-fit: contain;
     }
 
-    body.mag-ecom-body.h_menu .mag-mobile-menu-header-text h6 {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #1a1a1a;
-    }
-
-    body.mag-ecom-body.h_menu .mag-mobile-menu-header-text p {
-        margin: 0.2rem 0 0;
-        font-size: 0.78rem;
-        color: var(--mag-muted, #6b7280);
+    body.mag-ecom-body.h_menu .mag-mobile-menu-header-spacer {
+        display: block !important;
+        width: 36px;
+        flex-shrink: 0;
     }
 
     body.mag-ecom-body.h_menu .mag-mobile-menu-close {
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        color: #9a3412 !important;
-        background: #fff;
-        border: 1px solid #fdba74;
+        width: 36px;
+        height: 36px;
+        border-radius: 0;
+        color: #111827 !important;
+        background: transparent;
+        border: 0;
+        font-size: 1.15rem;
         text-decoration: none !important;
         flex-shrink: 0;
     }
 
     body.mag-ecom-body.h_menu .mag-mobile-menu-close:hover {
-        background: var(--mag-primary, #ea580c);
-        border-color: var(--mag-primary, #ea580c);
-        color: #fff !important;
+        background: transparent;
+        color: #f97316 !important;
     }
 
     body.mag-ecom-body.h_menu .mag-mobile-menu-user {
-        display: flex !important;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem 1.15rem;
-        border-bottom: 1px solid #f1f5f9;
-        flex-shrink: 0;
+        display: none !important;
     }
 
     body.mag-ecom-body.h_menu .mag-mobile-menu-user-avatar {
@@ -1492,14 +1545,70 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
         border-radius: 999px;
     }
 
+    body.mag-ecom-body.h_menu .mag-drawer-shortcuts {
+        display: flex !important;
+        flex-direction: column;
+        margin: 0 -1.15rem 0.25rem;
+        padding: 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    body.mag-ecom-body.h_menu .mag-drawer-toplink {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.95rem 1.15rem;
+        color: #9ca3af !important;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-decoration: none !important;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    body.mag-ecom-body.h_menu .mag-drawer-toplink i {
+        color: #d1d5db;
+        font-size: 1rem;
+    }
+
+    body.mag-ecom-body.h_menu .mag-drawer-iconrow {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.85rem 1.15rem;
+        color: #111827 !important;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-decoration: none !important;
+    }
+
+    body.mag-ecom-body.h_menu .mag-drawer-iconrow i {
+        width: 22px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 1.05rem;
+    }
+
+    body.mag-ecom-body.h_menu .mag-drawer-cathead {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 0 0.35rem;
+    }
+
     body.mag-ecom-body.h_menu .mag-mobile-menu-section-title {
         display: block !important;
-        margin: 0 0 0.65rem;
-        font-size: 0.7rem;
+        margin: 0;
+        font-size: 0.72rem;
         font-weight: 700;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #9a3412;
+        color: #9ca3af;
+    }
+
+    body.mag-ecom-body.h_menu .mag-nav-dashboard-item {
+        display: none !important;
     }
 
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu-header-container ul {
@@ -1507,7 +1616,7 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
         margin: 0 !important;
         display: flex;
         flex-direction: column;
-        gap: 0.35rem;
+        gap: 0;
         list-style: none !important;
     }
 
@@ -1538,31 +1647,30 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
         display: flex !important;
         align-items: center;
         gap: 0.7rem;
-        padding: 0.7rem 0.75rem !important;
-        border-radius: 12px !important;
-        border: 1px solid #f1f5f9 !important;
-        border-bottom: 1px solid #f1f5f9 !important;
-        color: #334155 !important;
+        padding: 0.85rem 0.15rem !important;
+        border-radius: 0 !important;
+        border: 0 !important;
+        border-bottom: 0 !important;
+        color: #111827 !important;
         text-decoration: none !important;
-        font-size: 0.84rem;
+        font-size: 0.95rem;
         font-weight: 500;
-        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-        background: #f8fafc !important;
+        background: transparent !important;
         box-shadow: none !important;
     }
 
-    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li > a > i {
+    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li > a > i:not(.mag-nav-parent-chevron) {
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
+        width: 22px;
+        height: auto;
         margin-right: 0 !important;
-        border-radius: 9px;
-        background: #fff;
-        color: var(--mag-primary, #ea580c) !important;
-        border: 1px solid #ffedd5;
-        font-size: 0.82rem;
+        border-radius: 0;
+        background: transparent;
+        color: #6b7280 !important;
+        border: 0;
+        font-size: 1.05rem;
         flex-shrink: 0;
         text-align: center;
     }
@@ -1570,42 +1678,64 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li > a:hover,
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li:hover > a,
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.active > a {
-        background: #fff7ed !important;
-        color: #9a3412 !important;
-        border-color: #fdba74 !important;
-        box-shadow: 0 6px 16px rgba(249, 115, 22, 0.12);
+        background: transparent !important;
+        color: #111827 !important;
+        border-color: transparent !important;
+        box-shadow: none;
     }
 
-    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li > a:hover > i,
-    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.active > a > i {
-        background: var(--mag-primary, #ea580c);
-        border-color: var(--mag-primary, #ea580c);
-        color: #fff !important;
+    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li > a:hover > i:not(.mag-nav-parent-chevron),
+    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.active > a > i:not(.mag-nav-parent-chevron) {
+        background: transparent;
+        border-color: transparent;
+        color: #f97316 !important;
     }
 
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children > a::before,
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children > a::after {
-        background-color: #fdba74 !important;
-        right: 14px !important;
+        display: none !important;
+        content: none !important;
+    }
+
+    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children > a .mag-nav-parent-chevron {
+        margin-left: auto;
+        font-size: 0.72rem;
+        color: #9ca3af;
+        transition: transform 0.2s ease;
+    }
+
+    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children.is-expanded > a .mag-nav-parent-chevron {
+        transform: rotate(180deg);
+        color: #f97316;
     }
 
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children .sub-menu {
-        width: min(300px, 88vw) !important;
-        height: 100% !important;
-        max-height: 100vh !important;
-        max-height: 100dvh !important;
-        background: #fff !important;
-        border-left: 1px solid #fed7aa;
-        box-shadow: -12px 0 32px rgba(15, 23, 42, 0.12);
-        padding: 0.75rem 1rem 1rem !important;
-        z-index: 1101 !important;
-        padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-        scrollbar-width: thin;
-        scrollbar-color: #fdba74 transparent;
+        display: none !important;
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 0 0.35rem 2rem !important;
+        z-index: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        float: none !important;
+    }
+
+    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children.is-expanded > .sub-menu {
+        display: block !important;
+    }
+
+    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children .sub-menu .mag-nav-dropdown-header,
+    body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu li.back {
+        display: none !important;
     }
 
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children .sub-menu::-webkit-scrollbar {
@@ -1648,16 +1778,15 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-close-btn {
         display: flex !important;
         align-items: center;
         gap: 0.7rem;
-        padding: 0.7rem 0.75rem !important;
-        border-radius: 12px !important;
-        border: 1px solid #f1f5f9 !important;
-        border-bottom: 1px solid #f1f5f9 !important;
-        color: #334155 !important;
-        font-size: 0.84rem;
+        padding: 0.55rem 0.25rem !important;
+        border-radius: 0 !important;
+        border: 0 !important;
+        color: #4b5563 !important;
+        font-size: 0.9rem;
         font-weight: 500;
         line-height: 1.35;
         text-decoration: none !important;
-        background: #f8fafc !important;
+        background: transparent !important;
         box-shadow: none !important;
         transform: none !important;
         position: relative;
@@ -2545,9 +2674,12 @@ body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.me
 
 /* Mobile : panneau latéral — badges + cartes (aligné navbar) */
 @media (max-width: 991px) {
-    body.mag-ecom-body.h_menu .mag-nav-dropdown-header,
-    body.mag-ecom-body.h_menu .mag-nav-parent-chevron {
+    body.mag-ecom-body.h_menu .mag-nav-dropdown-header {
         display: none !important;
+    }
+
+    body.mag-ecom-body.h_menu .mag-nav-parent-chevron {
+        display: inline-block !important;
     }
 
     body.mag-ecom-body.h_menu .mag-nav-dropdown-body {

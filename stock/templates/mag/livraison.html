@@ -8,58 +8,50 @@
 <li class="breadcrumb-item active">{% block page %}Livraison{% endblock page %}</li>
 {% endblock breadcrumb %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+
     {% include "mag/partials/_periode_filter_modal.html" %}
     {% include "mag/partials/_dashboard_kpi_styles.html" %}
-    {% include "mag/partials/_kpi_row_livraison.html" %}
+    <div class="mag-cmd-line-section">
+        {% include "mag/partials/_kpi_row_livraison.html" %}
+    </div>
 
-    <div class="col-lg-12 mt-1">
-        <div class="card">
-            <div class="header">
-                <a class="m-4 btn-outline-success buttons-csv" tabindex="0" aria-controls="DataTables_Table_1" href="#"><span>Liste commandes</span></a> 
-                
-                <ul class="header-dropdown">
-                    <li class="dropdown">
-                    <span id="panier-quantite-total" class="badge badge-warning mb-0"><i class="icon-basket text"></i> {{tot_panier}} - Tot {{panier_items|length}}</span>
-                    </li>
-                </ul>
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
+            <div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:10px;">
+                <h2 class="mb-0">Liste commandes</h2>
+                <span class="mag-cmd-chip mag-cmd-chip--muted"><i class="icon-basket"></i> {{tot_panier}} — {{panier_items|length}}</span>
             </div>
             <div class="body">
                 <form method="post" id="form-valider-panier">
                     {% csrf_token %}
-                    <div class="cwidget-scroll" id="panier-contenu" style="border-radius:18px; height: 400px; overflow-y: auto;">
-                        <div class="body">
-                            <div class="mag-table-shell" x-data="magTableFilter()">
-                                {% include "mag/partials/_alpine_table_toolbar.html" %}
+                    <div class="cwidget-scroll" id="panier-contenu" style="border-radius:18px; max-height: 480px; overflow-y: auto;">
+                            <div class="mag-table-shell" x-data="magTableFilter(10)">
+                                {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher n°, ticket, livreur…" %}
                                 <div class="table-responsive">
-                                    <table class="table table-hover mag-data-table">
+                                    <table class="table mag-data-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th data-breakpoints="sm xs md">N°Cmd</th>
-                                            <th data-breakpoints="sm xs md">Ticket</th>
-                                            <th data-breakpoints="xs">Total</th>
-                                            <th data-breakpoints="sm xs md">Date commande</th>
-                                            <th data-breakpoints="sm xs md">Livrer par</th>
-                                            <th data-breakpoints="sm xs md">Statut Livraison</th>
+                                            <th>N° cmd</th>
+                                            <th>Ticket</th>
+                                            <th>Total</th>
+                                            <th>Date commande</th>
+                                            <th>Livré par</th>
+                                            <th>Statut livraison</th>
                                         </tr>
                                     </thead>
-                                    <tfoot>
-                                        <tr>
-                                            <th data-breakpoints="sm xs md">N°Cmd</th>
-                                            <th data-breakpoints="sm xs md">Ticket</th>
-                                            <th data-breakpoints="xs">Total</th>
-                                            <th data-breakpoints="sm xs md">Date commande</th>
-                                            <th data-breakpoints="sm xs md">Livrer par</th>
-                                            <th data-breakpoints="sm xs md">Statut Livraison</th>
-                                        </tr>
-                                    </tfoot>
                                     <tbody id="liste-livraisons-body">
                                         {% include 'mag/partials/_liste_livraisons.html' %}
                                     </tbody>
                                 </table>
                                 </div>
+                                {% include "mag/partials/_table_pager.html" %}
                             </div>
-                        </div>
                     </div>
                 </form>
             </div>
@@ -111,7 +103,6 @@
         // Localité du livreur connecté (null = admin, voit tout)
         const CURRENT_USER_LOCAL_ID = {% if request.user.local_entrepot_id %}"{{ request.user.local_entrepot_id }}"{% else %}null{% endif %};
         const CURRENT_USER_IS_ADMIN = {% if request.user.is_superuser or request.user.role == 'admin' %}true{% else %}false{% endif %};
-
         // Ensemble des tickets déjà affichés — permet au polling de détecter les nouveautés
         let knownLivraisonTickets = new Set();
 
@@ -125,7 +116,6 @@
             });
             return tickets;
         }
-
         function reloadLivraisons(options) {
             options = options || {};
             return fetch("{% url 'ajax_reload_livraisons' %}", { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -241,6 +231,7 @@
             50% { transform: scale(1.1); }
         }
     </style>
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}

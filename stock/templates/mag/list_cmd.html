@@ -4,20 +4,25 @@
 {% block title %}AUTO-PIECE{% endblock title %}
 {% block page_title %}Liste commandes{% endblock page_title %}
 {% block page %}Liste commandes{% endblock page %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
 {% block main_content %}
 
 {% include "mag/partials/_periode_filter_modal.html" %}
 
-<div class="col-md-12 p-2 mt-4">
-    <div class="card" id="liste-commandes-live">
-        {% include "mag/partials/_liste_commandes_table.html" %}
+<div class="mag-cmd-line-page col-12 px-0">
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card" id="liste-commandes-live">
+            {% include "mag/partials/_liste_commandes_table.html" %}
+        </div>
     </div>
 </div>
 
 {% endblock main_content %}
 
 {% block extra_js %}
-{% include "mag/partials/_periode_filter_js.html" %}
+    {% include "mag/partials/_periode_filter_js.html" %}
 <script>
 (function () {
     var AJAX_RELOAD_LISTE_CMD_URL = "{% url 'ajax_reload_liste_commandes' %}";

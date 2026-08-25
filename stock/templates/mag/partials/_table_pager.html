@@ -1,0 +1,7 @@
+<nav class="mag-cmd-pager" aria-label="{{ pager_label|default:'Pagination' }}" x-show="pageSize > 0 && visibleCount > 0">
+    <button type="button" class="mag-cmd-pager-btn" :disabled="page <= 1" @click="prevPage()">Previous</button>
+    <span class="mag-cmd-pager-page">
+        Page <strong x-text="page"></strong> / <span x-text="pageCount"></span>
+    </span>
+    <button type="button" class="mag-cmd-pager-btn" :disabled="page >= pageCount" @click="nextPage()">Next</button>
+</nav>

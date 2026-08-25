@@ -118,13 +118,17 @@
                     <nav class="box-menu header-nav-center">
                         <div class="menu-container mag-mobile-menu">
                             <div class="menu-head mag-mobile-menu-header">
+                                <a href="javascript:void(0);" class="mag-mobile-menu-close" title="Fermer" aria-label="Fermer">
+                                    <i class="fa fa-times" aria-hidden="true"></i>
+                                </a>
+                                <a href="{% url 'tbord' %}" class="mag-mobile-menu-brand" title="AUTO-PIÈCE">
+                                    <img src="{% static 'logo.png' %}" alt="AUTO-PIÈCE" class="mag-mobile-menu-logo">
+                                </a>
+                                <span class="mag-mobile-menu-header-spacer" aria-hidden="true"></span>
                                 <div class="mag-mobile-menu-header-text">
                                     <h6>Menu</h6>
                                     <p>Navigation de l’espace magasin</p>
                                 </div>
-                                <a href="javascript:void(0);" class="mag-mobile-menu-close" title="Fermer" aria-label="Fermer">
-                                    <i class="fa fa-times" aria-hidden="true"></i>
-                                </a>
                             </div>
                             <div class="mag-mobile-menu-user">
                                 <span class="mag-mobile-menu-user-avatar">
@@ -143,7 +147,37 @@
                                 </div>
                             </div>
                             <div class="menu-header-container">
-                                <p class="mag-mobile-menu-section-title">Navigation</p>
+                                <div class="mag-drawer-shortcuts">
+                                    <a href="javascript:void(0);" class="mag-drawer-toplink right_setting">
+                                        <span>BESOIN D'AIDE ?</span>
+                                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                                    </a>
+                                    <a href="{% url 'change_password' %}" class="mag-drawer-toplink">
+                                        <span>VOTRE COMPTE AUTO-PIÈCE</span>
+                                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                                    </a>
+                                    <a href="{% url 'change_password' %}" class="mag-drawer-iconrow">
+                                        <i class="fa fa-user-o" aria-hidden="true"></i>
+                                        <span>Profil</span>
+                                    </a>
+                                    <a href="{% url 'tbord' %}" class="mag-drawer-iconrow">
+                                        <i class="fa fa-th-large" aria-hidden="true"></i>
+                                        <span>Tableau de bord</span>
+                                    </a>
+                                    {% for menu_cat in user_menu_categories %}
+                                        {% if menu_cat.display_label == "Comptes" %}
+                                            {% for perm in menu_cat.permissions %}
+                                            <a href="{% url perm.url %}" class="mag-drawer-iconrow">
+                                                <i class="fa fa-users" aria-hidden="true"></i>
+                                                <span>{{ perm.name }}</span>
+                                            </a>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="mag-drawer-cathead">
+                                    <p class="mag-mobile-menu-section-title">Nos catégories</p>
+                                </div>
                                 <ul id="cd-primary-nav" class="menu">
                                     {% for menu_cat in user_menu_categories %}
                                         {% if menu_cat.display_label == "Comptes" %}
@@ -151,7 +185,7 @@
                                         {% elif menu_cat.display_label == "Dashboard" %}
                                             {% for perm in menu_cat.permissions %}
                                                 {% if forloop.first %}
-                                                <li class="menu-item">
+                                                <li class="menu-item mag-nav-dashboard-item">
                                                     <a href="{% url perm.url %}" class="mag-nav-single-link">
                                                         <i class="{{ menu_cat.icon }}" aria-hidden="true"></i>
                                                         <span>{{ menu_cat.display_label }}</span>
@@ -222,9 +256,6 @@
                                 <a href="{% url 'deconnexion' %}" class="mag-mobile-menu-logout">
                                     <i class="fa fa-sign-out" aria-hidden="true"></i>
                                     Déconnexion
-                                </a>
-                                <a href="javascript:void(0);" class="mag-mobile-menu-close-btn">
-                                    Fermer
                                 </a>
                             </div>
                         </div>
@@ -564,16 +595,26 @@
     <script>
         (function ($) {
             function closeMobileMenu() {
-                $('body').removeClass('open-menu');
+                $('body').removeClass('open-menu').removeClass('open-menu');
                 $('.hamburger-menu .bar').removeClass('animate');
                 $('header .desk-menu .menu-container .menu .menu-item-has-children .sub-menu').removeClass('open-sub');
+                $('header .desk-menu .menu-container .menu .menu-item-has-children').removeClass('is-expanded');
             }
             $(document).on('click', '.mag-mobile-menu-close, .mag-mobile-menu-close-btn', function (e) {
                 e.preventDefault();
                 closeMobileMenu();
             });
-            // Libellé FR pour le retour des sous-menus
-            $('header .desk-menu .menu-container .menu .menu-item-has-children ul .back a').text('Retour');
+            var $parentLinks = $('header .desk-menu .menu-container .menu .menu-item-has-children > a');
+            $parentLinks.off('click').on('click.magAccordion', function (e) {
+                if ($(window).width() > 991) return;
+                e.preventDefault();
+                var $li = $(this).closest('li');
+                var open = !$li.hasClass('is-expanded');
+                $li.siblings('.menu-item-has-children').removeClass('is-expanded')
+                    .find('> a').attr('aria-expanded', 'false');
+                $li.toggleClass('is-expanded', open);
+                $(this).attr('aria-expanded', open ? 'true' : 'false');
+            });
         })(jQuery);
     </script>
     <script type="text/javascript">

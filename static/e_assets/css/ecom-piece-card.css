@@ -5487,14 +5487,42 @@
 }
 
 /* ?? Mobile sidebar menu ?? */
-#side-bar.side-bar.header-two {
+#side-bar.side-bar.header-two.ecom-drawer {
     position: fixed !important;
-    padding: 18px 16px 28px;
-    padding-top: 20px;
+    padding: 0 !important;
     background: #fff;
-    overflow: visible !important;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column;
+}
+
+#side-bar.side-bar.header-two .ecom-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+}
+
+#side-bar.side-bar.header-two .ecom-drawer-brand {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#side-bar.side-bar.header-two .ecom-drawer-logo {
+    height: 40px;
+    width: auto;
+    max-width: 170px;
+    object-fit: contain;
+}
+
+#side-bar.side-bar.header-two .ecom-drawer-header-spacer {
+    width: 40px;
+    flex-shrink: 0;
 }
 
 #side-bar.side-bar.header-two .ecom-mobile-sidebar-scroll {
@@ -5503,32 +5531,32 @@
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding-right: 2px;
+    padding: 0 0 24px;
 }
 
-#side-bar.side-bar.header-two .close-icon-menu {
-    position: absolute !important;
-    top: 16px !important;
-    left: 0 !important;
+#side-bar.side-bar.header-two .close-icon-menu,
+#side-bar.side-bar.header-two .ecom-drawer-close {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
     right: auto !important;
-    bottom: auto !important;
-    z-index: 30 !important;
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px;
+    transform: none !important;
+    z-index: 2 !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px;
     margin: 0 !important;
     padding: 0 !important;
-    border: 3px solid #fff !important;
-    border-radius: 50% !important;
-    background: #ff8b00 !important;
-    color: #fff !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #111827 !important;
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 18px rgba(255, 139, 0, 0.4);
+    box-shadow: none !important;
     cursor: pointer;
     max-width: none !important;
-    transform: translateX(-50%) !important;
 }
 
 #side-bar.side-bar.header-two .close-icon-menu i,
@@ -5543,17 +5571,18 @@
     padding: 0 !important;
     border-radius: 0 !important;
     background: transparent !important;
-    color: #fff !important;
+    color: #111827 !important;
     font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
-    font-size: 1.2rem !important;
+    font-size: 1.35rem !important;
     line-height: 1 !important;
     visibility: visible !important;
     opacity: 1 !important;
 }
 
 #side-bar.side-bar.header-two .close-icon-menu:hover {
-    background: #ff8b00 !important;
+    background: transparent !important;
+    color: #ff8b00 !important;
 }
 
 #side-bar.side-bar.header-two .search-input-area-menu {
@@ -5830,11 +5859,36 @@
 }
 
 .ecom-mobile-sidebar-footer {
-    margin-top: 24px !important;
-    padding: 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    background: #f9fafb;
+    margin: 16px 16px 0 !important;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.ecom-mobile-sidebar-footer .buton-area-bottom,
+.ecom-drawer .ecom-mobile-sidebar-footer {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    width: auto;
+}
+
+.ecom-drawer .ecom-mobile-sidebar-footer:has(> a:nth-child(2)) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+}
+
+.ecom-drawer .ecom-mobile-sidebar-footer .rts-btn {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+    text-align: center;
+    border-radius: 999px !important;
+    padding: 12px 16px;
+    font-size: 1.25rem;
+    font-weight: 700;
 }
 
 .ecom-mobile-sidebar-footer .contact-area {
@@ -5893,15 +5947,85 @@
     color: #fff !important;
 }
 
+.ecom-drawer-toplink {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    color: #6b7280 !important;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none !important;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.ecom-drawer-toplink i {
+    color: #9ca3af;
+    font-size: 1.15rem;
+}
+
+.ecom-drawer-iconlist {
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.ecom-drawer-iconrow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    color: #111827 !important;
+    font-size: 1.4rem;
+    font-weight: 500;
+    text-decoration: none !important;
+}
+
+.ecom-drawer-iconrow i {
+    width: 30px;
+    text-align: center;
+    color: #4b5563;
+    font-size: 1.45rem;
+}
+
+.ecom-drawer-sectionhead {
+    padding: 16px 20px 4px;
+}
+
+.ecom-drawer-sectionhead p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9ca3af;
+}
+
+.ecom-drawer-textlist {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0 4px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.ecom-drawer-textlist a {
+    padding: 12px 20px;
+    color: #374151 !important;
+    font-size: 1.35rem;
+    text-decoration: none !important;
+}
+
 .ecom-mobile-categories {
-    margin-top: 12px;
+    margin-top: 0;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .ecom-mobile-cat-panel {
     background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
 }
 
 .ecom-mobile-cat-head {
@@ -5909,40 +6033,42 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 14px 16px;
-    background: linear-gradient(135deg, #ff8b00, #ff8b00);
+    padding: 16px 20px 8px;
+    background: transparent;
 }
 
 .ecom-mobile-cat-head-title {
-    color: #fff;
-    font-size: 1.4rem;
-    font-weight: 800;
-    letter-spacing: 0.01em;
+    color: #9ca3af;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .ecom-mobile-cat-head-link {
-    color: #fff !important;
-    font-size: 1.1rem;
+    color: #ff8b00 !important;
+    font-size: 1.2rem;
     font-weight: 700;
     text-decoration: none !important;
-    opacity: 0.95;
-    padding: 6px 10px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.18);
+    opacity: 1;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .ecom-mobile-cat-head-link:hover {
     opacity: 1;
-    background: rgba(255, 255, 255, 0.28);
+    background: transparent;
+    text-decoration: underline !important;
 }
 
 .ecom-mobile-cat-list {
     list-style: none;
     margin: 0;
-    padding: 8px;
+    padding: 0 8px 12px 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0;
 }
 
 .ecom-mobile-cat-item {
@@ -5950,41 +6076,41 @@
     align-items: center;
     gap: 12px;
     width: 100%;
-    padding: 12px 10px !important;
-    border-radius: 12px;
-    color: #1f2937 !important;
+    padding: 12px 12px !important;
+    border-radius: 0;
+    color: #111827 !important;
     text-decoration: none !important;
     transition: background 0.15s ease, color 0.15s ease;
 }
 
 .ecom-mobile-cat-item:hover {
     background: #fff7ed;
-    color: #c2410c !important;
+    color: #111827 !important;
 }
 
 .ecom-mobile-cat-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
+    width: 22px;
+    height: auto;
+    border-radius: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #fff7ed;
-    color: #ff8b00;
+    background: transparent;
+    color: #4b5563;
     flex-shrink: 0;
 }
 
 .ecom-mobile-cat-icon i {
     font-family: "Font Awesome 6 Free" !important;
     font-weight: 900 !important;
-    font-size: 0.95rem;
-    color: #ff8b00 !important;
+    font-size: 1.4rem;
+    color: #4b5563 !important;
 }
 
 .ecom-mobile-cat-label {
     flex: 1;
-    font-size: 1.35rem;
-    font-weight: 600;
+    font-size: 1.4rem;
+    font-weight: 500;
     line-height: 1.3;
 }
 
@@ -9110,18 +9236,38 @@ only screen and (max-width: 767px) {
     font-size: 0.92em;
     opacity: 0.9;
 }
-.ecom-mobile-cat-children {
+.ecom-mobile-cat-caret {
+    margin-left: auto;
+    font-size: 0.9rem;
+    color: #9ca3af;
+    transition: transform 0.2s ease;
+}
+
+.ecom-mobile-cat-li.is-open > .ecom-mobile-cat-item > .ecom-mobile-cat-caret {
+    transform: rotate(180deg);
+    color: #ff8b00;
+}
+
+.ecom-mobile-cat-children,
+.ecom-mobile-cat-pieces {
+    display: none;
     list-style: none;
-    padding: 0 0 0.35rem 2.4rem;
+    padding: 0 0 0.35rem 1.75rem;
     margin: 0;
 }
+
+.ecom-mobile-cat-li.is-open > .ecom-mobile-cat-children,
+.ecom-mobile-cat-li.is-open > .ecom-mobile-cat-pieces,
+.ecom-mobile-cat-pieces.is-open {
+    display: block;
+}
 .ecom-mobile-cat-item--child {
-    font-size: 0.92em;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
+    font-size: 1.25rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
 }
 .ecom-mobile-cat-item--piece {
-    font-size: 0.86em;
+    font-size: 1.15rem;
     font-weight: 500 !important;
     padding: 0.2rem 0.75rem 0.2rem 1.1rem !important;
     color: #57534e !important;

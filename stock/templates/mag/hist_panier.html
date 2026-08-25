@@ -5,12 +5,18 @@
 {% block page_title %}HISTORIQUE DES PANIERS{% endblock page_title %}
 {% block page %}Historique paniers{% endblock page %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
 {% block page_action_buttons %}
 <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addinf">{{ annee }} Filtre <i class="icon-calendar"></i></button>
 <a href="" class="btn btn-outline-secondary">{{ annee }} Filtre <i class="icon-refresh"></i></a>
 {% endblock page_action_buttons %}
 
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+
     <div class="modal fade" id="addinf" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -42,45 +48,30 @@
         </div>
     </div>
 
-<div class="col-md-12 p-2 mt-4">
-    <div class="card">
-        <div class="header text-info">
-            <h2 class="text-info">{{historique_paniers|length}} Historique{% if historique_paniers|length > 1 %}s{% endif %} 
-            </h2>
+<div class="mag-cmd-line-section">
+    <div class="card mag-cmd-line-card">
+        <div class="header">
+            <h2 class="mb-0">{{historique_paniers|length}} historique{% if historique_paniers|length > 1 %}s{% endif %}</h2>
         </div>
         <div class="body">
-            <div class="mag-table-shell" x-data="magTableFilter()">
-                {% include "mag/partials/_alpine_table_toolbar.html" %}
+            <div class="mag-table-shell" x-data="magTableFilter(10)">
+                {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher utilisateur, action…" %}
                 <div class="table-responsive">
-                    <table class="table table-hover mag-data-table">
+                    <table class="table mag-data-table mb-0">
                     <thead>
-                        <tr class='text'>
-                            <th>N°#</th>
+                        <tr>
+                            <th>N°</th>
                             <th>ID</th>
                             <th>Utilisateur</th>
                             <th>Valide</th>
                             <th>Payé</th>
-                            <th>Livre</th>
+                            <th>Livré</th>
                             <th>Date création</th>
                             <th>Date save</th>
                             <th>Action</th>
                             <th>Date historique</th>
                         </tr>
                     </thead>
-                    <tfoot>
-                        <tr class='text'>
-                            <th>N°#</th>
-                            <th>ID</th>
-                            <th>Utilisateur</th>
-                            <th>Valide</th>
-                            <th>Payé</th>
-                            <th>Livre</th>
-                            <th>Date création</th>
-                            <th>Date save</th>
-                            <th>Action</th>
-                            <th>Date historique</th>
-                        </tr>
-                    </tfoot>
                     <tbody>
                         {% for panier in historique_paniers %}
                             <tr>
@@ -89,23 +80,23 @@
                                 <td>{{ panier.utilisateur }}</td>
                                 <td>
                                     {% if panier.valide %}
-                                    ✅​
+                                    <span class="mag-cmd-badge mag-cmd-badge--livre">Oui</span>
                                     {% else %}
-                                    ​❌​
+                                    <span class="mag-cmd-badge mag-cmd-badge--annuler">Non</span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% if panier.panier_paye %}
-                                    ✅​
+                                    <span class="mag-cmd-badge mag-cmd-badge--paye">Oui</span>
                                     {% else %}
-                                    ​❌​
+                                    <span class="mag-cmd-badge mag-cmd-badge--annuler">Non</span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% if panier.panier_livre %}
-                                    ✅​
+                                    <span class="mag-cmd-badge mag-cmd-badge--livre">Oui</span>
                                     {% else %}
-                                    ​❌​
+                                    <span class="mag-cmd-badge mag-cmd-badge--annuler">Non</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ panier.date_creation }}</td>
@@ -113,13 +104,20 @@
                                 <td>{{ panier.get_history_type_display }}</td>
                                 <td>{{ panier.history_date }}</td>
                             </tr>
+                        {% empty %}
+                            <tr class="mag-table-skip-filter">
+                                <td colspan="10" class="text-center text-muted py-4">Aucun historique.</td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% if historique_paniers %}
+            {% include "mag/partials/_table_pager.html" %}
+            {% endif %}
             </div>
         </div>
     </div>
 </div>
-    
+</div>
 {% endblock main_content %}

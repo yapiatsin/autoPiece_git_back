@@ -5,41 +5,37 @@
 {% block page_title %}HISTORIQUE GENERAL{% endblock page_title %}
 {% block page %}Historique général{% endblock page %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+
     {% include "mag/partials/_periode_filter_modal.html" %}
 
-    <div class="col-md-12 p-2 mt-4">
-        <div class="card">
-            <div class="header text-info">
-                <h2 class="text-info">
-                    {{ global_history|length }} Historique{% if global_history|length > 1 %}s{% endif %}
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
+            <div class="header">
+                <h2 class="mb-0">
+                    {{ global_history|length }} historique{% if global_history|length > 1 %}s{% endif %}
                 </h2>
             </div>
             <div class="body">
-                <div class="mag-table-shell" x-data="magTableFilter()">
-                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                <div class="mag-table-shell" x-data="magTableFilter(10)">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher table, action, utilisateur…" %}
                     <div class="table-responsive">
-                        <table class="table table-hover mag-data-table">
+                        <table class="table mag-data-table mb-0">
                         <thead>
-                            <tr class='text'>
-                                <th>N°#</th>
+                            <tr>
+                                <th>N°</th>
                                 <th>Table</th>
-                                <th>Type d'Action</th>
+                                <th>Type d'action</th>
                                 <th>Utilisateur</th>
                                 <th>Changements</th>
-                                <th>Date de l'Action</th>
+                                <th>Date de l'action</th>
                             </tr>
                         </thead>
-                        <tfoot>
-                            <tr class='text'>
-                                <th>N°#</th>
-                                <th>Table</th>
-                                <th>Type d'Action</th>
-                                <th>Utilisateur</th>
-                                <th>Changements</th>
-                                <th>Date de l'Action</th>
-                            </tr>
-                        </tfoot>
                         <tbody>
                             {% for entry in global_history %}
                                 <tr>
@@ -47,17 +43,17 @@
                                     <td>{{ entry.model }}</td>
                                     <td>
                                         {% if entry.record.history_type == '+' %}
-                                        Création
+                                        <span class="mag-cmd-badge mag-cmd-badge--livre">Création</span>
                                         {% elif entry.record.history_type == '-' %}
-                                        Suppression
+                                        <span class="mag-cmd-badge mag-cmd-badge--annuler">Suppression</span>
                                         {% else %}
-                                        Modification
+                                        <span class="mag-cmd-badge mag-cmd-badge--valider">Modification</span>
                                         {% endif %}
                                     </td>
                                     <td>{% if entry.record.utilisateur %}{{ entry.record.utilisateur }}{% else %}Système{% endif %}</td>
                                     <td>
                                         {% if entry.changed_fields %}
-                                        <ul>
+                                        <ul class="mb-0 pl-3">
                                             {% for change in entry.changed_fields %}
                                             <li>{{ change }}</li>
                                             {% endfor %}
@@ -69,8 +65,8 @@
                                     <td>{{ entry.record.history_date|date:"d M Y H:i:s" }}</td>
                                 </tr>
                             {% empty %}
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted p-3">
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="6" class="text-center text-muted py-4">
                                         Aucun historique pour cette période.
                                     </td>
                                 </tr>
@@ -78,11 +74,14 @@
                         </tbody>
                     </table>
                 </div>
+                {% if global_history %}
+                {% include "mag/partials/_table_pager.html" %}
+                {% endif %}
                 </div>
             </div>
         </div>
     </div>
-
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}

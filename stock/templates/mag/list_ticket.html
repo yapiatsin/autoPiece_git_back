@@ -2,123 +2,94 @@
 {% load static %}
 {% load custom_filters %}
 {% block title %}AUTO-PIECE{% endblock title %}
+{% block page_title %}Liste tickets{% endblock page_title %}
 {% block page %}Liste tickets{% endblock page %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
 {% block main_content %}
-<style>
-    .appliances-grp {
-        max-height: 300px;     
-        max-width: 100%;       
-        overflow: auto;        
-        padding: 10px;
-        border: 1px solid #ddd;
-    }
-    .appliances-grp::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    .appliances-grp::-webkit-scrollbar-thumb {
-        background: #aaa;
-        border-radius: 3px;
-    }
-    .appliances-grp::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-</style>
-<div class="col-md-12 p-2 mt-4">
-    <div class="card">
-        <div class="header text-info">
-            <h2 class="text-info">{{tickets|length}} Ticket{% if tickets|length > 1 %}s{% endif %} 
-            </h2>
-        </div>
-        <div class="body">
-            <div class="mag-table-shell" x-data="magTableFilter()">
-                {% include "mag/partials/_alpine_table_toolbar.html" %}
-                <div class="table-responsive">
-                    <table class="table table-hover mag-data-table">
-                    <thead>
-                        <tr class='text'>
-                            <th>N°#</th>
-                            <th>N°ticket</th>
-                            <th>Commande</th>
-                            <th>Utilise</th>
-                            <th>Caissier(ère)</th>
-                            <th>Date</th>
-                            <th class="text-center">Fichier</th>
-                            <th class="text-center">Imprimer</th>
-                            <th class="text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tfoot>
-                        <tr class='text'>
-                            <th>N°#</th>
-                            <th>N°ticket</th>
-                            <th>Commande</th>
-                            <th>Utilise</th>
-                            <th>Caissier(ère)</th>
-                            <th>Date</th>
-                            <th class="text-center">Fichier</th>
-                            <th class="text-center">Imprimer</th>
-                            <th class="text-center">Action</th>
-                        </tr>
-                    </tfoot>
-                    <tbody>
-                        {% for c in tickets %}
-                            <tr>
-                                <th>{{forloop.counter}}</th>
-                                <th>{{c.numero}}</th>
-                                <th>{{c.commande.numero_commande}}</th>
-                                <th>
-                                    {% if c.utilise %}
-                                    ✅​
-                                    {% else %}
-                                    ​❌​
-                                    {% endif %}
-                                </th>
-                                <th>{{c.utilisateur.username}}</th>
-                                <th>{{c.date_save}}</th>
-                                <th class="text-center">
-                                    {% if c.fichier_pdf %}
+<div class="mag-cmd-line-page col-12 px-0">
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
+            <div class="header">
+                <h2 class="mb-0">{{ tickets|length }} ticket{% if tickets|length != 1 %}s{% endif %}</h2>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter(10)">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher ticket, commande, caissier…" %}
+                    <div class="table-responsive">
+                        <table class="table mag-data-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>N°</th>
+                                    <th>N° ticket</th>
+                                    <th>Commande</th>
+                                    <th>Utilisé</th>
+                                    <th>Caissier(ère)</th>
+                                    <th>Date</th>
+                                    <th class="text-center">Fichier</th>
+                                    <th class="text-center">Imprimer</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in tickets %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><span class="mag-cmd-numero">{{ c.numero }}</span></td>
+                                    <td>{{ c.commande.numero_commande }}</td>
+                                    <td>
+                                        {% if c.utilise %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--livrer">Oui</span>
+                                        {% else %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--annuler">Non</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ c.utilisateur.username }}</td>
+                                    <td>{{ c.date_save }}</td>
+                                    <td class="text-center">
+                                        {% if c.fichier_pdf %}
                                         <a href="{{ c.fichier_pdf.url }}" target="_blank" rel="noopener" title="PDF reçu">
-                                            <i class="fa fa-file-o text-warning"></i>
+                                            <i class="fa fa-file-o"></i>
                                         </a>
-                                    {% else %}
+                                        {% else %}
                                         <span class="text-muted">—</span>
-                                    {% endif %}
-                                </th>
-                                <th class="text-center text-nowrap">
-                                    {% if c.commande.paye %}
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-primary reprint-recu-paiement"
-                                                data-ticket="{{ c.numero }}"
-                                                title="Réimprimer le reçu de paiement">
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center text-nowrap">
+                                        {% if c.commande.paye %}
+                                        <button type="button" class="btn mag-cmd-btn mag-cmd-btn--ghost reprint-recu-paiement" data-ticket="{{ c.numero }}" title="Réimprimer le reçu">
                                             <i class="fa fa-print"></i>
                                         </button>
                                         {% if c.commande.bon_paiement %}
-                                            <a href="{% url 'imprimer_bon_commande_vente' c.numero %}?format=pdf"
-                                               class="btn btn-sm btn-outline-secondary"
-                                               target="_blank"
-                                               rel="noopener"
-                                               title="PDF bon de commande">
-                                                <i class="fa fa-file-pdf-o"></i>
-                                            </a>
+                                        <a href="{% url 'imprimer_bon_commande_vente' c.numero %}?format=pdf" class="btn mag-cmd-btn mag-cmd-btn--ghost" target="_blank" rel="noopener" title="PDF bon de commande">
+                                            <i class="fa fa-file-pdf-o"></i>
+                                        </a>
                                         {% endif %}
-                                    {% else %}
+                                        {% else %}
                                         <span class="text-muted">—</span>
-                                    {% endif %}
-                                </th>
-                                <th class="text-center">
-                                    <span class="text-muted">—</span>
-                                </th>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center"><span class="text-muted">—</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="9" class="text-center text-muted py-4">Aucun ticket.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if tickets %}
+                    {% include "mag/partials/_table_pager.html" %}
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
-    
 {% endblock main_content %}
 
 {% block extra_js %}

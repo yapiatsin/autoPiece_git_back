@@ -421,169 +421,77 @@
     </div>
     </div>
 
-    <div id="side-bar" class="side-bar header-two">
-        <button type="button" class="close-icon-menu" aria-label="{% trans 'Fermer le menu' %}">
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-        </button>
+    <div id="side-bar" class="side-bar header-two ecom-drawer">
+        <div class="ecom-drawer-header">
+            <button type="button" class="close-icon-menu ecom-drawer-close" aria-label="{% trans 'Fermer le menu' %}">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+            <a href="{% url 'ecom_index' %}" class="ecom-drawer-brand" aria-label="{% trans 'Accueil' %}">
+                <img src="{% static 'logo.png' %}" alt="AUTO-PIÈCE" class="ecom-drawer-logo">
+            </a>
+            <span class="ecom-drawer-header-spacer" aria-hidden="true"></span>
+        </div>
         <div class="ecom-mobile-sidebar-scroll">
-        <div class="ecom-search-suggest ecom-search-suggest--sidebar" data-ecom-search-suggest
-             data-clear-url="{% url 'ecom_search_clear' %}">
-            <form method="get" action="{% url 'ecom_shop' %}" class="search-input-area-menu ecom-search-form">
-                <input type="search" name="q" value="{{ request.GET.q|default:'' }}" class="ecom-search-input"
-                    placeholder="{% trans 'Rechercher...' %}" autocomplete="off">
-                <button type="button" class="ecom-search-query-clear" data-ecom-clear-query
-                        aria-label="{% trans 'Effacer la recherche' %}"
-                        {% if not request.GET.q %}hidden{% endif %}>
-                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                </button>
-                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
-            </form>
-            {% include 'e_autopiece/partials/_ecom_search_suggestions.html' %}
-        </div>
+            <div class="ecom-drawer-section ecom-mobile-categories">
+                {% include 'e_autopiece/partials/_ecom_mobile_category_menu.html' with menu_id='category-active-menu' %}
+            </div>
 
-        <div class="mobile-menu-nav-area tab-nav-btn mt--20">
-            <div class="ecom-mobile-profile">
-                {% if user.is_authenticated %}
-                <a href="{% url 'ecom_account' %}" class="ecom-mobile-profile-card">
-                    <span class="ecom-mobile-profile-avatar-wrap">
-                        {% if ecom_user_has_photo %}
-                        <img src="{{ ecom_user_photo_url }}" alt="{% trans 'Photo de profil' %}" class="ecom-mobile-profile-avatar">
-                        {% else %}
-                        <span class="ecom-mobile-profile-avatar ecom-mobile-profile-avatar--initials" aria-hidden="true">{{ ecom_user_initials }}</span>
-                        {% endif %}
-                        {% if ecom_user_verified %}
-                        <span class="ecom-mobile-profile-badge" aria-label="{% trans 'Compte vérifié' %}">
-                            <i class="fa-solid fa-check" aria-hidden="true"></i>
-                        </span>
-                        {% endif %}
-                    </span>
-                    <span class="ecom-mobile-profile-meta">
-                        <span class="ecom-mobile-profile-name">{{ ecom_user_display_name }}</span>
-                        <span class="ecom-mobile-profile-email">{{ ecom_user_email }}</span>
-                    </span>
+            <a href="{% url 'ecom_support' %}" class="ecom-drawer-toplink">
+                <span>{% trans "Besoin d'aide ?" %}</span>
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            </a>
+            <a href="{% if user.is_authenticated %}{% url 'ecom_account' %}{% else %}{% url 'connexion' %}{% endif %}" class="ecom-drawer-toplink">
+                <span>{% trans "Votre compte Auto-Pièce" %}</span>
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            </a>
+
+            <div class="ecom-drawer-iconlist">
+                <a href="{% url 'ecom_mes_commandes' %}" class="ecom-drawer-iconrow">
+                    <i class="fa-solid fa-box" aria-hidden="true"></i>
+                    <span>{% trans "Vos commandes" %}</span>
                 </a>
-                {% else %}
-                <a href="{% url 'connexion' %}" class="ecom-mobile-profile-card ecom-mobile-profile-card--guest">
-                    <span class="ecom-mobile-profile-avatar-wrap">
-                        <span class="ecom-mobile-profile-avatar ecom-mobile-profile-avatar--initials" aria-hidden="true">
-                            <i class="fa-solid fa-user"></i>
-                        </span>
-                    </span>
-                    <span class="ecom-mobile-profile-meta">
-                        <span class="ecom-mobile-profile-name">{% trans "Bienvenue" %}</span>
-                        <span class="ecom-mobile-profile-email">{% trans "Connectez-vous à votre compte" %}</span>
-                    </span>
+                <a href="{% url 'ecom_wishlist' %}" class="ecom-drawer-iconrow">
+                    <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                    <span>{% trans "Favoris" %}</span>
                 </a>
-                {% endif %}
+                <a href="{% url 'ecom_vues_recentes' %}" class="ecom-drawer-iconrow">
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                    <span>{% trans "Vues récentes" %}</span>
+                </a>
+                <a href="{% url 'ecom_dashboard' %}" class="ecom-drawer-iconrow">
+                    <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>
+                    <span>{% trans "Tableau de bord" %}</span>
+                </a>
             </div>
 
-            <nav>
-                <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                    <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">{% trans "Menu" %}</button>
-                    <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">{% trans "Catégories" %}</button>
-                </div>
-            </nav>
-
-            <div class="tab-content" id="nav-tabContent">
-                <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
-                    <div class="mobile-menu-main ecom-mobile-menu">
-                        <nav class="nav-main mainmenu-nav mt--20">
-                            <ul class="mainmenu metismenu ecom-mobile-nav" id="mobile-menu-active">
-                                <li>
-                                    <a href="{% url 'ecom_index' %}" class="main ecom-mobile-link">
-                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-house" aria-hidden="true"></i></span>
-                                        <span class="ecom-mobile-link-label">{% trans "Accueil" %}</span>
-                                    </a>
-                                </li>
-                                <li class="has-droupdown">
-                                    <a href="#" class="main ecom-mobile-link">
-                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span>
-                                        <span class="ecom-mobile-link-label">{% trans "Boutique" %}</span>
-                                        <span class="ecom-mobile-link-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
-                                    </a>
-                                    <ul class="submenu mm-collapse">
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_shop' %}">{% trans "Toutes les pièces" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_localites' %}">{% trans "Nos agences" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_about' %}">{% trans "À propos" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_vues_recentes' %}">{% trans "Vus récemment" %}</a></li>
-                                    </ul>
-                                </li>
-                                <li class="has-droupdown">
-                                    <a href="#" class="main ecom-mobile-link">
-                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i></span>
-                                        <span class="ecom-mobile-link-label">{% trans "Achats" %}</span>
-                                        <span class="ecom-mobile-link-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
-                                    </a>
-                                    <ul class="submenu mm-collapse">
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_cart' %}">{% trans "Mon panier" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_checkout' %}">{% trans "Passer commande" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_wishlist' %}">{% trans "Favoris" %}</a></li>
-                                    </ul>
-                                </li>
-                                <li class="has-droupdown">
-                                    <a href="#" class="main ecom-mobile-link">
-                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
-                                        <span class="ecom-mobile-link-label">{% trans "Mon espace" %}</span>
-                                        <span class="ecom-mobile-link-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
-                                    </a>
-                                    <ul class="submenu mm-collapse">
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_dashboard' %}">{% trans "Dashboard" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_account' %}">{% trans "Mon compte" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_mes_commandes' %}">{% trans "Mes commandes" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_account' %}?tab=orders">{% trans "Suivi des commandes" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_contact' %}">{% trans "Contact" %}</a></li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <a href="{% url 'ecom_localites' %}" class="main ecom-mobile-link">
-                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
-                                        <span class="ecom-mobile-link-label">{% trans "Nos localités" %}</span>
-                                    </a>
-                                </li>
-                                <li class="has-droupdown">
-                                    <a href="#" class="main ecom-mobile-link">
-                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span>
-                                        <span class="ecom-mobile-link-label">{% trans "Informations" %}</span>
-                                        <span class="ecom-mobile-link-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
-                                    </a>
-                                    <ul class="submenu mm-collapse">
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_privacy_policy' %}">{% trans "Confidentialité" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_cookies_policy' %}">{% trans "Cookies" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_terms_condition' %}">{% trans "Conditions générales" %}</a></li>
-                                        <li><a class="mobile-menu-link" href="{% url 'ecom_support' %}">{% trans "Centre d'aide" %}</a></li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <a href="{% url 'ecom_contact' %}" class="main ecom-mobile-link">
-                                        <span class="ecom-mobile-link-icon"><i class="fa-solid fa-headset" aria-hidden="true"></i></span>
-                                        <span class="ecom-mobile-link-label">{% trans "Contact" %}</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-                <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
-                    <div class="ecom-mobile-categories">
-                        {% include 'e_autopiece/partials/_ecom_mobile_category_menu.html' with menu_id='category-active-menu' %}
-                    </div>
-                </div>
+            <div class="ecom-drawer-sectionhead">
+                <p>{% trans "Nos services" %}</p>
+            </div>
+            <div class="ecom-drawer-iconlist">
+                <a href="{% url 'ecom_localites' %}" class="ecom-drawer-iconrow">
+                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                    <span>{% trans "Changer de localité" %}</span>
+                </a>
+                <a href="{% url 'ecom_cart' %}" class="ecom-drawer-iconrow">
+                    <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+                    <span>{% trans "Panier" %}</span>
+                </a>
+                <a href="{% url 'ecom_shop' %}" class="ecom-drawer-iconrow">
+                    <i class="fa-solid fa-store" aria-hidden="true"></i>
+                    <span>{% trans "Toutes les pièces" %}</span>
+                </a>
             </div>
 
-        </div>
-
-        <div class="button-area-main-wrapper-menuy-sidebar mt--40 ecom-mobile-sidebar-footer">
-            <div class="contact-area">
-                <div class="phone">
-                    <i class="fa-solid fa-headset"></i>
-                    <a href="tel:+2250700000000">+225 07 00 00 00 00</a>
-                </div>
-                <div class="phone">
-                    <i class="fa-solid fa-envelope"></i>
-                    <a href="mailto:contact@autopiece.ci">contact@autopiece.ci</a>
-                </div>
+            <div class="ecom-drawer-textlist">
+                <a href="{% url 'ecom_support' %}">{% trans "Aide & FAQ" %}</a>
+                <a href="{% url 'ecom_contact' %}">{% trans "Contactez-nous" %}</a>
+                <a href="{% url 'ecom_about' %}">{% trans "À propos" %}</a>
+                <a href="{% url 'ecom_privacy_policy' %}">{% trans "Politique de confidentialité" %}</a>
+                <a href="{% url 'ecom_cookies_policy' %}">{% trans "Politique cookies" %}</a>
+                <a href="{% url 'ecom_terms_condition' %}">{% trans "Conditions générales" %}</a>
             </div>
-            <div class="buton-area-bottom">
+
+            <div class="button-area-main-wrapper-menuy-sidebar ecom-mobile-sidebar-footer">
                 {% if user.is_authenticated %}
                 <a href="{% url 'deconnexion' %}" class="rts-btn btn-primary ecom-mobile-logout-btn">{% trans "Déconnexion" %}</a>
                 {% else %}
@@ -591,7 +499,6 @@
                 <a href="{% url 'register' %}" class="rts-btn btn-primary">{% trans "S'inscrire" %}</a>
                 {% endif %}
             </div>
-        </div>
         </div>
     </div>
     {% endblock header %}
@@ -1485,9 +1392,33 @@
         })();
     </script>
     <script src="{% static 'e_assets/js/contact-float.js' %}"></script>
+    <script>
+        (function () {
+            var drawer = document.getElementById('side-bar');
+            if (!drawer) return;
+            drawer.addEventListener('click', function (event) {
+                var trigger = event.target.closest('a.ecom-cat-accordion');
+                if (!trigger || !drawer.contains(trigger)) return;
+                event.preventDefault();
+                var item = trigger.closest('.ecom-mobile-cat-li.has-children');
+                if (!item) return;
+                var opening = !item.classList.contains('is-open');
+                var group = item.parentElement;
+                if (group) {
+                    group.querySelectorAll(':scope > .ecom-mobile-cat-li.has-children.is-open').forEach(function (openItem) {
+                        if (openItem !== item) {
+                            openItem.classList.remove('is-open');
+                            var openLink = openItem.querySelector(':scope > a.ecom-cat-accordion');
+                            if (openLink) openLink.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                }
+                item.classList.toggle('is-open', opening);
+                trigger.setAttribute('aria-expanded', opening ? 'true' : 'false');
+            });
+        })();
+    </script>
     {% block extra_js %}{% endblock extra_js %}
     <!-- header style two End -->
-
-
 </body>
 </html>

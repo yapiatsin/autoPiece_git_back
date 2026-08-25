@@ -4,64 +4,67 @@
 {% block page_title %}Meilleures ventes{% endblock page_title %}
 {% block page %}Meilleures ventes{% endblock page %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
     {% include "mag/partials/_periode_filter_modal.html" %}
     {% include "mag/partials/_dashboard_kpi_styles.html" %}
-    {% include "mag/partials/_kpi_row_best_vente.html" %}
-    
-    <div class="col-lg-12">
-        <div class="card">
+
+    <div class="mag-cmd-line-section">
+        {% include "mag/partials/_kpi_row_best_vente.html" %}
+    </div>
+
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
             <div class="header">
-                <h2>Liste des ventes</h2>
+                <h2 class="mb-0">Liste des ventes</h2>
             </div>
             <div class="body">
-                <div class="mag-table-shell" x-data="magTableFilter()">
-                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                <div class="mag-table-shell" x-data="magTableFilter(10)">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher pièce, désignation, catégorie…" %}
                     <div class="table-responsive">
-                        <table class="table table-hover mag-data-table">
-                        <thead>
-                            <tr class='text-info'>
-                                <th>N°#</th>
-                                <th>N°Pièce</th>
-                                <th>Designation</th>
-                                <th>Categorie</th>
-                                <th class="text-center">Quantite</th>
-                                <th class="text-center">Total</th>
-                            </tr>
-                        </thead>
-                        <tfoot>
-                            <tr class='text-info'>
-                                <th>N°#</th>
-                                <th>N°Pièce</th>
-                                <th>Designation</th>
-                                <th>Categorie</th>
-                                <th class="text-center">Quantite</th>
-                                <th class="text-center">Total</th>
-                            </tr>
-                        </tfoot>
-                        <tbody>
-                            {% if top_vente_mens %}
+                        <table class="table mag-data-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>N°</th>
+                                    <th>N° pièce</th>
+                                    <th>Désignation</th>
+                                    <th>Catégorie</th>
+                                    <th class="text-center">Quantité</th>
+                                    <th class="text-center">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 {% for d in top_vente_mens %}
-                                    <tr>
-                                        <th>{{forloop.counter}}</th>
-                                        <th>{{d.numero_piece}}</th>
-                                        <th>{{d.piece__designation}}</th>
-                                        <th>{{d.piece__categorie__categorie}}</th>
-                                        <th class="text-center">{{d.quantite_vendue}}</th>
-                                        <th class="text-center">{{d.cout_total}}</th>
-                                    </tr>
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><span class="mag-cmd-numero">{{ d.numero_piece }}</span></td>
+                                    <td>{{ d.piece__designation }}</td>
+                                    <td>{{ d.piece__categorie__categorie }}</td>
+                                    <td class="text-center">{{ d.quantite_vendue }}</td>
+                                    <td class="text-center mag-cmd-total">{{ d.cout_total }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="6" class="text-center text-muted py-4">Aucune vente pour cette période.</td>
+                                </tr>
                                 {% endfor %}
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if top_vente_mens %}
+                    {% include "mag/partials/_table_pager.html" %}
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}
 {% include "mag/partials/_periode_filter_js.html" %}
 {% endblock extra_js %}
-

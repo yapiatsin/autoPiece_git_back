@@ -9,12 +9,13 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'apps/assets/css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
 {% endblock extra_head %}
 
 {% block main_content %}
 {% include "mag/partials/_dashboard_kpi_styles.html" %}
 
-<div class="dashboard-page">
+<div class="dashboard-page mag-cmd-line-page">
     <div class="modal fade" id="dashboardFilterModal" tabindex="-1" role="dialog" aria-labelledby="dashboardFilterModalLabel">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -101,7 +102,9 @@
         </div>
     </div>
 
-    {% include "mag/partials/_kpi_row_stock.html" %}
+    <div class="mag-cmd-line-section">
+        {% include "mag/partials/_kpi_row_stock.html" %}
+    </div>
 
     <div class="container-fluid px-0">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -1,101 +1,86 @@
-<div class="header text-info">
-    <h2 class="text-info">{{ cmdes|length }} Commande{% if cmdes|length > 1 %}s{% endif %}
+<div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:10px;">
+    <h2 class="mb-0">
+        {{ cmdes|length }} commande{% if cmdes|length != 1 %}s{% endif %}
     </h2>
 </div>
 <div class="body">
-    <div class="mag-table-shell" x-data="magTableFilter()">
-        {% include "mag/partials/_alpine_table_toolbar.html" %}
+    <div class="mag-table-shell" x-data="magTableFilter(10)">
+        {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher n°, ticket, caissier…" %}
         <div class="table-responsive">
-            <table class="table table-hover mag-data-table">
+            <table class="table mag-data-table mag-data-table--fit mb-0">
                 <thead>
-                    <tr class="text">
-                        <th>N°#</th>
-                        <th>N°Commande</th>
+                    <tr>
+                        <th>N°</th>
+                        <th>Commande</th>
                         <th>Montant</th>
                         <th>Remise</th>
                         <th>Total</th>
                         <th>Versé</th>
                         <th>Reste</th>
                         <th>Paiement</th>
-                        <th>N°ticket</th>
                         <th>Caissier(ère)</th>
-                        <th>Date</th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
-                <tfoot>
-                    <tr class="text">
-                        <th>N°#</th>
-                        <th>N°Commande</th>
-                        <th>Montant</th>
-                        <th>Remise</th>
-                        <th>Total</th>
-                        <th>Versé</th>
-                        <th>Reste</th>
-                        <th>Paiement</th>
-                        <th>N°ticket</th>
-                        <th>Caissier(ère)</th>
-                        <th>Date</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </tfoot>
                 <tbody>
                     {% for c in cmdes %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ c.numero_commande }}</td>
-                            <td>{{ c.total_sans_remise }}</td>
-                            <td>{{ c.remise }}</td>
-                            <td>{{ c.total }}</td>
-                            <td>{{ c.montant_paye }}</td>
-                            <td>{{ c.montant_reste }}</td>
-                            <td class="text-center">
-                                {% if c.paye %}✅{% else %}❌{% endif %}
-                            </td>
-                            <td>
-                                {% if c.ticket %}
-                                    {% if c.ticket.fichier_pdf %}
-                                        <a href="{{ c.ticket.fichier_pdf.url }}" target="_blank" rel="noopener" title="PDF reçu">{{ c.ticket.numero }}</a>
-                                    {% else %}
-                                        {{ c.ticket.numero }}
-                                    {% endif %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="mag-cmd-cell-wrap">
+                            <span class="mag-cmd-numero">{{ c.numero_commande }}</span>
+                            {% if c.ticket %}
+                            <p class="mag-cmd-meta">
+                                {% if c.ticket.fichier_pdf %}
+                                <a href="{{ c.ticket.fichier_pdf.url }}" target="_blank" rel="noopener">{{ c.ticket.numero }}</a>
                                 {% else %}
-                                    —
+                                {{ c.ticket.numero }}
                                 {% endif %}
-                            </td>
-                            <td>{{ c.utilisateur.username|default:"—" }}</td>
-                            <td>{{ c.date_creation|date:"d-m-y" }}</td>
-                            <td class="text-center text-nowrap">
+                            </p>
+                            {% endif %}
+                            {% if c.date_creation %}
+                            <p class="mag-cmd-meta">{{ c.date_creation|date:"d M Y" }}</p>
+                            {% endif %}
+                        </td>
+                        <td>{{ c.total_sans_remise }}</td>
+                        <td>{{ c.remise }}</td>
+                        <td class="mag-cmd-total">{{ c.total }}</td>
+                        <td>{{ c.montant_paye }}</td>
+                        <td>{{ c.montant_reste }}</td>
+                        <td>
+                            {% if c.paye %}
+                            <span class="mag-cmd-badge mag-cmd-badge--paye">Payée</span>
+                            {% else %}
+                            <span class="mag-cmd-badge mag-cmd-badge--annuler">Impayée</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ c.utilisateur.username|default:"—" }}</td>
+                        <td>
+                            <div class="mag-cmd-actions mag-cmd-actions--row">
                                 {% if c.paye and c.ticket %}
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-primary reprint-recu-paiement"
-                                            data-ticket="{{ c.ticket.numero }}"
-                                            title="Réimprimer le reçu de paiement">
-                                        <i class="fa fa-print"></i>
-                                    </button>
-                                    {% if c.bon_paiement %}
-                                        <a href="{% url 'imprimer_bon_commande_vente' c.ticket.numero %}?format=pdf"
-                                           class="btn btn-sm btn-outline-secondary"
-                                           target="_blank"
-                                           rel="noopener"
-                                           title="PDF bon de commande (paiement)">
-                                            <i class="fa fa-file-pdf-o"></i>
-                                        </a>
-                                    {% endif %}
-                                {% else %}
-                                    <span class="text-muted">—</span>
+                                <button type="button" class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon reprint-recu-paiement" data-ticket="{{ c.ticket.numero }}" title="Réimprimer le reçu">
+                                    <i class="fa fa-print"></i>
+                                </button>
+                                {% if c.bon_paiement %}
+                                <a href="{% url 'imprimer_bon_commande_vente' c.ticket.numero %}?format=pdf" class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon" target="_blank" rel="noopener" title="PDF bon de commande">
+                                    <i class="fa fa-file-pdf-o"></i>
+                                </a>
                                 {% endif %}
-                            </td>
-                        </tr>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
                     {% empty %}
-                        <tr class="mag-table-skip-filter">
-                            <td colspan="12" class="text-center text-muted py-4">
-                                Aucune commande pour la période sélectionnée.
-                            </td>
-                        </tr>
+                    <tr class="mag-table-skip-filter">
+                        <td colspan="10" class="text-center text-muted py-4">Aucune commande pour la période sélectionnée.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% if cmdes %}
+        {% include "mag/partials/_table_pager.html" %}
+        {% endif %}
     </div>
 </div>

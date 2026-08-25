@@ -1966,8 +1966,6 @@ def cmd_line(request):
     nb_payees = payees_qs.count()
     montant_paye = payees_qs.aggregate(s=Sum('total'))['s'] or Decimal('0')
 
-    paginator = Paginator(qs, 20)
-    page_obj = paginator.get_page(request.GET.get('page'))
     query_params = request.GET.copy()
     query_params.pop('page', None)
     extra_query = query_params.urlencode()
@@ -1977,9 +1975,7 @@ def cmd_line(request):
         livreurs = livreurs.filter(local_entrepot=localite)
 
     ctx = {
-        'commandes': page_obj.object_list,
-        'page_obj': page_obj,
-        'paginator': paginator,
+        'commandes': qs,
         'cmd_line_extra_query': extra_query,
         'livreurs': livreurs,
         'local': localite,

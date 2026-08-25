@@ -1,98 +1,149 @@
-<div class="row dashboard-kpi-row w-100 mx-0 mb-3">
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-truck"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">{{ stats_scope_label|default:"Assignées" }}</div>
-                    <h4 class="number mb-0">{{ stats_livraison.nb_total }}</h4>
-                    <small class="text-muted">Période filtrée</small>
-                </div>
+{% with total=stats_livraison.nb_total %}
+{% widthratio stats_livraison.nb_payees total 100 as pct_payees %}
+{% widthratio stats_livraison.nb_impayees total 100 as pct_impayees %}
+{% widthratio stats_livraison.nb_en_cours total 100 as pct_cours %}
+{% widthratio stats_livraison.nb_a_livrer total 100 as pct_livrer %}
+{% widthratio stats_livraison.nb_livrees total 100 as pct_livrees %}
+{% widthratio stats_livraison.nb_annulees total 100 as pct_annulees %}
+<div class="mag-cmd-kpi-grid">
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-truck"></i></span>
+                <p class="mag-stat-label">{{ stats_scope_label|default:"Assignées" }}</p>
             </div>
+            {% if total %}<span class="mag-stat-badge">{{ total }}</span>{% endif %}
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--revenue">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-money"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">Montant encaissé</div>
-                    <h4 class="number mb-0">{{ stats_livraison.montant_paye|floatformat:0 }} F</h4>
-                    <small class="text-muted">{{ stats_livraison.nb_payees }} payée{{ stats_livraison.nb_payees|pluralize }}</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ total }}</strong>
+            <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,20 12,16 24,18 36,10 48,13 60,7 72,9 88,4"></polyline>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Période filtrée</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-money"></i></span>
+                <p class="mag-stat-label">Montant encaissé</p>
             </div>
+            {% if total %}<span class="mag-stat-badge">{{ pct_payees|default:0 }}%</span>{% endif %}
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--pending">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-clock-o"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">À encaisser</div>
-                    <h4 class="number mb-0">{{ stats_livraison.nb_impayees }}</h4>
-                    <small class="text-muted">Impayées</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ stats_livraison.montant_paye|floatformat:0 }} F</strong>
+            <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                <rect x="2" y="16" width="6" height="12" rx="1.5"></rect>
+                <rect x="12" y="10" width="6" height="18" rx="1.5"></rect>
+                <rect x="22" y="14" width="6" height="14" rx="1.5"></rect>
+                <rect x="32" y="6" width="6" height="22" rx="1.5"></rect>
+                <rect x="42" y="11" width="6" height="17" rx="1.5"></rect>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">{{ stats_livraison.nb_payees }} payée{{ stats_livraison.nb_payees|pluralize }}</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-clock-o"></i></span>
+                <p class="mag-stat-label">À encaisser</p>
             </div>
+            {% if total %}<span class="mag-stat-badge">{{ pct_impayees|default:0 }}%</span>{% endif %}
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--entry">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-motorcycle"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">En cours</div>
-                    <h4 class="number mb-0">{{ stats_livraison.nb_en_cours }}</h4>
-                    <small class="text-muted">Validées / en route</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ stats_livraison.nb_impayees }}</strong>
+            <svg class="mag-stat-ring" viewBox="0 0 36 36" aria-hidden="true">
+                <circle class="mag-stat-ring-bg" cx="18" cy="18" r="14"></circle>
+                <circle class="mag-stat-ring-fg" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="{{ pct_impayees|default:0 }} 100"></circle>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Impayées</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-motorcycle"></i></span>
+                <p class="mag-stat-label">En cours</p>
             </div>
+            {% if total %}<span class="mag-stat-badge">{{ pct_cours|default:0 }}%</span>{% endif %}
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--paid">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-credit-card"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">À livrer</div>
-                    <h4 class="number mb-0">{{ stats_livraison.nb_a_livrer }}</h4>
-                    <small class="text-muted">Payées, non livrées</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ stats_livraison.nb_en_cours }}</strong>
+            <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,22 14,18 28,20 42,12 56,14 70,8 88,6"></polyline>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Validées / en route</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-credit-card"></i></span>
+                <p class="mag-stat-label">À livrer</p>
             </div>
+            {% if total %}<span class="mag-stat-badge">{{ pct_livrer|default:0 }}%</span>{% endif %}
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--delivered">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-check"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">Livrées</div>
-                    <h4 class="number mb-0">{{ stats_livraison.nb_livrees }}</h4>
-                    <small class="text-muted">Terminées</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ stats_livraison.nb_a_livrer }}</strong>
+            <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                <rect x="2" y="18" width="6" height="10" rx="1.5"></rect>
+                <rect x="12" y="12" width="6" height="16" rx="1.5"></rect>
+                <rect x="22" y="8" width="6" height="20" rx="1.5"></rect>
+                <rect x="32" y="14" width="6" height="14" rx="1.5"></rect>
+                <rect x="42" y="10" width="6" height="18" rx="1.5"></rect>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Payées, non livrées</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-check"></i></span>
+                <p class="mag-stat-label">Livrées</p>
             </div>
+            {% if total %}<span class="mag-stat-badge">{{ pct_livrees|default:0 }}%</span>{% endif %}
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--cancel">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-ban"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">Annulées</div>
-                    <h4 class="number mb-0">{{ stats_livraison.nb_annulees }}</h4>
-                    <small class="text-muted">Non livrables</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ stats_livraison.nb_livrees }}</strong>
+            <svg class="mag-stat-ring" viewBox="0 0 36 36" aria-hidden="true">
+                <circle class="mag-stat-ring-bg" cx="18" cy="18" r="14"></circle>
+                <circle class="mag-stat-ring-fg mag-stat-ring-fg--ok" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="{{ pct_livrees|default:0 }} 100"></circle>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Terminées</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-ban"></i></span>
+                <p class="mag-stat-label">Annulées</p>
             </div>
+            {% if total %}<span class="mag-stat-badge">{{ pct_annulees|default:0 }}%</span>{% endif %}
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-check-circle"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">Payées</div>
-                    <h4 class="number mb-0">{{ stats_livraison.nb_payees }}</h4>
-                    <small class="text-muted">Encaissées</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ stats_livraison.nb_annulees }}</strong>
+            <svg class="mag-stat-spark mag-stat-spark--warn" viewBox="0 0 88 28" aria-hidden="true">
+                <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,8 16,12 32,10 48,18 64,16 80,24 88,22"></polyline>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Non livrables</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-check-circle"></i></span>
+                <p class="mag-stat-label">Payées</p>
             </div>
+            {% if total %}<span class="mag-stat-badge">{{ pct_payees|default:0 }}%</span>{% endif %}
         </div>
-    </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ stats_livraison.nb_payees }}</strong>
+            <svg class="mag-stat-ring" viewBox="0 0 36 36" aria-hidden="true">
+                <circle class="mag-stat-ring-bg" cx="18" cy="18" r="14"></circle>
+                <circle class="mag-stat-ring-fg mag-stat-ring-fg--ok" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="{{ pct_payees|default:0 }} 100"></circle>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Encaissées</span>
+    </article>
 </div>
+{% endwith %}

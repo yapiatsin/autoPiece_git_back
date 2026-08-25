@@ -5,24 +5,30 @@
 {% block page_title %}HISTORIQUE DES COMMANDES{% endblock page_title %}
 {% block page %}Historique commandes{% endblock page %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+
     {% include "mag/partials/_periode_filter_modal.html" %}
 
-    <div class="col-md-12 p-2 mt-4">
-        <div class="card">
-            <div class="header text-info">
-                <h2 class="text-info">
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
+            <div class="header">
+                <h2 class="mb-0">
                     {{ historique_rows|length }} historique{% if historique_rows|length > 1 %}s{% endif %}
                 </h2>
             </div>
             <div class="body">
-                <div class="mag-table-shell" x-data="magTableFilter()">
-                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                <div class="mag-table-shell" x-data="magTableFilter(10)">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher n°, ticket, utilisateur…" %}
                     <div class="table-responsive">
-                        <table class="table table-hover mag-data-table">
+                        <table class="table mag-data-table mb-0">
                         <thead>
-                            <tr class="text-info">
-                                <th>N°#</th>
+                            <tr>
+                                <th>N°</th>
                                 <th>ID</th>
                                 <th>Numéro</th>
                                 <th>Montant net</th>
@@ -38,24 +44,6 @@
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tfoot>
-                            <tr class="text-info">
-                                <th>N°#</th>
-                                <th>ID</th>
-                                <th>Numéro</th>
-                                <th>Montant net</th>
-                                <th>Remise</th>
-                                <th>Total</th>
-                                <th>Payé</th>
-                                <th>Montant payé</th>
-                                <th>Montant reste</th>
-                                <th>Type action</th>
-                                <th>Reçu</th>
-                                <th>Utilisateur</th>
-                                <th>Date de l'action</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </tfoot>
                         <tbody>
                             {% for row in historique_rows %}
                                 {% with item=row.item ticket=row.ticket bon=row.bon %}
@@ -93,17 +81,17 @@
                                     <td class="text-center text-nowrap">
                                         {% if item.paye and ticket %}
                                             <button type="button"
-                                                    class="btn btn-sm btn-outline-primary reprint-recu-paiement"
+                                                    class="btn mag-cmd-btn mag-cmd-btn--ghost reprint-recu-paiement"
                                                     data-ticket="{{ ticket.numero }}"
                                                     title="Réimprimer le reçu de paiement">
                                                 <i class="fa fa-print"></i>
                                             </button>
                                             {% if bon %}
                                                 <a href="{% url 'imprimer_bon_commande_vente' ticket.numero %}?format=pdf"
-                                                   class="btn btn-sm btn-outline-secondary"
+                                                   class="btn mag-cmd-btn mag-cmd-btn--ghost"
                                                    target="_blank"
                                                    rel="noopener"
-                                                   title="PDF bon de commande (paiement)">
+                                                   title="PDF bon de commande">
                                                     <i class="fa fa-file-pdf-o"></i>
                                                 </a>
                                             {% endif %}
@@ -123,10 +111,14 @@
                         </tbody>
                     </table>
                 </div>
+                {% if historique_rows %}
+                {% include "mag/partials/_table_pager.html" %}
+                {% endif %}
                 </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}

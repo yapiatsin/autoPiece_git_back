@@ -5,54 +5,44 @@
 {% block page_title %}HISTORIQUE DES PIECES{% endblock page_title %}
 {% block page %}Historique pièces{% endblock page %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% endblock extra_head %}
+
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+
     {% include "mag/partials/_periode_filter_modal.html" %}
-<div class="col-md-12 p-2 mt-4">
-    <div class="card">
-        <div class="header text-info">
-            <h2 class="text-info">{{historique_pieces|length}} Historique{% if historique_pieces|length > 1 %}s{% endif %} 
-            </h2>
+<div class="mag-cmd-line-section">
+    <div class="card mag-cmd-line-card">
+        <div class="header">
+            <h2 class="mb-0">{{historique_pieces|length}} historique{% if historique_pieces|length > 1 %}s{% endif %}</h2>
         </div>
         <div class="body">
-            <div class="mag-table-shell" x-data="magTableFilter()">
-                {% include "mag/partials/_alpine_table_toolbar.html" %}
+            <div class="mag-table-shell" x-data="magTableFilter(10)">
+                {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher n°, désignation, utilisateur…" %}
                 <div class="table-responsive">
-                    <table class="table table-hover mag-data-table">
+                    <table class="table mag-data-table mb-0">
                     <thead>
-                        <tr class='text'>
-                            <th>N°#</th>
+                        <tr>
+                            <th>N°</th>
                             <th>Numéro</th>
                             <th>Désignation</th>
-                            <th>Prix Achat</th>
-                            <th>Prix Unitaire</th>
+                            <th>Prix achat</th>
+                            <th>Prix unitaire</th>
                             <th>Quantité</th>
                             <th>Seuil</th>
                             <th>Emplacement</th>
                             <th>Utilisateur</th>
                             <th>Action</th>
-                            <th>Date Historique</th>
+                            <th>Date historique</th>
                         </tr>
                     </thead>
-                    <tfoot>
-                        <tr class='text'>
-                            <th>N°#</th>
-                            <th>Numéro</th>
-                            <th>Désignation</th>
-                            <th>Prix Achat</th>
-                            <th>Prix Unitaire</th>
-                            <th>Quantité</th>
-                            <th>Seuil</th>
-                            <th>Emplacement</th>
-                            <th>Utilisateur</th>
-                            <th>Action</th>
-                            <th>Date Historique</th>
-                        </tr>
-                    </tfoot>
                     <tbody>
                         {% for piece in historique_pieces %}
                             <tr>
                                 <td>{{ forloop.counter }}</td>
-                                <td>{{ piece.numero_piece }}</td>
+                                <td><span class="mag-cmd-numero">{{ piece.numero_piece }}</span></td>
                                 <td>{{ piece.designation }}</td>
                                 <td>{{ piece.prix_achat }}</td>
                                 <td>{{ piece.prix_unitaire }}</td>
@@ -63,15 +53,22 @@
                                 <td>{{ piece.get_history_type_display }}</td>
                                 <td>{{ piece.history_date }}</td>
                             </tr>
+                        {% empty %}
+                            <tr class="mag-table-skip-filter">
+                                <td colspan="11" class="text-center text-muted py-4">Aucun historique pour cette période.</td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% if historique_pieces %}
+            {% include "mag/partials/_table_pager.html" %}
+            {% endif %}
             </div>
         </div>
     </div>
 </div>
-    
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}

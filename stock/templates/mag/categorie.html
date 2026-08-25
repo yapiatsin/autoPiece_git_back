@@ -6,6 +6,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'apps/assets/css/mag-form-modal.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
 {% endblock extra_head %}
 
 {% block page_action_buttons %}
@@ -23,6 +24,7 @@
 {% endblock page_action_buttons %}
 
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
     <div class="modal fade mag-form-modal" id="addinf" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -116,8 +118,8 @@
         </div>
     </div>
 
-    <div class="col-lg-12">
-        <div class="card" style="overflow-y: auto;">
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card" style="overflow-y: auto;">
             <div class="mobile-left">
                 <a class="btn btn-primary toggle-email-nav" data-toggle="collapse" href="#email-nav" role="button" aria-expanded="true" aria-controls="email-nav">
                     <span class="btn-label"><i class="la la-bars"></i></span>
@@ -197,4 +199,5 @@
             {% endfor %}
         {% endfor %}
     {% endif %}
+</div>
 {% endblock main_content %}

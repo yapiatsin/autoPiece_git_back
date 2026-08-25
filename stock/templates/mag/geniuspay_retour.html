@@ -3,8 +3,10 @@
 {% block page_title %}Paiement numérique{% endblock page_title %}
 {% block page %}{% endblock page %}
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+
 <div class="col-12 p-3">
-    <div class="card">
+    <div class="card mag-cmd-line-card">
         <div class="body text-center py-5">
             {% if error %}
             <h3 class="mb-3">Paiement non abouti</h3>
@@ -22,5 +24,6 @@
             <a href="{{ caisse_url }}" class="btn btn-primary mt-3">Retour à la caisse</a>
         </div>
     </div>
+</div>
 </div>
 {% endblock main_content %}

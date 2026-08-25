@@ -1,50 +1,67 @@
-<div class="row dashboard-kpi-row w-100 mx-0">
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--revenue">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-pie-chart"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">Revenu &amp; bénéfice</div>
-                    <h4 class="number mb-0">Rev: {{ vente_mens }} — Ben: {{ benefice_mensuel }} <span class="kpi-value-muted">frs</span></h4>
-                    <small class="text-muted">{{ annee }}</small>
-                </div>
+<div class="mag-cmd-kpi-grid mag-cmd-kpi-grid--4">
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-pie-chart"></i></span>
+                <p class="mag-stat-label">Revenu &amp; bénéfice</p>
             </div>
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--entry">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-shopping-cart"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">Vente journalière</div>
-                    <h4 class="number mb-0">{{ nb_piece_vendu_day }} <span class="kpi-value-muted">Val {{ vente_day }} frs</span></h4>
-                    <small class="text-muted">{{ day|date:"d-m-Y" }} — {{ annee }}</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ vente_mens }}</strong>
+            <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,20 12,16 24,18 36,10 48,13 60,7 72,9 88,4"></polyline>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Bénéfice {{ benefice_mensuel }} frs · {{ annee }}</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-shopping-cart"></i></span>
+                <p class="mag-stat-label">Vente journalière</p>
             </div>
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-money"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">Vente mensuelle</div>
-                    <h4 class="number mb-0">{{ nb_piece_vendu }} <span class="kpi-value-muted">Val {{ vente_mens }} frs</span></h4>
-                    <small class="text-muted">{{ moislib }} — {{ annee }}</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ nb_piece_vendu_day }}</strong>
+            <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                <rect x="2" y="16" width="6" height="12" rx="1.5"></rect>
+                <rect x="12" y="10" width="6" height="18" rx="1.5"></rect>
+                <rect x="22" y="14" width="6" height="14" rx="1.5"></rect>
+                <rect x="32" y="6" width="6" height="22" rx="1.5"></rect>
+                <rect x="42" y="11" width="6" height="17" rx="1.5"></rect>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Val {{ vente_day }} frs · {{ day|date:"d-m-Y" }}</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-money"></i></span>
+                <p class="mag-stat-label">Vente mensuelle</p>
             </div>
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mt-2">
-        <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
-            <div class="body">
-                <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-line-chart"></i></span></div>
-                <div class="content">
-                    <div class="text mb-1 text-uppercase">Vente annuelle</div>
-                    <h4 class="number mb-0">{{ nb_piece_vendu_year }} <span class="kpi-value-muted">Val {{ vente_year }} frs</span></h4>
-                    <small class="text-muted">{{ annee }}</small>
-                </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ nb_piece_vendu }}</strong>
+            <svg class="mag-stat-ring" viewBox="0 0 36 36" aria-hidden="true">
+                <circle class="mag-stat-ring-bg" cx="18" cy="18" r="14"></circle>
+                <circle class="mag-stat-ring-fg mag-stat-ring-fg--ok" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="70 100"></circle>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Val {{ vente_mens }} frs · {{ moislib }}</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-line-chart"></i></span>
+                <p class="mag-stat-label">Vente annuelle</p>
             </div>
         </div>
-    </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ nb_piece_vendu_year }}</strong>
+            <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,22 14,18 28,20 42,12 56,14 70,8 88,6"></polyline>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Val {{ vente_year }} frs · {{ annee }}</span>
+    </article>
 </div>

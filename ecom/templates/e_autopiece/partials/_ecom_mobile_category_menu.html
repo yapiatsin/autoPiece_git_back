@@ -1,27 +1,48 @@
 {% load i18n %}
 <div class="ecom-mobile-cat-panel">
     <div class="ecom-mobile-cat-head">
-        <span class="ecom-mobile-cat-head-title">{% trans "Catégories" %}</span>
-        <a href="{% url 'ecom_shop' %}" class="ecom-mobile-cat-head-link">{% trans "Tout voir" %}</a>
+        <span class="ecom-mobile-cat-head-title">{% trans "Nos catégories" %}</span>
+        <a href="{% url 'ecom_shop' %}" class="ecom-mobile-cat-head-link">{% trans "Voir plus" %}</a>
     </div>
     <ul class="ecom-mobile-cat-list" id="{{ menu_id|default:'category-active-menu' }}">
         {% for cat in ecom_categories %}
-        <li>
-            <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="ecom-mobile-cat-item has-arrow">
+        {% with has_sub=cat.sous_categories.all has_loose=cat.menu_pieces_sans_sous %}
+        <li class="ecom-mobile-cat-li{% if has_sub or has_loose %} has-children{% endif %}">
+            <a href="{% if has_sub or has_loose %}#{% else %}{% url 'ecom_shop' %}?categorie={{ cat.pk }}{% endif %}"
+               class="ecom-mobile-cat-item{% if has_sub or has_loose %} ecom-cat-accordion{% endif %}"
+               {% if has_sub or has_loose %}aria-expanded="false"{% endif %}>
                 <span class="ecom-mobile-cat-icon" aria-hidden="true">
                     <i class="fa-solid fa-gears"></i>
                 </span>
                 <span class="ecom-mobile-cat-label">{{ cat.categorie }}</span>
+                {% if has_sub or has_loose %}
+                <i class="fa-solid fa-chevron-down ecom-mobile-cat-caret" aria-hidden="true"></i>
+                {% endif %}
             </a>
-            {% if cat.sous_categories.all or cat.menu_pieces_sans_sous %}
-            <ul class="submenu mm-collapse ecom-mobile-cat-children">
-                {% for sc in cat.sous_categories.all %}
+            {% if has_sub or has_loose %}
+            <ul class="ecom-mobile-cat-children">
                 <li>
-                    <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}&sous_categorie={{ sc.pk }}" class="ecom-mobile-cat-item ecom-mobile-cat-item--child has-arrow">
+                    <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="ecom-mobile-cat-item ecom-mobile-cat-item--child">
+                        {% trans "Voir tout" %}
+                    </a>
+                </li>
+                {% for sc in cat.sous_categories.all %}
+                <li class="ecom-mobile-cat-li{% if sc.menu_pieces %} has-children{% endif %}">
+                    <a href="{% if sc.menu_pieces %}#{% else %}{% url 'ecom_shop' %}?categorie={{ cat.pk }}&sous_categorie={{ sc.pk }}{% endif %}"
+                       class="ecom-mobile-cat-item ecom-mobile-cat-item--child{% if sc.menu_pieces %} ecom-cat-accordion{% endif %}"
+                       {% if sc.menu_pieces %}aria-expanded="false"{% endif %}>
                         <span class="ecom-mobile-cat-label">{{ sc.nom }}</span>
+                        {% if sc.menu_pieces %}
+                        <i class="fa-solid fa-chevron-down ecom-mobile-cat-caret" aria-hidden="true"></i>
+                        {% endif %}
                     </a>
                     {% if sc.menu_pieces %}
-                    <ul class="submenu mm-collapse ecom-mobile-cat-pieces">
+                    <ul class="ecom-mobile-cat-pieces">
+                        <li>
+                            <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}&sous_categorie={{ sc.pk }}" class="ecom-mobile-cat-item ecom-mobile-cat-item--piece">
+                                {% trans "Toutes les pièces" %}
+                            </a>
+                        </li>
                         {% for piece in sc.menu_pieces|slice:":6" %}
                         <li>
                             <a href="{{ piece.get_absolute_url }}" class="ecom-mobile-cat-item ecom-mobile-cat-item--piece">
@@ -33,9 +54,26 @@
                     {% endif %}
                 </li>
                 {% endfor %}
+                {% if cat.menu_pieces_sans_sous %}
+                <li>
+                    <a href="{% url 'ecom_shop' %}?categorie={{ cat.pk }}" class="ecom-mobile-cat-item ecom-mobile-cat-item--child">
+                        {% trans "Autres pièces" %}
+                    </a>
+                    <ul class="ecom-mobile-cat-pieces is-open">
+                        {% for piece in cat.menu_pieces_sans_sous|slice:":6" %}
+                        <li>
+                            <a href="{{ piece.get_absolute_url }}" class="ecom-mobile-cat-item ecom-mobile-cat-item--piece">
+                                {{ piece.designation }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% endif %}
             </ul>
             {% endif %}
         </li>
+        {% endwith %}
         {% empty %}
         <li class="ecom-mobile-cat-empty">
             <p>{% trans "Aucune catégorie disponible pour le moment." %}</p>

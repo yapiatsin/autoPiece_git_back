@@ -11,16 +11,17 @@
 {% endblock extra_head %}
 
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
 {% include "mag/partials/_periode_filter_modal.html" %}
 {% include "mag/partials/_dashboard_kpi_styles.html" %}
 
-<div class="col-lg-12 p-2 mt-2">
+<div class="mag-cmd-line-section">
     {% include "mag/partials/_kpi_row_cmd_line.html" %}
 </div>
 
-<div class="col-lg-12 p-2 mt-2">
-    <div class="card">
-        <div class="header d-flex justify-content-between align-items-center flex-wrap">
+<div class="mag-cmd-line-section">
+    <div class="card mag-cmd-line-card">
+        <div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:10px;">
             <h2 class="mb-0">
                 {{ stats_cmd_line.nb_total }} commande{% if stats_cmd_line.nb_total != 1 %}s{% endif %} en ligne
                 {% if filtre_resume %}
@@ -28,168 +29,147 @@
                 {% endif %}
             </h2>
             {% if local %}
-            <span class="badge badge-primary">{{ local.nom }}</span>
+            <span class="mag-cmd-chip"><i class="fa fa-map-marker"></i> {{ local.nom }}</span>
             {% elif can_choose_localite %}
-            <span class="badge badge-secondary">Toutes les localités</span>
+            <span class="mag-cmd-chip mag-cmd-chip--muted">Toutes les localités</span>
             {% endif %}
         </div>
         <div class="body">
-            <div class="mag-table-shell" x-data="magTableFilter()">
-                {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher n°, client, localité, livreur…" %}
+            <div class="mag-table-shell" x-data="magTableFilter(10)">
+                {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher n°, client, localité, commune, livreur…" %}
                 <div class="table-responsive">
-                    <table class="table table-hover mag-data-table">
+                    <table class="table mag-data-table mb-0">
                         <thead>
                             <tr>
-                                <th>N°#</th>
-                                <th>N° commande</th>
+                                <th>N°</th>
+                                <th>Commande</th>
                                 <th>Client</th>
-                                <th>Localité</th>
-                                <th>Adresse livraison</th>
+                                <th>Trajet</th>
+                                <th>Adresse</th>
                                 <th>Total</th>
-                                <th>Mode réception</th>
                                 <th>Statut</th>
                                 <th>Livreur</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tfoot>
-                            <tr>
-                                <th>N°#</th>
-                                <th>N° commande</th>
-                                <th>Client</th>
-                                <th>Localité</th>
-                                <th>Adresse livraison</th>
-                                <th>Total</th>
-                                <th>Mode réception</th>
-                                <th>Statut</th>
-                                <th>Livreur</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </tfoot>
                         <tbody>
                             {% for cmd in commandes %}
                             <tr>
-                                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                                <td>{{ forloop.counter }}</td>
                                 <td>
-                                    <strong>{{ cmd.numero_commande }}</strong>
+                                    <span class="mag-cmd-numero">{{ cmd.numero_commande }}</span>
                                     {% if cmd.panier.ticket %}
-                                    <br><small class="text-muted">{{ cmd.panier.ticket }}</small>
+                                    <p class="mag-cmd-meta">{{ cmd.panier.ticket }}</p>
+                                    {% endif %}
+                                    {% if cmd.date %}
+                                    <p class="mag-cmd-meta">{{ cmd.date|date:"d M Y H:i" }}</p>
                                     {% endif %}
                                 </td>
                                 <td>{{ cmd.panier.utilisateur.username|default:cmd.panier.nom_client|default:"—" }}</td>
-                                <td>{{ cmd.panier.local_entrepot.nom|default:"—" }}</td>
+                                <td>
+                                    <div class="mag-cmd-route">
+                                        <div class="mag-cmd-route-end">
+                                            <span class="mag-cmd-route-label">Localité</span>
+                                            <span class="mag-cmd-route-name">{{ cmd.panier.local_entrepot.nom|default:"—" }}</span>
+                                        </div>
+                                        <i class="fa fa-long-arrow-right mag-cmd-route-arrow" aria-hidden="true"></i>
+                                        <div class="mag-cmd-route-end">
+                                            {% if cmd.panier.mode_reception == 'livraison' %}
+                                            <span class="mag-cmd-route-label">Livraison</span>
+                                            <span class="mag-cmd-route-name">
+                                                {{ cmd.panier.livraison_commune.nom|default:cmd.panier.livraison_ville.nom|default:"—" }}
+                                            </span>
+                                            {% else %}
+                                            <span class="mag-cmd-route-label">Réception</span>
+                                            <span class="mag-cmd-route-name">Retrait magasin</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
                                 <td>
                                     {% if cmd.panier.mode_reception == 'livraison' %}
-                                    <small>
-                                        {% if cmd.panier.livraison_ville %}{{ cmd.panier.livraison_ville.nom }}{% endif %}
-                                        {% if cmd.panier.livraison_commune %} — {{ cmd.panier.livraison_commune.nom }}{% endif %}
-                                        {% if cmd.panier.adresse_domicile %}<br>{{ cmd.panier.adresse_domicile }}{% endif %}
-                                        {% if cmd.panier.telephone_livraison %}<br>Tél. {{ cmd.panier.telephone_livraison }}{% endif %}
-                                        {% if cmd.panier.frais_livraison %}<br>Frais: {{ cmd.panier.frais_livraison|floatformat:0 }} FCFA{% endif %}
-                                    </small>
+                                    <div class="mag-cmd-addr">
+                                        {% if cmd.panier.livraison_ville %}
+                                        <span>{{ cmd.panier.livraison_ville.nom }}{% if cmd.panier.livraison_commune %} · {{ cmd.panier.livraison_commune.nom }}{% endif %}</span>
+                                        {% endif %}
+                                        {% if cmd.panier.adresse_domicile %}<span>{{ cmd.panier.adresse_domicile }}</span>{% endif %}
+                                        {% if cmd.panier.telephone_livraison %}<span>Tél. {{ cmd.panier.telephone_livraison }}</span>{% endif %}
+                                        {% if cmd.panier.frais_livraison %}<span>Frais {{ cmd.panier.frais_livraison|floatformat:0 }} FCFA</span>{% endif %}
+                                    </div>
                                     {% else %}
-                                    <span class="text-muted">—</span>
+                                    <span class="text-muted">{{ cmd.panier.get_mode_reception_display|default:"Retrait" }}</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ cmd.total|floatformat:0 }} FCFA</td>
-                                <td>{{ cmd.panier.get_mode_reception_display|default:"—" }}</td>
+                                <td class="mag-cmd-total">{{ cmd.total|floatformat:0 }} FCFA</td>
                                 <td>
-                                    {% if cmd.statut_commande == 'en_attente' %}
-                                    <span class="badge badge-warning">{{ cmd.get_statut_commande_display }}</span>
-                                    {% elif cmd.statut_commande == 'valider' %}
-                                    <span class="badge badge-outline-info">{{ cmd.get_statut_commande_display }}</span>
-                                    {% elif cmd.statut_commande == 'livrer' %}
-                                    <span class="badge badge-success">{{ cmd.get_statut_commande_display }}</span>
-                                    {% elif cmd.statut_commande == 'annuler' %}
-                                    <span class="badge badge-danger">{{ cmd.get_statut_commande_display }}</span>
-                                    {% else %}
-                                    <span class="badge badge-secondary">{{ cmd.get_statut_commande_display }}</span>
-                                    {% endif %}
-                                    {% if cmd.paye %}<span class="badge badge-success ml-1">Payée</span>{% endif %}
-                                    {% if cmd.client_confirme_reception %}<span class="badge badge-primary ml-1">Reçue client</span>{% endif %}
+                                    <div class="mag-cmd-badges">
+                                        {% if cmd.statut_commande == 'en_attente' %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--en_attente">{{ cmd.get_statut_commande_display }}</span>
+                                        {% elif cmd.statut_commande == 'valider' %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--valider">{{ cmd.get_statut_commande_display }}</span>
+                                        {% elif cmd.statut_commande == 'livrer' %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--livrer">{{ cmd.get_statut_commande_display }}</span>
+                                        {% elif cmd.statut_commande == 'annuler' %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--annuler">{{ cmd.get_statut_commande_display }}</span>
+                                        {% else %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--en_attente">{{ cmd.get_statut_commande_display }}</span>
+                                        {% endif %}
+                                        {% if cmd.paye %}<span class="mag-cmd-badge mag-cmd-badge--paye">Payée</span>{% endif %}
+                                        {% if cmd.client_confirme_reception %}<span class="mag-cmd-badge mag-cmd-badge--recu">Reçue</span>{% endif %}
+                                    </div>
                                 </td>
                                 <td>{{ cmd.livreur.username|default:"—" }}</td>
                                 <td>
-                                    <div class="d-flex flex-column" style="gap:8px; min-width: 220px;">
+                                    <div class="mag-cmd-actions">
                                         <button type="button"
-                                                class="btn btn-sm btn-outline-info btn-block"
+                                                class="btn mag-cmd-btn mag-cmd-btn--ghost"
                                                 onclick="afficherDetailCmdLine('{{ cmd.pk }}')">
                                             Détail
                                         </button>
                                         {% if cmd.statut_commande == 'annuler' %}
-                                        <span class="badge badge-danger">Annulée</span>
+                                        <span class="mag-cmd-badge mag-cmd-badge--annuler">Annulée</span>
                                         {% else %}
                                         {% if cmd.statut_commande == 'en_attente' %}
                                         <form method="post" action="{% url 'cmd_line_valider' cmd.pk %}">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-success btn-block">Valider</button>
+                                            <button type="submit" class="btn mag-cmd-btn mag-cmd-btn--ok">Valider</button>
                                         </form>
                                         {% endif %}
                                         {% if cmd.panier.mode_reception == 'livraison' and cmd.statut_commande != 'livrer' %}
-                                        <form method="post" action="{% url 'cmd_line_assigner' cmd.pk %}"
-                                              class="d-flex align-items-center"
-                                              style="gap:6px;">
+                                        <form method="post" action="{% url 'cmd_line_assigner' cmd.pk %}" class="mag-cmd-assign">
                                             {% csrf_token %}
-                                            <select name="livreur_id"
-                                                    class="form-control form-control-sm"
-                                                    required>
+                                            <select name="livreur_id" required>
                                                 <option value="">Livreur…</option>
                                                 {% for l in livreurs %}
                                                 <option value="{{ l.pk }}" {% if cmd.livreur_id == l.pk %}selected{% endif %}>{{ l.username }}</option>
                                                 {% endfor %}
                                             </select>
-                                            <button type="submit" class="btn btn-sm btn-primary">
-                                                Assigner
-                                            </button>
+                                            <button type="submit" class="btn mag-cmd-btn mag-cmd-btn--primary">Assigner</button>
                                         </form>
-                                        {% elif cmd.statut_commande != 'en_attente' %}
-                                        <span class="text-muted small">—</span>
                                         {% endif %}
                                         {% endif %}
                                     </div>
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="10" class="text-center text-muted py-4">Aucune commande en ligne pour cette période.</td>
+                            <tr class="mag-table-skip-filter">
+                                <td colspan="9" class="text-center text-muted py-4">Aucune commande en ligne pour cette période.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                {% if page_obj.paginator.num_pages > 1 %}
-                <nav class="d-flex justify-content-between align-items-center flex-wrap mt-3" aria-label="Pagination commandes">
-                    <small class="text-muted">
-                        {{ page_obj.start_index }}–{{ page_obj.end_index }}
-                        / {{ page_obj.paginator.count }} résultat(s)
-                    </small>
-                    <ul class="pagination mb-0">
-                        <li class="page-item{% if not page_obj.has_previous %} disabled{% endif %}">
-                            {% if page_obj.has_previous %}
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if cmd_line_extra_query %}&amp;{{ cmd_line_extra_query }}{% endif %}">Previous</a>
-                            {% else %}
-                            <span class="page-link">Previous</span>
-                            {% endif %}
-                        </li>
-                        {% for num in page_obj.paginator.page_range %}
-                            {% if num == page_obj.number %}
-                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                            {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}{% if cmd_line_extra_query %}&amp;{{ cmd_line_extra_query }}{% endif %}">{{ num }}</a>
-                            </li>
-                            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
-                            <li class="page-item disabled"><span class="page-link">…</span></li>
-                            {% endif %}
-                        {% endfor %}
-                        <li class="page-item{% if not page_obj.has_next %} disabled{% endif %}">
-                            {% if page_obj.has_next %}
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if cmd_line_extra_query %}&amp;{{ cmd_line_extra_query }}{% endif %}">Next</a>
-                            {% else %}
-                            <span class="page-link">Next</span>
-                            {% endif %}
-                        </li>
-                    </ul>
+                {% if commandes %}
+                <nav class="mag-cmd-pager" aria-label="Pagination commandes" x-show="pageSize > 0 && visibleCount > 0">
+                    <button type="button" class="mag-cmd-pager-btn" :disabled="page <= 1" @click="prevPage()">
+                        Previous
+                    </button>
+                    <span class="mag-cmd-pager-page">
+                        Page <strong x-text="page"></strong> / <span x-text="pageCount"></span>
+                    </span>
+                    <button type="button" class="mag-cmd-pager-btn" :disabled="page >= pageCount" @click="nextPage()">
+                        Next
+                    </button>
                 </nav>
                 {% endif %}
             </div>
@@ -210,10 +190,11 @@
                 <p class="text-muted text-center mb-0">Chargement…</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-outline-secondary mag-cmd-btn mag-cmd-btn--ghost" data-dismiss="modal" style="width:auto !important;">Fermer</button>
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock main_content %}
 

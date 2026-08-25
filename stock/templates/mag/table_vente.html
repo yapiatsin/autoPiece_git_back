@@ -7,12 +7,18 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'apps/assets/css/table-vente.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
 {% endblock extra_head %}
 
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+
     {% include "mag/partials/_periode_filter_modal.html" %}
-    <div class="col-lg-12 mt-4">
-        <div class="card">
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
+            <div class="header">
+                <h2 class="mb-0">Tableau des ventes · {{ month_name }}</h2>
+            </div>
             <div class="body">
                 <div class="table-responsive" style="overflow-x: auto;">
                     <table class="table table-bordered table-striped table-hover" style="font-size: 12px;">
@@ -86,7 +92,7 @@
             </div>
         </div>
     </div>
-
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}

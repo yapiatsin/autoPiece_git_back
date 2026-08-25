@@ -6,124 +6,67 @@
 {% block page %}Liste des ventes{% endblock page %}
 
 {% block extra_head %}
-{% include "mag/partials/_dashboard_kpi_styles.html" %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
 {% endblock extra_head %}
 
 {% block main_content %}
-
+<div class="mag-cmd-line-page col-12 px-0">
 {% include "mag/partials/_periode_filter_modal.html" %}
+{% include "mag/partials/_dashboard_kpi_styles.html" %}
 
-<div class="col-lg-12 p-2 mt-2">
-    <div class="row dashboard-kpi-row w-100 mx-0">
-        <div class="col-lg-4 col-md-4 col-sm-12 mt-2">
-            <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
-                <div class="body">
-                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-calendar"></i></span></div>
-                    <div class="content">
-                        <div class="text mb-1 text-uppercase">Ventes journalières</div>
-                        <h4 class="number mb-0">
-                            {{ stats_jour.nombre }}
-                            <span class="kpi-value-muted">— {{ stats_jour.montant }} Fcfa</span>
-                        </h4>
-                        <small class="text-muted">{{ dates|date:"d/m/Y" }}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-4 col-sm-12 mt-2">
-            <div class="card top_widget dashboard-kpi dashboard-kpi--revenue">
-                <div class="body">
-                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-calendar-check-o"></i></span></div>
-                    <div class="content">
-                        <div class="text mb-1 text-uppercase">Ventes mensuelles</div>
-                        <h4 class="number mb-0">
-                            {{ stats_mois.nombre }}
-                            <span class="kpi-value-muted">— {{ stats_mois.montant }} Fcfa</span>
-                        </h4>
-                        <small class="text-muted">{{ moisact }} {{ annee }}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-4 col-sm-12 mt-2">
-            <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
-                <div class="body">
-                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-line-chart"></i></span></div>
-                    <div class="content">
-                        <div class="text mb-1 text-uppercase">Ventes annuelles</div>
-                        <h4 class="number mb-0">
-                            {{ stats_annee.nombre }}
-                            <span class="kpi-value-muted">— {{ stats_annee.montant }} Fcfa</span>
-                        </h4>
-                        <small class="text-muted">Année {{ annee }}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="mag-cmd-line-section">
+    {% include "mag/partials/_kpi_row_liste_ventes.html" %}
 </div>
 
-<div class="col-md-12 p-2 mt-2">
-    <div class="card">
-        <div class="header text-info">
-            <h2 class="text-info">
+<div class="mag-cmd-line-section">
+    <div class="card mag-cmd-line-card">
+        <div class="header">
+            <h2 class="mb-0">
                 {{ cmdes|length }} vente{% if cmdes|length > 1 %}s{% endif %}
-                <small class="text-muted font-14">
-                    ({{ filtre_resume }})
-                </small>
+                {% if filtre_resume %}
+                <small class="text-muted font-weight-normal">· {{ filtre_resume }}</small>
+                {% endif %}
             </h2>
         </div>
         <div class="body">
-            <div class="mag-table-shell" x-data="magTableFilter()">
-                {% include "mag/partials/_alpine_table_toolbar.html" %}
+            <div class="mag-table-shell" x-data="magTableFilter(10)">
+                {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher n°, ticket, caissier…" %}
                 <div class="table-responsive">
-                    <table class="table table-hover mag-data-table">
+                    <table class="table mag-data-table mb-0">
                         <thead>
-                            <tr class="text">
-                                <th>N°#</th>
-                                <th>N°Commande</th>
+                            <tr>
+                                <th>N°</th>
+                                <th>Commande</th>
                                 <th>Montant</th>
                                 <th>Remise</th>
                                 <th>Total</th>
                                 <th>Versé</th>
                                 <th>Reste</th>
                                 <th>Paiement</th>
-                                <th>N°ticket</th>
+                                <th>Ticket</th>
                                 <th>Caissier(ère)</th>
                                 <th>Date</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tfoot>
-                            <tr class="text">
-                                <th>N°#</th>
-                                <th>N°Commande</th>
-                                <th>Montant</th>
-                                <th>Remise</th>
-                                <th>Total</th>
-                                <th>Versé</th>
-                                <th>Reste</th>
-                                <th>Paiement</th>
-                                <th>N°ticket</th>
-                                <th>Caissier(ère)</th>
-                                <th>Date</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </tfoot>
                         <tbody>
                             {% for c in cmdes %}
                                 <tr>
                                     <td>{{ forloop.counter }}</td>
-                                    <td>{{ c.numero_commande }}</td>
+                                    <td><span class="mag-cmd-numero">{{ c.numero_commande }}</span></td>
                                     <td>{{ c.total_sans_remise }}</td>
                                     <td>{{ c.remise }}</td>
-                                    <td>{{ c.total }}</td>
+                                    <td class="mag-cmd-total">{{ c.total }}</td>
                                     <td>{{ c.montant_paye }}</td>
                                     <td>{{ c.montant_reste }}</td>
-                                    <td class="text-center">
-                                        {% if c.paye %}✅{% else %}❌{% endif %}
+                                    <td>
+                                        {% if c.paye %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--paye">Payée</span>
+                                        {% else %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--annuler">Impayée</span>
+                                        {% endif %}
                                         {% if c.libelle_paiement %}
-                                        <div class="small text-muted">{{ c.libelle_paiement }}</div>
+                                        <p class="mag-cmd-meta mb-0">{{ c.libelle_paiement }}</p>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -142,17 +85,17 @@
                                     <td class="text-center text-nowrap">
                                         {% if c.paye and c.ticket %}
                                             <button type="button"
-                                                    class="btn btn-sm btn-outline-primary reprint-recu-paiement"
+                                                    class="btn mag-cmd-btn mag-cmd-btn--ghost reprint-recu-paiement"
                                                     data-ticket="{{ c.ticket.numero }}"
                                                     title="Réimprimer le reçu de paiement">
                                                 <i class="fa fa-print"></i>
                                             </button>
                                             {% if c.bon_paiement %}
                                                 <a href="{% url 'imprimer_bon_commande_vente' c.ticket.numero %}?format=pdf"
-                                                   class="btn btn-sm btn-outline-secondary"
+                                                   class="btn mag-cmd-btn mag-cmd-btn--ghost"
                                                    target="_blank"
                                                    rel="noopener"
-                                                   title="PDF bon de commande (paiement)">
+                                                   title="PDF bon de commande">
                                                     <i class="fa fa-file-pdf-o"></i>
                                                 </a>
                                             {% endif %}
@@ -171,11 +114,14 @@
                         </tbody>
                     </table>
                 </div>
+                {% if cmdes %}
+                {% include "mag/partials/_table_pager.html" %}
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
-
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}

@@ -6,6 +6,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'apps/assets/css/mag-form-modal.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
 {% endblock extra_head %}
 
 {% block page_action_buttons %}
@@ -23,22 +24,25 @@
 {% endblock page_action_suffix %}
 
 {% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
     {% include "mag/partials/_periode_filter_modal.html" %}
     {% include "mag/partials/_dashboard_kpi_styles.html" %}
-    {% include "mag/partials/_kpi_row_stock.html" %}
+    <div class="mag-cmd-line-section">
+        {% include "mag/partials/_kpi_row_stock.html" %}
+    </div>
 
-    <div class="col-lg-12">
-        <div class="card">
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
             <div class="header">
-                <h2>Evolution des ventes</h2>
+                <h2 class="mb-0">Evolution des ventes</h2>
             </div>
             <div class="body">
-                <div class="mag-table-shell" x-data="magTableFilter()">
-                    {% include "mag/partials/_alpine_table_toolbar.html" %}
+                <div class="mag-table-shell" x-data="magTableFilter(10)">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher pièce, désignation, catégorie…" %}
                     <div class="table-responsive">
-                        <table class="table table-hover mag-data-table">
+                        <table class="table mag-data-table mb-0">
                         <thead>
-                            <tr class='text-info'>
+                            <tr>
                                 <th>N°#</th>
                                 <th>N°Pièce</th>
                                 <th>Designation</th>
@@ -56,25 +60,6 @@
                                 <th class="text-center">Sortie</th>
                             </tr>
                         </thead>
-                        <tfoot>
-                            <tr class='text-info'>
-                                <th>N°#</th>
-                                <th>N°Pièce</th>
-                                <th>Designation</th>
-                                <th>Categorie</th>
-                                <th>Prix achat</th>
-                                <th class="text-center">Prix vente</th>
-                                <th class="text-center">Prix vente local</th>
-                                <th class="text-center">Quantite stock</th>
-                                <th>Provenance</th>
-                                <th>seuil</th>
-                                <th>Emplacement</th>
-                                <th>Auteur</th>
-                                <th>Date</th>
-                                <th class="text-center">Action</th>
-                                <th class="text-center">Sortie</th>
-                            </tr>
-                        </tfoot>
                         <tbody>
                             {% if piece_queryset %}
                                 {% for d in piece_queryset %}
@@ -157,6 +142,9 @@
                         </tbody>
                     </table>
                 </div>
+                {% if piece_queryset %}
+                {% include "mag/partials/_table_pager.html" %}
+                {% endif %}
                 </div>
             </div>
         </div>
@@ -207,6 +195,7 @@
     </script>
     {% include "mag/partials/_archive_toggle_js.html" %}
     {% include "mag/partials/_sous_categorie_cascade.html" %}
+</div>
 {% endblock main_content %}
 
 {% block extra_js %}
