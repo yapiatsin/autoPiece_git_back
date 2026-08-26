@@ -11,6 +11,7 @@ from .models import (
     Categorie, SousCategorie, EntrePiece, Piece, Fournisseur, Panier, PanierItem, Commande, Ticket,
     MoyenPaiement, Notification, StockLocal, TransfertStock,
     DemandeTransfert, LigneDemandeTransfert, BonCommandePaiement,
+    ParametreTVA, BaremeTimbre,
 )
 from .bon_commande_vente import (
     context_bon_commande_vente,
@@ -55,10 +56,11 @@ from .stock_transfers import (
     _parse_lignes_post,
 )
 from .demande_transfert_pdf import generate_demande_transfert_pdf, titre_bon_commande
-from Userauths.models import LocalEntrepot
+from Userauths.models import LocalEntrepot, CustomUser
 from .forms import (
     CategorieForm, SousCategorieForm, EntrePieceForm, PieceForm, DateForm,
     FournisseurForm, UpdatePieceForm, StockLocalPrixForm,
+    ParametreTVAForm, BaremeTimbreForm,
 )
 from django.contrib import messages 
 from django.contrib.auth.decorators import login_required
@@ -1178,8 +1180,8 @@ class AddPieceView(View):
         if pk:
             categorie = get_object_or_404(Categorie, pk=pk)
             pieces_qs = Piece.objects.filter(categorie=categorie).select_related(
-                'categorie', 'sous_categorie', 'utilisateur'
-            ).order_by('id')
+                'categorie', 'sous_categorie', 'utilisateur',
+            ).prefetch_related('images_supplementaires').order_by('id')
             total_pieces_categorie = pieces_qs.count()
             if sous_categorie_id:
                 sous_categorie = SousCategorie.objects.filter(
@@ -1305,6 +1307,7 @@ class AddPieceView(View):
             piece.utilisateur = request.user
             piece.categorie = categorie
             piece.save()
+            piece.sync_supplementary_images(request)
             localite = get_user_localite(request.user)
             if localite:
                 get_or_create_stock(piece, localite)
@@ -1315,7 +1318,8 @@ class AddPieceView(View):
             pieces = annotate_pieces_for_localite(
                 Piece.objects.filter(
                     categorie=categorie,
-                ).select_related('categorie', 'sous_categorie', 'utilisateur').order_by('-id'),
+                ).select_related('categorie', 'sous_categorie', 'utilisateur')
+                .prefetch_related('images_supplementaires').order_by('-id'),
                 get_user_localite(request.user),
             )
             return render(request, self.template_name,{
@@ -3413,6 +3417,7 @@ class EntreSockPieceView(LoginRequiredMixin, CreateView):
             messages.error(self.request, "Localité requise pour enregistrer une entrée en stock.")
             return redirect(self.request.META.get('HTTP_REFERER', 'stock'))
         form.instance.local_entrepot = loc
+        form.instance.origine_type = 'fournisseur'
         reponse = super().form_valid(form)
         messages.success(self.request, self.success_message)
         return reponse
@@ -3452,7 +3457,8 @@ class UpdatepieceView(LoginRequiredMixin, UpdateView):
     success_message = 'La pièce a été mise à jour.👍✓✓'
     error_message = "Erreur de saisie verifié les informations ✘✘"
     def form_valid(self, form):
-        form.save()
+        piece = form.save()
+        piece.sync_supplementary_images(self.request)
         messages.success(self.request, self.success_message)
         # Rediriger vers la page d'origine (HTTP_REFERER) ou vers stock par défaut
         return redirect(self.request.META.get('HTTP_REFERER', 'stock'))
@@ -4036,6 +4042,7 @@ class MonStockView(TemplateView):
 
         piece_queryset = filter_piece_catalogue_actif(
             Piece.objects.select_related('categorie', 'sous_categorie', 'utilisateur')
+            .prefetch_related('images_supplementaires')
         )
         if localite:
             piece_queryset = piece_queryset.filter(
@@ -5341,4 +5348,333 @@ def marquer_toutes_notifications_lues(request):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+def _notification_url(notif):
+    if notif.type_notification == 'transfert_demande':
+        return reverse('liste_transferts')
+    if notif.type_notification == 'commande_en_ligne':
+        try:
+            return reverse('cmd_line')
+        except Exception:
+            try:
+                return reverse('ecom_cmd_line')
+            except Exception:
+                return None
+    return None
+
+
+def _notification_payload(notif, *, mark_read=False):
+    if mark_read and not notif.lu:
+        notif.lu = True
+        notif.save(update_fields=['lu'])
+    pieces = []
+    if notif.type_notification == 'stock_alerte':
+        for piece in notif.pieces_alerte.all()[:20]:
+            pieces.append({
+                'designation': piece.designation,
+                'numero_piece': piece.numero_piece,
+                'quantite': piece.quantite_totale,
+                'seuil': piece.seuil,
+            })
+    return {
+        'id': str(notif.id),
+        'titre': notif.titre,
+        'message': notif.message,
+        'type': notif.type_notification,
+        'type_display': notif.get_type_notification_display(),
+        'date': notif.date_creation.strftime('%d/%m/%Y %H:%M'),
+        'lu': notif.lu,
+        'url': _notification_url(notif),
+        'pieces': pieces,
+    }
+
+
+class ListeNotificationsView(LoginRequiredMixin, TemplateView):
+    login_url = 'connexion'
+    template_name = 'mag/liste_notifications.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        qs = Notification.objects.filter(utilisateur=self.request.user).order_by('-date_creation')
+        filtre = (self.request.GET.get('filtre') or 'toutes').strip().lower()
+        if filtre == 'non_lues':
+            qs = qs.filter(lu=False)
+        elif filtre == 'lues':
+            qs = qs.filter(lu=True)
+        context.update({
+            'notifications': qs[:200],
+            'nb_total': Notification.objects.filter(utilisateur=self.request.user).count(),
+            'nb_non_lues': Notification.objects.filter(utilisateur=self.request.user, lu=False).count(),
+            'filtre_actif': filtre if filtre in ('toutes', 'non_lues', 'lues') else 'toutes',
+        })
+        return context
+
+
+@login_required(login_url='connexion')
+def notification_detail(request, notification_id):
+    """Détail notification (JSON) + marque comme lue."""
+    notif = get_object_or_404(Notification, id=notification_id, utilisateur=request.user)
+    return JsonResponse({'success': True, 'notification': _notification_payload(notif, mark_read=True)})
+
+
+@login_required(login_url='connexion')
+@require_POST
+def notification_delete(request, notification_id):
+    notif = get_object_or_404(Notification, id=notification_id, utilisateur=request.user)
+    notif.delete()
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+    messages.success(request, 'Notification supprimée.')
+    return redirect('liste_notifications')
+
+
+# ============================================================================
+# GESTION DES PARAMÈTRES
+# ============================================================================
+
+def utilisateur_peut_gerer_parametres(user) -> bool:
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return getattr(user, 'role', None) in ('admin', 'gestionnaire')
+
+
+def _redirect_gestion_parametre():
+    return redirect('gestion_parametre')
+
+
+class GestionParametreView(LoginRequiredMixin, TemplateView):
+    login_url = 'connexion'
+    template_name = 'mag/gestion_parametre.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not utilisateur_peut_gerer_parametres(request.user):
+            messages.error(request, "Accès réservé aux administrateurs et gestionnaires.")
+            return redirect('tbord')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        now_dt = timezone.now()
+        depuis_7j = now_dt - timedelta(days=7)
+        depuis_30j = now_dt - timedelta(days=30)
+
+        staff_qs = CustomUser.objects.exclude(role='client')
+        clients_qs = CustomUser.objects.filter(role='client')
+
+        stock_val = StockLocal.objects.aggregate(
+            qty=Sum('quantite_disponible'),
+            cout=Sum(
+                F('quantite_disponible') * Coalesce(
+                    F('prix_unitaire_local'), F('piece__prix_unitaire')
+                ),
+                output_field=FloatField(),
+            ),
+        )
+        ventes_qs = PanierItem.objects.filter(
+            panier__valide=True,
+            panier__panier_paye=True,
+        )
+        ventes_agg = ventes_qs.aggregate(
+            nb=Sum('quantite'),
+            montant=Sum(
+                F('quantite') * F('piece__prix_unitaire'),
+                output_field=FloatField(),
+            ),
+        )
+
+        cmd_local = Commande.objects.filter(
+            panier__valide=True,
+            commande_en_ligne=False,
+        )
+        cmd_online = Commande.objects.filter(commande_en_ligne=True)
+
+        context.update({
+            'nb_employes': staff_qs.count(),
+            'nb_connexions_7j': staff_qs.filter(last_login__gte=depuis_7j).count(),
+            'nb_connexions_30j': staff_qs.filter(last_login__gte=depuis_30j).count(),
+            'nb_jamais_connectes': staff_qs.filter(last_login__isnull=True).count(),
+            'nb_clients': clients_qs.count(),
+            'nb_categories': Categorie.objects.count(),
+            'nb_sous_categories': SousCategorie.objects.filter(actif=True).count(),
+            'nb_pieces': Piece.objects.count(),
+            'qty_stock_total': stock_val['qty'] or 0,
+            'cout_stock_total': stock_val['cout'] or 0,
+            'nb_ventes_qty': ventes_agg['nb'] or 0,
+            'montant_ventes': ventes_agg['montant'] or 0,
+            'cmd_local_attente': cmd_local.filter(
+                paye=False, panier__panier_livre=False,
+            ).exclude(statut_commande='livrer').count(),
+            'cmd_local_payee': cmd_local.filter(paye=True).count(),
+            'cmd_local_a_livrer': cmd_local.filter(
+                paye=True, panier__panier_livre=False,
+            ).exclude(statut_commande='livrer').count(),
+            'cmd_local_livree': cmd_local.filter(
+                Q(panier__panier_livre=True) | Q(statut_commande='livrer'),
+            ).count(),
+            'cmd_online_attente': cmd_online.filter(statut_commande='en_attente').count(),
+            'cmd_online_valider': cmd_online.filter(statut_commande='valider').count(),
+            'cmd_online_livrer': cmd_online.filter(statut_commande='livrer').count(),
+            'cmd_online_annuler': cmd_online.filter(statut_commande='annuler').count(),
+            'livraison_online_a_livrer': cmd_online.filter(
+                livreur__isnull=False,
+            ).exclude(statut_commande__in=('livrer', 'annuler')).count(),
+            'livraison_online_livree': cmd_online.filter(statut_commande='livrer').count(),
+            'nb_tickets_total': Ticket.objects.count(),
+            'nb_tickets_utilises': Ticket.objects.filter(utilise=True).count(),
+            'proforma_attente': Commande.objects.filter(profoma=1, paye=False).count(),
+            'proforma_validee': Commande.objects.filter(profoma=1, paye=True).count(),
+            'parametres_tva': ParametreTVA.objects.all(),
+            'tva_form': ParametreTVAForm(),
+            'baremes_timbre': BaremeTimbre.objects.all(),
+            'timbre_form': BaremeTimbreForm(),
+            'moyens_paiement': MoyenPaiement.objects.all().order_by('nom'),
+        })
+        return context
+
+
+@login_required(login_url='connexion')
+@require_POST
+def parametre_tva_save(request):
+    if not utilisateur_peut_gerer_parametres(request.user):
+        messages.error(request, "Accès refusé.")
+        return _redirect_gestion_parametre()
+
+    pk = request.POST.get('pk') or None
+    instance = None
+    if pk:
+        instance = get_object_or_404(ParametreTVA, pk=pk)
+    form = ParametreTVAForm(request.POST, instance=instance)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Paramètre TVA enregistré.")
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field}: {error}")
+    return _redirect_gestion_parametre()
+
+
+@login_required(login_url='connexion')
+@require_POST
+def parametre_tva_toggle(request, pk):
+    if not utilisateur_peut_gerer_parametres(request.user):
+        messages.error(request, "Accès refusé.")
+        return _redirect_gestion_parametre()
+
+    parametre = get_object_or_404(ParametreTVA, pk=pk)
+    if parametre.active:
+        parametre.active = False
+        parametre.save(update_fields=['active', 'date_maj'])
+        messages.success(request, "TVA désactivée.")
+    else:
+        ParametreTVA.objects.filter(active=True).update(active=False)
+        parametre.active = True
+        parametre.save(update_fields=['active', 'date_maj'])
+        messages.success(request, f"TVA {parametre.taux}% activée.")
+    return _redirect_gestion_parametre()
+
+
+@login_required(login_url='connexion')
+@require_POST
+def parametre_tva_delete(request, pk):
+    if not utilisateur_peut_gerer_parametres(request.user):
+        messages.error(request, "Accès refusé.")
+        return _redirect_gestion_parametre()
+
+    parametre = get_object_or_404(ParametreTVA, pk=pk)
+    if parametre.active:
+        messages.error(request, "Désactivez ce taux avant de le supprimer.")
+        return _redirect_gestion_parametre()
+    parametre.delete()
+    messages.success(request, "Paramètre TVA supprimé.")
+    return _redirect_gestion_parametre()
+
+
+@login_required(login_url='connexion')
+@require_POST
+def bareme_timbre_save(request):
+    if not utilisateur_peut_gerer_parametres(request.user):
+        messages.error(request, "Accès refusé.")
+        return _redirect_gestion_parametre()
+
+    pk = request.POST.get('pk') or None
+    instance = None
+    if pk:
+        instance = get_object_or_404(BaremeTimbre, pk=pk)
+    form = BaremeTimbreForm(request.POST, instance=instance)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Barème de timbre enregistré.")
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field}: {error}")
+    return _redirect_gestion_parametre()
+
+
+@login_required(login_url='connexion')
+@require_POST
+def bareme_timbre_toggle(request, pk):
+    if not utilisateur_peut_gerer_parametres(request.user):
+        messages.error(request, "Accès refusé.")
+        return _redirect_gestion_parametre()
+
+    bareme = get_object_or_404(BaremeTimbre, pk=pk)
+    bareme.actif = not bareme.actif
+    bareme.save(update_fields=['actif'])
+    messages.success(
+        request,
+        "Barème activé." if bareme.actif else "Barème désactivé.",
+    )
+    return _redirect_gestion_parametre()
+
+
+@login_required(login_url='connexion')
+@require_POST
+def bareme_timbre_delete(request, pk):
+    if not utilisateur_peut_gerer_parametres(request.user):
+        messages.error(request, "Accès refusé.")
+        return _redirect_gestion_parametre()
+
+    bareme = get_object_or_404(BaremeTimbre, pk=pk)
+    bareme.delete()
+    messages.success(request, "Barème de timbre supprimé.")
+    return _redirect_gestion_parametre()
+
+
+@login_required(login_url='connexion')
+@require_POST
+def moyen_paiement_toggle(request, pk):
+    if not utilisateur_peut_gerer_parametres(request.user):
+        messages.error(request, "Accès refusé.")
+        return _redirect_gestion_parametre()
+
+    moyen = get_object_or_404(MoyenPaiement, pk=pk)
+    moyen.actif = not moyen.actif
+    moyen.save(update_fields=['actif'])
+    messages.success(
+        request,
+        f'« {moyen.nom} » activé.' if moyen.actif else f'« {moyen.nom} » désactivé.',
+    )
+    return _redirect_gestion_parametre()
+
+
+@login_required(login_url='connexion')
+@require_POST
+def moyen_paiement_delete(request, pk):
+    if not utilisateur_peut_gerer_parametres(request.user):
+        messages.error(request, "Accès refusé.")
+        return _redirect_gestion_parametre()
+
+    moyen = get_object_or_404(MoyenPaiement, pk=pk)
+    if moyen.actif:
+        messages.error(request, "Désactivez ce moyen de paiement avant de le supprimer.")
+        return _redirect_gestion_parametre()
+    nom = moyen.nom
+    moyen.delete()
+    messages.success(request, f'« {nom} » supprimé.')
+    return _redirect_gestion_parametre()
 

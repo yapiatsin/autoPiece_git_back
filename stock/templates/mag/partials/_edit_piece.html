@@ -84,6 +84,40 @@
                         </div>
                     </section>
 
+                    <section class="mf-section">
+                        <h3 class="mf-section__title">
+                            <i class="fa fa-images"></i> Galerie boutique
+                        </h3>
+                        <p class="mf-hint mb-3">Images supplémentaires affichées sur la fiche e-commerce, en plus de l'image principale.</p>
+                        {% with extra_images=piece.images_supplementaires.all %}
+                        {% if extra_images %}
+                        <div class="mf-gallery mb-3">
+                            {% for img in extra_images %}
+                            <div class="mf-gallery__item">
+                                <img src="{{ img.image.url }}" alt="Image {{ forloop.counter }}">
+                                <div class="mf-check mf-gallery__delete">
+                                    <input type="checkbox"
+                                        name="delete_piece_images"
+                                        value="{{ img.pk }}"
+                                        id="del-img-{{ piece.pk }}-{{ img.pk }}">
+                                    <label for="del-img-{{ piece.pk }}-{{ img.pk }}" class="mb-0">Supprimer</label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                        <div class="mf-field mb-0">
+                            <label>Ajouter des images <span class="text-muted font-weight-normal">(facultatif)</span></label>
+                            <input type="file"
+                                name="images_supplementaires"
+                                class="form-control"
+                                accept="image/*"
+                                multiple>
+                            <span class="mf-hint">Sélection multiple possible (JPG, PNG, WebP…).</span>
+                        </div>
+                    </section>
+
                     <section class="mf-section mb-0">
                         <h3 class="mf-section__title">
                             <i class="fa fa-tags"></i> Prix &amp; stock
@@ -102,9 +136,15 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mf-field">
+                                <div class="mf-field mf-field--readonly">
                                     <label>Quantité disponible</label>
-                                    <input type="number" value="{{ piece.quantite_disponible }}" class="form-control" min="0" readonly tabindex="-1">
+                                    <input type="number"
+                                        value="{{ piece.quantite_disponible }}"
+                                        class="form-control mf-control-readonly"
+                                        min="0"
+                                        readonly
+                                        tabindex="-1"
+                                        aria-readonly="true">
                                     <span class="mf-hint">Mise à jour via les entrées en stock.</span>
                                 </div>
                             </div>

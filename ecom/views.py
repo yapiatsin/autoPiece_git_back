@@ -236,11 +236,11 @@ def contact(request):
 
 
 def privacy_policy(request):
-    return render(request, 'e_autopiece/privacy-policy.html', _ecom_context(request))
+    return render(request, 'e_autopiece/privacy_policy.html', _ecom_context(request))
 
 
 def cookies_policy(request):
-    return render(request, 'e_autopiece/cookies-policy.html', _ecom_context(request))
+    return render(request, 'e_autopiece/cookies_policy.html', _ecom_context(request))
 
 
 @require_POST
@@ -286,7 +286,7 @@ def search_clear_recent(request):
 
 
 def terms_condition(request):
-    return render(request, 'e_autopiece/terms-condition.html', _ecom_context(request))
+    return render(request, 'e_autopiece/terms_condition.html', _ecom_context(request))
 
 
 SUPPORT_THEMES = (
@@ -572,7 +572,7 @@ def localites_grid(request):
             'view': request.GET.get('view', 'grid'),
         },
     })
-    return render(request, 'e_autopiece/vendor-grid.html', ctx)
+    return render(request, 'e_autopiece/vendor_grid.html', ctx)
 
 
 def localite_detail(request, local_code):
@@ -678,7 +678,7 @@ def localite_detail(request, local_code):
         'horaires_semaine': horaires_semaine,
         'localite_ouverte': localite.est_ouvert_maintenant(),
     })
-    return render(request, 'e_autopiece/vendor-details.html', ctx)
+    return render(request, 'e_autopiece/vendor_details.html', ctx)
 
 
 def shop(request):
@@ -752,7 +752,7 @@ def shop(request):
         'shop_next_url': request.get_full_path(),
     })
     ctx.update(_geo_livraison_context(request))
-    return render(request, 'e_autopiece/shop-grid-sidebar.html', ctx)
+    return render(request, 'e_autopiece/shop_grid_sidebar.html', ctx)
 
 
 def shop_detail(request, piece_id, slug=None):
@@ -779,7 +779,7 @@ def shop_detail(request, piece_id, slug=None):
         'localite_nom': local.nom if local else '',
         'cart_quantite': cart_quantite,
     })
-    return render(request, 'e_autopiece/shop-details.html', ctx)
+    return render(request, 'e_autopiece/shop_details.html', ctx)
 
 
 @login_required(login_url='connexion')
@@ -1285,7 +1285,7 @@ def vues_recentes(request):
     local = get_local_from_session(request)
     ctx = _ecom_context(request, local)
     ctx['vues_recentes_rows'] = lignes_vues_recentes(request.user, local, limit=None)
-    return render(request, 'e_autopiece/vues-recentes.html', ctx)
+    return render(request, 'e_autopiece/vues_recentes.html', ctx)
 
 
 @login_required(login_url='connexion')

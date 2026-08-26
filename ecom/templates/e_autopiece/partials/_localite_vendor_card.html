@@ -1,0 +1,47 @@
+{% load i18n %}
+<article class="ecom-localite-ticket{% if layout == 'list' %} ecom-localite-ticket--list{% endif %}">
+    <div class="ecom-localite-ticket__head">
+        <div class="ecom-localite-ticket__icon" aria-hidden="true">
+            <i class="fa-solid fa-store"></i>
+        </div>
+        <div class="ecom-localite-ticket__title-wrap">
+            <h3 class="ecom-localite-ticket__title">
+                <a href="{% url 'ecom_localite_detail' loc.code %}">{{ loc.nom }}</a>
+            </h3>
+            <p class="ecom-localite-ticket__lead">{% trans "Agence Auto-Pièce" %}</p>
+        </div>
+        {% if loc.nb_pieces %}
+        <span class="ecom-localite-ticket__status is-open">{% trans "Ouvert" %}</span>
+        {% else %}
+        <span class="ecom-localite-ticket__status is-closed">{% trans "Sans stock" %}</span>
+        {% endif %}
+    </div>
+
+    <div class="ecom-localite-ticket__tear" aria-hidden="true"></div>
+
+    <div class="ecom-localite-ticket__body">
+        <dl class="ecom-localite-ticket__rows">
+            <div class="ecom-localite-ticket__row">
+                <dt>{% trans "Pièces disponibles" %}</dt>
+                <dd class="is-accent">
+                    {% blocktrans count counter=loc.nb_pieces|default:0 %}{{ counter }} pièce{% plural %}{{ counter }} pièces{% endblocktrans %}
+                </dd>
+            </div>
+            <div class="ecom-localite-ticket__row">
+                <dt>{% trans "Localisation" %}</dt>
+                <dd>{% blocktrans with zone=loc.nom %}Abidjan · {{ zone }}{% endblocktrans %}</dd>
+            </div>
+            <div class="ecom-localite-ticket__row">
+                <dt>{% trans "Contact" %}</dt>
+                <dd>+225 07 00 00 00 00</dd>
+            </div>
+        </dl>
+
+        <div class="ecom-localite-ticket__footer">
+            <a href="{% url 'ecom_localite_detail' loc.code %}" class="ecom-localite-ticket__cta">
+                <span>{% trans "Voir l'agence" %}</span>
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
+</article>

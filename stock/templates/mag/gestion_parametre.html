@@ -1,0 +1,517 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static l10n %}
+{% block title %}Gestion des paramètres{% endblock title %}
+{% block header %}{% endblock header %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-form-modal.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-parametres.css' %}">
+{% endblock extra_head %}
+
+{% block main_content %}
+<div class="mag-cmd-line-page mag-param-page col-12 px-0">
+
+    <section class="mag-cmd-line-section mag-param-section">
+        <h3 class="mag-param-section__title"><span><i class="fa fa-th-large"></i> Indicateurs &amp; accès rapides</span></h3>
+        <div class="mag-cmd-kpi-grid mag-cmd-kpi-grid--4 mag-param-stat-grid">
+            <a href="{% url 'add_compte' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-users"></i></span>
+                        <p class="mag-stat-label">Employés</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ nb_employes }}</strong>
+                    <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                        <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,20 12,16 24,18 36,10 48,13 60,7 72,9 88,4"></polyline>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">Comptes staff (hors clients)</span>
+            </a>
+
+            <a href="{% url 'add_compte' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-sign-in"></i></span>
+                        <p class="mag-stat-label">Connexions</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ nb_connexions_7j }}</strong>
+                    <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                        <rect x="2" y="16" width="6" height="12" rx="1.5"></rect>
+                        <rect x="12" y="10" width="6" height="18" rx="1.5"></rect>
+                        <rect x="22" y="14" width="6" height="14" rx="1.5"></rect>
+                        <rect x="32" y="6" width="6" height="22" rx="1.5"></rect>
+                        <rect x="42" y="11" width="6" height="17" rx="1.5"></rect>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">{{ nb_connexions_30j }} sur 30 j · {{ nb_jamais_connectes }} jamais connectés</span>
+            </a>
+
+            <a href="{% url 'compte_client' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-user"></i></span>
+                        <p class="mag-stat-label">Clients</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ nb_clients }}</strong>
+                    <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                        <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,22 14,18 28,20 42,12 56,14 70,8 88,6"></polyline>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">Comptes boutique en ligne</span>
+            </a>
+
+            <a href="{% url 'add_categorie' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-sitemap"></i></span>
+                        <p class="mag-stat-label">Catégories</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ nb_categories }}</strong>
+                    <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                        <rect x="2" y="14" width="6" height="14" rx="1.5"></rect>
+                        <rect x="12" y="8" width="6" height="20" rx="1.5"></rect>
+                        <rect x="22" y="12" width="6" height="16" rx="1.5"></rect>
+                        <rect x="32" y="4" width="6" height="24" rx="1.5"></rect>
+                        <rect x="42" y="10" width="6" height="18" rx="1.5"></rect>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">{{ nb_sous_categories }} sous-catégorie{{ nb_sous_categories|pluralize }}</span>
+            </a>
+
+            <a href="{% url 'stock' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-cubes"></i></span>
+                        <p class="mag-stat-label">Pièces &amp; stock</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ nb_pieces }}</strong>
+                    <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                        <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,18 14,14 28,16 42,8 56,11 70,5 88,3"></polyline>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">Qté {{ qty_stock_total }} · {{ cout_stock_total|floatformat:0 }} FCFA</span>
+            </a>
+
+            <a href="{% url 'liste_ventes' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-line-chart"></i></span>
+                        <p class="mag-stat-label">Ventes</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ nb_ventes_qty }}</strong>
+                    <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                        <rect x="2" y="16" width="6" height="12" rx="1.5"></rect>
+                        <rect x="12" y="10" width="6" height="18" rx="1.5"></rect>
+                        <rect x="22" y="14" width="6" height="14" rx="1.5"></rect>
+                        <rect x="32" y="6" width="6" height="22" rx="1.5"></rect>
+                        <rect x="42" y="11" width="6" height="17" rx="1.5"></rect>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">{{ montant_ventes|floatformat:0 }} FCFA (pièces vendues)</span>
+            </a>
+
+            <a href="{% url 'liste_commandes' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-shopping-basket"></i></span>
+                        <p class="mag-stat-label">Commandes locales</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ cmd_local_payee }}</strong>
+                    <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                        <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,20 12,16 24,18 36,10 48,13 60,7 72,9 88,4"></polyline>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">Attente {{ cmd_local_attente }} · À livrer {{ cmd_local_a_livrer }} · Livrées {{ cmd_local_livree }}</span>
+            </a>
+
+            <a href="{% url 'cmd_line' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-cloud"></i></span>
+                        <p class="mag-stat-label">Commandes en ligne</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ cmd_online_attente }}</strong>
+                    <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                        <rect x="2" y="14" width="6" height="14" rx="1.5"></rect>
+                        <rect x="12" y="8" width="6" height="20" rx="1.5"></rect>
+                        <rect x="22" y="12" width="6" height="16" rx="1.5"></rect>
+                        <rect x="32" y="4" width="6" height="24" rx="1.5"></rect>
+                        <rect x="42" y="10" width="6" height="18" rx="1.5"></rect>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">Validées {{ cmd_online_valider }} · Livrées {{ cmd_online_livrer }} · Annulées {{ cmd_online_annuler }}</span>
+            </a>
+
+            <a href="{% url 'livraison_cmd_online' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-truck"></i></span>
+                        <p class="mag-stat-label">Livraisons en ligne</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ livraison_online_a_livrer }}</strong>
+                    <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                        <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,22 14,18 28,20 42,12 56,14 70,8 88,6"></polyline>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">{{ livraison_online_livree }} livrée{{ livraison_online_livree|pluralize }}</span>
+            </a>
+
+            <a href="{% url 'livraisons' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-motorcycle"></i></span>
+                        <p class="mag-stat-label">Livraisons locales</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ cmd_local_a_livrer }}</strong>
+                    <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                        <rect x="2" y="16" width="6" height="12" rx="1.5"></rect>
+                        <rect x="12" y="10" width="6" height="18" rx="1.5"></rect>
+                        <rect x="22" y="14" width="6" height="14" rx="1.5"></rect>
+                        <rect x="32" y="6" width="6" height="22" rx="1.5"></rect>
+                        <rect x="42" y="11" width="6" height="17" rx="1.5"></rect>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">{{ cmd_local_livree }} livrée{{ cmd_local_livree|pluralize }} en magasin</span>
+            </a>
+
+            <a href="{% url 'bons_commande_paiement' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-ticket"></i></span>
+                        <p class="mag-stat-label">Tickets</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ nb_tickets_utilises }}</strong>
+                    <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                        <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,18 14,14 28,16 42,8 56,11 70,5 88,3"></polyline>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">{{ nb_tickets_total }} au total</span>
+            </a>
+
+            <a href="{% url 'proforma_attente' %}" class="mag-stat-card mag-stat-card--link">
+                <div class="mag-stat-card-top">
+                    <div class="mag-stat-heading">
+                        <span class="mag-stat-icon"><i class="fa fa-file-text-o"></i></span>
+                        <p class="mag-stat-label">Proformas</p>
+                    </div>
+                </div>
+                <div class="mag-stat-card-bottom">
+                    <strong class="mag-stat-value">{{ proforma_attente }}</strong>
+                    <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                        <rect x="2" y="14" width="6" height="14" rx="1.5"></rect>
+                        <rect x="12" y="8" width="6" height="20" rx="1.5"></rect>
+                        <rect x="22" y="12" width="6" height="16" rx="1.5"></rect>
+                        <rect x="32" y="4" width="6" height="24" rx="1.5"></rect>
+                        <rect x="42" y="10" width="6" height="18" rx="1.5"></rect>
+                    </svg>
+                </div>
+                <span class="mag-stat-hint">{{ proforma_validee }} validée{{ proforma_validee|pluralize }}</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="mag-cmd-line-section mag-param-section">
+        <div class="mag-param-panel">
+            <div class="header">
+                <h2><i class="fa fa-percent text-warning"></i> Paramètres TVA</h2>
+                <button type="button" class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#modalParametreTva" data-tva-reset="1">
+                    <i class="fa fa-plus"></i> Nouveau taux
+                </button>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table class="table table-hover mag-param-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Libellé</th>
+                                <th>Taux</th>
+                                <th>Statut</th>
+                                <th>Mise à jour</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tva in parametres_tva %}
+                            <tr>
+                                <td>{{ tva.libelle|default:"—" }}</td>
+                                <td><strong>{{ tva.taux|unlocalize }} %</strong></td>
+                                <td>
+                                    {% if tva.active %}
+                                    <span class="badge badge-success">Actif</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Inactif</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ tva.date_maj|date:"d/m/Y H:i" }}</td>
+                                <td class="text-right">
+                                    <div class="mag-param-actions justify-content-end">
+                                        <button type="button"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            data-toggle="modal"
+                                            data-target="#modalParametreTva"
+                                            data-tva-pk="{{ tva.pk }}"
+                                            data-tva-libelle="{{ tva.libelle }}"
+                                            data-tva-taux="{{ tva.taux|unlocalize }}"
+                                            title="Modifier">
+                                            <i class="fa fa-pencil"></i>
+                                        </button>
+                                        <form method="post" action="{% url 'parametre_tva_toggle' tva.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm {% if tva.active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{% if tva.active %}Désactiver{% else %}Activer{% endif %}">
+                                                <i class="fa {% if tva.active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                        {% if not tva.active %}
+                                        <form method="post" action="{% url 'parametre_tva_delete' tva.pk %}" class="d-inline" onsubmit="return confirm('Supprimer ce taux TVA ?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Aucun paramètre TVA. Créez un taux pour l’activer en caisse.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mag-cmd-line-section mag-param-section">
+        <div class="mag-param-panel">
+            <div class="header">
+                <h2><i class="fa fa-money text-warning"></i> Barèmes de timbre</h2>
+                <button type="button" class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#modalBaremeTimbre" data-timbre-reset="1">
+                    <i class="fa fa-plus"></i> Nouveau barème
+                </button>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table class="table table-hover mag-param-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tranche</th>
+                                <th>Timbre</th>
+                                <th>Statut</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in baremes_timbre %}
+                            <tr>
+                                <td>
+                                    {% if b.montant_max %}
+                                    {{ b.montant_min|floatformat:0 }} – {{ b.montant_max|floatformat:0 }} FCFA
+                                    {% else %}
+                                    {{ b.montant_min|floatformat:0 }} FCFA et plus
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ b.montant_timbre|floatformat:0 }} FCFA</strong></td>
+                                <td>
+                                    {% if b.actif %}
+                                    <span class="badge badge-success">Actif</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Inactif</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right">
+                                    <div class="mag-param-actions justify-content-end">
+                                        <button type="button"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            data-toggle="modal"
+                                            data-target="#modalBaremeTimbre"
+                                            data-timbre-pk="{{ b.pk }}"
+                                            data-timbre-min="{{ b.montant_min|unlocalize }}"
+                                            data-timbre-max="{% if b.montant_max %}{{ b.montant_max|unlocalize }}{% endif %}"
+                                            data-timbre-montant="{{ b.montant_timbre|unlocalize }}"
+                                            title="Modifier">
+                                            <i class="fa fa-pencil"></i>
+                                        </button>
+                                        <form method="post" action="{% url 'bareme_timbre_toggle' b.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm {% if b.actif %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                                                <i class="fa {% if b.actif %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'bareme_timbre_delete' b.pk %}" class="d-inline" onsubmit="return confirm('Supprimer ce barème ?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">Aucun barème de timbre.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mag-cmd-line-section mag-param-section">
+        <div class="mag-param-panel">
+            <div class="header">
+                <h2><i class="fa fa-credit-card text-warning"></i> Moyens de paiement</h2>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table class="table table-hover mag-param-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Code</th>
+                                <th>Statut</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in moyens_paiement %}
+                            <tr>
+                                <td>{{ m.nom }}</td>
+                                <td><code>{{ m.code }}</code></td>
+                                <td>
+                                    {% if m.actif %}
+                                    <span class="badge badge-success">Actif</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Inactif</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right">
+                                    <div class="mag-param-actions justify-content-end">
+                                        <form method="post" action="{% url 'moyen_paiement_toggle' m.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm {% if m.actif %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{% if m.actif %}Désactiver{% else %}Activer{% endif %}">
+                                                <i class="fa {% if m.actif %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                                                {% if m.actif %}Désactiver{% else %}Activer{% endif %}
+                                            </button>
+                                        </form>
+                                        {% if not m.actif %}
+                                        <form method="post" action="{% url 'moyen_paiement_delete' m.pk %}" class="d-inline" onsubmit="return confirm('Supprimer le moyen de paiement « {{ m.nom }} » ?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">Aucun moyen de paiement.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mag-cmd-line-section mag-param-section">
+        <h3 class="mag-param-section__title"><span><i class="fa fa-cogs"></i> Autres configurations</span></h3>
+        <div class="mag-param-shortcut-grid">
+            <a href="{% url 'add_localite' %}" class="mag-param-shortcut">
+                <i class="fa fa-map-marker"></i>
+                <div>
+                    <strong>Localités &amp; créneaux</strong>
+                    <span>Agences, GPS, horaires d’ouverture</span>
+                </div>
+            </a>
+            <a href="{% url 'zones_livraison' %}" class="mag-param-shortcut">
+                <i class="fa fa-road"></i>
+                <div>
+                    <strong>Zones de livraison</strong>
+                    <span>Tarifs et paliers kilométriques</span>
+                </div>
+            </a>
+            <a href="{% url 'nouveau_fournisseur' %}" class="mag-param-shortcut">
+                <i class="fa fa-truck"></i>
+                <div>
+                    <strong>Fournisseurs</strong>
+                    <span>Contacts pour les entrées en stock</span>
+                </div>
+            </a>
+        </div>
+    </section>
+</div>
+
+{% include "mag/partials/_modal_parametre_tva.html" %}
+{% include "mag/partials/_modal_bareme_timbre.html" %}
+{% endblock main_content %}
+
+{% block extra_js %}
+<script>
+(function ($) {
+    $('#modalParametreTva').on('show.bs.modal', function (event) {
+        var btn = $(event.relatedTarget);
+        var modal = $(this);
+        if (!btn || !btn.length || btn.data('tva-reset')) {
+            modal.find('#tva-pk').val('');
+            modal.find('#tva-libelle').val('');
+            modal.find('#tva-taux').val('18.00');
+            modal.find('#modalParametreTvaLabel').text('Nouveau taux TVA');
+            return;
+        }
+        modal.find('#tva-pk').val(btn.data('tva-pk') || '');
+        modal.find('#tva-libelle').val(btn.data('tva-libelle') || '');
+        modal.find('#tva-taux').val(btn.data('tva-taux') || '');
+        modal.find('#modalParametreTvaLabel').text('Modifier le taux TVA');
+    });
+
+    $('#modalBaremeTimbre').on('show.bs.modal', function (event) {
+        var btn = $(event.relatedTarget);
+        var modal = $(this);
+        if (!btn || !btn.length || btn.data('timbre-reset')) {
+            modal.find('#timbre-pk').val('');
+            modal.find('#timbre-min').val('');
+            modal.find('#timbre-max').val('');
+            modal.find('#timbre-montant').val('');
+            modal.find('#modalBaremeTimbreLabel').text('Nouveau barème');
+            return;
+        }
+        modal.find('#timbre-pk').val(btn.data('timbre-pk') || '');
+        modal.find('#timbre-min').val(btn.data('timbre-min') || '');
+        modal.find('#timbre-max').val(btn.data('timbre-max') || '');
+        modal.find('#timbre-montant').val(btn.data('timbre-montant') || '');
+        modal.find('#modalBaremeTimbreLabel').text('Modifier le barème');
+    });
+})(jQuery);
+</script>
+{% endblock extra_js %}

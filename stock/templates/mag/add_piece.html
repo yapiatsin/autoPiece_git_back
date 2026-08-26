@@ -1,7 +1,6 @@
 {% extends "mag/base_mag_ecom.html" %}
 {% load static %}
 {% block title %}AUTO-PIECE{% endblock title %}
-{% block page_title %}Categorie "{{ categorie.categorie }}"{% endblock page_title %}
 {% block breadcrumb %}
 <li class="breadcrumb-item text-success"><a href="{% url 'add_categorie' %}"><i class="icon-arrow-left text-success"></i> Retour aux categories</a></li>
 <li class="breadcrumb-item active">{% block page %}Pièces{% endblock page %}</li>
@@ -61,8 +60,19 @@
                                 </div>
                                 <div class="col-12">
                                     <div class="mf-field">
-                                        <label>Image <span class="text-muted font-weight-normal">(facultatif)</span></label>
+                                        <label>Image principale <span class="text-muted font-weight-normal">(facultatif)</span></label>
                                         {{ form.image }}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mf-field">
+                                        <label>Images supplémentaires <span class="text-muted font-weight-normal">(facultatif)</span></label>
+                                        <input type="file"
+                                            name="images_supplementaires"
+                                            class="form-control"
+                                            accept="image/*"
+                                            multiple>
+                                        <span class="mf-hint">Galerie boutique : sélection multiple possible (JPG, PNG, WebP…).</span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">

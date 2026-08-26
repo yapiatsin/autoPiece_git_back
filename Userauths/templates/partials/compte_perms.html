@@ -26,9 +26,9 @@
                     {% for checkbox in permission_form.permissions %}
                     <div class="cm-perm-item permission-item"
                          data-perm-label="{{ checkbox.choice_label|lower }}">
-                        <label class="cm-perm-chip" for="{{ checkbox.id_for_label }}">
+                        <label class="cm-perm-chip">
                             {{ checkbox.tag }}
-                            <span>{{ checkbox.choice_label }}</span>
+                            <span class="cm-perm-label">{{ checkbox.choice_label }}</span>
                         </label>
                     </div>
                     {% endfor %}
@@ -60,6 +60,11 @@
     var items = Array.from(list.querySelectorAll('.permission-item'));
     var emptyMsg = list.querySelector('.permission-empty');
     var countEl = root.querySelector('.permission-search-count');
+    function syncChip(cb) {
+        if (!cb) return;
+        var chip = cb.closest('label.cm-perm-chip');
+        if (chip) chip.classList.toggle('is-checked', cb.checked);
+    }
     function filterPermissions() {
         var q = (input.value || '').trim().toLowerCase();
         var visible = 0;
@@ -80,9 +85,18 @@
         items.forEach(function (item) {
             if (item.classList.contains('d-none')) return;
             var cb = item.querySelector('input[type="checkbox"]');
-            if (cb) cb.checked = checked;
+            if (cb) {
+                cb.checked = checked;
+                syncChip(cb);
+            }
         });
     }
+    items.forEach(function (item) {
+        var cb = item.querySelector('input[type="checkbox"]');
+        if (!cb) return;
+        syncChip(cb);
+        cb.addEventListener('change', function () { syncChip(cb); });
+    });
     input.addEventListener('input', filterPermissions);
     input.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {

@@ -23,13 +23,38 @@
     <div class="container">
         <div class="ecom-pd__hero">
             <div class="ecom-pd__gallery">
-                {% if piece.image %}
-                <div class="ecom-pd__thumbs">
-                    <button type="button" class="ecom-pd__thumb is-active">
-                        <img src="{{ piece.image.url }}" alt="{{ piece.designation }}">
+                {% with gallery=piece.gallery_images %}
+                {% if gallery %}
+                <div class="ecom-pd__stage ecom-pd-zoom" data-ecom-zoom>
+                    {% if piece.quantite_disponible > 0 or piece.stock_total %}
+                    <span class="ecom-pd__badge">{% trans "En stock" %}</span>
+                    {% else %}
+                    <span class="ecom-pd__badge is-out">{% trans "Rupture" %}</span>
+                    {% endif %}
+                    {% if piece.categorie %}
+                    <a href="{% url 'ecom_shop' %}{% if piece.sous_categorie %}?categorie={{ piece.categorie_id }}&sous_categorie={{ piece.sous_categorie_id }}{% else %}?categorie={{ piece.categorie_id }}{% endif %}" class="ecom-pd__cat">
+                        {{ piece.libelle_classification }}
+                    </a>
+                    {% endif %}
+                    <div class="ecom-pd-zoom__frame">
+                        <img src="{{ gallery.0.url }}" alt="{{ gallery.0.alt }}" class="ecom-pd-zoom__img">
+                    </div>
+                </div>
+                {% if gallery|length > 1 %}
+                <div class="ecom-pd__thumbs" role="tablist" aria-label="{% trans 'Images du produit' %}">
+                    {% for img in gallery %}
+                    <button type="button"
+                        class="ecom-pd__thumb{% if forloop.first %} is-active{% endif %}"
+                        data-ecom-gallery-src="{{ img.url }}"
+                        data-ecom-gallery-alt="{{ img.alt }}"
+                        aria-label="{% blocktrans with n=forloop.counter %}Image {{ n }}{% endblocktrans %}"
+                        {% if forloop.first %}aria-selected="true"{% else %}aria-selected="false"{% endif %}>
+                        <img src="{{ img.url }}" alt="{{ img.alt }}">
                     </button>
+                    {% endfor %}
                 </div>
                 {% endif %}
+                {% else %}
                 <div class="ecom-pd__stage">
                     {% if piece.quantite_disponible > 0 or piece.stock_total %}
                     <span class="ecom-pd__badge">{% trans "En stock" %}</span>
@@ -41,14 +66,12 @@
                         {{ piece.libelle_classification }}
                     </a>
                     {% endif %}
-                    {% if piece.image %}
-                    <img src="{{ piece.image.url }}" alt="{{ piece.designation }}">
-                    {% else %}
                     <div class="ecom-piece-placeholder ecom-pd__placeholder" aria-hidden="true">
                         <i class="fa-solid fa-gears"></i>
                     </div>
-                    {% endif %}
                 </div>
+                {% endif %}
+                {% endwith %}
             </div>
 
             <div class="ecom-pd__info">
@@ -377,3 +400,61 @@
         </div>
     </div>
 </div>
+<script>
+(function () {
+    var gallery = document.querySelector('.ecom-pd__gallery');
+    if (!gallery) return;
+
+    var stage = gallery.querySelector('[data-ecom-zoom]');
+    var img = gallery.querySelector('.ecom-pd-zoom__img');
+    var frame = gallery.querySelector('.ecom-pd-zoom__frame');
+    var thumbs = gallery.querySelectorAll('.ecom-pd__thumb[data-ecom-gallery-src]');
+
+    function resetZoom() {
+        if (!stage || !img) return;
+        stage.classList.remove('is-zooming');
+        img.style.transform = 'scale(1)';
+        img.style.transformOrigin = 'center center';
+    }
+
+    thumbs.forEach(function (thumb) {
+        thumb.addEventListener('click', function () {
+            var src = thumb.getAttribute('data-ecom-gallery-src');
+            var alt = thumb.getAttribute('data-ecom-gallery-alt') || '';
+            if (!src || !img) return;
+
+            img.src = src;
+            img.alt = alt;
+            thumbs.forEach(function (t) {
+                t.classList.remove('is-active');
+                t.setAttribute('aria-selected', 'false');
+            });
+            thumb.classList.add('is-active');
+            thumb.setAttribute('aria-selected', 'true');
+            resetZoom();
+        });
+    });
+
+    if (!stage || !img || !frame) return;
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    var scale = 2.5;
+
+    function zoomAt(event) {
+        var rect = frame.getBoundingClientRect();
+        var x = ((event.clientX - rect.left) / rect.width) * 100;
+        var y = ((event.clientY - rect.top) / rect.height) * 100;
+        x = Math.max(0, Math.min(100, x));
+        y = Math.max(0, Math.min(100, y));
+        img.style.transformOrigin = x + '% ' + y + '%';
+        img.style.transform = 'scale(' + scale + ')';
+    }
+
+    stage.addEventListener('mouseenter', function (event) {
+        stage.classList.add('is-zooming');
+        zoomAt(event);
+    });
+    stage.addEventListener('mousemove', zoomAt);
+    stage.addEventListener('mouseleave', resetZoom);
+})();
+</script>

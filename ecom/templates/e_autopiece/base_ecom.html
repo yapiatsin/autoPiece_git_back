@@ -23,7 +23,6 @@
     <link rel="stylesheet" href="{% static 'e_assets/css/ecom-piece-card.css' %}">
     <link rel="stylesheet" href="{% static 'e_assets/css/contact-float.css' %}">
     {% block extra_css %}{% endblock extra_css %}
-
 </head>
 
 <body class="{% block body_class %}shop-main-h{% endblock body_class %}">
@@ -354,7 +353,7 @@
                             <!-- button-area -->
                             <div class="right-btn-area">
                                 <a href="{% url 'ecom_privacy_policy' %}" class="btn-narrow">{% trans "Politique de confidentialite" %}</a>
-                                <button class="rts-btn btn-success">
+                                <button type="button" class="rts-btn ecom-origin-btn">
                                     {% trans "100% Pièces d'origine" %}
                                 </button>
                             </div>
@@ -1152,7 +1151,6 @@
 
             var effects = [
                 'fx-pulse',
-                'fx-float',
                 'fx-glow'
             ];
             var index = 0;

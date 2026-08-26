@@ -57,6 +57,21 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="single-filter-box">
+                            <h5 class="title">{% trans "Localités" %}</h5>
+                            <div class="filterbox-body">
+                                <div class="category-wrapper">
+                                    {% for loc in localites %}
+                                    <div class="single-category">
+                                        <input id="loc-{{ loc.code }}" name="localite" type="radio"
+                                            value="{{ loc.code }}" class="ecom-auto-filter-input"
+                                            {% if shop_filters.localite == loc.code|stringformat:'s' %}checked{% endif %}>
+                                        <label for="loc-{{ loc.code }}">{{ loc.nom }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
                         <div class="single-filter-box ecom-price-filter-box">
                             <h5 class="title">{% trans "Prix" %}</h5>
                             <div class="filterbox-body">
@@ -100,28 +115,6 @@
                                                 data-ecom-price-max-input>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="single-filter-box">
-                            <h5 class="title">{% trans "Ville / commune" %}</h5>
-                            <div class="filterbox-body">
-                                {% csrf_token %}
-                                {% include 'e_autopiece/partials/_ecom_ville_commune_selects.html' with geo_ville_id='shop-geo-ville' geo_commune_id='shop-geo-commune' %}
-                            </div>
-                        </div>
-                        <div class="single-filter-box">
-                            <h5 class="title">{% trans "Localités" %}</h5>
-                            <div class="filterbox-body">
-                                <div class="category-wrapper">
-                                    {% for loc in localites %}
-                                    <div class="single-category">
-                                        <input id="loc-{{ loc.code }}" name="localite" type="radio"
-                                            value="{{ loc.code }}" class="ecom-auto-filter-input"
-                                            {% if shop_filters.localite == loc.code|stringformat:'s' %}checked{% endif %}>
-                                        <label for="loc-{{ loc.code }}">{{ loc.nom }}</label>
-                                    </div>
-                                    {% endfor %}
                                 </div>
                             </div>
                         </div>

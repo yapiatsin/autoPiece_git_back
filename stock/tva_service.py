@@ -10,17 +10,17 @@ from .models import ParametreTVA
 
 
 def get_parametre_tva() -> ParametreTVA | None:
-    return ParametreTVA.objects.order_by('pk').first()
+    """Retourne le paramètre TVA actif (au plus un)."""
+    return ParametreTVA.objects.filter(active=True).order_by('-date_maj', '-pk').first()
 
 
 def tva_est_active() -> bool:
-    parametre = get_parametre_tva()
-    return bool(parametre and parametre.active)
+    return get_parametre_tva() is not None
 
 
 def get_taux_tva() -> Decimal:
     parametre = get_parametre_tva()
-    if parametre and parametre.active:
+    if parametre:
         return Decimal(str(parametre.taux or 0))
     return Decimal('0')
 

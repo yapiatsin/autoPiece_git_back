@@ -79,7 +79,7 @@ def _activation_url(token, request=None):
     path = reverse('activate-account', kwargs={'token': token})
     if request:
         return request.build_absolute_uri(path)
-    base = (getattr(settings, 'FRONTEND_URL', None) or 'http://127.0.0.1:8002').rstrip('/')
+    base = (getattr(settings, 'FRONTEND_URL', None) or 'http://127.0.0.1:8000').rstrip('/')
     return base + path
 
 

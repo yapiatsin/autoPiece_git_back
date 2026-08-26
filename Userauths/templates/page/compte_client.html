@@ -1,56 +1,44 @@
 {% extends "mag/base_mag_ecom.html" %}
 {% load static %}
-<title>{% block title %} Auto-Pièce - Comptes employés {% endblock title %}</title>
-{% block header %}
-<div class="block-header">
-    <div class="row">
-        <div class="col-lg-6 col-md-6 col-sm-12">
-            <h2>{% block page_title %}Comptes clients{% endblock page_title %}</h2>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
-                <li class="breadcrumb-item active"> {% block page %}Liste des comptes clients{% endblock page %}</li>
-            </ul>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-12">
-            <div class="d-flex flex-row-reverse">
-                <div class="page_action">
-                    {% block page_action %}
-                        <a href="{% url 'export_comptes_clients_excel' %}{% if search_q %}?q={{ search_q|urlencode }}{% endif %}"
-                           class="btn btn-outline-primary mr-2">
-                            <i class="fa fa-file-excel-o"></i> Exporter Excel
-                        </a>
-                    {% endblock page_action %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock header %}
+{% block title %}AUTO-PIECE — Comptes clients{% endblock title %}
+{% block page %}Comptes clients{% endblock page %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/compte-modal.css' %}">
+{% endblock extra_head %}
+
+{% block page_action_buttons %}
+<a href="{% url 'export_comptes_clients_excel' %}{% if search_q %}?q={{ search_q|urlencode }}{% endif %}"
+   class="btn btn-outline-secondary btn-sm" title="Exporter en Excel">
+    <i class="fa fa-file-excel-o"></i> Excel
+</a>
+{% endblock page_action_buttons %}
+
 {% block main_content %}
-    <div class="col-lg-12">
-        <div class="card" style="border-radius:18px; overflow-y: auto; box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;">
-            <div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:12px;">
-                <h2 class="text-info mb-0">
-                    {{ comptes|length }} Compte{% if comptes|length > 1 %}s{% endif %} client{% if comptes|length > 1 %}s{% endif %}
+<div class="mag-cmd-line-page col-12 px-0">
+
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
+            <div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:10px;">
+                <h2 class="mb-0">
+                    {{ comptes|length }} compte{% if comptes|length != 1 %}s{% endif %} client{% if comptes|length != 1 %}s{% endif %}
                     {% if search_q %}
-                    <small class="text-muted font-weight-normal">· filtre « {{ search_q }} »</small>
+                    <small class="text-muted font-weight-normal">· « {{ search_q }} »</small>
                     {% endif %}
                 </h2>
-                <form method="get" action="{% url 'compte_client' %}" class="d-flex align-items-center" style="gap:8px; min-width:280px; max-width:420px; flex:1;">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fa fa-search"></i></span>
-                        </div>
+                <form method="get" action="{% url 'compte_client' %}" class="mag-compte-search">
+                    <div class="input-group input-group-sm">
                         <input type="search"
                                name="q"
                                value="{{ search_q }}"
                                class="form-control"
-                               placeholder="Rechercher nom, email, contact, ville…"
+                               placeholder="Rechercher nom, email, contact…"
                                autocomplete="off">
                         <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary">Chercher</button>
+                            <button type="submit" class="btn mag-cmd-btn mag-cmd-btn--primary" style="width:auto !important; min-width:0; padding:0 0.85rem !important;">Chercher</button>
                             {% if search_q %}
-                            <a href="{% url 'compte_client' %}" class="btn btn-outline-secondary" title="Réinitialiser">
+                            <a href="{% url 'compte_client' %}" class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon" title="Réinitialiser">
                                 <i class="fa fa-times"></i>
                             </a>
                             {% endif %}
@@ -59,42 +47,31 @@
                 </form>
             </div>
             <div class="body">
-                <div class="mag-table-shell" x-data="magTableFilter()">
+                <div class="mag-table-shell" x-data="magTableFilter(10)">
                     {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Filtrer dans le tableau…" %}
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover dataTable mag-data-table">
+                        <table class="table mag-data-table mag-data-table--fit mb-0">
                             <thead>
-                                <tr class="text">
+                                <tr>
                                     <th>Nom utilisateur</th>
                                     <th>Nom complet</th>
                                     <th>Email</th>
                                     <th>Contact</th>
                                     <th>Genre</th>
-                                    <th class="text-center">Activer/Désactiver</th>
-                                    <th class="text-center">Action</th>
+                                    <th class="text-center">Activer</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tfoot>
-                                <tr class="text">
-                                    <th>Nom utilisateur</th>
-                                    <th>Nom complet</th>
-                                    <th>Email</th>
-                                    <th>Contact</th>
-                                    <th>Genre</th>
-                                    <th class="text-center">Activer/Désactiver</th>
-                                    <th class="text-center">Action</th>
-                                </tr>
-                            </tfoot>
                             <tbody>
                                 {% for c in comptes %}
                                 <tr>
-                                    <td>{{ c.username }}</td>
+                                    <td><strong class="mag-cmd-numero">{{ c.username }}</strong></td>
                                     <td>{{ c.get_full_name|default:"—" }}</td>
-                                    <td>{{ c.email }}</td>
+                                    <td class="mag-cmd-cell-wrap">{{ c.email }}</td>
                                     <td>{{ c.contact|default:"—" }}</td>
-                                    <td>{{ c.genre }}</td>
+                                    <td>{{ c.genre|default:"—" }}</td>
                                     <td class="text-center">
-                                        <label class="toggle-switch">
+                                        <label class="toggle-switch mb-0">
                                             <input type="checkbox"
                                                 class="toggle-checkbox"
                                                 data-active-url="{% url 'active_compte' c.pk %}"
@@ -103,27 +80,31 @@
                                             <span class="toggle-switch-slider {% if c.is_active %}bg-success{% else %}bg-danger{% endif %}"></span>
                                         </label>
                                     </td>
-                                    <td class="text-center">
-                                        <a href="#" class="detail-compte-client-btn text-info mr-1"
-                                           data-url="{% url 'detail_compte_client' c.id %}"
-                                           title="Voir les détails">
-                                            <i class="icon-eye"></i>
-                                        </a>
-                                        <a href="#" class="edit-compte-client-btn text-warning mr-1"
-                                           data-url="{% url 'update_compte_client' c.id %}"
-                                           title="Modifier">
-                                            <i class="icon-note"></i>
-                                        </a>
-                                        <a href="{% url 'del_compte_client' c.pk %}"
-                                           class="text-danger"
-                                           title="Supprimer"
-                                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer le compte de {{ c.username }} ({{ c.email }}) ? Toutes les informations liées seront supprimées.')">
-                                            <i class="icon-trash"></i>
-                                        </a>
+                                    <td class="text-center text-nowrap">
+                                        <div class="mag-cmd-actions mag-cmd-actions--row mag-cmd-actions--center">
+                                            <a href="#"
+                                               class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon detail-compte-client-btn"
+                                               data-url="{% url 'detail_compte_client' c.id %}"
+                                               title="Voir les détails">
+                                                <i class="fa fa-eye"></i>
+                                            </a>
+                                            <a href="#"
+                                               class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon edit-compte-client-btn"
+                                               data-url="{% url 'update_compte_client' c.id %}"
+                                               title="Modifier">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'del_compte_client' c.pk %}"
+                                               class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon mag-cmd-btn--danger"
+                                               title="Supprimer"
+                                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer le compte de {{ c.username }} ({{ c.email }}) ? Toutes les informations liées seront supprimées.')">
+                                                <i class="fa fa-trash"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% empty %}
-                                <tr>
+                                <tr class="mag-table-skip-filter">
                                     <td colspan="7" class="text-center text-muted py-4">
                                         {% if search_q %}Aucun compte client ne correspond à « {{ search_q }} ».{% else %}Aucun compte client.{% endif %}
                                     </td>
@@ -132,16 +113,19 @@
                             </tbody>
                         </table>
                     </div>
+                    {% if comptes %}
+                    {% include "mag/partials/_table_pager.html" %}
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="detailCompteClientModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-xl" role="document" style="max-width: 960px;">
+    <div class="modal fade compte-modal" id="detailCompteClientModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width: 960px;">
             <div class="modal-content">
-                <div class="modal-header" style="border-bottom: 1px solid #fed7aa; background: linear-gradient(90deg, #fff7ed, #fff);">
-                    <h6 class="title mb-0" style="color: #9a3412; font-weight: 700;">
+                <div class="modal-header">
+                    <h6 class="modal-title mb-0">
                         <i class="fa fa-id-card-o mr-1"></i> Fiche client
                     </h6>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
@@ -153,11 +137,11 @@
         </div>
     </div>
 
-    <div class="modal fade" id="editCompteClientModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
+    <div class="modal fade compte-modal" id="editCompteClientModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h6 class="title">Modifier le compte client</h6>
+                    <h6 class="modal-title">Modifier le compte client</h6>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -166,73 +150,94 @@
             </div>
         </div>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        document.querySelectorAll('.toggle-checkbox').forEach(function (checkbox) {
-            checkbox.addEventListener('change', function () {
-                const url = this.checked
-                    ? this.dataset.activeUrl
-                    : this.dataset.deactiveUrl;
-                window.location.href = url;
-            });
-        });
-
-        $(document).on('click', '.detail-compte-client-btn', function (e) {
-            e.preventDefault();
-            var url = $(this).data('url');
-            $.get(url, function (data) {
-                $('#modalDetailClientContent').html(data);
-                $('#detailCompteClientModal').modal('show');
-            });
-        });
-
-        $(document).on('click', '.edit-compte-client-btn', function (e) {
-            e.preventDefault();
-            var url = $(this).data('url');
-            $.get(url, function (data) {
-                $('#modalEditClientContent').html(data);
-                $('#editCompteClientModal').modal('show');
-            });
-        });
-
-        $(document).on('submit', '#compteClientUpdateform', function (e) {
-            e.preventDefault();
-            var form = $(this);
-            var url = form.attr('action');
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: form.serialize(),
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                success: function (data) {
-                    if (data.success) {
-                        $('#editCompteClientModal').modal('hide');
-                        Swal.fire({
-                            toast: true,
-                            position: 'top',
-                            icon: 'success',
-                            title: data.message,
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true
-                        });
-                        setTimeout(function () {
-                            window.location.href = data.redirect_url || '{% url "compte_client" %}';
-                        }, 2000);
-                    } else {
-                        $('#modalEditClientContent').html(data.html);
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erreur',
-                        text: 'Une erreur est survenue lors de la modification.'
-                    });
-                }
-            });
-        });
-    </script>
+</div>
 {% endblock main_content %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+(function () {
+    document.querySelectorAll(".toggle-checkbox").forEach(function (checkbox) {
+        checkbox.addEventListener("change", function () {
+            window.location.href = this.checked
+                ? this.dataset.activeUrl
+                : this.dataset.deactiveUrl;
+        });
+    });
+
+    $(document).on("click", ".detail-compte-client-btn", function (e) {
+        e.preventDefault();
+        var url = $(this).data("url");
+        $.get(url, function (data) {
+            $("#modalDetailClientContent").html(data);
+            $("#detailCompteClientModal").modal("show");
+        });
+    });
+
+    $(document).on("click", ".edit-compte-client-btn", function (e) {
+        e.preventDefault();
+        var url = $(this).data("url");
+        $.get(url, function (data) {
+            $("#modalEditClientContent").html(data);
+            $("#editCompteClientModal").modal("show");
+        });
+    });
+
+    $(document).on("submit", "#compteClientUpdateform", function (e) {
+        e.preventDefault();
+        var form = $(this);
+        var url = form.attr("action");
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: form.serialize(),
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+            success: function (data) {
+                if (data.success) {
+                    $("#editCompteClientModal").modal("hide");
+                    Swal.fire({
+                        toast: true,
+                        position: "top",
+                        icon: "success",
+                        title: data.message,
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    setTimeout(function () {
+                        window.location.href = data.redirect_url || "{% url 'compte_client' %}";
+                    }, 2000);
+                } else {
+                    $("#modalEditClientContent").html(data.html);
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: "error",
+                    title: "Erreur",
+                    text: "Une erreur est survenue lors de la modification."
+                });
+            }
+        });
+    });
+})();
+</script>
+<style>
+.mag-cmd-line-page .mag-compte-search {
+    flex: 1 1 240px;
+    max-width: 360px;
+    margin: 0;
+}
+.mag-cmd-line-page .mag-compte-search .form-control {
+    border-radius: 999px 0 0 999px;
+    border-color: #e2e8f0;
+}
+.mag-cmd-line-page .mag-compte-search .btn {
+    border-radius: 0 999px 999px 0 !important;
+}
+.mag-cmd-line-page .mag-compte-search .input-group-append .mag-cmd-btn--icon {
+    border-radius: 0 999px 999px 0 !important;
+    margin-left: 0.25rem;
+}
+</style>
+{% endblock extra_js %}

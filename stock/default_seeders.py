@@ -1,4 +1,5 @@
-"""Données de référence (permissions, agences, créneaux, catégories).
+"""Données de référence (permissions, agences, créneaux, catégories,
+moyens de paiement, barèmes de timbre).
 
 Appelé automatiquement après `migrate` (signal post_migrate) et par la
 migration 0045. Toutes les opérations sont idempotentes (`get_or_create`).
@@ -14,8 +15,8 @@ from django.utils.text import slugify
 TYPE_PERMISSIONS = ['Autres', 'Comptes', 'Dashboard', 'Interfaces', 'Liste', 'Stocks']
 
 CUSTOM_PERMISSIONS = [{'categorie': 'Comptes', 'name': 'Active Compte', 'url': 'active_compte'},
- {'categorie': 'Comptes', 'name': 'Compte staff', 'url': 'add_compte'},
  {'categorie': 'Comptes', 'name': 'Compte Client', 'url': 'compte_client'},
+ {'categorie': 'Comptes', 'name': 'Compte staff', 'url': 'add_compte'},
  {'categorie': 'Comptes', 'name': 'Create Permission', 'url': 'create_permission'},
  {'categorie': 'Comptes', 'name': 'Deactive Compte', 'url': 'deactive_compte'},
  {'categorie': 'Comptes', 'name': 'Del Compte', 'url': 'del_compte'},
@@ -32,23 +33,23 @@ CUSTOM_PERMISSIONS = [{'categorie': 'Comptes', 'name': 'Active Compte', 'url': '
  {'categorie': 'Comptes', 'name': 'Update Permission', 'url': 'update_permission'},
  {'categorie': 'Comptes', 'name': 'Update Permissions', 'url': 'update_permissions'},
  {'categorie': 'Dashboard', 'name': 'Tbord', 'url': 'tbord'},
- {'categorie': 'Interfaces', 'name': 'Ajouter Agence', 'url': 'add_localite'},
  {'categorie': 'Interfaces', 'name': 'Add Proforma', 'url': 'add_proforma'},
- {'categorie': 'Interfaces', 'name': 'Service caissiere', 'url': 'caissiere'},
+ {'categorie': 'Interfaces', 'name': 'Ajouter Agence', 'url': 'add_localite'},
+ {'categorie': 'Interfaces', 'name': 'Ajouter lieu de livraison', 'url': 'zones_livraison'},
  {'categorie': 'Interfaces', 'name': 'Commandes en ligne', 'url': 'cmd_line'},
  {'categorie': 'Interfaces', 'name': 'Livraison commande client', 'url': 'livraison_cmd_online'},
- {'categorie': 'Interfaces', 'name': 'Service livraisons', 'url': 'livraisons'},
+ {'categorie': 'Interfaces', 'name': 'Gestion des paramètres', 'url': 'gestion_parametre'},
  {'categorie': 'Interfaces', 'name': 'Service accueil', 'url': 'paniers'},
- {'categorie': 'Interfaces', 'name': 'Ajouter lieu de livraison', 'url': 'zones_livraison'},
- {'categorie': 'Liste', 'name': 'Historique Commande', 'url': 'Historique_commande'},
- {'categorie': 'Liste', 'name': 'Historique Panier', 'url': 'Historique_panier'},
- {'categorie': 'Liste', 'name': 'Historique Pieces', 'url': 'Historique_pieces'},
- {'categorie': 'Liste',
-  'name': 'Export Comptes Clients Excel',
-  'url': 'export_comptes_clients_excel'},
+ {'categorie': 'Interfaces', 'name': 'Service caissiere', 'url': 'caissiere'},
+ {'categorie': 'Interfaces', 'name': 'Service livraisons', 'url': 'livraisons'},
+ {'categorie': 'Interfaces', 'name': 'Transferts inter-localités', 'url': 'liste_transferts'},
+ {'categorie': 'Liste', 'name': 'Export Comptes Clients Excel', 'url': 'export_comptes_clients_excel'},
  {'categorie': 'Liste', 'name': 'Export Comptes Excel', 'url': 'export_comptes_excel'},
  {'categorie': 'Liste', 'name': 'Export Permissions Excel', 'url': 'export_permissions_excel'},
+ {'categorie': 'Liste', 'name': 'Historique Commande', 'url': 'Historique_commande'},
  {'categorie': 'Liste', 'name': 'Historique Global', 'url': 'global_history'},
+ {'categorie': 'Liste', 'name': 'Historique Panier', 'url': 'Historique_panier'},
+ {'categorie': 'Liste', 'name': 'Historique Pieces', 'url': 'Historique_pieces'},
  {'categorie': 'Liste', 'name': 'liste commande', 'url': 'liste_commandes'},
  {'categorie': 'Liste', 'name': 'Liste des ventes', 'url': 'liste_ventes'},
  {'categorie': 'Liste', 'name': 'Mes ventes', 'url': 'mesventes'},
@@ -62,23 +63,17 @@ CUSTOM_PERMISSIONS = [{'categorie': 'Comptes', 'name': 'Active Compte', 'url': '
  {'categorie': 'Stocks', 'name': 'Add Panier', 'url': 'add_panier'},
  {'categorie': 'Stocks', 'name': 'Add Panier Proforma', 'url': 'add_panier_proforma'},
  {'categorie': 'Stocks', 'name': 'Add Piece', 'url': 'add_piece'},
- {'categorie': 'Stocks', 'name': 'Sous-catégories', 'url': 'add_sous_categorie'},
  {'categorie': 'Stocks', 'name': 'Ajax Add Panier', 'url': 'ajax_add_panier'},
  {'categorie': 'Stocks', 'name': 'Annuler Demande Demandeur', 'url': 'annuler_demande_demandeur'},
  {'categorie': 'Stocks', 'name': 'Annuler Demande Donneur', 'url': 'annuler_demande_donneur'},
  {'categorie': 'Stocks', 'name': 'Bons Commande Paiement', 'url': 'bons_commande_paiement'},
  {'categorie': 'Stocks', 'name': 'Cmd Line Detail', 'url': 'cmd_line_detail'},
- {'categorie': 'Stocks', 'name': 'Create Perm Category', 'url': 'create_perm_category'},
- {'categorie': 'Stocks', 'name': 'Creer Demande Transfert', 'url': 'creer_demande_transfert'},
  {'categorie': 'Stocks', 'name': 'Deactivate Sortie', 'url': 'deactivate_sortie'},
  {'categorie': 'Stocks', 'name': 'Deactivate Sortie Local', 'url': 'deactivate_sortie_local'},
  {'categorie': 'Stocks', 'name': 'Delet Categorie', 'url': 'delet_categorie'},
  {'categorie': 'Stocks', 'name': 'Delete Perm Category', 'url': 'delete_perm_category'},
- {'categorie': 'Stocks', 'name': 'Supprimer sous-catégorie', 'url': 'delete_sous_categorie'},
  {'categorie': 'Stocks', 'name': 'Details Commande', 'url': 'details_commande'},
- {'categorie': 'Stocks',
-  'name': 'Download Modele Pieces Excel',
-  'url': 'download_modele_pieces_excel'},
+ {'categorie': 'Stocks', 'name': 'Download Modele Pieces Excel','url': 'download_modele_pieces_excel'},
  {'categorie': 'Stocks', 'name': 'Entrée stock', 'url': 'entrestock'},
  {'categorie': 'Stocks', 'name': 'Export Best Vente Excel', 'url': 'export_best_vente_excel'},
  {'categorie': 'Stocks', 'name': 'Export Best Vente Pdf', 'url': 'export_best_vente_pdf'},
@@ -92,67 +87,50 @@ CUSTOM_PERMISSIONS = [{'categorie': 'Comptes', 'name': 'Active Compte', 'url': '
  {'categorie': 'Stocks', 'name': 'Export Hist Cmd Pdf', 'url': 'export_hist_cmd_pdf'},
  {'categorie': 'Stocks', 'name': 'Export Hist Gen Excel', 'url': 'export_hist_gen_excel'},
  {'categorie': 'Stocks', 'name': 'Export Hist Gen Pdf', 'url': 'export_hist_gen_pdf'},
- {'categorie': 'Stocks',
-  'name': 'Export Liste Commandes Excel',
-  'url': 'export_liste_commandes_excel'},
+ {'categorie': 'Stocks', 'name': 'Export Liste Commandes Excel','url': 'export_liste_commandes_excel'},
  {'categorie': 'Stocks', 'name': 'Export Liste Commandes Pdf', 'url': 'export_liste_commandes_pdf'},
  {'categorie': 'Stocks', 'name': 'Export Liste Ventes Excel', 'url': 'export_liste_ventes_excel'},
  {'categorie': 'Stocks', 'name': 'Export Liste Ventes Pdf', 'url': 'export_liste_ventes_pdf'},
- {'categorie': 'Stocks',
-  'name': 'Export Livraison Cmd Online Excel',
-  'url': 'export_livraison_cmd_online_excel'},
- {'categorie': 'Stocks',
-  'name': 'Export Livraison Cmd Online Pdf',
-  'url': 'export_livraison_cmd_online_pdf'},
+ {'categorie': 'Stocks', 'name': 'Export Livraison Cmd Online Excel', 'url': 'export_livraison_cmd_online_excel'},
+ {'categorie': 'Stocks', 'name': 'Export Livraison Cmd Online Pdf', 'url': 'export_livraison_cmd_online_pdf'},
  {'categorie': 'Stocks', 'name': 'Export Livraisons Excel', 'url': 'export_livraisons_excel'},
  {'categorie': 'Stocks', 'name': 'Export Livraisons Pdf', 'url': 'export_livraisons_pdf'},
- {'categorie': 'Stocks',
-  'name': 'Export Pieces Categorie Excel',
-  'url': 'export_pieces_categorie_excel'},
- {'categorie': 'Stocks',
-  'name': 'Export Pieces Categorie Pdf',
-  'url': 'export_pieces_categorie_pdf'},
+ {'categorie': 'Stocks', 'name': 'Export Pieces Categorie Excel', 'url': 'export_pieces_categorie_excel'},
+ {'categorie': 'Stocks', 'name': 'Export Pieces Categorie Pdf', 'url': 'export_pieces_categorie_pdf'},
  {'categorie': 'Stocks', 'name': 'Export Stock Excel', 'url': 'export_stock_excel'},
  {'categorie': 'Stocks', 'name': 'Export Stock Pdf', 'url': 'export_stock_pdf'},
  {'categorie': 'Stocks', 'name': 'Export Ventes Excel', 'url': 'export_ventes_excel'},
  {'categorie': 'Stocks', 'name': 'Fourniss', 'url': 'fourniss'},
  {'categorie': 'Stocks', 'name': 'Get Notifications', 'url': 'get_notifications'},
- {'categorie': 'Stocks',
-  'name': 'Imprimer Bon Commande Vente',
-  'url': 'imprimer_bon_commande_vente'},
+ {'categorie': 'Stocks', 'name': 'Imprimer Bon Commande Vente', 'url': 'imprimer_bon_commande_vente'},
  {'categorie': 'Stocks', 'name': 'Imprimer Bon Livraison', 'url': 'imprimer_bon_livraison'},
  {'categorie': 'Stocks', 'name': 'Imprimer Demande Transfert', 'url': 'imprimer_demande_transfert'},
  {'categorie': 'Stocks', 'name': 'Imprimer Proforma Pdf', 'url': 'imprimer_proforma_pdf'},
  {'categorie': 'Stocks', 'name': 'Imprimer Recu Commande', 'url': 'imprimer_recu_commande'},
  {'categorie': 'Stocks', 'name': 'Info Piece', 'url': 'info_piece'},
  {'categorie': 'Stocks', 'name': 'List Perm Categories', 'url': 'list_perm_categories'},
- {'categorie': 'Stocks', 'name': 'Transferts inter-localités', 'url': 'liste_transferts'},
  {'categorie': 'Stocks', 'name': 'Livraison Cmd Detail', 'url': 'livraison_cmd_detail'},
  {'categorie': 'Stocks', 'name': 'Marquer Notification Lue', 'url': 'marquer_notification_lue'},
- {'categorie': 'Stocks',
-  'name': 'Marquer Toutes Notifications Lues',
-  'url': 'marquer_toutes_notifications_lues'},
+ {'categorie': 'Stocks', 'name': 'Marquer Toutes Notifications Lues', 'url': 'marquer_toutes_notifications_lues'},
+ {'categorie': 'Stocks', 'name': 'Modifier sous-catégorie', 'url': 'update_sous_categorie'},
+ {'categorie': 'Stocks', 'name': 'Mon stock', 'url': 'stock'},
  {'categorie': 'Stocks', 'name': 'Panier Action', 'url': 'panier_action'},
  {'categorie': 'Stocks', 'name': 'Panier Proforma Action', 'url': 'panier_proforma_action'},
  {'categorie': 'Stocks', 'name': 'Piece Delete', 'url': 'piece_delete'},
  {'categorie': 'Stocks', 'name': 'Piece Detail', 'url': 'piece_detail'},
  {'categorie': 'Stocks', 'name': 'Pieces Archivees', 'url': 'pieces_archivees'},
- {'categorie': 'Stocks', 'name': 'Printer Connect', 'url': 'printer_connect'},
- {'categorie': 'Stocks', 'name': 'Printer Scan', 'url': 'printer_scan'},
- {'categorie': 'Stocks', 'name': 'Printer Test', 'url': 'printer_test'},
  {'categorie': 'Stocks', 'name': 'Recevoir Demande Transfert', 'url': 'recevoir_demande_transfert'},
  {'categorie': 'Stocks', 'name': 'Reimprimer Recu Paiement', 'url': 'reimprimer_recu_paiement'},
- {'categorie': 'Stocks', 'name': 'Mon stock', 'url': 'stock'},
+ {'categorie': 'Stocks', 'name': 'Sous-catégories', 'url': 'add_sous_categorie'},
+ {'categorie': 'Stocks', 'name': 'Supprimer sous-catégorie', 'url': 'delete_sous_categorie'},
  {'categorie': 'Stocks', 'name': 'Update Categorie', 'url': 'update_categorie'},
  {'categorie': 'Stocks', 'name': 'Update Fournisseur', 'url': 'update_fournisseur'},
  {'categorie': 'Stocks', 'name': 'Update Perm Category', 'url': 'update_perm_category'},
  {'categorie': 'Stocks', 'name': 'Update Piece', 'url': 'update_piece'},
- {'categorie': 'Stocks', 'name': 'Modifier sous-catégorie', 'url': 'update_sous_categorie'},
  {'categorie': 'Stocks', 'name': 'Valid Pay Article', 'url': 'valid_pay_article'},
  {'categorie': 'Stocks', 'name': 'Valider Demande Donneur', 'url': 'valider_demande_donneur'},
  {'categorie': 'Stocks', 'name': 'Valider Livraison', 'url': 'valider_livraison'},
- {'categorie': 'Stocks', 'name': 'Valider Panier Proforma', 'url': 'valider_panier_proforma'},
- {'categorie': 'Stocks', 'name': 'Valider Proforma', 'url': 'valider_proforma'}]
+ {'categorie': 'Stocks', 'name': 'Valider Panier Proforma', 'url': 'valider_panier_proforma'}]
 
 LOCAL_ENTREPOTS = [{'latitude': '5.4283391', 'longitude': '-4.0188503', 'nom': 'Abobo', 'statut': True},
  {'latitude': '5.3652248', 'longitude': '-3.9170846', 'nom': 'Bingerville', 'statut': True},
@@ -185,10 +163,7 @@ CATEGORIES = [{'categorie': 'Dzire',
                  'grâce à sa maniabilité et son style original.'},
  {'categorie': 'Swift',
   'description': 'Grâce à son empattement allongé de 20 mm et son agencement intérieur revu, la '
-                 'Suzuki SWIFT offre un espace et un confort incomparables.'},
- {'categorie': 'Toyota',
-  'description': "Toyota est le premier constructeur automobile de l'histoire à passer la barre "
-                 'des 300 millions de véhicules produits 9.'}]
+                 'Suzuki SWIFT offre un espace et un confort incomparables.'}]
 
 SOUS_CATEGORIES = [{'actif': True, 'categorie': 'Dzire', 'nom': 'Moteur', 'ordre': 1, 'slug': 'moteur'},
  {'actif': True, 'categorie': 'Dzire', 'nom': 'Freinage', 'ordre': 2, 'slug': 'freinage'},
@@ -251,6 +226,21 @@ SOUS_CATEGORIES = [{'actif': True, 'categorie': 'Dzire', 'nom': 'Moteur', 'ordre
   'ordre': 11,
   'slug': 'refroidissement'}]
 
+# Snapshot base — moyens de paiement (code unique)
+MOYENS_PAIEMENT = [
+    {'code': 'espece', 'nom': 'Espèce', 'actif': True},
+    {'code': 'geniuspay', 'nom': 'Paiement numérique', 'actif': True},
+]
+
+# Snapshot base — barèmes de timbre fiscal (tranche par montant_min)
+BAREMES_TIMBRE = [
+    {'montant_min': '5001.00', 'montant_max': '100000.00', 'montant_timbre': '100.00', 'actif': True},
+    {'montant_min': '100001.00', 'montant_max': '500000.00', 'montant_timbre': '500.00', 'actif': True},
+    {'montant_min': '500001.00', 'montant_max': '1000000.00', 'montant_timbre': '1000.00', 'actif': True},
+    {'montant_min': '1000001.00', 'montant_max': '5000000.00', 'montant_timbre': '2000.00', 'actif': True},
+    {'montant_min': '5000001.00', 'montant_max': None, 'montant_timbre': '5000.00', 'actif': True},
+]
+
 
 def _parse_time(value):
     h, m, s = (int(p) for p in value.split(':'))
@@ -265,7 +255,7 @@ def seed_defaults(*, using='default'):
         LocalEntrepot,
         TypeCustomPermission,
     )
-    from stock.models import Categorie, SousCategorie
+    from stock.models import BaremeTimbre, Categorie, MoyenPaiement, SousCategorie
 
     types = {}
     for name in TYPE_PERMISSIONS:
@@ -283,10 +273,20 @@ def seed_defaults(*, using='default'):
                 defaults={'categorie': item['categorie']},
             )
             types[item['categorie']] = cat
-        CustomPermission.objects.using(using).get_or_create(
+        perm, created = CustomPermission.objects.using(using).get_or_create(
             url=item['url'],
             defaults={'name': item['name'], 'categorie': cat},
         )
+        if not created:
+            update = []
+            if perm.name != item['name']:
+                perm.name = item['name']
+                update.append('name')
+            if perm.categorie_id != cat.pk:
+                perm.categorie = cat
+                update.append('categorie')
+            if update:
+                perm.save(update_fields=update)
 
     locaux = {}
     for item in LOCAL_ENTREPOTS:
@@ -342,6 +342,29 @@ def seed_defaults(*, using='default'):
             defaults={
                 'slug': item.get('slug') or slugify(item['nom']),
                 'ordre': item.get('ordre') or 0,
+                'actif': item.get('actif', True),
+            },
+        )
+
+    for item in MOYENS_PAIEMENT:
+        MoyenPaiement.objects.using(using).get_or_create(
+            code=item['code'],
+            defaults={
+                'nom': item['nom'],
+                'actif': item.get('actif', True),
+            },
+        )
+
+    for item in BAREMES_TIMBRE:
+        montant_min = Decimal(item['montant_min'])
+        montant_max = (
+            Decimal(item['montant_max']) if item.get('montant_max') is not None else None
+        )
+        BaremeTimbre.objects.using(using).get_or_create(
+            montant_min=montant_min,
+            defaults={
+                'montant_max': montant_max,
+                'montant_timbre': Decimal(item['montant_timbre']),
                 'actif': item.get('actif', True),
             },
         )

@@ -451,10 +451,66 @@ body.mag-ecom-body:has(.mag-cmd-line-page) .row-deck {
     gap: 0.3rem;
 }
 
+.mag-cmd-line-page .mag-cmd-actions--center {
+    justify-content: center;
+}
+
 .mag-cmd-line-page .mag-cmd-btn--icon {
     width: 34px !important;
     min-width: 34px;
     padding: 0 !important;
+}
+
+.mag-cmd-line-page .mag-cmd-btn--danger {
+    color: #b91c1c !important;
+}
+
+.mag-cmd-line-page .mag-cmd-btn--danger:hover {
+    border-color: #fca5a5 !important;
+    color: #991b1b !important;
+    background: #fef2f2 !important;
+}
+
+/* Fournisseurs — cellules qté / totaux */
+.mag-cmd-line-page .mag-fourn-qty {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.28rem;
+    line-height: 1.2;
+}
+
+.mag-cmd-line-page .mag-fourn-qty__val {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.mag-cmd-line-page .mag-fourn-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.mag-cmd-line-page .mag-fourn-contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.86rem;
+    color: #475569;
+}
+
+.mag-cmd-line-page .mag-fourn-contact i {
+    color: #94a3b8;
+    font-size: 0.75rem;
+}
+
+.mag-cmd-line-page .mag-fourn-total {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #15803d;
+    white-space: nowrap;
 }
 
 .mag-cmd-line-page .mag-cmd-pager {

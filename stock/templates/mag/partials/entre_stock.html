@@ -1,3 +1,4 @@
+{% load l10n %}
 <div class="modal fade mag-form-modal" id="entreStockModal{{ piece.pk }}" tabindex="-1" role="dialog" aria-labelledby="entreStockModalLabel{{ piece.pk }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -69,17 +70,23 @@
                         </h3>
                         <div class="mf-field">
                             <label>Quantité à ajouter <span class="mf-req">*</span></label>
-                            {{ entre_stock_form.quantitajout }}
-                            {% if entre_stock_form.quantitajout.errors %}
-                                <div class="text-danger">{{ entre_stock_form.quantitajout.errors }}</div>
-                            {% endif %}
+                            <input type="number"
+                                name="quantitajout"
+                                class="form-control"
+                                min="1"
+                                step="1"
+                                required
+                                placeholder="1">
                         </div>
                         <div class="mf-field">
                             <label>Prix d'achat <span class="mf-req">*</span></label>
-                            {{ entre_stock_form.prix_achat }}
-                            {% if entre_stock_form.prix_achat.errors %}
-                                <div class="text-danger">{{ entre_stock_form.prix_achat.errors }}</div>
-                            {% endif %}
+                            <input type="number"
+                                name="prix_achat"
+                                class="form-control"
+                                min="0"
+                                step="0.01"
+                                required
+                                value="{{ piece.prix_achat|unlocalize }}">
                         </div>
                         <div class="mf-field mb-0">
                             <label>Fournisseur</label>

@@ -1,7 +1,6 @@
 {% extends "mag/base_mag_ecom.html" %}
 {% load static %}
 {% block title %}AUTO-PIECE — Bons de commande (paiement){% endblock title %}
-{% block page_title %}Bons de commande — paiement caisse{% endblock page_title %}
 {% block page %}Bons commande caisse{% endblock page %}
 
 {% block extra_head %}
@@ -44,7 +43,7 @@
                                 <th class="text-right">Montant payé</th>
                                 <th class="text-right">Reste</th>
                                 <th>Date émission</th>
-                                <th class="text-center">PDF</th>
+                                <th class="text-center text-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -63,15 +62,17 @@
                                     <td class="text-right">{{ bon.montant_paye }}</td>
                                     <td class="text-right">{{ bon.montant_reste }}</td>
                                     <td>{{ bon.date_emission|date:"d/m/Y H:i" }}</td>
-                                    <td class="text-center">
-                                        {% if bon.fichier_pdf %}
-                                            <a href="{{ bon.fichier_pdf.url }}" class="btn mag-cmd-btn mag-cmd-btn--ghost" target="_blank" title="Télécharger le PDF">
+                                    <td class="text-center text-nowrap">
+                                        <div class="mag-cmd-actions mag-cmd-actions--row">
+                                            {% if bon.fichier_pdf %}
+                                            <a href="{{ bon.fichier_pdf.url }}" class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon" target="_blank" rel="noopener" title="Télécharger le PDF">
                                                 <i class="fa fa-download"></i>
                                             </a>
-                                        {% endif %}
-                                        <a href="{% url 'imprimer_bon_commande_vente' bon.ticket_numero %}" class="btn mag-cmd-btn mag-cmd-btn--ghost" target="_blank" title="Réimprimer">
-                                            <i class="fa fa-print"></i>
-                                        </a>
+                                            {% endif %}
+                                            <a href="{% url 'imprimer_bon_commande_vente' bon.ticket_numero %}" class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon" target="_blank" rel="noopener" title="Réimprimer">
+                                                <i class="fa fa-print"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             {% empty %}

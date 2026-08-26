@@ -1,0 +1,32 @@
+{% load l10n %}
+<div class="modal fade mag-form-modal" id="modalParametreTva" tabindex="-1" role="dialog" aria-labelledby="modalParametreTvaLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title" id="modalParametreTvaLabel">Paramètre TVA</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{% url 'parametre_tva_save' %}" id="formParametreTva" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="pk" id="tva-pk" value="">
+                <div class="modal-body">
+                    <div class="mf-field">
+                        <label for="tva-libelle">Libellé <span class="text-muted font-weight-normal">(facultatif)</span></label>
+                        <input type="text" name="libelle" id="tva-libelle" class="form-control" placeholder="TVA standard" maxlength="100">
+                    </div>
+                    <div class="mf-field mb-0">
+                        <label for="tva-taux">Taux (%) <span class="mf-req">*</span></label>
+                        <input type="number" name="taux" id="tva-taux" class="form-control" min="0" max="100" step="0.01" value="18.00" required>
+                        <span class="mf-hint">Ex. 18 pour 18 %. Un seul taux peut être actif à la fois.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

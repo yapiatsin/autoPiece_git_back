@@ -1,0 +1,216 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+{% block title %}AUTO-PIECE — Notifications{% endblock title %}
+{% block page %}Notifications{% endblock page %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-form-modal.css' %}">
+{% endblock extra_head %}
+
+{% block page_action_buttons %}
+<form method="post" action="{% url 'marquer_toutes_notifications_lues' %}" class="d-inline" id="formMarkAllPage">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-secondary btn-sm" title="Tout marquer comme lu">
+        <i class="fa fa-check"></i> Tout marquer lu
+    </button>
+</form>
+{% endblock page_action_buttons %}
+
+{% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
+            <div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:10px;">
+                <h2 class="mb-0">
+                    {{ notifications|length }} notification{% if notifications|length != 1 %}s{% endif %}
+                    <small class="text-muted font-weight-normal">· {{ nb_non_lues }} non lue{% if nb_non_lues != 1 %}s{% endif %}</small>
+                </h2>
+                <div class="mag-cmd-actions mag-cmd-actions--row" style="min-width:0;">
+                    <a href="{% url 'liste_notifications' %}?filtre=toutes" class="btn mag-cmd-btn mag-cmd-btn--ghost {% if filtre_actif == 'toutes' %}is-active{% endif %}" style="width:auto !important; padding:0 0.85rem !important;">Toutes</a>
+                    <a href="{% url 'liste_notifications' %}?filtre=non_lues" class="btn mag-cmd-btn mag-cmd-btn--ghost {% if filtre_actif == 'non_lues' %}is-active{% endif %}" style="width:auto !important; padding:0 0.85rem !important;">Non lues</a>
+                    <a href="{% url 'liste_notifications' %}?filtre=lues" class="btn mag-cmd-btn mag-cmd-btn--ghost {% if filtre_actif == 'lues' %}is-active{% endif %}" style="width:auto !important; padding:0 0.85rem !important;">Lues</a>
+                </div>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter(10)">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher titre, message, type…" %}
+                    <div class="table-responsive">
+                        <table class="table mag-data-table mag-data-table--fit mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Statut</th>
+                                    <th>Type</th>
+                                    <th>Titre</th>
+                                    <th>Message</th>
+                                    <th>Date</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for n in notifications %}
+                                <tr class="{% if not n.lu %}mag-notif-row--unread{% endif %}" data-notif-id="{{ n.id }}">
+                                    <td>
+                                        {% if n.lu %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--en_attente">Lue</span>
+                                        {% else %}
+                                        <span class="mag-cmd-badge mag-cmd-badge--valider">Non lue</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ n.get_type_notification_display }}</td>
+                                    <td><strong class="mag-cmd-numero">{{ n.titre }}</strong></td>
+                                    <td class="mag-cmd-cell-wrap">{{ n.message|truncatechars:90 }}</td>
+                                    <td class="text-nowrap">{{ n.date_creation|date:"d/m/Y H:i" }}</td>
+                                    <td class="text-center text-nowrap">
+                                        <div class="mag-cmd-actions mag-cmd-actions--row mag-cmd-actions--center">
+                                            <button type="button"
+                                                    class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon btn-notif-view"
+                                                    data-url="{% url 'notification_detail' n.id %}"
+                                                    title="Voir">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+                                            <form method="post" action="{% url 'notification_delete' n.id %}" class="d-inline form-notif-delete">
+                                                {% csrf_token %}
+                                                <button type="submit"
+                                                        class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon mag-cmd-btn--danger"
+                                                        title="Supprimer"
+                                                        onclick="return confirm('Supprimer cette notification ?');">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="6" class="text-center text-muted py-4">Aucune notification.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if notifications %}
+                    {% include "mag/partials/_table_pager.html" %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade mag-form-modal" id="modalNotifDetail" tabindex="-1" role="dialog" aria-labelledby="modalNotifDetailLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:560px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title" id="modalNotifDetailLabel">Détail notification</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalNotifDetailBody">
+                <p class="text-muted mb-0">Chargement…</p>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="modalNotifLink" class="btn btn-mf-save d-none" target="_self">
+                    <i class="fa fa-external-link"></i> Ouvrir
+                </a>
+                <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main_content %}
+
+{% block extra_js %}
+<script>
+(function ($) {
+    function csrfToken() {
+        return (document.cookie.split('; ').find(function (c) { return c.startsWith('csrftoken='); }) || '').split('=')[1] || '';
+    }
+
+    function renderDetail(n) {
+        var piecesHtml = '';
+        if (n.pieces && n.pieces.length) {
+            piecesHtml = '<ul class="mb-0 pl-3">' + n.pieces.map(function (p) {
+                return '<li><strong>' + p.designation + '</strong> (' + p.numero_piece + ') — Qté ' + p.quantite + ' / Seuil ' + p.seuil + '</li>';
+            }).join('') + '</ul>';
+        }
+        var html = ''
+            + '<div class="mb-2"><span class="mag-cmd-badge mag-cmd-badge--valider">' + (n.type_display || n.type) + '</span>'
+            + (n.lu ? ' <span class="mag-cmd-badge mag-cmd-badge--en_attente">Lue</span>' : '') + '</div>'
+            + '<h5 class="mb-2" style="font-weight:800;color:#0f172a;">' + (n.titre || '') + '</h5>'
+            + '<p class="mb-3" style="color:#475569;line-height:1.5;">' + (n.message || '') + '</p>'
+            + (piecesHtml ? '<div class="mb-3"><strong class="d-block mb-1">Pièces concernées</strong>' + piecesHtml + '</div>' : '')
+            + '<p class="mb-0 text-muted small"><i class="fa fa-clock-o"></i> ' + (n.date || '') + '</p>';
+        $('#modalNotifDetailBody').html(html);
+        var link = $('#modalNotifLink');
+        if (n.url) {
+            link.attr('href', n.url).removeClass('d-none');
+        } else {
+            link.addClass('d-none');
+        }
+    }
+
+    function openNotif(url, row) {
+        $('#modalNotifDetailBody').html('<p class="text-muted mb-0">Chargement…</p>');
+        $('#modalNotifLink').addClass('d-none');
+        $('#modalNotifDetail').modal('show');
+        $.getJSON(url)
+            .done(function (data) {
+                if (!data.success || !data.notification) {
+                    $('#modalNotifDetailBody').html('<p class="text-danger mb-0">Impossible de charger la notification.</p>');
+                    return;
+                }
+                renderDetail(data.notification);
+                if (row && row.length) {
+                    row.removeClass('mag-notif-row--unread');
+                    row.find('td:first .mag-cmd-badge')
+                        .removeClass('mag-cmd-badge--valider')
+                        .addClass('mag-cmd-badge--en_attente')
+                        .text('Lue');
+                }
+                if (typeof chargerNotifications === 'function') {
+                    try { chargerNotifications(); } catch (e) {}
+                }
+            })
+            .fail(function () {
+                $('#modalNotifDetailBody').html('<p class="text-danger mb-0">Erreur réseau.</p>');
+            });
+    }
+
+    $(document).on('click', '.btn-notif-view', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var btn = $(this);
+        openNotif(btn.data('url'), btn.closest('tr'));
+    });
+
+    $(document).on('click', 'tr[data-notif-id] td:not(:last-child)', function () {
+        var row = $(this).closest('tr');
+        var btn = row.find('.btn-notif-view');
+        if (btn.length) openNotif(btn.data('url'), row);
+    });
+
+    $('#formMarkAllPage').on('submit', function (e) {
+        e.preventDefault();
+        var form = $(this);
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest' },
+            success: function () { window.location.reload(); },
+            error: function () { window.location.reload(); }
+        });
+    });
+})(jQuery);
+</script>
+<style>
+.mag-notif-row--unread td { font-weight: 600; }
+.mag-cmd-line-page .mag-cmd-btn.is-active {
+    border-color: #f97316 !important;
+    color: #ea580c !important;
+    background: #fff7ed !important;
+}
+tr[data-notif-id] td:not(:last-child) { cursor: pointer; }
+</style>
+{% endblock extra_js %}

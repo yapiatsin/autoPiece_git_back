@@ -2,7 +2,6 @@
 {% load static %}
 {% load custom_filters %}
 {% block title %}AUTO-PIECE — Fournisseurs{% endblock title %}
-{% block page_title %}Fournisseurs{% endblock page_title %}
 {% block page %}Fournisseurs{% endblock page %}
 
 {% block extra_head %}
@@ -164,60 +163,75 @@
                 <div class="mag-table-shell" x-data="magTableFilter(10)">
                     {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher fournisseur, contact…" %}
                     <div class="table-responsive">
-                        <table class="table mag-data-table mb-0">
+                        <table class="table mag-data-table mag-data-table--fit mb-0">
                         <thead>
                             <tr>
-                                <th>N°#</th>
+                                <th class="text-center" style="width:3rem">N°</th>
                                 <th>Fournisseur</th>
                                 <th>Contact</th>
                                 {% for cat in all_categories %}
                                     <th class="text-center">{{ cat }}</th>
                                 {% endfor %}
                                 <th class="text-center">Total Qté</th>
-                                <th class="text-center">Total Valeur</th>
-                                <th class="text-center">Action</th>
+                                <th class="text-right">Total Valeur</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for data in fourniss_data %}
                                 <tr>
-                                    <th>{{ forloop.counter }}</th>
-                                    <th>{{ data.f.nom }}</th>
-                                    <th>{{ data.f.contact|default:"-" }}</th>
+                                    <td class="text-center text-muted">{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong class="mag-fourn-name">{{ data.f.nom }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if data.f.contact %}
+                                        <span class="mag-fourn-contact"><i class="fa fa-phone"></i> {{ data.f.contact }}</span>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
                                     {% for cat in all_categories %}
                                         <td class="text-center">
                                             {% with stats=data.categories_dict|get_item:cat %}
                                                 {% if stats.qte > 0 %}
-                                                    <span class="badge badge-info">{{ stats.qte }}</span>
-                                                    <br>
-                                                    <small class="text-muted">{{ stats.valeur|floatformat:2 }} frs</small>
+                                                    <div class="mag-fourn-qty">
+                                                        <span class="mag-cmd-badge mag-cmd-badge--valider">{{ stats.qte }}</span>
+                                                        <span class="mag-fourn-qty__val">{{ stats.valeur|floatformat:0 }} FCFA</span>
+                                                    </div>
                                                 {% else %}
-                                                    <span class="text-muted">-</span>
+                                                    <span class="text-muted">—</span>
                                                 {% endif %}
                                             {% endwith %}
                                         </td>
                                     {% endfor %}
                                     <td class="text-center">
-                                        <strong>{{ data.quant_piec }}</strong>
+                                        <span class="mag-cmd-badge mag-cmd-badge--recu">{{ data.quant_piec }}</span>
                                     </td>
-                                    <td class="text-center">
-                                        <strong class="text-success">{{ data.val_piec|floatformat:2 }} frs</strong>
+                                    <td class="text-right">
+                                        <strong class="mag-fourn-total">{{ data.val_piec|floatformat:0 }} FCFA</strong>
                                     </td>
-                                    <td class="text-center">
-                                        <a href="javascript:void(0);" data-toggle="modal" data-target="#editFournisseurModal{{ data.f.pk }}" title="Modifier">
-                                            <i class="icon-note text-warning"></i>
-                                        </a>
-                                        &nbsp;|&nbsp;
-                                        <a href="{% url 'fourniss' data.f.pk %}" 
-                                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer le fournisseur {{ data.f.nom }} ?')" 
-                                           title="Supprimer">
-                                            <i class="icon-trash text-danger"></i>
-                                        </a>
+                                    <td class="text-center text-nowrap">
+                                        <div class="mag-cmd-actions mag-cmd-actions--row mag-cmd-actions--center">
+                                            <a href="javascript:void(0);"
+                                               class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                               data-toggle="modal"
+                                               data-target="#editFournisseurModal{{ data.f.pk }}"
+                                               title="Modifier">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'fourniss' data.f.pk %}"
+                                               class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon mag-cmd-btn--danger"
+                                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer le fournisseur {{ data.f.nom }} ?')"
+                                               title="Supprimer">
+                                                <i class="fa fa-trash"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             {% empty %}
                                 <tr class="mag-table-skip-filter">
-                                    <td colspan="{{ total_cols }}" class="text-center text-muted p-3">
+                                    <td colspan="{{ total_cols }}" class="text-center text-muted py-4">
                                         Aucun fournisseur enregistré.
                                     </td>
                                 </tr>

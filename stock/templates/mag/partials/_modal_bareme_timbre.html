@@ -1,0 +1,35 @@
+{% load l10n %}
+<div class="modal fade mag-form-modal" id="modalBaremeTimbre" tabindex="-1" role="dialog" aria-labelledby="modalBaremeTimbreLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="title" id="modalBaremeTimbreLabel">Barème de timbre</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{% url 'bareme_timbre_save' %}" id="formBaremeTimbre" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="pk" id="timbre-pk" value="">
+                <div class="modal-body">
+                    <div class="mf-field">
+                        <label for="timbre-min">Montant min <span class="mf-req">*</span></label>
+                        <input type="number" name="montant_min" id="timbre-min" class="form-control" min="0" step="0.01" required>
+                    </div>
+                    <div class="mf-field">
+                        <label for="timbre-max">Montant max <span class="text-muted font-weight-normal">(vide = et plus)</span></label>
+                        <input type="number" name="montant_max" id="timbre-max" class="form-control" min="0" step="0.01" placeholder="Optionnel">
+                    </div>
+                    <div class="mf-field mb-0">
+                        <label for="timbre-montant">Montant timbre <span class="mf-req">*</span></label>
+                        <input type="number" name="montant_timbre" id="timbre-montant" class="form-control" min="0" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-mf-cancel" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-mf-save"><i class="fa fa-check"></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

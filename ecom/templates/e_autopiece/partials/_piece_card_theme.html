@@ -95,7 +95,7 @@
                 {% endif %}
             </div>
             {% if user.is_authenticated and not localite_code %}
-            <p class="ecom-article-card__hint">{% trans "Choisissez une localité sur la carte." %}</p>
+            <p class="ecom-article-card__hint">{% trans "Choisissez une localité sur la carte ou par filtre." %}</p>
             {% elif user.is_authenticated and localite_code and quantite|default:0 == 0 %}
             <p class="ecom-article-card__hint is-out">{% trans "Rupture de stock dans cette localité." %}</p>
             {% endif %}

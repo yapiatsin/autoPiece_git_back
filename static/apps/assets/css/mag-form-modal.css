@@ -137,6 +137,27 @@
     font-size: 0.75rem;
     color: var(--mf-muted);
 }
+
+.mf-field--readonly label {
+    color: var(--mf-muted);
+}
+
+.mf-field .form-control.mf-control-readonly,
+.mf-field .form-control[readonly] {
+    background-color: #f1f5f9;
+    color: #64748b;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
+    opacity: 1;
+    box-shadow: none;
+}
+
+.mf-field .form-control.mf-control-readonly:focus,
+.mf-field .form-control[readonly]:focus {
+    border-color: #e2e8f0;
+    box-shadow: none;
+}
+
 .mf-req {
     color: var(--mf-accent);
     font-weight: 700;
@@ -237,4 +258,40 @@
 }
 .mf-piece-info__value--ok {
     color: #16a34a;
+}
+
+.mf-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.mf-gallery__item {
+    width: 88px;
+    border: 1px solid var(--mf-border);
+    border-radius: 10px;
+    background: #fff;
+    padding: 0.45rem;
+    text-align: center;
+}
+
+.mf-gallery__item img {
+    display: block;
+    width: 100%;
+    height: 64px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #f8fafc;
+    margin-bottom: 0.35rem;
+}
+
+.mf-gallery__delete {
+    justify-content: center;
+    font-size: 0.72rem;
+}
+
+.mf-gallery__delete label {
+    cursor: pointer;
+    color: #b45309;
+    font-weight: 600;
 }

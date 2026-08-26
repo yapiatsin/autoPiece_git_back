@@ -1,0 +1,166 @@
+{% extends 'e_autopiece/base_ecom.html' %}
+{% load static i18n %}
+{% block title %}{% trans "Nos localités" %} — Auto-Pièce{% endblock title %}
+{% block body_class %}shop-main-h ecom-localites-page{% endblock body_class %}
+{% block content %}
+    <div class="rts-navigation-area-breadcrumb bg_light-1">
+        <div class="container">
+            <div class="navigator-breadcrumb-wrapper">
+                <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span class="current">{% trans "Localités" %}</span>
+            </div>
+        </div>
+    </div>
+
+    <section class="ecom-localites-hero vendor-search-area">
+        <div class="container">
+            <div class="vendor-search-area-wrapper ecom-localites-search-hero">
+                <span class="ecom-localites-hero__kicker">{% trans "Réseau Auto-Pièce" %}</span>
+                <h1 class="title">{% trans "Nos localités" %}</h1>
+                <p class="ecom-localites-search-lead">{% trans "Retrouvez nos agences à Abidjan, consultez le stock par secteur et commandez en ligne." %}</p>
+                <form method="get" action="{% url 'ecom_localites' %}" class="ecom-localite-search-form ecom-localites-grid-search">
+                    {% if localites_filters.sort %}
+                    <input type="hidden" name="sort" value="{{ localites_filters.sort }}">
+                    {% endif %}
+                    {% if localites_filters.view %}
+                    <input type="hidden" name="view" value="{{ localites_filters.view }}">
+                    {% endif %}
+                    <div class="ecom-localite-search-box">
+                        <input type="text" name="q" value="{{ localites_filters.q }}"
+                            class="ecom-localite-search-input"
+                            placeholder="{% trans 'Rechercher une localité…' %}"
+                            autocomplete="off">
+                        <button type="submit" class="ecom-localite-search-btn" aria-label="{% trans 'Search' %}">
+                            {% trans "Rechercher" %}
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="ecom-localites-shell vendor-search-area rts-section-gap">
+        <div class="container">
+            <div class="ecom-localites-toolbar filter-search-area-top-between filter-select-area">
+                <div class="top-filter">
+                    {% with start=localites_page.start_index end=localites_page.end_index total=localites_total %}
+                    <span class="ecom-localites-toolbar__count">
+                        {% if total %}
+                        {% blocktrans with start=start end=end total=total %}Affichage {{ start }}–{{ end }} sur {{ total }} agences{% endblocktrans %}
+                        {% else %}
+                        {% trans "Aucune agence trouvée" %}
+                        {% endif %}
+                    </span>
+                    {% endwith %}
+                </div>
+                <form method="get" action="{% url 'ecom_localites' %}" class="ecom-localite-sort-form">
+                    {% if localites_filters.q %}
+                    <input type="hidden" name="q" value="{{ localites_filters.q }}">
+                    {% endif %}
+                    {% if localites_filters.view %}
+                    <input type="hidden" name="view" value="{{ localites_filters.view }}">
+                    {% endif %}
+                    <label class="visually-hidden" for="localites-sort">{% trans "Trier" %}</label>
+                    <div class="ecom-localite-sort-wrap">
+                        <span class="ecom-localite-sort-icon" aria-hidden="true">
+                            <i class="fa-solid fa-arrow-down-a-z"></i>
+                        </span>
+                        <select id="localites-sort" name="sort" class="ecom-localite-sort-select ecom-no-nice-select" onchange="this.form.submit()">
+                            <option value="nom"{% if localites_filters.sort != 'pieces' %} selected{% endif %}>{% trans "Nom (A–Z)" %}</option>
+                            <option value="pieces"{% if localites_filters.sort == 'pieces' %} selected{% endif %}>{% trans "Stock disponible" %}</option>
+                        </select>
+                        <span class="ecom-localite-sort-caret" aria-hidden="true">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </span>
+                    </div>
+                </form>
+            </div>
+
+            <div class="row g-4 ecom-localites-grid">
+                {% for loc in localites %}
+                <div class="col-xl-3 col-lg-3 col-md-6 col-12">
+                    {% include "e_autopiece/partials/_localite_vendor_card.html" with loc=loc layout="grid" %}
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="ecom-localites-empty">
+                        <i class="fa-solid fa-store-slash" aria-hidden="true"></i>
+                        <p>{% trans "Aucune localité trouvée." %}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if localites_page.paginator.num_pages > 1 %}
+            <div class="ecom-shop-pagination mt-5">
+                {% if localites_page.has_previous %}
+                <a class="ecom-page-btn" href="?{% if localites_query %}{{ localites_query }}&{% endif %}page={{ localites_page.previous_page_number }}">&lsaquo;</a>
+                {% endif %}
+                {% for num in localites_page.paginator.page_range %}
+                    {% if num == localites_page.number %}
+                    <span class="ecom-page-btn is-active">{{ num }}</span>
+                    {% elif num == 1 or num == localites_page.paginator.num_pages or num >= localites_page.number|add:'-2' and num <= localites_page.number|add:'2' %}
+                    <a class="ecom-page-btn" href="?{% if localites_query %}{{ localites_query }}&{% endif %}page={{ num }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if localites_page.has_next %}
+                <a class="ecom-page-btn" href="?{% if localites_query %}{{ localites_query }}&{% endif %}page={{ localites_page.next_page_number }}">&rsaquo;</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="rts-shorts-service-area rts-section-gap bg_primary">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-tags"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Prix compétitifs" %}</h4>
+                            <p class="disc">{% trans "Des pièces auto au juste prix, par localité." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-rotate-left"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Assistance commande" %}</h4>
+                            <p class="disc">{% trans "Aide pour vos commandes en ligne et retraits." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-headset"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Support réactif" %}</h4>
+                            <p class="disc">{% trans "Une équipe disponible pour vos questions." %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 col-12">
+                    <div class="single-short-service-area-start">
+                        <div class="icon-area">
+                            <span class="ecom-contact-service-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                        </div>
+                        <div class="information">
+                            <h4 class="title">{% trans "Livraison locale" %}</h4>
+                            <p class="disc">{% trans "Retrait ou livraison selon votre localité." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}

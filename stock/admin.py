@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Categorie, SousCategorie, Piece, Fournisseur, PanierItem, Panier, Ticket, Commande,
+    Categorie, SousCategorie, Piece, PieceImage, Fournisseur, PanierItem, Panier, Ticket, Commande,
     MoyenPaiement, EntrePiece, Notification, StockLocal, TransfertStock,
     DemandeTransfert, LigneDemandeTransfert, BaremeTimbre, ParametreTVA, BonCommandePaiement,
     GeniusPayPaiement,
@@ -44,8 +44,9 @@ class BaremeTimbreAdmin(admin.ModelAdmin):
 
 @admin.register(ParametreTVA)
 class ParametreTVAAdmin(admin.ModelAdmin):
-    list_display = ['active', 'taux', 'date_maj']
+    list_display = ['libelle', 'active', 'taux', 'date_maj']
     list_filter = ['active']
+    search_fields = ['libelle']
 
 
 class StockLocalInline(admin.TabularInline):
@@ -56,6 +57,13 @@ class StockLocalInline(admin.TabularInline):
         'emplacement', 'active_sortie', 'archive_par', 'archive_le',
     ]
 
+
+class PieceImageInline(admin.TabularInline):
+    model = PieceImage
+    extra = 1
+    fields = ['image', 'ordre', 'legende']
+
+
 @admin.register(Piece)
 class PieceAdmin(admin.ModelAdmin):
     list_display = [
@@ -65,7 +73,7 @@ class PieceAdmin(admin.ModelAdmin):
     search_fields = ['numero_piece', 'designation']
     list_filter = ['categorie', 'sous_categorie', 'active_sortie']
     autocomplete_fields = ['categorie', 'sous_categorie']
-    inlines = [StockLocalInline]
+    inlines = [PieceImageInline, StockLocalInline]
 
 @admin.register(StockLocal)
 class StockLocalAdmin(admin.ModelAdmin):

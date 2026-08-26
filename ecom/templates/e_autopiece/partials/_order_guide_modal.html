@@ -4,9 +4,8 @@
      aria-labelledby="ecomOrderGuideModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content ecom-order-guide-content">
-            <button type="button" class="ecom-order-guide-skip" data-bs-dismiss="modal">
-                <i class="fa-solid fa-check" aria-hidden="true"></i>
-                {% trans "J’ai compris" %}
+            <button type="button" class="ecom-order-guide-skip" data-bs-dismiss="modal" aria-label="{% trans 'Fermer' %}">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
             <div class="ecom-order-guide-body">
                 <p class="ecom-order-guide-eyebrow">{% trans "Guide rapide" %}</p>

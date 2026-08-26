@@ -1,13 +1,48 @@
 {% extends "mag/base_mag_ecom.html" %}
 {% load static %}
 {% load custom_filters %}
-{% block title %}AUTO-PIECE — Historique des entrées{% endblock title %}
-{% block page_title %}Historique des entrées — {{ piece.designation }} ({{ piece.numero_piece }}){% endblock page_title %}
-{% block page %}Historique des entrées{% endblock page %}
-{% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
-<li class="breadcrumb-item active">Historique des entrées</li>
-{% endblock breadcrumb %}
+{% block title %}AUTO-PIECE — {{ piece.designation }} ({{ piece.numero_piece }}){% endblock title %}
+
+{% block user_nav_localite %}{% endblock user_nav_localite %}
+
+{% block header %}
+<div class="app-page-header app-page-header--piece-hist app-page-header--breadcrumb-only">
+    <div class="app-page-header__grid">
+        <div class="app-page-header__info">
+            <nav class="app-page-header__breadcrumb" aria-label="Fil d'Ariane">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'stock' %}">Stock</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'add_piece' piece.categorie_id %}">{{ piece.categorie.categorie }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ piece.designation }} ({{ piece.numero_piece }})</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="app-page-header__toolbar">
+            <div class="page-header-actions">
+                {% if page_export_excel_url %}
+                <a href="{{ page_export_excel_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_excel_title|default:'Exporter en Excel' }}">
+                    <i class="fa fa-file-excel-o"></i>
+                </a>
+                {% endif %}
+                {% if page_export_pdf_url %}
+                <a href="{{ page_export_pdf_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_pdf_title|default:'Exporter en PDF' }}">
+                    <i class="fa fa-file-pdf-o"></i>
+                </a>
+                {% endif %}
+                {% if page_export_url and not page_export_excel_url %}
+                <a href="{{ page_export_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_title|default:'Télécharger' }}"{% if page_export_download %} download="{{ page_export_download }}"{% endif %}>
+                    <i class="fa fa-download"></i>
+                </a>
+                {% endif %}
+                {% if filter_modal_id %}
+                {% include "mag/partials/_periode_filter_header.html" %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock header %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
@@ -60,8 +95,11 @@
                     </div>
                 </div>
                 <div class="mail-right">
-                    <div class="header">
-                        <h2>Entrées de stock pour {{ piece.designation }} ({{ piece.numero_piece }})</h2>
+                    <div class="header d-flex justify-content-between align-items-center flex-wrap mag-hist-entre-card-head">
+                        <h2 class="mb-0">Entrées enregistrées</h2>
+                        {% if filtre_resume %}
+                        <span class="mag-cmd-chip mag-cmd-chip--muted">{{ filtre_resume }}</span>
+                        {% endif %}
                     </div>
                     <div class="body">
                             <div class="mag-table-shell" x-data="magTableFilter(10)">
@@ -100,7 +138,7 @@
                                         </tr>
                                     {% empty %}
                                         <tr class="mag-table-skip-filter">
-                                            <td colspan="7" class="text-center text-muted p-3">
+                                            <td colspan="8" class="text-center text-muted p-3">
                                                 Aucune entrée de stock pour cette pièce.
                                             </td>
                                         </tr>

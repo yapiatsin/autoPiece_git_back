@@ -203,6 +203,68 @@ class Piece(models.Model):
         from .stock_local_service import piece_color_status
         return piece_color_status(qty, seuil)
 
+    @property
+    def gallery_images(self):
+        """Images pour la galerie fiche (principale + supplémentaires)."""
+        images = []
+        if self.image:
+            images.append({'url': self.image.url, 'alt': self.designation})
+        for extra in self.images_supplementaires.all():
+            if extra.image:
+                images.append({
+                    'url': extra.image.url,
+                    'alt': extra.legende or self.designation,
+                })
+        return images
+
+    def sync_supplementary_images(self, request):
+        """Supprime ou ajoute des images supplémentaires depuis le modal magasin."""
+        from django.db.models import Max
+
+        delete_ids = []
+        for raw in request.POST.getlist('delete_piece_images'):
+            try:
+                delete_ids.append(int(raw))
+            except (TypeError, ValueError):
+                continue
+        if delete_ids:
+            self.images_supplementaires.filter(pk__in=delete_ids).delete()
+
+        new_files = request.FILES.getlist('images_supplementaires')
+        if not new_files:
+            return
+
+        max_ordre = self.images_supplementaires.aggregate(m=Max('ordre'))['m'] or 0
+        for offset, uploaded in enumerate(new_files, start=1):
+            if uploaded:
+                PieceImage.objects.create(
+                    piece=self,
+                    image=uploaded,
+                    ordre=max_ordre + offset,
+                )
+
+
+class PieceImage(models.Model):
+    """Image supplémentaire affichée dans la galerie fiche d'une pièce."""
+    piece = models.ForeignKey(
+        Piece,
+        on_delete=models.CASCADE,
+        related_name='images_supplementaires',
+    )
+    image = models.ImageField(upload_to='pieces/galerie')
+    ordre = models.PositiveSmallIntegerField(default=0)
+    legende = models.CharField(max_length=255, blank=True, default='')
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['ordre', 'pk']
+        verbose_name = 'Image supplémentaire'
+        verbose_name_plural = 'Images supplémentaires'
+
+    def __str__(self):
+        return f"{self.piece.numero_piece} — image #{self.pk}"
+
+
 class StockLocal(models.Model):
     """Stock d'une pièce dans une localité."""
     piece = models.ForeignKey(Piece, on_delete=models.CASCADE, related_name='stocks')
@@ -545,21 +607,35 @@ class BaremeTimbre(models.Model):
 
 
 class ParametreTVA(models.Model):
-    """Configuration globale de la TVA (activable depuis l'admin)."""
-    active = models.BooleanField(default=False, help_text="Si activé, la case TVA apparaît en caisse lors du paiement.",
+    """Configuration de taux TVA (au plus un actif pour la caisse)."""
+    libelle = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text="Ex. TVA standard, TVA réduite…",
     )
-    taux = models.DecimalField( max_digits=5, decimal_places=2, default=Decimal('18.00'),
+    active = models.BooleanField(
+        default=False,
+        help_text="Si activé, la case TVA apparaît en caisse lors du paiement.",
+    )
+    taux = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('18.00'),
         help_text="Taux de TVA en pourcentage (ex. 18 pour 18 %).",
     )
     date_maj = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()
+
     class Meta:
         verbose_name = 'Paramètre TVA'
         verbose_name_plural = 'Paramètres TVA'
+        ordering = ['-active', 'taux', 'pk']
 
     def __str__(self):
         etat = 'activée' if self.active else 'désactivée'
-        return f"TVA {self.taux}% ({etat})"
+        label = self.libelle.strip() or f'TVA {self.taux}%'
+        return f"{label} ({etat})"
 
 
 class Commande(models.Model):

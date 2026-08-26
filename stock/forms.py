@@ -1,5 +1,8 @@
 from django import forms
-from .models import Categorie, SousCategorie, EntrePiece, Piece, Fournisseur, MoyenPaiement, StockLocal
+from .models import (
+    Categorie, SousCategorie, EntrePiece, Piece, Fournisseur, MoyenPaiement, StockLocal,
+    ParametreTVA, BaremeTimbre,
+)
 from Userauths.models import CustomUser, LocalEntrepot
 from django.forms import DateInput
 
@@ -162,10 +165,10 @@ class StockLocalPrixForm(forms.Form):
 class EntrePieceForm(forms.ModelForm):
     class Meta:
         model = EntrePiece
-        exclude = ['utilisateur','piece',]
+        fields = ['quantitajout', 'prix_achat', 'fournisseur']
         widgets = {
             'prix_achat': forms.NumberInput(attrs={'class':'form-control', "min":"0", "step":"0.01"}),
-            'quantitajout': forms.NumberInput(attrs={'class':'form-control', "min":"0"}),
+            'quantitajout': forms.NumberInput(attrs={'class':'form-control', "min":"1"}),
             'fournisseur': forms.Select(attrs={'class':'form-control',}),
         }
   
@@ -182,4 +185,54 @@ class FournisseurForm(forms.ModelForm):
 class AjouterAuPanierForm(forms.Form):
     pieces = forms.ModelMultipleChoiceField(queryset=Piece.objects.all(), widget=forms.CheckboxSelectMultiple)
     quantites = forms.CharField(widget=forms.HiddenInput)
+
+
+class ParametreTVAForm(forms.ModelForm):
+    class Meta:
+        model = ParametreTVA
+        fields = ('libelle', 'taux')
+        widgets = {
+            'libelle': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'TVA standard',
+            }),
+            'taux': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '100',
+                'step': '0.01',
+                'placeholder': '18.00',
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['libelle'].required = False
+        self.fields['taux'].localize = False
+        self.fields['taux'].widget.is_localized = False
+
+
+class BaremeTimbreForm(forms.ModelForm):
+    class Meta:
+        model = BaremeTimbre
+        fields = ('montant_min', 'montant_max', 'montant_timbre')
+        widgets = {
+            'montant_min': forms.NumberInput(attrs={
+                'class': 'form-control', 'min': '0', 'step': '0.01',
+            }),
+            'montant_max': forms.NumberInput(attrs={
+                'class': 'form-control', 'min': '0', 'step': '0.01',
+                'placeholder': 'Vide = et plus',
+            }),
+            'montant_timbre': forms.NumberInput(attrs={
+                'class': 'form-control', 'min': '0', 'step': '0.01',
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['montant_max'].required = False
+        for name in ('montant_min', 'montant_max', 'montant_timbre'):
+            self.fields[name].localize = False
+            self.fields[name].widget.is_localized = False
 

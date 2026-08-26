@@ -268,10 +268,12 @@
                             <span class="user-role-pill" title="Rôle et localité">
                                 <span class="user-role-dot" aria-hidden="true"></span>
                                 Rôle : {% if user.is_superuser %}Admin{% else %}{{ user.get_role_display }}{% endif %}
+                                {% block user_nav_localite %}
                                 {% if user_nav_localite %}
                                 <span class="user-role-sep" aria-hidden="true">·</span>
                                 <span class="user-role-localite">{{ user_nav_localite }}</span>
                                 {% endif %}
+                                {% endblock user_nav_localite %}
                             </span>
                         </li>
                         <li class="dropdown header-notifications-center">
@@ -282,8 +284,10 @@
                             <ul class="dropdown-menu notifications dropdown-menu-right" id="notificationsList">
                                 <li class="header notifications-card-header">
                                     <div class="notifications-card-header-inner">
-                                        <i class="fa fa-bell" aria-hidden="true"></i>
-                                        <div>
+                                        <span class="notifications-card-icon" aria-hidden="true">
+                                            <i class="fa fa-bell"></i>
+                                        </span>
+                                        <div class="notifications-card-copy">
                                             <strong class="notifications-card-title">Notifications</strong>
                                             <span class="notifications-card-subtitle" id="notificationHeader">Aucune nouvelle notification</span>
                                         </div>
@@ -297,10 +301,16 @@
                                     </ul>
                                 </li>
                                 <li class="footer notifications-card-footer">
-                                    <a href="javascript:void(0);" id="marquerToutesLues" class="notifications-mark-all-btn">
-                                        <i class="fa fa-check" aria-hidden="true"></i>
-                                        Tout marquer comme lu
-                                    </a>
+                                    <div class="notifications-card-footer-actions">
+                                        <a href="javascript:void(0);" id="marquerToutesLues" class="notifications-mark-all-btn">
+                                            <i class="fa fa-check" aria-hidden="true"></i>
+                                            Tout marquer comme lu
+                                        </a>
+                                        <a href="{% url 'liste_notifications' %}" class="notifications-view-all-btn">
+                                            <i class="fa fa-list" aria-hidden="true"></i>
+                                            Voir tout
+                                        </a>
+                                    </div>
                                 </li>
                             </ul>
                         </li>
@@ -383,12 +393,11 @@
         <div id="main-content" class="mag-ecom-main">
             <div class="container-fluid">
                 {% block header %}
-                    <div class="app-page-header">
+                    <div class="app-page-header app-page-header--breadcrumb-only">
                         <div class="app-page-header__grid">
                             <div class="app-page-header__info">
-                                <h2 class="app-page-header__title">{% block page_title %}Home{% endblock page_title %}</h2>
                                 <nav class="app-page-header__breadcrumb" aria-label="Fil d'Ariane">
-                                    <ol class="breadcrumb">
+                                    <ol class="breadcrumb mb-0">
                                         {% block breadcrumb %}
                                         <li class="breadcrumb-item">
                                             <a href="{% url 'tbord' %}"><i class="fa fa-chart-pie"></i> Tableau de bord</a>
@@ -458,12 +467,12 @@
                             </a>
                             <a href="#ecomDownloadAppModal"
                                class="mag-copyright-app"
-                               title="Download App"
+                               title="Télécharger l'application"
                                role="button"
                                data-toggle="modal"
                                data-target="#ecomDownloadAppModal">
                                 <i class="fa fa-mobile" aria-hidden="true"></i>
-                                <span>Download App</span>
+                                <span>Télécharger l'application</span>
                             </a>
                         </nav>
                     </div>
@@ -538,6 +547,10 @@
                 <a href="{% url 'tbord' %}" class="mag-settings-link">
                     <i class="fa fa-tachometer" aria-hidden="true"></i>
                     <span>Tableau de bord</span>
+                </a>
+                <a href="{% url 'gestion_parametre' %}" class="mag-settings-link">
+                    <i class="fa fa-cog" aria-hidden="true"></i>
+                    <span>Gestion des paramètres</span>
                 </a>
                 <a href="{% url 'change_password' %}" class="mag-settings-link">
                     <i class="fa fa-lock" aria-hidden="true"></i>
@@ -653,7 +666,6 @@
         }
         
         const csrftoken = getCookie('csrftoken');
-
         // Clé localStorage pour mémoriser les IDs déjà affichés comme toast
         const SEEN_NOTIFS_KEY = 'autopiece_seen_notif_ids';
         // Flag : évite d'afficher les toasts au tout premier chargement de la page
@@ -667,7 +679,6 @@
                 return [];
             }
         }
-
         function saveSeenNotifIds(ids) {
             try {
                 // On garde au plus 200 IDs pour éviter la croissance infinie
@@ -690,7 +701,6 @@
                 toastr.info(message, titre, options);
             }
         }
-
         // Fonction pour charger les notifications
         function chargerNotifications() {
             fetch('{% url "get_notifications" %}')
@@ -781,11 +791,9 @@
                                             <i class="${iconClass}" aria-hidden="true"></i>
                                         </div>
                                         <div class="media-body">
-                                            <p class="text">
-                                                <strong>${titre}</strong>
-                                                ${message}
-                                            </p>
-                                            <span class="timestamp">${notif.date}</span>
+                                            <p class="notif-title">${titre}</p>
+                                            ${message ? `<p class="notif-message">${message}</p>` : ''}
+                                            <span class="timestamp"><i class="fa fa-clock-o" aria-hidden="true"></i> ${notif.date}</span>
                                         </div>
                                     </div>
                                 </a>
@@ -907,7 +915,7 @@
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             var logos = document.querySelectorAll('.app-logo-img');
             if (!logos.length) return;
-            var effects = ['fx-pulse', 'fx-float', 'fx-glow'];
+            var effects = ['fx-pulse', 'fx-glow'];
             var index = 0;
             var EFFECT_MS = 1800;
             var PAUSE_MS = 900;

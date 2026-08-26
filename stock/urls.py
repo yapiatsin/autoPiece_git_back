@@ -135,6 +135,9 @@ urlpatterns = [
     
     # URLs pour les notifications
     path('notifications/', get_notifications, name='get_notifications'),
+    path('notifications/liste/', ListeNotificationsView.as_view(), name='liste_notifications'),
+    path('notifications/<str:notification_id>/detail/', notification_detail, name='notification_detail'),
+    path('notifications/<str:notification_id>/delete/', notification_delete, name='notification_delete'),
     path('notifications/<str:notification_id>/marquer-lue/', marquer_notification_lue, name='marquer_notification_lue'),
     path('notifications/marquer-toutes-lues/', marquer_toutes_notifications_lues, name='marquer_toutes_notifications_lues'),
     
@@ -185,4 +188,15 @@ urlpatterns = [
     path('transferts/<int:demande_id>/imprimer/', imprimer_demande_transfert, name='imprimer_demande_transfert'),
     path('transferts/bon-livraison/<int:bon_id>/imprimer/', imprimer_bon_livraison, name='imprimer_bon_livraison'),
     path('transferts/ajax/livreurs/<uuid:local_pk>/', ajax_livreurs_localite, name='ajax_livreurs_localite'),
+
+    # Gestion des paramètres
+    path('parametres/', GestionParametreView.as_view(), name='gestion_parametre'),
+    path('parametres/tva/save/', parametre_tva_save, name='parametre_tva_save'),
+    path('parametres/tva/<int:pk>/toggle/', parametre_tva_toggle, name='parametre_tva_toggle'),
+    path('parametres/tva/<int:pk>/delete/', parametre_tva_delete, name='parametre_tva_delete'),
+    path('parametres/timbre/save/', bareme_timbre_save, name='bareme_timbre_save'),
+    path('parametres/timbre/<int:pk>/toggle/', bareme_timbre_toggle, name='bareme_timbre_toggle'),
+    path('parametres/timbre/<int:pk>/delete/', bareme_timbre_delete, name='bareme_timbre_delete'),
+    path('parametres/paiement/<int:pk>/toggle/', moyen_paiement_toggle, name='moyen_paiement_toggle'),
+    path('parametres/paiement/<int:pk>/delete/', moyen_paiement_delete, name='moyen_paiement_delete'),
 ]

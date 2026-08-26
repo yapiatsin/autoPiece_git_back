@@ -148,10 +148,16 @@
                                     </ul>
                                 </li>
                                 <li class="footer notifications-card-footer">
-                                    <a href="javascript:void(0);" id="marquerToutesLues" class="notifications-mark-all-btn">
-                                        <i class="fa fa-check" aria-hidden="true"></i>
-                                        Tout marquer comme lu
-                                    </a>
+                                    <div class="notifications-card-footer-actions">
+                                        <a href="javascript:void(0);" id="marquerToutesLues" class="notifications-mark-all-btn">
+                                            <i class="fa fa-check" aria-hidden="true"></i>
+                                            Tout marquer comme lu
+                                        </a>
+                                        <a href="{% url 'liste_notifications' %}" class="notifications-view-all-btn">
+                                            <i class="fa fa-list" aria-hidden="true"></i>
+                                            Voir tout
+                                        </a>
+                                    </div>
                                 </li>
                             </ul>
                         </li>
@@ -224,12 +230,11 @@
         <div id="main-content" style='background-color: #eaeaea46;'>
             <div class="container-fluid">
                 {% block header %}
-                    <div class="app-page-header">
+                    <div class="app-page-header app-page-header--breadcrumb-only">
                         <div class="app-page-header__grid">
                             <div class="app-page-header__info">
-                                <h2 class="app-page-header__title">{% block page_title %}Home{% endblock page_title %}</h2>
                                 <nav class="app-page-header__breadcrumb" aria-label="Fil d'Ariane">
-                                    <ol class="breadcrumb">
+                                    <ol class="breadcrumb mb-0">
                                         {% block breadcrumb %}
                                         <li class="breadcrumb-item">
                                             <a href="{% url 'tbord' %}"><i class="fa fa-chart-pie"></i> Tableau de bord</a>
@@ -562,7 +567,7 @@
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             var logos = document.querySelectorAll('.app-logo-img');
             if (!logos.length) return;
-            var effects = ['fx-pulse', 'fx-float', 'fx-glow'];
+            var effects = ['fx-pulse', 'fx-glow'];
             var index = 0;
             var EFFECT_MS = 1800;
             var PAUSE_MS = 900;

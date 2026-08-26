@@ -204,7 +204,7 @@ EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=30, cast=int)
 
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
-FRONTEND_URL = config('FRONTEND_URL', default='http://127.0.0.1:8002')
+FRONTEND_URL = config('FRONTEND_URL', default='http://127.0.0.1:8000')
 PUBLIC_BASE_URL = config('PUBLIC_BASE_URL', default='http://127.0.0.1:8000')
 
 # GeniusPay (paiements numériques e-com + caisse) — clés uniquement serveur

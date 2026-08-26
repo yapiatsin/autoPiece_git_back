@@ -224,6 +224,7 @@ def queryset_piece_fiche():
 
     qs = Piece.objects.select_related('categorie', 'sous_categorie').prefetch_related(
         Prefetch('stocks', queryset=stocks_qs, to_attr='stocks_disponibles'),
+        'images_supplementaires',
     )
     return filter_piece_catalogue_actif(qs).annotate(
         stock_total=Sum(
