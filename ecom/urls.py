@@ -18,6 +18,7 @@ from .views import (
     chat_api_history_conversations,
     chat_api_messages,
     chat_api_refuse,
+    chat_api_typing,
     chat_history,
     chat_inbox,
     chat_thread,
@@ -123,6 +124,7 @@ urlpatterns = [
     path('mag/chat/api/<int:conversation_id>/close/', chat_api_close, name='ecom_chat_api_close'),
     path('mag/chat/api/<int:conversation_id>/delete/', chat_api_delete, name='ecom_chat_api_delete'),
     path('mag/chat/api/<int:conversation_id>/messages/', chat_api_messages, name='ecom_chat_api_messages'),
+    path('mag/chat/api/<int:conversation_id>/typing/', chat_api_typing, name='ecom_chat_api_typing'),
     # Personnel magasin
     path('mag/commandes-ligne/', cmd_line, name='ecom_cmd_line'),
     path('mag/commandes-ligne/<str:commande_id>/detail/', ajax_cmd_line_detail, name='ecom_cmd_line_detail'),

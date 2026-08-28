@@ -11,6 +11,12 @@ from django.utils import timezone
 from Userauths.models import CustomUser
 from stock.models import Notification
 
+from .chat_typing import (
+    clear_typing,
+    publish_typing_event,
+    set_typing,
+    typing_payload_for_viewer,
+)
 from .models import ChatConversation, ChatMessage
 from .services import ROLES_STAFF_CMD, get_local_from_session
 
@@ -178,6 +184,7 @@ def serialize_conversation(
     *,
     include_messages: bool = True,
     for_client: bool = False,
+    viewer_role: str | None = None,
 ) -> dict:
     data = {
         'id': conv.pk,
@@ -203,6 +210,9 @@ def serialize_conversation(
                 serialize_message(m) for m in conv.messages.order_by('created_at')
             ]
             data['messages_hidden'] = False
+    if viewer_role in ('client', 'staff'):
+        conv.refresh_from_db(fields=['client_typing_at', 'staff_typing_at'])
+        data.update(typing_payload_for_viewer(conv, viewer_role))
     return data
 
 
@@ -284,6 +294,9 @@ def client_send_message(request, body: str) -> tuple[ChatConversation, ChatMessa
             body=PENDING_CLIENT_MESSAGE,
         )
         notify_staff_new_chat(conv, body, request=request)
+
+    clear_typing(conv, 'client')
+    publish_typing_event(conv.pk, who='client', typing=False)
 
     return conv, msg
 
@@ -393,6 +406,8 @@ def staff_send_message(conversation: ChatConversation, staff_user, body: str) ->
         conversation.save(update_fields=['last_message_at', 'staff', 'updated_at'])
     else:
         conversation.save(update_fields=['last_message_at', 'updated_at'])
+    clear_typing(conversation, 'staff')
+    publish_typing_event(conversation.pk, who='staff', typing=False)
     return msg
 
 
@@ -503,7 +518,12 @@ def conversation_thread_payload(request) -> dict:
             'can_start_new': False,
             'messages_hidden': False,
         }
-    data = serialize_conversation(conv, include_messages=True, for_client=True)
+    data = serialize_conversation(
+        conv,
+        include_messages=True,
+        for_client=True,
+        viewer_role='client',
+    )
     show_chips = conv.status == ChatConversation.STATUS_REFUSED
     can_send = conv.status in OPEN_STATUSES
     can_start_new = conv.status == ChatConversation.STATUS_CLOSED
@@ -518,4 +538,36 @@ def conversation_thread_payload(request) -> dict:
         'can_send': can_send,
         'can_start_new': can_start_new,
         'messages_hidden': data.get('messages_hidden', False),
+        'typing': data.get('typing', False),
+        'typing_label': data.get('typing_label'),
     }
+
+
+def client_signal_typing(request) -> dict | None:
+    """Pulse « en train d'écrire » côté client."""
+    conv = get_current_conversation(request)
+    if conv is None or conv.status not in OPEN_STATUSES:
+        return None
+    client = _client_user(request)
+    set_typing(conv, 'client')
+    publish_typing_event(
+        conv.pk,
+        who='client',
+        typing=True,
+        label='Client écrit…',
+    )
+    return {'conversation_id': conv.pk}
+
+
+def staff_signal_typing(conversation: ChatConversation, staff_user) -> None:
+    """Pulse « en train d'écrire » côté staff."""
+    if conversation.status != ChatConversation.STATUS_ACTIVE:
+        return
+    set_typing(conversation, 'staff')
+    staff_name = staff_user.get_full_name() or staff_user.username or 'Conseiller'
+    publish_typing_event(
+        conversation.pk,
+        who='staff',
+        typing=True,
+        label=f'{staff_name} écrit…',
+    )

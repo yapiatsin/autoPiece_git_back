@@ -17,12 +17,18 @@
   var newWrap = document.getElementById('contact-chatbot-new-wrap');
   var newBtn = document.getElementById('contact-chatbot-new');
   var statusEl = document.getElementById('contact-chatbot-status');
+  var typingEl = document.getElementById('contact-chatbot-typing');
+  var typingLabelEl = typingEl ? typingEl.querySelector('.contact-chatbot__typing-label') : null;
   var scrollEl = chatPanel.querySelector('.contact-chatbot__scroll');
   var pollTimer = null;
   var lastMessageIds = '';
   var knownStatus = null;
   var knownFlags = '';
+  var knownTyping = '';
   var sending = false;
+  var currentConversationId = null;
+  var lastTypingSent = 0;
+  var typingPulseTimer = null;
 
   var STATUS_LABELS = {
     pending: 'Un conseiller va prendre en charge…',
@@ -145,6 +151,63 @@
     chipsEl.hidden = !show;
   }
 
+  function renderTypingBubble(show, label) {
+    if (!bodyEl) return;
+    var existing = bodyEl.querySelector('[data-chat-typing]');
+    if (existing) existing.remove();
+    if (typingEl) typingEl.hidden = true;
+    if (!show) {
+      knownTyping = '';
+      return;
+    }
+    var text = label || 'Écrit…';
+    var el = document.createElement('div');
+    el.className = 'contact-chatbot__bubble contact-chatbot__bubble--staff contact-chatbot__bubble--typing';
+    el.setAttribute('data-chat-typing', '1');
+    el.innerHTML =
+      '<span>' + text + '</span>' +
+      '<span class="contact-chatbot__typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>';
+    bodyEl.appendChild(el);
+    knownTyping = text;
+    if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+  }
+
+  function showTypingIndicator(show, label) {
+    renderTypingBubble(show, label);
+  }
+
+  function handleTypingEvent(payload) {
+    if (!payload || !currentConversationId) return;
+    if (String(payload.conversation_id) !== String(currentConversationId)) return;
+    if (payload.who !== 'staff') return;
+    showTypingIndicator(!!payload.typing, payload.label || 'Conseiller écrit…');
+  }
+
+  function signalTyping() {
+    var now = Date.now();
+    if (now - lastTypingSent < 1000) return;
+    lastTypingSent = now;
+    fetch(threadUrl, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken()
+      },
+      body: JSON.stringify({ action: 'typing' })
+    }).catch(function () {});
+  }
+
+  function scheduleTypingPulse() {
+    signalTyping();
+    if (typingPulseTimer) clearTimeout(typingPulseTimer);
+    typingPulseTimer = setTimeout(function () {
+      var input = chatForm ? chatForm.querySelector('input[name="message"]') : null;
+      if (input && input.value.trim()) signalTyping();
+    }, 1400);
+  }
+
   function setNewVisible(show) {
     if (!newWrap) return;
     newWrap.hidden = !show;
@@ -170,6 +233,8 @@
     lastMessageIds = '';
     knownStatus = null;
     knownFlags = '';
+    currentConversationId = null;
+    showTypingIndicator(false);
   }
 
   function renderThread(data) {
@@ -180,8 +245,12 @@
     var canSend = data && data.can_send !== false;
     var canStartNew = !!(data && data.can_start_new);
     var messagesHidden = !!(data && data.messages_hidden);
+    var typing = !!(data && data.typing);
+    var typingLabel = (data && data.typing_label) || 'Conseiller écrit…';
     var ids = messages.map(function (m) { return m.id; }).join(',');
-    var flags = [showChips, canSend, canStartNew, messagesHidden].join('|');
+    var flags = [showChips, canSend, canStartNew, messagesHidden, typing, typingLabel].join('|');
+
+    currentConversationId = (data && data.conversation && data.conversation.id) || data.conversation_id || currentConversationId;
 
     if (statusEl) {
       statusEl.textContent = STATUS_LABELS[status] || 'En ligne · répond rapidement';
@@ -196,6 +265,7 @@
       setChipsVisible(showChips);
       setNewVisible(canStartNew);
       setFormVisible(canSend && !canStartNew);
+      renderTypingBubble(typing, typingLabel);
       return;
     }
 
@@ -214,12 +284,14 @@
       setChipsVisible(false);
       setNewVisible(true);
       setFormVisible(false);
+      renderTypingBubble(false);
       return;
     }
 
     if (!messages.length) {
       renderWelcome();
       setChipsVisible(showChips || true);
+      renderTypingBubble(typing, typingLabel);
       return;
     }
 
@@ -233,6 +305,7 @@
     setChipsVisible(showChips);
     setNewVisible(canStartNew);
     setFormVisible(canSend && !canStartNew);
+    renderTypingBubble(typing, typingLabel);
     if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
   }
 
@@ -252,6 +325,7 @@
   function sendMessage(text) {
     if (sending || !text) return;
     sending = true;
+    showTypingIndicator(false);
     var token = csrfToken();
     fetch(threadUrl, {
       method: 'POST',
@@ -266,8 +340,13 @@
       .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
       .then(function (res) {
         sending = false;
-        if (res.data) renderThread(res.data);
-        else refreshThread();
+        if (res.data) {
+          if (res.data.conversation_id) currentConversationId = res.data.conversation_id;
+          if (res.data.conversation && res.data.conversation.id) {
+            currentConversationId = res.data.conversation.id;
+          }
+          renderThread(res.data);
+        } else refreshThread();
       })
       .catch(function () {
         sending = false;
@@ -319,6 +398,22 @@
       input.value = '';
       sendMessage(text);
     });
+    var chatInput = chatForm.querySelector('input[name="message"]');
+    if (chatInput) {
+      chatInput.addEventListener('input', scheduleTypingPulse);
+      chatInput.addEventListener('blur', function () {
+        if (typingPulseTimer) clearTimeout(typingPulseTimer);
+      });
+    }
+  }
+
+  if (window.ecomChatPusher) {
+    try {
+      var chatChannel = window.ecomChatPusher.subscribe('magasin-chat');
+      chatChannel.bind('typing', function (payload) {
+        handleTypingEvent(payload);
+      });
+    } catch (e) {}
   }
 
   if (newBtn) {

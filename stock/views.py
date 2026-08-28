@@ -144,9 +144,12 @@ def queryset_categories_avec_sous(actif_only=True):
     sous_qs = SousCategorie.objects.order_by('ordre', 'nom')
     if actif_only:
         sous_qs = sous_qs.filter(actif=True)
-    return Categorie.objects.prefetch_related(
+    qs = Categorie.objects.prefetch_related(
         Prefetch('sous_categories', queryset=sous_qs)
     ).order_by('categorie')
+    if actif_only:
+        qs = qs.filter(actif=True)
+    return qs
 
 
 def utilisateur_peut_fixer_prix_local(user):

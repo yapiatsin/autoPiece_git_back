@@ -228,8 +228,9 @@ body:not(.ecom-invoice-body) .progress-wrap {
   align-items: center;
   gap: 10px;
   padding: 14px 14px 12px;
-  background: linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%);
-  color: #fff;
+  background: #fff;
+  color: #222;
+  border-bottom: 1px solid #ececec;
 }
 
 .contact-chatbot__avatar {
@@ -261,7 +262,7 @@ body:not(.ecom-invoice-body) .progress-wrap {
   display: block;
   margin-top: 2px;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #6b7280;
 }
 
 .contact-chatbot__close {
@@ -270,14 +271,15 @@ body:not(.ecom-invoice-body) .progress-wrap {
   height: 32px;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: #f3f4f6;
+  color: #555;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .contact-chatbot__close:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #e5e7eb;
+  color: #222;
 }
 
 .contact-chatbot__body {
@@ -378,6 +380,72 @@ body:not(.ecom-invoice-body) .progress-wrap {
   border: 1px solid #ffe0b8;
   color: #6a4a1a;
   font-size: 12px;
+}
+
+.contact-chatbot__bubble--typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px 14px 14px 4px;
+  background: #fff;
+  border: 1px solid #ececec;
+  color: #6b7280;
+  font-size: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
+}
+
+.contact-chatbot__typing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #ececec;
+  color: #6b7280;
+  font-size: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
+}
+
+.contact-chatbot__typing[hidden] {
+  display: none !important;
+}
+
+.contact-chatbot__typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.contact-chatbot__typing-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .35;
+  animation: contact-chat-typing-bounce 1.2s infinite ease-in-out;
+}
+
+.contact-chatbot__typing-dots i:nth-child(2) {
+  animation-delay: .15s;
+}
+
+.contact-chatbot__typing-dots i:nth-child(3) {
+  animation-delay: .3s;
+}
+
+@keyframes contact-chat-typing-bounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: .35;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
 }
 
 .contact-chatbot__chip {

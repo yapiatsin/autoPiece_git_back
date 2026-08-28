@@ -186,6 +186,7 @@ class CommuneLivraison(models.Model):
     def __str__(self):
         return f'{self.nom} ({self.ville.nom})'
 
+
 class ChatConversation(models.Model):
     """Conversation chatbot e-commerce (client ↔ staff, IA plus tard)."""
 
@@ -236,6 +237,8 @@ class ChatConversation(models.Model):
     subject = models.CharField(max_length=255, blank=True, default='')
     last_message_at = models.DateTimeField(null=True, blank=True, db_index=True)
     closed_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    client_typing_at = models.DateTimeField(null=True, blank=True)
+    staff_typing_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

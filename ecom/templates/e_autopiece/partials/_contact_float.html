@@ -17,7 +17,7 @@
 
 <div class="contact-chatbot" id="contact-chatbot" hidden
      data-thread-url="{% url 'ecom_chat_thread' %}"
-     data-poll-ms="4000">
+     data-poll-ms="1500">
     <div class="contact-chatbot__panel" role="dialog" aria-labelledby="contact-chatbot-title" aria-modal="true">
         <div class="contact-chatbot__head">
             <div class="contact-chatbot__avatar" aria-hidden="true"><i class="fa-solid fa-comments"></i></div>
@@ -34,6 +34,10 @@
                 <div class="contact-chatbot__bubble contact-chatbot__bubble--bot" data-welcome="1">
                     {% trans "Bonjour ! Comment puis-je vous aider aujourd’hui ?" %}
                 </div>
+            </div>
+            <div class="contact-chatbot__typing" id="contact-chatbot-typing" hidden aria-live="polite">
+                <span class="contact-chatbot__typing-label">{% trans "Écrit…" %}</span>
+                <span class="contact-chatbot__typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>
             </div>
             <div class="contact-chatbot__actions" id="contact-chatbot-chips" data-chips="1">
                 <a href="{% url 'ecom_support' %}" class="contact-chatbot__chip">{% trans 'Centre d’assistance' %}</a>
@@ -53,3 +57,14 @@
         </form>
     </div>
 </div>
+{% if PUSHER_KEY %}
+<script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+<script>
+(function () {
+    if (typeof Pusher === 'undefined' || window.ecomChatPusher) return;
+    window.ecomChatPusher = new Pusher('{{ PUSHER_KEY|escapejs }}', {
+        cluster: '{{ PUSHER_CLUSTER|default:"eu"|escapejs }}'
+    });
+})();
+</script>
+{% endif %}

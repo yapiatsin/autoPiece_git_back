@@ -1,5 +1,5 @@
 {% load static i18n %}
-<div class="rts-navigation-area-breadcrumb bg_light-1">
+<div class="rts-navigation-area-breadcrumb bg_light-1 ecom-pd-breadcrumb">
     <div class="container">
         <div class="navigator-breadcrumb-wrapper">
             <a href="{% url 'ecom_index' %}">{% trans "Accueil" %}</a>
@@ -37,11 +37,13 @@
                     </a>
                     {% endif %}
                     <div class="ecom-pd-zoom__frame">
-                        <img src="{{ gallery.0.url }}" alt="{{ gallery.0.alt }}" class="ecom-pd-zoom__img">
+                        <img src="{{ gallery.0.url }}" alt="{{ gallery.0.alt }}" class="ecom-pd-zoom__img" data-ecom-zoom-img>
+                        <div class="ecom-pd-zoom__lens" aria-hidden="true"></div>
                     </div>
                 </div>
                 {% if gallery|length > 1 %}
-                <div class="ecom-pd__thumbs" role="tablist" aria-label="{% trans 'Images du produit' %}">
+                <div class="ecom-pd__thumbs-wrap">
+                    <div class="ecom-pd__thumbs" role="tablist" aria-label="{% trans 'Images du produit' %}">
                     {% for img in gallery %}
                     <button type="button"
                         class="ecom-pd__thumb{% if forloop.first %} is-active{% endif %}"
@@ -52,6 +54,7 @@
                         <img src="{{ img.url }}" alt="{{ img.alt }}">
                     </button>
                     {% endfor %}
+                    </div>
                 </div>
                 {% endif %}
                 {% else %}
@@ -406,15 +409,63 @@
     if (!gallery) return;
 
     var stage = gallery.querySelector('[data-ecom-zoom]');
-    var img = gallery.querySelector('.ecom-pd-zoom__img');
+    var img = gallery.querySelector('[data-ecom-zoom-img]');
     var frame = gallery.querySelector('.ecom-pd-zoom__frame');
+    var lens = gallery.querySelector('.ecom-pd-zoom__lens');
     var thumbs = gallery.querySelectorAll('.ecom-pd__thumb[data-ecom-gallery-src]');
+    var zoomLevel = 2.4;
+    var touchZooming = false;
+
+    function getLensSize() {
+        if (window.matchMedia('(max-width: 575px)').matches) return 100;
+        if (window.matchMedia('(max-width: 991px)').matches) return 110;
+        return 130;
+    }
 
     function resetZoom() {
-        if (!stage || !img) return;
+        if (!stage) return;
         stage.classList.remove('is-zooming');
-        img.style.transform = 'scale(1)';
-        img.style.transformOrigin = 'center center';
+        touchZooming = false;
+        if (lens) {
+            lens.style.opacity = '0';
+            lens.style.backgroundImage = '';
+        }
+    }
+
+    function pointerCoords(event) {
+        if (event.touches && event.touches.length) {
+            return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        }
+        return { x: event.clientX, y: event.clientY };
+    }
+
+    function updateLens(event) {
+        if (!stage || !img || !frame || !lens || !img.src) return;
+        var rect = frame.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+
+        var point = pointerCoords(event);
+        var x = point.x - rect.left;
+        var y = point.y - rect.top;
+        if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+            resetZoom();
+            return;
+        }
+
+        var lensSize = getLensSize();
+        var half = lensSize / 2;
+        var lensX = Math.max(0, Math.min(rect.width - lensSize, x - half));
+        var lensY = Math.max(0, Math.min(rect.height - lensSize, y - half));
+
+        lens.style.width = lensSize + 'px';
+        lens.style.height = lensSize + 'px';
+        lens.style.left = lensX + 'px';
+        lens.style.top = lensY + 'px';
+        lens.style.backgroundImage = 'url("' + img.src + '")';
+        lens.style.backgroundSize = (rect.width * zoomLevel) + 'px ' + (rect.height * zoomLevel) + 'px';
+        lens.style.backgroundPosition = (-(x * zoomLevel - half)) + 'px ' + (-(y * zoomLevel - half)) + 'px';
+        lens.style.opacity = '1';
+        stage.classList.add('is-zooming');
     }
 
     thumbs.forEach(function (thumb) {
@@ -431,30 +482,31 @@
             });
             thumb.classList.add('is-active');
             thumb.setAttribute('aria-selected', 'true');
+            thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             resetZoom();
         });
     });
 
-    if (!stage || !img || !frame) return;
-    if (window.matchMedia('(hover: none)').matches) return;
+    if (!stage || !img || !frame || !lens) return;
 
-    var scale = 2.5;
-
-    function zoomAt(event) {
-        var rect = frame.getBoundingClientRect();
-        var x = ((event.clientX - rect.left) / rect.width) * 100;
-        var y = ((event.clientY - rect.top) / rect.height) * 100;
-        x = Math.max(0, Math.min(100, x));
-        y = Math.max(0, Math.min(100, y));
-        img.style.transformOrigin = x + '% ' + y + '%';
-        img.style.transform = 'scale(' + scale + ')';
-    }
-
-    stage.addEventListener('mouseenter', function (event) {
-        stage.classList.add('is-zooming');
-        zoomAt(event);
-    });
-    stage.addEventListener('mousemove', zoomAt);
+    stage.addEventListener('mouseenter', updateLens);
+    stage.addEventListener('mousemove', updateLens);
     stage.addEventListener('mouseleave', resetZoom);
+
+    stage.addEventListener('touchstart', function (event) {
+        if (!event.touches || event.touches.length !== 1) return;
+        touchZooming = true;
+        updateLens(event);
+    }, { passive: true });
+
+    stage.addEventListener('touchmove', function (event) {
+        if (!touchZooming || !event.touches || event.touches.length !== 1) return;
+        updateLens(event);
+    }, { passive: true });
+
+    stage.addEventListener('touchend', resetZoom);
+    stage.addEventListener('touchcancel', resetZoom);
+
+    window.addEventListener('resize', resetZoom);
 })();
 </script>

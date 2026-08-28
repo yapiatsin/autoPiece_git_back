@@ -6,6 +6,7 @@ Canaux Pusher :
   magasin-paiement         event: valide
   magasin-transfert        event: demande
   magasin-commande-ligne   event: update
+  magasin-chat             event: typing
 """
 import logging
 import threading
@@ -19,6 +20,7 @@ CHANNEL_PANIER = "magasin-panier"
 CHANNEL_PAIEMENT = "magasin-paiement"
 CHANNEL_TRANSFERT = "magasin-transfert"
 CHANNEL_CMD_LIGNE = "magasin-commande-ligne"
+CHANNEL_CHAT = "magasin-chat"
 
 _client = None
 _client_lock = threading.Lock()
@@ -139,6 +141,20 @@ def publish_transfert_demande(
             "local_donneur_id": str(local_donneur_id) if local_donneur_id else None,
             "local_demandeur_id": str(local_demandeur_id) if local_demandeur_id else None,
             "statut": statut,
+        },
+    )
+
+
+def publish_chat_typing(conversation_id, who, typing, label=None):
+    """Notifie le chat qu'un participant est en train d'écrire."""
+    _trigger(
+        CHANNEL_CHAT,
+        "typing",
+        {
+            "conversation_id": int(conversation_id),
+            "who": who,
+            "typing": bool(typing),
+            "label": label,
         },
     )
 

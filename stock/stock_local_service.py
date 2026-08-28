@@ -19,6 +19,18 @@ def filter_piece_catalogue_actif(queryset):
     return queryset.filter(Q(active_sortie=True) | Q(active_sortie__isnull=True))
 
 
+def filter_categories_actives(queryset):
+    """Catégories visibles boutique / vente."""
+    return queryset.filter(actif=True)
+
+
+def filter_pieces_categories_actives(queryset):
+    """Pièces dont la catégorie (et sous-catégorie le cas échéant) est active."""
+    return queryset.filter(categorie__actif=True).filter(
+        Q(sous_categorie__isnull=True) | Q(sous_categorie__actif=True)
+    )
+
+
 def annotate_archive_info(queryset, local_entrepot: LocalEntrepot | None):
     """Annoter les infos d'archivage (utilisateur / localité) pour l'affichage."""
     qs = queryset.select_related('archive_par')
@@ -67,8 +79,12 @@ def piece_active_sortie_local(piece: Piece, local_entrepot: LocalEntrepot | None
 
 
 def piece_visible_en_localite(piece: Piece, local_entrepot: LocalEntrepot | None) -> bool:
-    """Visible à la vente : catalogue actif ET (pas de localité OU stock local actif)."""
+    """Visible à la vente : catalogue actif ET catégorie active ET stock local actif."""
     if not piece_catalogue_actif(piece):
+        return False
+    if piece.categorie_id and not getattr(piece.categorie, 'actif', True):
+        return False
+    if piece.sous_categorie_id and not getattr(piece.sous_categorie, 'actif', True):
         return False
     if local_entrepot is None:
         return True

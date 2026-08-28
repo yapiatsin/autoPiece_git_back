@@ -9,8 +9,10 @@ from .models import (
 
 @admin.register(Categorie)
 class CategorieAdmin(admin.ModelAdmin):
-    list_display = ['cid', 'categorie']
+    list_display = ['cid', 'categorie', 'actif']
+    list_filter = ['actif']
     search_fields = ['cid', 'categorie']
+    list_editable = ['actif']
 
 
 @admin.register(SousCategorie)

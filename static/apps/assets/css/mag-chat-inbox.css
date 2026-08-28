@@ -480,6 +480,80 @@ body.mag-ecom-body:has(.mag-chat-inbox-page) #main-content.mag-ecom-main > .cont
   cursor: not-allowed;
 }
 
+.mag-chat-bubble--typing,
+.contact-chatbot__bubble--typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  max-width: min(72%, 520px);
+  font-size: 12px;
+  color: #6b7280;
+  background: #fff;
+  border: 1px solid #e8eaed;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
+}
+
+.mag-chat-typing,
+.contact-chatbot__typing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin: 4px 0 8px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--chat-border, #e8eaed);
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.2;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
+}
+
+.mag-chat-typing[hidden],
+.contact-chatbot__typing[hidden] {
+  display: none !important;
+}
+
+.mag-chat-typing__dots,
+.contact-chatbot__typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.mag-chat-typing__dots i,
+.contact-chatbot__typing-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .35;
+  animation: mag-chat-typing-bounce 1.2s infinite ease-in-out;
+}
+
+.mag-chat-typing__dots i:nth-child(2),
+.contact-chatbot__typing-dots i:nth-child(2) {
+  animation-delay: .15s;
+}
+
+.mag-chat-typing__dots i:nth-child(3),
+.contact-chatbot__typing-dots i:nth-child(3) {
+  animation-delay: .3s;
+}
+
+@keyframes mag-chat-typing-bounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: .35;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
 @media (max-width: 1100px) {
   .mag-chat-page {
     grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);

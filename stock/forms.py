@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Q
 from .models import (
     Categorie, SousCategorie, EntrePiece, Piece, Fournisseur, MoyenPaiement, StockLocal,
     ParametreTVA, BaremeTimbre,
@@ -46,7 +47,7 @@ class DateForm(forms.Form):
 class CategorieForm(forms.ModelForm):
     class Meta:
         model = Categorie
-        fields = ('categorie', 'description', 'image',)
+        fields = ('categorie', 'description', 'image', 'actif')
         widgets = {
             'categorie': forms.TextInput(attrs={'class':'form-control',"placeholder":"Nom de la categorie"}),
             'description': forms.Textarea(attrs={'class':'form-control',"placeholder":"Description...","row":"3"}),
@@ -54,6 +55,7 @@ class CategorieForm(forms.ModelForm):
                 'class': 'form-control',
                 'accept': 'image/*',
             }),
+            'actif': forms.CheckboxInput(attrs={'id': 'id_categorie_actif'}),
         }
 
 
@@ -71,6 +73,10 @@ class SousCategorieForm(forms.ModelForm):
             'ordre': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
             'actif': forms.CheckboxInput(attrs={'id': 'id_sous_categorie_actif'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['categorie'].queryset = Categorie.objects.filter(actif=True).order_by('categorie')
 
 
 def _sous_categorie_queryset(categorie=None):
@@ -140,6 +146,12 @@ class UpdatePieceForm(forms.ModelForm):
         self.fields['sous_categorie'].queryset = _sous_categorie_queryset()
         self.fields['sous_categorie'].required = False
         self.fields['sous_categorie'].empty_label = 'Aucune'
+        cat_qs = Categorie.objects.filter(actif=True)
+        if self.instance.pk and self.instance.categorie_id:
+            cat_qs = Categorie.objects.filter(
+                Q(actif=True) | Q(pk=self.instance.categorie_id)
+            )
+        self.fields['categorie'].queryset = cat_qs.order_by('categorie')
         self.fields['image'].required = False
         self.fields['emplacement'].required = False
         for name in ('prix_achat', 'prix_unitaire'):

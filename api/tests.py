@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from Userauths.models import CustomUser, LocalEntrepot, ProfilUser
-from stock.models import Categorie, Piece
+from stock.models import Categorie, Piece, StockLocal
 
 
 class APIV1PublicTests(APITestCase):
@@ -30,6 +30,55 @@ class APIV1PublicTests(APITestCase):
     def test_legacy_api_deprecated(self):
         response = self.client.get('/api/')
         self.assertEqual(response.status_code, 410)
+
+
+class APIV1CategorieActifTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.local = LocalEntrepot.objects.create(nom='Cat Actif Local')
+        cls.cat_active = Categorie.objects.create(categorie='Active Cat', actif=True)
+        cls.cat_inactive = Categorie.objects.create(categorie='Inactive Cat', actif=False)
+        cls.piece_active = Piece.objects.create(
+            categorie=cls.cat_active,
+            numero_piece='ACT-001',
+            designation='Piece active',
+            prix_achat=100,
+            prix_unitaire=500,
+            active_sortie=True,
+        )
+        cls.piece_inactive = Piece.objects.create(
+            categorie=cls.cat_inactive,
+            numero_piece='INA-001',
+            designation='Piece inactive cat',
+            prix_achat=100,
+            prix_unitaire=500,
+            active_sortie=True,
+        )
+        for piece in (cls.piece_active, cls.piece_inactive):
+            StockLocal.objects.create(
+                piece=piece,
+                local_entrepot=cls.local,
+                quantite_disponible=5,
+                active_sortie=True,
+            )
+
+    def test_inactive_category_excluded_from_catalog(self):
+        response = self.client.get('/api/v1/catalog/categories/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        names = [row['categorie'] for row in response.data['results']]
+        self.assertIn('Active Cat', names)
+        self.assertNotIn('Inactive Cat', names)
+
+    def test_inactive_category_products_excluded_from_listing(self):
+        response = self.client.get('/api/v1/catalog/products/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data['results']]
+        self.assertIn(self.piece_active.pk, ids)
+        self.assertNotIn(self.piece_inactive.pk, ids)
+
+    def test_inactive_category_product_detail_not_found(self):
+        response = self.client.get(f'/api/v1/catalog/products/{self.piece_inactive.pk}/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class APIV1AuthTests(APITestCase):

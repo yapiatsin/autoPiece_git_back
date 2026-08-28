@@ -23,6 +23,7 @@ class Categorie(models.Model):
     categorie = models.CharField(unique=True, max_length=50)
     image = models.ImageField(upload_to="vehicules", blank=True, null=True, default='favicon.ico')
     description = models.TextField(max_length=2000, null=True, blank=True)
+    actif = models.BooleanField(default=True)
     history = HistoricalRecords()
     def __str__(self):
         return f"{self.categorie}"
@@ -32,6 +33,7 @@ class Categorie(models.Model):
             'id': self.pk,
             'cid': self.cid,
             'categorie': self.categorie,
+            'actif': self.actif,
         }
         if with_sous:
             data['sous_categories'] = [

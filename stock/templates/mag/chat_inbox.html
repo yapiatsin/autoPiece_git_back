@@ -96,7 +96,8 @@
          data-refuse-url-template="{% url 'ecom_chat_api_refuse' 0 %}"
          data-close-url-template="{% url 'ecom_chat_api_close' 0 %}"
          data-messages-url-template="{% url 'ecom_chat_api_messages' 0 %}"
-         data-poll-ms="4000"
+         data-typing-url-template="{% url 'ecom_chat_api_typing' 0 %}"
+         data-poll-ms="1500"
          data-pending-count="{{ pending_count|default:0 }}">
       <aside class="mag-chat-list">
         <div class="mag-chat-list__head">
@@ -131,6 +132,10 @@
             </div>
           </div>
           <div class="mag-chat-thread" id="mag-chat-thread"></div>
+          <div class="mag-chat-typing" id="mag-chat-typing" hidden aria-live="polite">
+            <span id="mag-chat-typing-label">Écrit…</span>
+            <span class="mag-chat-typing__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          </div>
           <p class="mag-chat-error" id="mag-chat-error" hidden></p>
           <form class="mag-chat-composer" id="mag-chat-composer" autocomplete="off" hidden>
             {% csrf_token %}
@@ -160,7 +165,8 @@
   var refuseTpl = root.getAttribute('data-refuse-url-template');
   var closeTpl = root.getAttribute('data-close-url-template');
   var messagesTpl = root.getAttribute('data-messages-url-template');
-  var pollMs = parseInt(root.getAttribute('data-poll-ms') || '4000', 10) || 4000;
+  var typingTpl = root.getAttribute('data-typing-url-template');
+  var pollMs = parseInt(root.getAttribute('data-poll-ms') || '2000', 10) || 2000;
 
   var itemsEl = document.getElementById('mag-chat-items');
   var badgeEl = document.getElementById('mag-chat-pending-badge');
@@ -171,6 +177,8 @@
   var pendingActions = document.getElementById('mag-chat-pending-actions');
   var activeActions = document.getElementById('mag-chat-active-actions');
   var threadEl = document.getElementById('mag-chat-thread');
+  var typingEl = document.getElementById('mag-chat-typing');
+  var typingLabelEl = document.getElementById('mag-chat-typing-label');
   var composer = document.getElementById('mag-chat-composer');
   var inputEl = document.getElementById('mag-chat-input');
   var errorEl = document.getElementById('mag-chat-error');
@@ -182,6 +190,8 @@
   var filterStatus = '';
   var pollTimer = null;
   var lastThreadKey = '';
+  var lastTypingSent = 0;
+  var typingPulseTimer = null;
 
   var STATUS_LABELS = {
     pending: 'En attente',
@@ -264,6 +274,48 @@
     });
   }
 
+  function renderTypingBubble(show, label) {
+    if (!threadEl) return;
+    var existing = threadEl.querySelector('[data-chat-typing]');
+    if (existing) existing.remove();
+    if (!show) return;
+    var el = document.createElement('div');
+    el.className = 'mag-chat-bubble mag-chat-bubble--client mag-chat-bubble--typing';
+    el.setAttribute('data-chat-typing', '1');
+    el.innerHTML =
+      '<span>' + (label || 'Écrit…') + '</span>' +
+      '<span class="mag-chat-typing__dots" aria-hidden="true"><i></i><i></i><i></i></span>';
+    threadEl.appendChild(el);
+    threadEl.scrollTop = threadEl.scrollHeight;
+    if (typingEl) typingEl.hidden = true;
+  }
+
+  function showTypingIndicator(show, label) {
+    renderTypingBubble(show, label);
+  }
+
+  function handleTypingEvent(payload) {
+    if (!payload || String(payload.conversation_id) !== String(selectedId)) return;
+    if (payload.who !== 'client') return;
+    showTypingIndicator(!!payload.typing, payload.label || 'Client écrit…');
+  }
+
+  function signalTyping() {
+    if (!selectedId || !typingTpl) return;
+    var now = Date.now();
+    if (now - lastTypingSent < 1200) return;
+    lastTypingSent = now;
+    postAction(urlFor(typingTpl, selectedId)).catch(function () {});
+  }
+
+  function scheduleTypingPulse() {
+    signalTyping();
+    if (typingPulseTimer) clearTimeout(typingPulseTimer);
+    typingPulseTimer = setTimeout(function () {
+      if (inputEl && inputEl.value.trim()) signalTyping();
+    }, 1400);
+  }
+
   function bubbleClass(type) {
     if (type === 'staff') return 'mag-chat-bubble mag-chat-bubble--staff';
     if (type === 'system' || type === 'bot') return 'mag-chat-bubble mag-chat-bubble--system';
@@ -283,16 +335,18 @@
       composer.hidden = true;
       if (activeActions) activeActions.hidden = true;
     }
-    var key = (conv.messages || []).map(function (m) { return m.id; }).join(',') + '|' + conv.status;
-    if (key === lastThreadKey) return;
-    lastThreadKey = key;
-    threadEl.innerHTML = '';
-    (conv.messages || []).forEach(function (m) {
-      var el = document.createElement('div');
-      el.className = bubbleClass(m.sender_type);
-      el.textContent = m.body || '';
-      threadEl.appendChild(el);
-    });
+    var msgKey = (conv.messages || []).map(function (m) { return m.id; }).join(',') + '|' + conv.status;
+    if (msgKey !== lastThreadKey) {
+      lastThreadKey = msgKey;
+      threadEl.innerHTML = '';
+      (conv.messages || []).forEach(function (m) {
+        var el = document.createElement('div');
+        el.className = bubbleClass(m.sender_type);
+        el.textContent = m.body || '';
+        threadEl.appendChild(el);
+      });
+    }
+    renderTypingBubble(!!conv.typing, conv.typing_label || 'Client écrit…');
     threadEl.scrollTop = threadEl.scrollHeight;
     showError('');
   }
@@ -409,6 +463,7 @@
       if (!selectedId || !inputEl || !inputEl.value.trim()) return;
       var text = inputEl.value.trim();
       inputEl.value = '';
+      showTypingIndicator(false);
       postAction(urlFor(messagesTpl, selectedId), { message: text })
         .then(function (res) {
           if (!res.ok) {
@@ -420,6 +475,21 @@
           refreshList();
         });
     });
+    if (inputEl) {
+      inputEl.addEventListener('input', scheduleTypingPulse);
+      inputEl.addEventListener('blur', function () {
+        if (typingPulseTimer) clearTimeout(typingPulseTimer);
+      });
+    }
+  }
+
+  if (window.magPusher) {
+    try {
+      var chatChannel = window.magPusher.subscribe('magasin-chat');
+      chatChannel.bind('typing', function (payload) {
+        handleTypingEvent(payload);
+      });
+    } catch (e) {}
   }
 
   root.querySelectorAll('.mag-chat-filter').forEach(function (btn) {

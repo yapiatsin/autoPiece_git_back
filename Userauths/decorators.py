@@ -3,10 +3,44 @@ Décorateurs pour la gestion des permissions personnalisées
 """
 from functools import wraps
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import resolve
 from .permissions_utils import get_permission_name_from_url, user_has_permission
+
+
+def superuser_required(view_func):
+    """Accès réservé aux superutilisateurs Django."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('connexion')
+        if not request.user.is_superuser:
+            message = 'Accès réservé aux administrateurs.'
+            is_ajax = (
+                request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                or request.GET.get('ajax') == '1'
+            )
+            if is_ajax:
+                html = render_to_string(
+                    'page/access_denied_modal.html',
+                    {'message': message},
+                    request=request,
+                )
+                return JsonResponse({
+                    'success': False,
+                    'access_denied': True,
+                    'html': html,
+                    'message': message,
+                }, status=403)
+            return render(
+                request,
+                'page/access_denied.html',
+                {'message': message},
+                status=403,
+            )
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 def custom_permission_required(permission_url=None):

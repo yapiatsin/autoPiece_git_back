@@ -71,29 +71,29 @@
         {% endfor %}
     </div>
     <script>
-    (function () {
-        var stack = document.getElementById('magFlashMessages');
-        if (!stack) return;
+        (function () {
+            var stack = document.getElementById('magFlashMessages');
+            if (!stack) return;
 
-        function dismissToast(toast) {
-            if (!toast || toast.classList.contains('is-leaving')) return;
-            toast.classList.add('is-leaving');
-            setTimeout(function () {
-                if (toast.parentNode) toast.parentNode.removeChild(toast);
-                if (stack && !stack.children.length && stack.parentNode) {
-                    stack.parentNode.removeChild(stack);
-                }
-            }, 320);
-        }
-
-        stack.querySelectorAll('.ecom-flash-toast').forEach(function (toast) {
-            var closeBtn = toast.querySelector('.ecom-flash-toast-close');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', function () { dismissToast(toast); });
+            function dismissToast(toast) {
+                if (!toast || toast.classList.contains('is-leaving')) return;
+                toast.classList.add('is-leaving');
+                setTimeout(function () {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                    if (stack && !stack.children.length && stack.parentNode) {
+                        stack.parentNode.removeChild(stack);
+                    }
+                }, 320);
             }
-            setTimeout(function () { dismissToast(toast); }, 5000);
-        });
-    })();
+
+            stack.querySelectorAll('.ecom-flash-toast').forEach(function (toast) {
+                var closeBtn = toast.querySelector('.ecom-flash-toast-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function () { dismissToast(toast); });
+                }
+                setTimeout(function () { dismissToast(toast); }, 5000);
+            });
+        })();
     </script>
     {% endif %}
     <div id="wrapper" class="theme-light">
@@ -365,7 +365,7 @@
                                         {% endfor %}
                                     {% endif %}
                                 {% endfor %}
-                                {% if user.is_staff %}
+                                {% if user.is_staff and user.is_superuser %}
                                     <a href="{% url 'list_permissions' %}" class="nav-user-menu-item">
                                         <i class="fa fa-cog" aria-hidden="true"></i>
                                         Permissions

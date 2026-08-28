@@ -174,7 +174,7 @@
                                     <th>Rôle</th>
                                     <th>Genre</th>
                                     <th>Localité</th>
-                                    <th class="text-center">Permissions</th>
+                                    {% if user.is_superuser %}<th class="text-center">Permissions</th>{% endif %}
                                     <th class="text-center">Activer</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
@@ -187,6 +187,7 @@
                                     <td>{{ c.get_role_display|default:c.role }}</td>
                                     <td>{{ c.genre|default:"—" }}</td>
                                     <td>{% if c.local_entrepot %}{{ c.local_entrepot.nom }}{% else %}—{% endif %}</td>
+                                    {% if user.is_superuser %}
                                     <td class="text-center">
                                         <a href="#largeModal"
                                            class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon edit-permission-btn"
@@ -196,6 +197,7 @@
                                             <i class="fa fa-lock"></i>
                                         </a>
                                     </td>
+                                    {% endif %}
                                     <td class="text-center">
                                         <label class="toggle-switch mb-0">
                                             <input type="checkbox"
@@ -226,7 +228,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr class="mag-table-skip-filter">
-                                    <td colspan="8" class="text-center text-muted py-4">
+                                    <td colspan="{% if user.is_superuser %}8{% else %}7{% endif %}" class="text-center text-muted py-4">
                                         {% if search_q %}Aucun compte ne correspond à « {{ search_q }} ».{% else %}Aucun compte.{% endif %}
                                     </td>
                                 </tr>

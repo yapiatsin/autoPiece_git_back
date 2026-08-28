@@ -48,6 +48,7 @@ from .forms import (
     ProfileSelfUserForm,
     ProfileSelfProfilForm,
 )
+from .decorators import superuser_required
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth import update_session_auth_hash
 from .models import PWD_FORGET, EmailVerificationToken, ProfilUser
@@ -828,6 +829,7 @@ def delete_compte(request, pk):
     return redirect(request.META.get('HTTP_REFERER', 'default_view_name'))
 
 @login_required(login_url='connexion')
+@superuser_required
 def update_permissions(request, pk):
     user = get_object_or_404(
         CustomUser.objects.select_related('local_entrepot').prefetch_related('custom_permissions'),
@@ -878,6 +880,7 @@ def update_permissions(request, pk):
 # VUES POUR LA GESTION DES PERMISSIONS PERSONNALISÉES
 # ============================================================
 @login_required(login_url='connexion')
+@superuser_required
 def list_permissions(request):
     """Liste toutes les permissions avec recherche, filtrage et pagination."""
     from django.core.paginator import Paginator
@@ -915,6 +918,7 @@ def list_permissions(request):
     return render(request, 'page/list_permissions.html', context)
 
 @login_required(login_url='connexion')
+@superuser_required
 def create_permission(request):
     """Créer une nouvelle permission"""
     if request.method == 'POST':
@@ -949,6 +953,7 @@ def create_permission(request):
     return render(request, "partials/permission_form.html", {"form": form})
 
 @login_required(login_url='connexion')
+@superuser_required
 def update_permission(request, pk):
     """Modifier une permission existante"""
     permission = get_object_or_404(CustomPermission, pk=pk)
@@ -990,6 +995,7 @@ def update_permission(request, pk):
     })
 
 @login_required(login_url='connexion')
+@superuser_required
 def delete_permission(request, pk):
     """Supprimer une permission"""
     permission = get_object_or_404(CustomPermission, pk=pk)
@@ -1053,9 +1059,9 @@ def create_category(request):
                 return JsonResponse({
                     "success": True,
                     "message": "Catégorie créée avec succès!",
-                    "redirect_url": reverse("list_categories")
+                    "redirect_url": reverse("list_perm_categories")
                 })
-            return redirect('list_categories')
+            return redirect('list_perm_categories')
         else:
             is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest" or request.headers.get("X-Requested-With") == "XMLHttpRequest"
             if is_ajax:
@@ -1090,9 +1096,9 @@ def update_category(request, pk):
                 return JsonResponse({
                     "success": True,
                     "message": "Catégorie mise à jour avec succès!",
-                    "redirect_url": reverse("list_categories")
+                    "redirect_url": reverse("list_perm_categories")
                 })
-            return redirect('list_categories')
+            return redirect('list_perm_categories')
         else:
             is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest" or request.headers.get("X-Requested-With") == "XMLHttpRequest"
             if is_ajax:
@@ -1132,7 +1138,7 @@ def delete_category(request, pk):
                 "success": True,
                 "message": f'Catégorie "{category_name}" supprimée avec succès!'
             })
-        return redirect('list_categories')
+        return redirect('list_perm_categories')
     # Pour GET, retourner la confirmation
     html = render_to_string("partials/delete_category_confirm.html", {
         "object": category
@@ -1140,6 +1146,7 @@ def delete_category(request, pk):
     return HttpResponse(html)
 
 @login_required(login_url='connexion')
+@superuser_required
 def import_permissions_excel(request):
     """Importer les permissions depuis un fichier Excel"""
     if request.method == 'POST':
@@ -1235,6 +1242,7 @@ def import_permissions_excel(request):
     return render(request, 'page/import_permissions.html', context)
 
 @login_required(login_url='connexion')
+@superuser_required
 def export_permissions_excel(request):
     """Exporter les permissions vers un fichier Excel"""
     permissions = CustomPermission.objects.all().select_related('categorie').order_by('categorie__categorie', 'name')

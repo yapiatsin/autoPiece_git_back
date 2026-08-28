@@ -2433,6 +2433,12 @@ def chat_thread(request):
             data['ok'] = True
             return JsonResponse(data)
 
+        if action == 'typing':
+            pulse = chatbots.client_signal_typing(request)
+            if pulse is None:
+                return JsonResponse({'ok': True, 'typing': False})
+            return JsonResponse({'ok': True, **pulse})
+
         try:
             conv, _msg = chatbots.client_send_message(request, body)
         except ValueError as exc:
@@ -2648,10 +2654,30 @@ def chat_api_messages(request, conversation_id):
         conv.refresh_from_db()
         return JsonResponse({
             'ok': True,
-            'conversation': chatbots.serialize_conversation(conv, include_messages=True),
+            'conversation': chatbots.serialize_conversation(
+                conv,
+                include_messages=True,
+                viewer_role='staff',
+            ),
         })
 
     return JsonResponse({
         'ok': True,
-        'conversation': chatbots.serialize_conversation(conv, include_messages=True),
+        'conversation': chatbots.serialize_conversation(
+            conv,
+            include_messages=True,
+            viewer_role='staff',
+        ),
     })
+
+
+@login_required(login_url='connexion')
+@require_POST
+def chat_api_typing(request, conversation_id):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    from . import chatbots
+    conv = get_object_or_404(ChatConversation, pk=conversation_id)
+    conv = chatbots.maybe_auto_close_idle(conv)
+    chatbots.staff_signal_typing(conv, request.user)
+    return JsonResponse({'ok': True, 'conversation_id': conv.pk})

@@ -41,6 +41,12 @@
                                 <div class="text-danger">{{ edit_form.image.errors }}</div>
                             {% endif %}
                         </div>
+                        <div class="mf-field mb-0">
+                            <div class="mf-check">
+                                <input type="checkbox" name="actif" id="id_categorie_actif_{{ categorie.pk }}" class="form-check-input"{% if categorie.actif %} checked{% endif %}>
+                                <label for="id_categorie_actif_{{ categorie.pk }}" class="mf-hint mb-0">Visible dans le catalogue et la boutique</label>
+                            </div>
+                        </div>
                     </section>
                 </div>
                 <div class="modal-footer">

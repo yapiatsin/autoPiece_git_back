@@ -1,5 +1,5 @@
 """Données de référence (permissions, agences, créneaux, catégories,
-moyens de paiement, barèmes de timbre).
+zones de livraison e-commerce, moyens de paiement, barèmes de timbre).
 
 Appelé automatiquement après `migrate` (signal post_migrate) et par la
 migration 0045. Toutes les opérations sont idempotentes (`get_or_create`).
@@ -17,21 +17,15 @@ TYPE_PERMISSIONS = ['Autres', 'Comptes', 'Dashboard', 'Interfaces', 'Liste', 'St
 CUSTOM_PERMISSIONS = [{'categorie': 'Comptes', 'name': 'Active Compte', 'url': 'active_compte'},
  {'categorie': 'Comptes', 'name': 'Compte Client', 'url': 'compte_client'},
  {'categorie': 'Comptes', 'name': 'Compte staff', 'url': 'add_compte'},
- {'categorie': 'Comptes', 'name': 'Create Permission', 'url': 'create_permission'},
  {'categorie': 'Comptes', 'name': 'Deactive Compte', 'url': 'deactive_compte'},
  {'categorie': 'Comptes', 'name': 'Del Compte', 'url': 'del_compte'},
  {'categorie': 'Comptes', 'name': 'Del Compte Client', 'url': 'del_compte_client'},
  {'categorie': 'Comptes', 'name': 'Delete Localite', 'url': 'delete_localite'},
- {'categorie': 'Comptes', 'name': 'Delete Permission', 'url': 'delete_permission'},
  {'categorie': 'Comptes', 'name': 'Detail Compte Client', 'url': 'detail_compte_client'},
  {'categorie': 'Comptes', 'name': 'Fiche Client Pdf', 'url': 'fiche_client_pdf'},
- {'categorie': 'Comptes', 'name': 'Import Permissions Excel', 'url': 'import_permissions_excel'},
- {'categorie': 'Comptes', 'name': 'List Permissions', 'url': 'list_permissions'},
  {'categorie': 'Comptes', 'name': 'Update Compte', 'url': 'update_compte'},
  {'categorie': 'Comptes', 'name': 'Update Compte Client', 'url': 'update_compte_client'},
  {'categorie': 'Comptes', 'name': 'Update Localite', 'url': 'update_localite'},
- {'categorie': 'Comptes', 'name': 'Update Permission', 'url': 'update_permission'},
- {'categorie': 'Comptes', 'name': 'Update Permissions', 'url': 'update_permissions'},
  {'categorie': 'Dashboard', 'name': 'Tbord', 'url': 'tbord'},
  {'categorie': 'Interfaces', 'name': 'Add Proforma', 'url': 'add_proforma'},
  {'categorie': 'Interfaces', 'name': 'Ajouter Agence', 'url': 'add_localite'},
@@ -45,10 +39,9 @@ CUSTOM_PERMISSIONS = [{'categorie': 'Comptes', 'name': 'Active Compte', 'url': '
  {'categorie': 'Interfaces', 'name': 'Service caissiere', 'url': 'caissiere'},
  {'categorie': 'Interfaces', 'name': 'Service livraisons', 'url': 'livraisons'},
  {'categorie': 'Interfaces', 'name': 'Transferts inter-localités', 'url': 'liste_transferts'},
- {'categorie': 'Interfaces', 'name': 'List Perm Categories', 'url': 'list_perm_categories'},
+ {'categorie': 'Interfaces', 'name': 'Nouveau Fournisseur', 'url': 'nouveau_fournisseur'},
  {'categorie': 'Liste', 'name': 'Export Comptes Clients Excel', 'url': 'export_comptes_clients_excel'},
  {'categorie': 'Liste', 'name': 'Export Comptes Excel', 'url': 'export_comptes_excel'},
- {'categorie': 'Liste', 'name': 'Export Permissions Excel', 'url': 'export_permissions_excel'},
  {'categorie': 'Liste', 'name': 'Export Best Vente Excel', 'url': 'export_best_vente_excel'},
  {'categorie': 'Liste', 'name': 'Export Best Vente Pdf', 'url': 'export_best_vente_pdf'},
  {'categorie': 'Liste', 'name': 'Export Caisse Ventes Excel', 'url': 'export_caisse_ventes_excel'},
@@ -81,7 +74,6 @@ CUSTOM_PERMISSIONS = [{'categorie': 'Comptes', 'name': 'Active Compte', 'url': '
  {'categorie': 'Liste', 'name': 'liste commande', 'url': 'liste_commandes'},
  {'categorie': 'Liste', 'name': 'Liste des ventes', 'url': 'liste_ventes'},
  {'categorie': 'Liste', 'name': 'Mes ventes', 'url': 'mesventes'},
- {'categorie': 'Liste', 'name': 'Nouveau Fournisseur', 'url': 'nouveau_fournisseur'},
  {'categorie': 'Liste', 'name': 'Pièce en rupture', 'url': 'piece_rupture'},
  {'categorie': 'Liste', 'name': 'Proforma Attente', 'url': 'proforma_attente'},
  {'categorie': 'Liste', 'name': 'Top ventes', 'url': 'topventes'},
@@ -111,8 +103,6 @@ CUSTOM_PERMISSIONS = [{'categorie': 'Comptes', 'name': 'Active Compte', 'url': '
  {'categorie': 'Stocks', 'name': 'Imprimer Recu Commande', 'url': 'imprimer_recu_commande'},
  {'categorie': 'Stocks', 'name': 'Info Piece', 'url': 'info_piece'},
  {'categorie': 'Stocks', 'name': 'Livraison Cmd Detail', 'url': 'livraison_cmd_detail'},
- {'categorie': 'Stocks', 'name': 'Marquer Notification Lue', 'url': 'marquer_notification_lue'},
- {'categorie': 'Stocks', 'name': 'Marquer Toutes Notifications Lues', 'url': 'marquer_toutes_notifications_lues'},
  {'categorie': 'Stocks', 'name': 'Modifier sous-catégorie', 'url': 'update_sous_categorie'},
  {'categorie': 'Stocks', 'name': 'Mon stock', 'url': 'stock'},
  {'categorie': 'Stocks', 'name': 'Panier Action', 'url': 'panier_action'},
@@ -229,6 +219,29 @@ SOUS_CATEGORIES = [{'actif': True, 'categorie': 'Dzire', 'nom': 'Moteur', 'ordre
   'ordre': 11,
   'slug': 'refroidissement'}]
 
+# Snapshot base — zones de livraison e-commerce (pays → villes → communes)
+PAYS_LIVRAISON = [
+    {'nom': "Côte d'Ivoire", 'code': 'CI', 'actif': True},
+]
+
+VILLES_LIVRAISON = [
+    {'pays': 'CI', 'nom': 'Abidjan', 'frais_livraison': '2000.00', 'actif': True},
+    {'pays': 'CI', 'nom': 'Bingerville', 'frais_livraison': '2500.00', 'actif': True},
+]
+
+COMMUNES_LIVRAISON = [
+    {'ville': 'Abidjan', 'nom': 'Abobo', 'actif': True},
+    {'ville': 'Abidjan', 'nom': 'Adjamé', 'actif': True},
+    {'ville': 'Abidjan', 'nom': 'Attécoubé', 'actif': True},
+    {'ville': 'Abidjan', 'nom': 'Cocody', 'actif': True},
+    {'ville': 'Abidjan', 'nom': 'Koumassi', 'actif': True},
+    {'ville': 'Abidjan', 'nom': 'Marcory', 'actif': True},
+    {'ville': 'Abidjan', 'nom': 'Plateau', 'actif': True},
+    {'ville': 'Abidjan', 'nom': 'Port-Bouët', 'actif': True},
+    {'ville': 'Abidjan', 'nom': 'Treichville', 'actif': True},
+    {'ville': 'Abidjan', 'nom': 'Yopougon', 'actif': True},
+]
+
 # Snapshot base — moyens de paiement (code unique)
 MOYENS_PAIEMENT = [
     {'code': 'espece', 'nom': 'Espèce', 'actif': True},
@@ -258,6 +271,7 @@ def seed_defaults(*, using='default'):
         LocalEntrepot,
         TypeCustomPermission,
     )
+    from ecom.models import CommuneLivraison, PaysLivraison, VilleLivraison
     from stock.models import BaremeTimbre, Categorie, MoyenPaiement, SousCategorie
 
     types = {}
@@ -347,6 +361,42 @@ def seed_defaults(*, using='default'):
                 'ordre': item.get('ordre') or 0,
                 'actif': item.get('actif', True),
             },
+        )
+
+    pays_livraison = {}
+    for item in PAYS_LIVRAISON:
+        obj, _ = PaysLivraison.objects.using(using).get_or_create(
+            code=item['code'],
+            defaults={
+                'nom': item['nom'],
+                'actif': item.get('actif', True),
+            },
+        )
+        pays_livraison[item['code']] = obj
+
+    villes_livraison = {}
+    for item in VILLES_LIVRAISON:
+        pays = pays_livraison.get(item['pays'])
+        if pays is None:
+            continue
+        obj, _ = VilleLivraison.objects.using(using).get_or_create(
+            pays=pays,
+            nom=item['nom'],
+            defaults={
+                'frais_livraison': Decimal(item['frais_livraison']),
+                'actif': item.get('actif', True),
+            },
+        )
+        villes_livraison[item['nom']] = obj
+
+    for item in COMMUNES_LIVRAISON:
+        ville = villes_livraison.get(item['ville'])
+        if ville is None:
+            continue
+        CommuneLivraison.objects.using(using).get_or_create(
+            ville=ville,
+            nom=item['nom'],
+            defaults={'actif': item.get('actif', True)},
         )
 
     for item in MOYENS_PAIEMENT:

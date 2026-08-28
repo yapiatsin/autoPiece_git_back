@@ -25,6 +25,7 @@ from stock.stock_local_service import (
     decrementer_stock,
     filter_piece_catalogue_actif,
     filter_pieces_avec_stock,
+    filter_pieces_categories_actives,
     get_prix_unitaire,
     get_quantite_vendable,
     piece_visible_en_localite,
@@ -39,13 +40,11 @@ ROLES_MAGASIN = {'accueil', 'caissier', 'livreur', 'chefagence', 'gestionnaire',
 # Rôles qui voient les commandes de leur LocalEntrepot (pas toutes les assignations)
 ROLES_VUE_LOCAL_ENTREPOT = {'accueil', 'caissier', 'chefagence', 'gestionnaire'}
 
-
 def _is_admin_global(user) -> bool:
     return bool(
         getattr(user, 'is_superuser', False)
         or getattr(user, 'role', None) == 'admin'
     )
-
 
 def filter_commandes_livraison_online_for_user(user, qs, localite=None):
     """
@@ -240,7 +239,7 @@ def queryset_piece_fiche():
         Prefetch('stocks', queryset=stocks_qs, to_attr='stocks_disponibles'),
         'images_supplementaires',
     )
-    return filter_piece_catalogue_actif(qs).annotate(
+    return filter_pieces_categories_actives(filter_piece_catalogue_actif(qs)).annotate(
         stock_total=Sum(
             'stocks__quantite_disponible',
             filter=Q(stocks__active_sortie=True, stocks__quantite_disponible__gt=0),
@@ -393,10 +392,12 @@ def lignes_pieces_plus_commandees(
 
 def _qs_pieces_menu_boutique():
     return (
-        Piece.objects.filter(
-            Q(active_sortie=True) | Q(active_sortie__isnull=True),
-            stocks__active_sortie=True,
-            stocks__quantite_disponible__gt=0,
+        filter_pieces_categories_actives(
+            Piece.objects.filter(
+                Q(active_sortie=True) | Q(active_sortie__isnull=True),
+                stocks__active_sortie=True,
+                stocks__quantite_disponible__gt=0,
+            )
         )
         .distinct()
         .only('id', 'designation', 'numero_piece', 'categorie_id', 'sous_categorie_id')
@@ -425,7 +426,7 @@ def queryset_categories_catalogue():
         )
     )
     return (
-        Categorie.objects.filter(Exists(pieces_en_stock))
+        Categorie.objects.filter(Exists(pieces_en_stock), actif=True)
         .prefetch_related(
             Prefetch('sous_categories', queryset=sous_qs),
             Prefetch(
@@ -604,6 +605,7 @@ def categories_pour_localite(local: LocalEntrepot):
     sous_qs = SousCategorie.objects.filter(actif=True).order_by('ordre', 'nom')
     return (
         Categorie.objects.filter(
+            actif=True,
             piece__stocks__local_entrepot=local,
             piece__stocks__active_sortie=True,
             piece__stocks__quantite_disponible__gt=0,
