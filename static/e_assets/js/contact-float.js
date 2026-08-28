@@ -10,6 +10,33 @@
   var chatOriginReady = false;
   var openAnim = 'ecom-genie-open';
   var closeAnim = 'ecom-genie-close';
+  var threadUrl = chatPanel.getAttribute('data-thread-url') || '/chat/thread/';
+  var pollMs = parseInt(chatPanel.getAttribute('data-poll-ms') || '4000', 10) || 4000;
+  var bodyEl = document.getElementById('contact-chatbot-body');
+  var chipsEl = document.getElementById('contact-chatbot-chips');
+  var newWrap = document.getElementById('contact-chatbot-new-wrap');
+  var newBtn = document.getElementById('contact-chatbot-new');
+  var statusEl = document.getElementById('contact-chatbot-status');
+  var scrollEl = chatPanel.querySelector('.contact-chatbot__scroll');
+  var pollTimer = null;
+  var lastMessageIds = '';
+  var knownStatus = null;
+  var knownFlags = '';
+  var sending = false;
+
+  var STATUS_LABELS = {
+    pending: 'Un conseiller va prendre en charge…',
+    active: 'Discussion avec un conseiller',
+    refused: 'Conseiller indisponible',
+    closed: 'Conversation terminée'
+  };
+
+  function csrfToken() {
+    var input = chatForm ? chatForm.querySelector('input[name="csrfmiddlewaretoken"]') : null;
+    if (input && input.value) return input.value;
+    var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+  }
 
   function measureGenieTarget() {
     var wasHidden = chatPanel.hasAttribute('hidden');
@@ -55,7 +82,9 @@
       chatIsOpen = true;
       chatAnimating = false;
       var input = chatForm ? chatForm.querySelector('input[name="message"]') : null;
-      if (input) input.focus();
+      if (input && chatForm && !chatForm.hidden) input.focus();
+      startPolling();
+      refreshThread();
     }
     chatPanel.addEventListener('animationend', onOpenEnd);
   }
@@ -63,6 +92,7 @@
   function closeChatbot() {
     if (chatAnimating || !chatIsOpen) return;
     chatAnimating = true;
+    stopPolling();
     if (!chatOriginReady) measureGenieTarget();
     else {
       var panelRect = chatPanel.getBoundingClientRect();
@@ -89,21 +119,185 @@
     chatPanel.addEventListener('animationend', onCloseEnd);
   }
 
-  function replyFor(text) {
-    var t = (text || '').toLowerCase();
-    if (/whatsapp|whats\s?app|0787532210/.test(t)) {
-      return 'Vous pouvez nous joindre sur WhatsApp au 07 87 53 22 10. Le bouton vert ouvre la conversation.';
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(function () {
+      if (chatIsOpen) refreshThread();
+    }, pollMs);
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
     }
-    if (/livr|retrait|commande|suivi/.test(t)) {
-      return 'Après paiement, l’agence prépare votre commande. En livraison, confirmez la réception une fois livrée. Consultez « Mes commandes » dans votre compte.';
+  }
+
+  function bubbleClass(senderType) {
+    if (senderType === 'client') return 'contact-chatbot__bubble contact-chatbot__bubble--client';
+    if (senderType === 'staff') return 'contact-chatbot__bubble contact-chatbot__bubble--staff';
+    if (senderType === 'system') return 'contact-chatbot__bubble contact-chatbot__bubble--system';
+    return 'contact-chatbot__bubble contact-chatbot__bubble--bot';
+  }
+
+  function setChipsVisible(show) {
+    if (!chipsEl) return;
+    chipsEl.hidden = !show;
+  }
+
+  function setNewVisible(show) {
+    if (!newWrap) return;
+    newWrap.hidden = !show;
+  }
+
+  function setFormVisible(show) {
+    if (!chatForm) return;
+    chatForm.hidden = !show;
+  }
+
+  function renderWelcome() {
+    if (!bodyEl) return;
+    bodyEl.innerHTML = '';
+    var welcome = document.createElement('div');
+    welcome.className = 'contact-chatbot__bubble contact-chatbot__bubble--bot';
+    welcome.setAttribute('data-welcome', '1');
+    welcome.textContent = 'Bonjour ! Comment puis-je vous aider aujourd’hui ?';
+    bodyEl.appendChild(welcome);
+    setChipsVisible(true);
+    setNewVisible(false);
+    setFormVisible(true);
+    if (statusEl) statusEl.textContent = 'En ligne · répond rapidement';
+    lastMessageIds = '';
+    knownStatus = null;
+    knownFlags = '';
+  }
+
+  function renderThread(data) {
+    if (!bodyEl) return;
+    var messages = (data && data.messages) || [];
+    var status = data && data.status;
+    var showChips = !!(data && data.show_chips);
+    var canSend = data && data.can_send !== false;
+    var canStartNew = !!(data && data.can_start_new);
+    var messagesHidden = !!(data && data.messages_hidden);
+    var ids = messages.map(function (m) { return m.id; }).join(',');
+    var flags = [showChips, canSend, canStartNew, messagesHidden].join('|');
+
+    if (statusEl) {
+      statusEl.textContent = STATUS_LABELS[status] || 'En ligne · répond rapidement';
     }
-    if (/pai|wave|orange|mtn|genius/.test(t)) {
-      return 'Le paiement en ligne se fait via GeniusPay (Wave, Orange Money, MTN ou carte). L’espèce est possible à la livraison ou au retrait.';
+
+    if (!messages.length && !status) {
+      renderWelcome();
+      return;
     }
-    if (/pi[eè]ce|stock|prix|dispo/.test(t)) {
-      return 'Parcourez la boutique et choisissez votre agence pour voir le stock local. Un conseiller WhatsApp peut aussi vous aider à identifier une pièce.';
+
+    if (ids === lastMessageIds && status === knownStatus && flags === knownFlags) {
+      setChipsVisible(showChips);
+      setNewVisible(canStartNew);
+      setFormVisible(canSend && !canStartNew);
+      return;
     }
-    return 'Merci pour votre message. Un conseiller vous répondra bientôt, ou contactez-nous via WhatsApp / le centre d’assistance.';
+
+    lastMessageIds = ids;
+    knownStatus = status;
+    knownFlags = flags;
+    bodyEl.innerHTML = '';
+
+    if (messagesHidden || (!messages.length && status === 'closed')) {
+      var ended = document.createElement('div');
+      ended.className = 'contact-chatbot__bubble contact-chatbot__bubble--system';
+      ended.textContent = messagesHidden
+        ? 'Cette conversation est terminée. Vous pouvez en démarrer une nouvelle.'
+        : 'La conversation est terminée.';
+      bodyEl.appendChild(ended);
+      setChipsVisible(false);
+      setNewVisible(true);
+      setFormVisible(false);
+      return;
+    }
+
+    if (!messages.length) {
+      renderWelcome();
+      setChipsVisible(showChips || true);
+      return;
+    }
+
+    messages.forEach(function (m) {
+      var el = document.createElement('div');
+      el.className = bubbleClass(m.sender_type);
+      el.textContent = m.body || '';
+      bodyEl.appendChild(el);
+    });
+
+    setChipsVisible(showChips);
+    setNewVisible(canStartNew);
+    setFormVisible(canSend && !canStartNew);
+    if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+  }
+
+  function refreshThread() {
+    fetch(threadUrl, {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.ok !== false) renderThread(data);
+      })
+      .catch(function () { /* ignore poll errors */ });
+  }
+
+  function sendMessage(text) {
+    if (sending || !text) return;
+    sending = true;
+    var token = csrfToken();
+    fetch(threadUrl, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token
+      },
+      body: JSON.stringify({ message: text })
+    })
+      .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+      .then(function (res) {
+        sending = false;
+        if (res.data) renderThread(res.data);
+        else refreshThread();
+      })
+      .catch(function () {
+        sending = false;
+      });
+  }
+
+  function startNewConversation() {
+    if (sending) return;
+    sending = true;
+    fetch(threadUrl, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken()
+      },
+      body: JSON.stringify({ action: 'new' })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        sending = false;
+        renderWelcome();
+        if (data) renderThread(data);
+        var input = chatForm ? chatForm.querySelector('input[name="message"]') : null;
+        if (input) input.focus();
+      })
+      .catch(function () {
+        sending = false;
+      });
   }
 
   chatBtn.addEventListener('click', function () {
@@ -120,28 +314,19 @@
     chatForm.addEventListener('submit', function (event) {
       event.preventDefault();
       var input = chatForm.querySelector('input[name="message"]');
-      var body = chatPanel.querySelector('.contact-chatbot__body');
-      if (!input || !body || !input.value.trim()) return;
-
-      var userBubble = document.createElement('div');
-      userBubble.className = 'contact-chatbot__bubble';
-      userBubble.style.marginTop = '10px';
-      userBubble.style.marginLeft = 'auto';
-      userBubble.style.display = 'block';
-      userBubble.style.borderRadius = '14px 14px 4px 14px';
-      userBubble.style.background = '#ff8b00';
-      userBubble.style.color = '#fff';
-      userBubble.textContent = input.value.trim();
-      body.appendChild(userBubble);
-
-      var reply = document.createElement('div');
-      reply.className = 'contact-chatbot__bubble';
-      reply.style.marginTop = '10px';
-      reply.style.display = 'block';
-      reply.textContent = replyFor(input.value);
-      body.appendChild(reply);
-      body.scrollTop = body.scrollHeight;
+      if (!input || !input.value.trim()) return;
+      var text = input.value.trim();
       input.value = '';
+      sendMessage(text);
     });
   }
+
+  if (newBtn) {
+    newBtn.addEventListener('click', startNewConversation);
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stopPolling();
+    else if (chatIsOpen) startPolling();
+  });
 })();

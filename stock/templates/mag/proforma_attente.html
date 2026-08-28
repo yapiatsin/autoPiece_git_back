@@ -152,6 +152,44 @@ function validerProforma(ticketId) {
     });
 }
 
+function supprimerProforma(ticketId) {
+    if (!ticketId) return;
+    if (!confirm('Supprimer définitivement cette proforma ? Le stock ne sera pas modifié.')) {
+        return;
+    }
+    $.ajax({
+        url: '{% url "supprimer_proforma" ticket_id="__TID__" %}'.replace('__TID__', encodeURIComponent(ticketId)),
+        type: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function (response) {
+            if (response.success) {
+                if (typeof toastr !== 'undefined') {
+                    toastr.success(response.message);
+                } else {
+                    alert(response.message);
+                }
+                $('#modal-proforma').modal('hide');
+                updateProformaList();
+            } else if (typeof toastr !== 'undefined') {
+                toastr.error(response.message || 'Erreur lors de la suppression.');
+            } else {
+                alert(response.message || 'Erreur lors de la suppression.');
+            }
+        },
+        error: function (xhr) {
+            var msg = 'Erreur lors de la suppression de la proforma.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            }
+            if (typeof toastr !== 'undefined') {
+                toastr.error(msg);
+            } else {
+                alert(msg);
+            }
+        }
+    });
+}
+
 function imprimerProforma(ticketId) {
     var url = '{% url "imprimer_proforma_pdf" ticket_id="__TID__" %}'.replace('__TID__', encodeURIComponent(ticketId));
     window.open(url + '?print=1', '_blank', 'width=920,height=720');

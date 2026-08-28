@@ -26,41 +26,7 @@
                 <div class="row">
                     <div class="col-xl-3 col-lg-12 pr--60 pr_md--10 pr_sm--10">
                         <div class="filter-area-vendor-details">
-                            <div class="single-filter-box">
-                            <h5 class="title">{% trans "Catégories" %}</h5>
-                                <div class="filterbox-body">
-                                <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" id="localite-cat-form">
-                                    {% if localite_filters.q %}
-                                    <input type="hidden" name="q" value="{{ localite_filters.q }}">
-                                    {% endif %}
-                                    {% if localite_filters.sort %}
-                                    <input type="hidden" name="sort" value="{{ localite_filters.sort }}">
-                                    {% endif %}
-                                    <div class="category-wrapper">
-                                        {% for cat in categories %}
-                                        <div class="single-category">
-                                            <input id="loc-cat-{{ cat.pk }}" type="checkbox" name="categorie"
-                                                value="{{ cat.pk }}"
-                                                {% if cat.pk|stringformat:'s' in selected_categories %}checked{% endif %}
-                                                onchange="this.form.submit()">
-                                            <label for="loc-cat-{{ cat.pk }}">{{ cat.categorie }}</label>
-                                        </div>
-                                        {% for sc in cat.sous_categories.all %}
-                                        <div class="single-category ps-3">
-                                            <input id="loc-sous-{{ sc.pk }}" type="checkbox" name="sous_categorie"
-                                                value="{{ sc.pk }}"
-                                                {% if sc.pk|stringformat:'s' in selected_sous_categories %}checked{% endif %}
-                                                onchange="this.form.submit()">
-                                            <label for="loc-sous-{{ sc.pk }}">{{ sc.nom }}</label>
-                                        </div>
-                                        {% endfor %}
-                                        {% empty %}
-                                        <p class="text-muted small mb-0">{% trans "Aucune catégorie pour cette localité." %}</p>
-                                        {% endfor %}
-                                    </div>
-                                </form>
-                                </div>
-                            </div>
+                            
                             <div class="single-filter-box">
                                 <h5 class="title">{% trans "Horaires" %}</h5>
                                 <div class="filterbox-body vendor-time-opening">
@@ -88,6 +54,54 @@
                                     {% endfor %}
                                 </div>
                             </div>
+                            <div class="single-filter-box">
+                                <h5 class="title">{% trans "Catégories" %}</h5>
+                                <div class="filterbox-body">
+                                    <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" id="localite-cat-form">
+                                        {% if localite_filters.q %}
+                                        <input type="hidden" name="q" value="{{ localite_filters.q }}">
+                                        {% endif %}
+                                        {% if localite_filters.sort %}
+                                        <input type="hidden" name="sort" value="{{ localite_filters.sort }}">
+                                        {% endif %}
+                                        <div class="category-wrapper ecom-localite-cat-wrapper">
+                                            {% for cat in categories %}
+                                            <div class="ecom-shop-cat">
+                                                <div class="single-category">
+                                                    <input id="loc-cat-{{ cat.pk }}" type="checkbox" name="categorie"
+                                                        value="{{ cat.pk }}"
+                                                        class="ecom-localite-cat-input"
+                                                        {% if cat.pk|stringformat:'s' in selected_categories %}checked{% endif %}>
+                                                    <label for="loc-cat-{{ cat.pk }}">{{ cat.categorie }}</label>
+                                                </div>
+                                                {% with sous_list=cat.sous_categories.all %}
+                                                {% if sous_list %}
+                                                {# Déplacé en JS vers #ecom-localite-sous-host (grille boutique) #}
+                                                <div class="ecom-shop-sous-card{% if cat.pk|stringformat:'s' in selected_categories %} is-open{% endif %}"
+                                                    data-cat-id="{{ cat.pk }}">
+                                                    <p class="ecom-shop-sous-card__title">{% trans "Sous-catégories" %} {{ cat.categorie }}</p>
+                                                    <div class="ecom-shop-sous-card__grid">
+                                                        {% for sc in sous_list %}
+                                                        <label class="ecom-shop-sous-card__item" for="loc-sous-{{ sc.pk }}">
+                                                            <input id="loc-sous-{{ sc.pk }}" type="checkbox" name="sous_categorie"
+                                                                value="{{ sc.pk }}"
+                                                                class="ecom-localite-sous-input"
+                                                                {% if sc.pk|stringformat:'s' in selected_sous_categories %}checked{% endif %}>
+                                                            <span>{{ sc.nom }}</span>
+                                                        </label>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                                {% endwith %}
+                                            </div>
+                                            {% empty %}
+                                                <p class="text-muted small mb-0">{% trans "Aucune catégorie pour cette localité." %}</p>
+                                            {% endfor %}
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -100,46 +114,32 @@
                                         <span class="ecom-localite-thumb-icon" aria-hidden="true">
                                             <i class="fa-solid fa-store"></i>
                                         </span>
-                                        <span class="ecom-localite-thumb-label">{{ localite.nom }}</span>
                                     </div>
-                                        <div class="header-area">
+                                    <div class="header-area">
                                         <h4 class="title">
-                                            {{ localite.nom }}
                                             {% if shop_total %}
-                                            <span>{% trans "Ouvert" %}</span>
+                                                <span>{% trans "Pièces disponibles" %}</span>
                                             {% else %}
-                                            <span class="closed">{% trans "Sans stock" %}</span>
+                                                <span class="closed">{% trans "Rupture de stock" %}</span>
                                             {% endif %}
                                         </h4>
-                                        </div>
+                                    </div>
                                     <div class="stars-area ecom-localite-meta">
                                         <i class="fa-solid fa-box"></i>
                                         <span>
                                             {% blocktrans count counter=shop_total %}{{ counter }} pièce disponible{% plural %}{{ counter }} pièces disponibles{% endblocktrans %}
                                         </span>
-                                        </div>
-                                        <div class="location">
-                                        <i class="fa-solid fa-location-dot"></i>
-                                        <p>
-                                            {% if localite.a_coordonnees %}
-                                            {{ localite.latitude }}, {{ localite.longitude }}
-                                            {% else %}
-                                            {% trans "Abidjan, Côte d'Ivoire" %}
-                                            {% endif %}
-                                        </p>
-                                        </div>
-                                        <div class="location">
+                                    </div>
+                                    <div class="location">
                                         <i class="fa-solid fa-phone"></i>
                                         <p>+225 07 00 00 00 00</p>
                                         </div>
-                                        <div class="location">
+                                    <div class="location">
                                         <i class="fa-solid fa-cart-shopping"></i>
-                                        <p>
-                                            {% blocktrans count counter=shop_total %}{{ counter }} produit disponible{% plural %}{{ counter }} produits disponibles{% endblocktrans %}
-                                            </p>
-                                        </div>
+                                        <p>{% blocktrans count counter=shop_total %}{{ counter }} produit disponible{% plural %}{{ counter }} produits disponibles{% endblocktrans %}</p>
                                     </div>
                                 </div>
+                            </div>
                             <div class="col-lg-9 col-md-7">
                                 <div class="banner-vendor-details ecom-localite-promo-banner"
                                     style="background-image: url('{% static 'e_assets/images/feature/bg_c.png' %}');">
@@ -180,10 +180,11 @@
                             </div>
                         </div>
 
-                        <div class="row mt--50 ml-v-dec-m">
-                            <div class="col-lg-12">
+                    <div id="ecom-localite-results">
+                    <div class="row mt--50 ml-v-dec-m">
+                        <div class="col-lg-12">
                             <div class="ecom-localite-filter-bar">
-                                <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" class="ecom-localite-search-form">
+                                <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" class="ecom-localite-search-form" id="ecom-localite-search-form">
                                     {% for cat_id in selected_categories %}
                                     <input type="hidden" name="categorie" value="{{ cat_id }}">
                                     {% endfor %}
@@ -194,7 +195,8 @@
                                     <input type="hidden" name="sort" value="{{ localite_filters.sort }}">
                                     {% endif %}
                                     <div class="ecom-localite-search-box">
-                                        <input type="text" name="q" value="{{ localite_filters.q }}"
+                                        <input type="search" name="q" value="{{ localite_filters.q }}"
+                                            id="ecom-localite-search-input"
                                             class="ecom-localite-search-input" placeholder="{% trans 'Entrez le nom de la pièce' %}" autocomplete="off">
                                         <button type="submit" class="ecom-localite-search-btn" aria-label="{% trans 'Search' %}">
                                             {% trans "Rechercher" %}
@@ -202,7 +204,7 @@
                                         </button>
                                     </div>
                                 </form>
-                                <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" class="ecom-localite-sort-form">
+                                <form method="get" action="{% url 'ecom_localite_detail' localite.code %}" class="ecom-localite-sort-form" id="ecom-localite-sort-form">
                                     {% if localite_filters.q %}
                                     <input type="hidden" name="q" value="{{ localite_filters.q }}">
                                     {% endif %}
@@ -214,15 +216,18 @@
                                     {% endfor %}
                                     <label class="ecom-localite-sort-wrap" for="localite-sort-select">
                                         <select id="localite-sort-select" name="sort"
-                                            class="ecom-localite-sort-select ecom-no-nice-select" onchange="this.form.submit()">
-                                            <option value="designation" {% if localite_filters.sort == 'designation' %}selected{% endif %}>{% trans "Default Sorting" %}</option>
+                                            class="ecom-localite-sort-select ecom-no-nice-select">
+                                            <option value="designation" {% if localite_filters.sort == 'designation' %}selected{% endif %}>{% trans "Ordre A-Z" %}</option>
                                             <option value="price_asc" {% if localite_filters.sort == 'price_asc' %}selected{% endif %}>{% trans "Prix croissant" %}</option>
                                             <option value="price_desc" {% if localite_filters.sort == 'price_desc' %}selected{% endif %}>{% trans "Prix décroissant" %}</option>
                                         </select>
-                                        <span class="ecom-localite-sort-caret" aria-hidden="true"></span>
+                                        <span class="ecom-localite-sort-caret" aria-hidden="true">
+                                            <i class="fa-solid fa-chevron-down"></i>
+                                        </span>
                                     </label>
                                 </form>
                             </div>
+                            <div id="ecom-localite-sous-host" class="ecom-shop-sous-host ecom-localite-sous-host" hidden></div>
                         </div>
                     </div>
 
@@ -255,6 +260,7 @@
                         {% endif %}
                     </div>
                     {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -314,7 +320,25 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    if (window.jQuery && jQuery.fn.niceSelect) {
+    var localiteUrl = '{% url "ecom_localite_detail" localite.code %}';
+    var busy = false;
+    var fetchController = null;
+    var searchTimer = null;
+
+    function getCatForm() {
+        return document.getElementById('localite-cat-form');
+    }
+
+    function getHost() {
+        return document.getElementById('ecom-localite-sous-host');
+    }
+
+    function getResults() {
+        return document.getElementById('ecom-localite-results');
+    }
+
+    function destroyNiceSelect() {
+        if (!(window.jQuery && jQuery.fn.niceSelect)) return;
         jQuery('.ecom-localite-sort-wrap select.ecom-no-nice-select').each(function () {
             var $el = jQuery(this);
             if ($el.next().hasClass('nice-select')) {
@@ -323,6 +347,232 @@ document.addEventListener('DOMContentLoaded', function () {
             $el.show();
         });
     }
+
+    function syncSousHostVisibility() {
+        var host = getHost();
+        if (!host) return;
+        host.hidden = !host.querySelector('.ecom-shop-sous-card.is-open');
+    }
+
+    function moveSousCardsToHost() {
+        var form = getCatForm();
+        var host = getHost();
+        if (!form || !host) return;
+        form.querySelectorAll('.ecom-shop-sous-card').forEach(function (card) {
+            host.appendChild(card);
+        });
+        syncSousHostVisibility();
+    }
+
+    function buildLocaliteQuery(page) {
+        var params = new URLSearchParams();
+        var form = getCatForm();
+        var host = getHost();
+        var searchInput = document.getElementById('ecom-localite-search-input');
+        var sortSel = document.getElementById('localite-sort-select');
+
+        if (searchInput && searchInput.value.trim()) {
+            params.set('q', searchInput.value.trim());
+        }
+        if (sortSel && sortSel.value) {
+            params.set('sort', sortSel.value);
+        }
+        if (form) {
+            form.querySelectorAll('input.ecom-localite-cat-input:checked').forEach(function (el) {
+                params.append('categorie', el.value);
+            });
+        }
+        var sousRoot = host || form;
+        if (sousRoot) {
+            sousRoot.querySelectorAll('input.ecom-localite-sous-input:checked').forEach(function (el) {
+                params.append('sous_categorie', el.value);
+            });
+        }
+        if (page && page > 1) {
+            params.set('page', String(page));
+        }
+        return params;
+    }
+
+    function setLoading(isLoading) {
+        var root = getResults();
+        if (root) root.classList.toggle('is-loading', !!isLoading);
+    }
+
+    function applyLocaliteHtml(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var nextResults = doc.getElementById('ecom-localite-results');
+        var root = getResults();
+        var nextForm = doc.getElementById('localite-cat-form');
+        var form = getCatForm();
+
+        if (nextResults && root) {
+            root.innerHTML = nextResults.innerHTML;
+        }
+        if (nextForm && form) {
+            form.innerHTML = nextForm.innerHTML;
+        }
+
+        destroyNiceSelect();
+        moveSousCardsToHost();
+        bindCatSousPanels();
+        bindSearchAndSort();
+        return !!(nextResults && root);
+    }
+
+    function fetchLocalite(params, pushState) {
+        var query = params.toString();
+        var url = localiteUrl + (query ? ('?' + query) : '');
+        if (busy && fetchController) {
+            fetchController.abort();
+        }
+        busy = true;
+        setLoading(true);
+        fetchController = new AbortController();
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
+            signal: fetchController.signal,
+            credentials: 'same-origin',
+        })
+            .then(function (response) {
+                if (!response.ok) throw new Error('localite filter failed');
+                return response.text();
+            })
+            .then(function (html) {
+                applyLocaliteHtml(html);
+                if (pushState !== false) {
+                    history.pushState({ localiteFilter: true }, '', url);
+                }
+            })
+            .catch(function (err) {
+                if (err && err.name === 'AbortError') return;
+                window.location.href = url;
+            })
+            .finally(function () {
+                busy = false;
+                setLoading(false);
+            });
+    }
+
+    function runFilter(options) {
+        options = options || {};
+        fetchLocalite(buildLocaliteQuery(options.page || null), options.pushState !== false);
+    }
+
+    function bindCatSousPanels() {
+        var form = getCatForm();
+        var host = getHost();
+        if (!form) return;
+
+        form.querySelectorAll('.ecom-shop-cat').forEach(function (wrap) {
+            var catCb = wrap.querySelector('input.ecom-localite-cat-input');
+            if (!catCb || catCb.getAttribute('data-bound') === '1') return;
+            catCb.setAttribute('data-bound', '1');
+            var catId = catCb.value;
+            var card = host
+                ? host.querySelector('.ecom-shop-sous-card[data-cat-id="' + catId + '"]')
+                : wrap.querySelector('.ecom-shop-sous-card');
+            if (card) card.classList.toggle('is-open', !!catCb.checked);
+
+            catCb.addEventListener('change', function () {
+                card = host
+                    ? host.querySelector('.ecom-shop-sous-card[data-cat-id="' + catId + '"]')
+                    : wrap.querySelector('.ecom-shop-sous-card');
+                if (card) {
+                    if (!catCb.checked) {
+                        card.querySelectorAll('input.ecom-localite-sous-input').forEach(function (sc) {
+                            sc.checked = false;
+                        });
+                        card.classList.remove('is-open');
+                    } else {
+                        card.classList.add('is-open');
+                    }
+                }
+                syncSousHostVisibility();
+                runFilter({});
+            });
+        });
+
+        document.querySelectorAll('input.ecom-localite-sous-input').forEach(function (sc) {
+            if (sc.getAttribute('data-bound') === '1') return;
+            sc.setAttribute('data-bound', '1');
+            sc.addEventListener('change', function () {
+                var card = sc.closest('.ecom-shop-sous-card');
+                var catId = card ? card.getAttribute('data-cat-id') : '';
+                var catCb = form.querySelector('input.ecom-localite-cat-input[value="' + catId + '"]');
+                if (sc.checked && catCb && !catCb.checked) {
+                    catCb.checked = true;
+                    if (card) card.classList.add('is-open');
+                }
+                syncSousHostVisibility();
+                runFilter({});
+            });
+        });
+
+        syncSousHostVisibility();
+    }
+
+    function bindSearchAndSort() {
+        var searchForm = document.getElementById('ecom-localite-search-form');
+        var searchInput = document.getElementById('ecom-localite-search-input');
+        var sortSel = document.getElementById('localite-sort-select');
+
+        if (searchForm && searchForm.getAttribute('data-bound') !== '1') {
+            searchForm.setAttribute('data-bound', '1');
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                clearTimeout(searchTimer);
+                runFilter({});
+            });
+        }
+
+        if (searchInput && searchInput.getAttribute('data-bound') !== '1') {
+            searchInput.setAttribute('data-bound', '1');
+            searchInput.addEventListener('input', function () {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function () {
+                    runFilter({});
+                }, 450);
+            });
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    searchInput.value = '';
+                    clearTimeout(searchTimer);
+                    runFilter({});
+                }
+            });
+        }
+
+        if (sortSel && sortSel.getAttribute('data-bound') !== '1') {
+            sortSel.setAttribute('data-bound', '1');
+            sortSel.addEventListener('change', function () {
+                runFilter({});
+            });
+        }
+    }
+
+    document.addEventListener('click', function (event) {
+        var pageLink = event.target.closest && event.target.closest('#ecom-localite-results .ecom-shop-pagination a.ecom-page-btn');
+        if (!pageLink) return;
+        event.preventDefault();
+        var href = pageLink.getAttribute('href') || '';
+        var page = 1;
+        try {
+            var u = new URL(href, window.location.origin);
+            page = parseInt(u.searchParams.get('page') || '1', 10) || 1;
+        } catch (e) {}
+        runFilter({ page: page });
+    });
+
+    window.addEventListener('popstate', function () {
+        fetchLocalite(new URLSearchParams(window.location.search), false);
+    });
+
+    destroyNiceSelect();
+    moveSousCardsToHost();
+    bindCatSousPanels();
+    bindSearchAndSort();
 });
 </script>
 {% endblock extra_js %}

@@ -1015,11 +1015,18 @@ def delete_permission(request, pk):
 @login_required(login_url='connexion')
 def list_categories(request):
     """Liste toutes les catégories de permissions"""
+    from django.db.models import Avg
+
     categories = TypeCustomPermission.objects.annotate(
         num_permissions=models.Count('cat_permis')
     ).order_by('categorie')
+    permissions_total = CustomPermission.objects.count()
+    avg_row = categories.aggregate(avg=Avg('num_permissions'))
+    permissions_avg = round(avg_row['avg'] or 0, 1)
     context = {
         'categories': categories,
+        'permissions_total': permissions_total,
+        'permissions_avg': permissions_avg,
     }
     # Vérifier si c'est une requête AJAX
     is_ajax = (

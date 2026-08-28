@@ -83,6 +83,7 @@ urlpatterns = [
     path('ajax/search-proformas/', ajax_search_proformas, name='ajax_search_proformas'),
     path('ajax/detail_proforma/<str:ticket_id>/', ajax_detail_proforma, name='ajax_detail_proforma'),
     path('valider_panier_proforma/<str:ticket_id>/', valider_panier_proforma, name='valider_panier_proforma'),
+    path('supprimer_proforma/<str:ticket_id>/', supprimer_proforma, name='supprimer_proforma'),
     path('imprimer_proforma/<str:ticket_id>/', imprimer_proforma_pdf, name='imprimer_proforma_pdf'),
     path('imprimer_bon_commande/<str:ticket_id>/', imprimer_recu_commande, name='imprimer_recu_commande'),
 

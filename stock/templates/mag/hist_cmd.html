@@ -77,26 +77,28 @@
                                     </td>
                                     <td>{{ item.history_user.username|default:item.utilisateur.username|default:"—" }}</td>
                                     <td>{{ item.history_date|date:"d/m/Y H:i" }}</td>
-                                    <td class="text-center text-nowrap">
-                                        {% if item.paye and ticket %}
+                                    <td>
+                                        <div class="mag-cmd-actions mag-cmd-actions--row">
+                                            {% if item.paye and ticket %}
                                             <button type="button"
-                                                    class="btn mag-cmd-btn mag-cmd-btn--ghost reprint-recu-paiement"
+                                                    class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon reprint-recu-paiement"
                                                     data-ticket="{{ ticket.numero }}"
-                                                    title="Réimprimer le reçu de paiement">
+                                                    title="Réimprimer le reçu">
                                                 <i class="fa fa-print"></i>
                                             </button>
                                             {% if bon %}
-                                                <a href="{% url 'imprimer_bon_commande_vente' ticket.numero %}?format=pdf"
-                                                   class="btn mag-cmd-btn mag-cmd-btn--ghost"
-                                                   target="_blank"
-                                                   rel="noopener"
-                                                   title="PDF bon de commande">
-                                                    <i class="fa fa-file-pdf-o"></i>
-                                                </a>
+                                            <a href="{% url 'imprimer_bon_commande_vente' ticket.numero %}?format=pdf"
+                                               class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                               target="_blank"
+                                               rel="noopener"
+                                               title="PDF bon de commande">
+                                                <i class="fa fa-file-pdf-o"></i>
+                                            </a>
                                             {% endif %}
-                                        {% else %}
+                                            {% else %}
                                             <span class="text-muted">—</span>
-                                        {% endif %}
+                                            {% endif %}
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endwith %}

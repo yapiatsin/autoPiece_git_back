@@ -1,6 +1,8 @@
 from django.contrib import admin
 
 from .models import (
+    ChatConversation,
+    ChatMessage,
     CommuneLivraison,
     FavoriPiece,
     NewsletterAbonne,
@@ -97,3 +99,36 @@ class CommuneLivraisonAdmin(admin.ModelAdmin):
     search_fields = ['nom', 'ville__nom']
     list_editable = ['actif']
     list_select_related = ['ville', 'ville__pays']
+
+
+class ChatMessageInline(admin.TabularInline):
+    model = ChatMessage
+    extra = 0
+    readonly_fields = ['sender_type', 'sender', 'body', 'created_at']
+    can_delete = False
+
+
+@admin.register(ChatConversation)
+class ChatConversationAdmin(admin.ModelAdmin):
+    list_display = ['id', 'status', 'handler_mode', 'client', 'staff', 'subject', 'last_message_at', 'closed_at', 'created_at']
+    list_filter = ['status', 'handler_mode', 'created_at']
+    search_fields = ['subject', 'session_key', 'client__username', 'client__email', 'staff__username']
+    raw_id_fields = ['client', 'staff']
+    list_select_related = ['client', 'staff']
+    readonly_fields = ['created_at', 'updated_at', 'last_message_at', 'closed_at']
+    inlines = [ChatMessageInline]
+    ordering = ['-last_message_at', '-created_at']
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'conversation', 'sender_type', 'sender', 'body_preview', 'created_at']
+    list_filter = ['sender_type', 'created_at']
+    search_fields = ['body', 'conversation__id', 'sender__username']
+    raw_id_fields = ['conversation', 'sender']
+    list_select_related = ['conversation', 'sender']
+    ordering = ['-created_at']
+
+    @admin.display(description='Message')
+    def body_preview(self, obj):
+        return (obj.body or '')[:60]

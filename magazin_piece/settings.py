@@ -217,6 +217,9 @@ GENIUSPAY_BASE_URL = config(
 GENIUSPAY_WEBHOOK_SECRET = config('GENIUSPAY_WEBHOOK_SECRET', default='').strip()
 GENIUSPAY_MIN_AMOUNT = 200
 
+# Chatbot e-com — clé IA (non utilisée pour l’instant)
+CHATBOT_AI_API_KEY = config('CHATBOT_AI_API_KEY', default='').strip()
+
 # Pusher (temps réel magasin — remplace MQTT local)
 PUSHER_APP_ID = config('PUSHER_APP_ID', default='')
 PUSHER_KEY = config('PUSHER_KEY', default='')

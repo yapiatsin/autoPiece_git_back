@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.views.generic import TemplateView
 
 from Userauths.models import CustomUser, LocalEntrepot, ProfilUser, JOURS_SEMAINE
@@ -27,6 +27,7 @@ from .models import (
     PaysLivraison,
     VilleLivraison,
     VueRecentePiece,
+    ChatConversation,
 )
 from .forms import EcomAccountAddressForm, EcomAccountProfileForm, NewsletterForm
 from .context_processors import ECOM_API_PATH_PREFIXES, get_ecom_cart_context, safe_ecom_next_url
@@ -2405,3 +2406,252 @@ def zones_livraison_delete(request):
     obj.delete()
     messages.success(request, f'{nom} supprimé.')
     return redirect(f"{reverse('zones_livraison')}?tab={kind}")
+
+
+# ── Chatbot client / staff ───────────────────────────────────────────────
+
+@require_http_methods(['GET', 'POST'])
+def chat_thread(request):
+    """GET état + messages / POST envoi message (client ou invité)."""
+    from . import chatbots
+
+    if request.method == 'POST':
+        payload = {}
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                payload = json.loads(request.body.decode('utf-8') or '{}')
+            except json.JSONDecodeError:
+                payload = {}
+            action = (payload.get('action') or '').strip().lower()
+            body = payload.get('body') or payload.get('message') or ''
+        else:
+            action = (request.POST.get('action') or '').strip().lower()
+            body = request.POST.get('body') or request.POST.get('message') or ''
+
+        if action in ('new', 'start_new'):
+            data = chatbots.client_start_new_thread(request)
+            data['ok'] = True
+            return JsonResponse(data)
+
+        try:
+            conv, _msg = chatbots.client_send_message(request, body)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        data = chatbots.conversation_thread_payload(request)
+        data['ok'] = True
+        data['conversation_id'] = conv.pk
+        return JsonResponse(data)
+
+    data = chatbots.conversation_thread_payload(request)
+    data['ok'] = True
+    return JsonResponse(data)
+
+
+@login_required(login_url='connexion')
+def chat_inbox(request):
+    """Page magasin : inbox chat clients."""
+    denied = _deny_client_access(request)
+    if denied:
+        return denied
+    if not _require_staff_cmd(request.user):
+        messages.error(request, 'Accès réservé au personnel du magasin.')
+        return redirect('tbord')
+    from . import chatbots
+    pending_count = chatbots.staff_list_conversations(
+        request.user, status=ChatConversation.STATUS_PENDING
+    ).count()
+    return render(request, 'mag/chat_inbox.html', {
+        'pending_count': pending_count,
+        'chat_stats': chatbots.staff_chat_stats(request.user),
+    })
+
+
+@login_required(login_url='connexion')
+def chat_history(request):
+    """Page magasin : historique des conversations chat (période = mois par défaut)."""
+    denied = _deny_client_access(request)
+    if denied:
+        return denied
+    if not _require_staff_cmd(request.user):
+        messages.error(request, 'Accès réservé au personnel du magasin.')
+        return redirect('tbord')
+    from . import chatbots
+    filt = periode_filter_context(
+        request,
+        request.user,
+        reset_url_name='ecom_chat_history',
+        default='mois',
+        include_localites=False,
+    )
+    date_debut = filt['date_debut']
+    date_fin = filt['date_fin']
+    return render(request, 'mag/historique_chat_inbox.html', {
+        **filt,
+        'filter_modal_id': 'chatHistoryFilterModal',
+        'chat_stats': chatbots.staff_chat_stats(
+            request.user, date_debut=date_debut, date_fin=date_fin
+        ),
+    })
+
+
+@login_required(login_url='connexion')
+@require_GET
+def chat_api_conversations(request):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    from . import chatbots
+    status = (request.GET.get('status') or '').strip() or None
+    if status and status not in dict(ChatConversation.STATUS_CHOICES):
+        return JsonResponse({'error': 'Statut invalide.'}, status=400)
+    items = [
+        chatbots.serialize_conversation_list_item(c)
+        for c in chatbots.staff_list_conversations(request.user, status=status)[:100]
+    ]
+    pending_count = chatbots.staff_list_conversations(
+        request.user, status=ChatConversation.STATUS_PENDING
+    ).count()
+    return JsonResponse({
+        'ok': True,
+        'conversations': items,
+        'pending_count': pending_count,
+        'stats': chatbots.staff_chat_stats(request.user),
+    })
+
+
+@login_required(login_url='connexion')
+@require_GET
+def chat_api_history_conversations(request):
+    """Liste historique : toutes les conversations de la période (mois par défaut)."""
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    from . import chatbots
+    from stock.period_filters import get_periode_date_range
+    from stock.forms import DateForm
+
+    status = (request.GET.get('status') or '').strip() or None
+    if status and status not in dict(ChatConversation.STATUS_CHOICES):
+        return JsonResponse({'error': 'Statut invalide.'}, status=400)
+
+    form = DateForm(request.GET)
+    date_debut, date_fin, periode_active = get_periode_date_range(
+        request, form, default='mois'
+    )
+    items = [
+        chatbots.serialize_conversation_list_item(c)
+        for c in chatbots.staff_list_history_conversations(
+            request.user,
+            status=status,
+            date_debut=date_debut,
+            date_fin=date_fin,
+        )[:300]
+    ]
+    return JsonResponse({
+        'ok': True,
+        'conversations': items,
+        'stats': chatbots.staff_chat_stats(
+            request.user, date_debut=date_debut, date_fin=date_fin
+        ),
+        'periode': {
+            'active': periode_active,
+            'date_debut': date_debut.isoformat(),
+            'date_fin': date_fin.isoformat(),
+        },
+    })
+
+
+@login_required(login_url='connexion')
+@require_POST
+def chat_api_accept(request, conversation_id):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    from . import chatbots
+    conv = get_object_or_404(ChatConversation, pk=conversation_id)
+    try:
+        chatbots.staff_accept(conv, request.user)
+    except ValueError as exc:
+        return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+    return JsonResponse({
+        'ok': True,
+        'conversation': chatbots.serialize_conversation(conv, include_messages=True),
+    })
+
+
+@login_required(login_url='connexion')
+@require_POST
+def chat_api_refuse(request, conversation_id):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    from . import chatbots
+    conv = get_object_or_404(ChatConversation, pk=conversation_id)
+    try:
+        chatbots.staff_refuse(conv, request.user)
+    except ValueError as exc:
+        return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+    return JsonResponse({
+        'ok': True,
+        'conversation': chatbots.serialize_conversation(conv, include_messages=True),
+    })
+
+
+@login_required(login_url='connexion')
+@require_POST
+def chat_api_close(request, conversation_id):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    from . import chatbots
+    conv = get_object_or_404(ChatConversation, pk=conversation_id)
+    try:
+        chatbots.staff_close(conv, request.user)
+    except ValueError as exc:
+        return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+    conv.refresh_from_db()
+    return JsonResponse({
+        'ok': True,
+        'conversation': chatbots.serialize_conversation(conv, include_messages=True),
+    })
+
+
+@login_required(login_url='connexion')
+@require_POST
+def chat_api_delete(request, conversation_id):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    from . import chatbots
+    conv = get_object_or_404(ChatConversation, pk=conversation_id)
+    chatbots.staff_delete_conversation(conv)
+    return JsonResponse({'ok': True, 'deleted_id': conversation_id})
+
+
+@login_required(login_url='connexion')
+@require_http_methods(['GET', 'POST'])
+def chat_api_messages(request, conversation_id):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    from . import chatbots
+    conv = get_object_or_404(ChatConversation, pk=conversation_id)
+    conv = chatbots.maybe_auto_close_idle(conv)
+
+    if request.method == 'POST':
+        body = ''
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                payload = json.loads(request.body.decode('utf-8') or '{}')
+            except json.JSONDecodeError:
+                payload = {}
+            body = payload.get('body') or payload.get('message') or ''
+        else:
+            body = request.POST.get('body') or request.POST.get('message') or ''
+        try:
+            chatbots.staff_send_message(conv, request.user, body)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        conv.refresh_from_db()
+        return JsonResponse({
+            'ok': True,
+            'conversation': chatbots.serialize_conversation(conv, include_messages=True),
+        })
+
+    return JsonResponse({
+        'ok': True,
+        'conversation': chatbots.serialize_conversation(conv, include_messages=True),
+    })

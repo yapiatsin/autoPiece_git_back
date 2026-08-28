@@ -1,32 +1,192 @@
 {% extends "mag/base_mag_ecom.html" %}
-<title>{% block title %} Auto-Piece - Gestion des Catégories {% endblock title %}</title>
+{% load static %}
 
-{% block header %}
-<div class="block-header">
-    <div class="row">
-        <div class="col-lg-6 col-md-6 col-sm-12">
-            <h2>{% block page_title %}<i class="fa fa-tags text-info"></i> Gestion des Catégories{% endblock page_title %}</h2>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'tbord' %}"><i class="fa fa-home"></i> Tableau de bord</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'list_permissions' %}">Permissions</a></li>
-                <li class="breadcrumb-item active">{% block page %}Catégories{% endblock page %}</li>
-            </ul>
-        </div>
-        <div class="col-lg-6 col-md-6 col-sm-12">
-            <div class="d-flex flex-row-reverse">
-                <div class="page_action">
-                    {% block page_action %}
-                        <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#addCategoryModal" onclick="openCategoryModal()">
-                            <i class="icon-plus"></i> Nouvelle Catégorie
-                        </button>
-                    {% endblock page_action %}
+{% block title %}AUTO-PIECE — Catégories permissions{% endblock title %}
+{% block page %}Catégories de permissions{% endblock page %}
+
+{% block page_action_buttons %}
+<a href="{% url 'list_permissions' %}" class="btn btn-outline-secondary btn-sm" title="Retour aux permissions">
+    <i class="fa fa-lock"></i>
+</a>
+<button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#addCategoryModal" onclick="openCategoryModal()" title="Nouvelle catégorie">
+    <i class="fa fa-plus"></i>
+</button>
+{% endblock page_action_buttons %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+{% include "mag/partials/_dashboard_kpi_styles.html" %}
+{% endblock extra_head %}
+
+{% block main_content %}
+<div class="mag-cmd-line-page col-12 px-0">
+    <div class="mag-cmd-line-section">
+        {% include "partials/_kpi_row_perm_categories.html" %}
+    </div>
+
+    <div class="mag-cmd-line-section" id="perm-categories-live">
+        {% include "page/list_categories.html" %}
+    </div>
+</div>
+
+<div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog" aria-labelledby="categoryModalLabel">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryModalLabel">Nouvelle catégorie</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="categoryFormContainer">
+                <div class="text-center p-4 text-muted">
+                    <i class="fa fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2 mb-0">Chargement du formulaire…</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock header %}
-
-{% block main_content %}
-    {% include 'page/list_categories.html' %}
 {% endblock main_content %}
+
+{% block extra_js %}
+<script>
+var CAT_URLS = {
+    create: '{% url "create_perm_category" %}',
+    update: '{% url "update_perm_category" 0 %}'.replace('/0/', '/__ID__/'),
+    remove: '{% url "delete_perm_category" 0 %}'.replace('/0/', '/__ID__/')
+};
+
+function catLoadingHtml(msg) {
+    return '<div class="text-center p-4 text-muted"><i class="fa fa-spinner fa-spin fa-2x"></i><p class="mt-2 mb-0">' + (msg || 'Chargement…') + '</p></div>';
+}
+
+function loadCreateCategoryForm() {
+    $('#categoryFormContainer').html(catLoadingHtml('Chargement du formulaire…'));
+    $.ajax({
+        url: CAT_URLS.create,
+        type: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function(data) { $('#categoryFormContainer').html(data); },
+        error: function() {
+            $('#categoryFormContainer').html('<div class="alert alert-danger m-3">Erreur lors du chargement du formulaire.</div>');
+        }
+    });
+}
+
+function openCategoryModal() {
+    if (!$('#categoryFormContainer form').length) loadCreateCategoryForm();
+    $('#categoryModalLabel').text('Nouvelle catégorie');
+}
+
+function editCategory(pk) {
+    $('#categoryFormContainer').html(catLoadingHtml('Chargement du formulaire…'));
+    $('#addCategoryModal').modal('show');
+    $.ajax({
+        url: CAT_URLS.update.replace('__ID__', pk),
+        type: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function(data) {
+            $('#categoryFormContainer').html(data);
+            $('#categoryModalLabel').text('Modifier la catégorie');
+        },
+        error: function(xhr) {
+            $('#categoryFormContainer').html('<div class="alert alert-danger m-3">Erreur lors du chargement.</div>');
+        }
+    });
+}
+
+function deleteCategoryConfirm(pk, name) {
+    if (!confirm('Supprimer la catégorie « ' + name + ' » ?\n\nCette action est irréversible.')) return;
+    deleteCategory(pk);
+}
+
+function deleteCategory(pk) {
+    $('#categoryFormContainer').html(catLoadingHtml('Chargement…'));
+    $('#addCategoryModal').modal('show');
+    $.ajax({
+        url: CAT_URLS.remove.replace('__ID__', pk),
+        type: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function(data) {
+            $('#categoryFormContainer').html(data);
+            $('#categoryModalLabel').text('Supprimer la catégorie');
+        },
+        error: function() {
+            $('#categoryFormContainer').html('<div class="alert alert-danger m-3">Erreur lors du chargement.</div>');
+        }
+    });
+}
+
+function reloadCategoriesList() {
+    var url = '{% url "list_perm_categories" %}?ajax=1';
+    return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            var el = document.getElementById('perm-categories-live');
+            if (!el) return;
+            if (window.Alpine && typeof Alpine.destroyTree === 'function') {
+                try { Alpine.destroyTree(el); } catch (e) {}
+            }
+            el.innerHTML = html;
+            if (window.Alpine && typeof Alpine.initTree === 'function') {
+                try { Alpine.initTree(el); } catch (e) {}
+            }
+        });
+}
+
+$(document).ready(function() { loadCreateCategoryForm(); });
+
+$('#addCategoryModal').on('hidden.bs.modal', function() {
+    loadCreateCategoryForm();
+    $('#categoryModalLabel').text('Nouvelle catégorie');
+});
+
+$(document).on('submit', '#categoryForm', function(e) {
+    e.preventDefault();
+    var form = $(this);
+    var objectId = form.data('object-id');
+    var url = objectId ? CAT_URLS.update.replace('__ID__', objectId) : CAT_URLS.create;
+    $.ajax({
+        url: url,
+        type: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        data: form.serialize(),
+        success: function(data) {
+            if (data.success) {
+                $('#addCategoryModal').modal('hide');
+                location.reload();
+            } else {
+                $('#categoryFormContainer').html(data.html || '<div class="alert alert-danger m-3">Erreur lors de l\'enregistrement.</div>');
+            }
+        },
+        error: function(xhr) {
+            alert(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Une erreur est survenue.');
+        }
+    });
+});
+
+$(document).on('submit', '#deleteCategoryForm', function(e) {
+    e.preventDefault();
+    var form = $(this);
+    var pk = form.data('category-id');
+    $.ajax({
+        url: CAT_URLS.remove.replace('__ID__', pk),
+        type: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        data: form.serialize(),
+        success: function(data) {
+            if (data.success) {
+                $('#addCategoryModal').modal('hide');
+                location.reload();
+            } else {
+                alert(data.message || 'Erreur lors de la suppression');
+            }
+        },
+        error: function() {
+            alert('Une erreur est survenue lors de la suppression.');
+        }
+    });
+});
+</script>
+{% endblock extra_js %}

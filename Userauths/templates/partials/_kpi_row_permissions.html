@@ -1,0 +1,55 @@
+<div class="mag-cmd-kpi-grid mag-cmd-kpi-grid--3">
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-lock"></i></span>
+                <p class="mag-stat-label">Permissions</p>
+            </div>
+        </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ permissions_total }}</strong>
+            <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,20 12,16 24,18 36,10 48,13 60,7 72,9 88,4"></polyline>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">{% if search_query or category_filter %}Résultat filtré{% else %}Total enregistré{% endif %}</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-tags"></i></span>
+                <p class="mag-stat-label">Catégories</p>
+            </div>
+        </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value">{{ categories|length }}</strong>
+            <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+                <rect x="2" y="16" width="6" height="12" rx="1.5"></rect>
+                <rect x="12" y="10" width="6" height="18" rx="1.5"></rect>
+                <rect x="22" y="14" width="6" height="14" rx="1.5"></rect>
+                <rect x="32" y="6" width="6" height="22" rx="1.5"></rect>
+                <rect x="42" y="11" width="6" height="17" rx="1.5"></rect>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">Types de menu</span>
+    </article>
+    <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+            <div class="mag-stat-heading">
+                <span class="mag-stat-icon"><i class="fa fa-filter"></i></span>
+                <p class="mag-stat-label">Filtre actif</p>
+            </div>
+        </div>
+        <div class="mag-stat-card-bottom">
+            <strong class="mag-stat-value" style="font-size:1.05rem;">
+                {% if category_filter or search_query %}Oui{% else %}Non{% endif %}
+            </strong>
+            <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+                <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,22 14,18 28,20 42,12 56,14 70,8 88,6"></polyline>
+            </svg>
+        </div>
+        <span class="mag-stat-hint">
+            {% if search_query %}« {{ search_query }} »{% elif category_filter %}Par catégorie{% else %}Toutes affichées{% endif %}
+        </span>
+    </article>
+</div>

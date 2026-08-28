@@ -546,7 +546,8 @@ body.mag-ecom-body:has(.mag-cmd-line-page) .row-deck {
     background: #fff7ed !important;
 }
 
-.mag-cmd-line-page .mag-cmd-pager-btn:disabled {
+.mag-cmd-line-page .mag-cmd-pager-btn:disabled,
+.mag-cmd-line-page .mag-cmd-pager-btn.disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
@@ -584,6 +585,10 @@ body.mag-ecom-body:has(.mag-cmd-line-page) .row-deck {
 
 .mag-cmd-kpi-grid--4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.mag-cmd-kpi-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .mag-stat-card {

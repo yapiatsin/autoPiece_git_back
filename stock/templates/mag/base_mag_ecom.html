@@ -194,11 +194,11 @@
                                                 {% endif %}
                                             {% endfor %}
                                         {% else %}
-                                            <li class="menu-item menu-item-has-children mag-nav-item{% if menu_cat.permissions|length > 4 %} mag-nav-item--wide{% endif %}{% if menu_cat.has_cmd_line or menu_cat.has_livraison_cmd %} js-interfaces-nav-parent{% endif %}">
+                                            <li class="menu-item menu-item-has-children mag-nav-item{% if menu_cat.permissions|length > 4 %} mag-nav-item--wide{% endif %}{% if menu_cat.has_cmd_line or menu_cat.has_livraison_cmd or menu_cat.has_chat_client %} js-interfaces-nav-parent{% endif %}">
                                                 <a href="#" class="mag-nav-parent-link" aria-haspopup="true" aria-expanded="false">
                                                     <i class="{{ menu_cat.icon }}" aria-hidden="true"></i>
                                                     <span class="mag-nav-parent-label">{{ menu_cat.display_label }}</span>
-                                                    {% if menu_cat.has_cmd_line or menu_cat.has_livraison_cmd %}
+                                                    {% if menu_cat.has_cmd_line or menu_cat.has_livraison_cmd or menu_cat.has_chat_client %}
                                                     <span class="mag-nav-badge js-interfaces-badge"
                                                           data-badge-role="parent"
                                                           {% if nb_interfaces_notif %}aria-label="{{ nb_interfaces_notif }} notification{{ nb_interfaces_notif|pluralize }} Interfaces"{% else %}hidden aria-hidden="true"{% endif %}>
@@ -222,8 +222,8 @@
                                                             {% for perm in menu_cat.permissions %}
                                                                 <li class="menu-item mag-nav-dropdown-item">
                                                                     <a href="{% url perm.url %}"
-                                                                       class="mag-nav-dropdown-link{% if request.resolver_match.url_name == perm.url %} is-active{% endif %}{% if perm.url == 'cmd_line' or perm.url == 'livraison_cmd_online' %} js-ecom-nav-link{% endif %}">
-                                                                        <span class="mag-nav-dropdown-icon{% if perm.url == 'cmd_line' or perm.url == 'livraison_cmd_online' %} mag-nav-dropdown-icon--badge{% endif %}">
+                                                                       class="mag-nav-dropdown-link{% if request.resolver_match.url_name == perm.url %} is-active{% endif %}{% if perm.url == 'cmd_line' or perm.url == 'livraison_cmd_online' or perm.url == 'ecom_chat_inbox' %} js-ecom-nav-link{% endif %}">
+                                                                        <span class="mag-nav-dropdown-icon{% if perm.url == 'cmd_line' or perm.url == 'livraison_cmd_online' or perm.url == 'ecom_chat_inbox' %} mag-nav-dropdown-icon--badge{% endif %}">
                                                                             <i class="{{ perm.menu_icon|default:'fa fa-angle-right' }}" aria-hidden="true"></i>
                                                                             {% if perm.url == 'cmd_line' %}
                                                                             <span class="mag-nav-badge mag-nav-badge--sm js-cmd-line-badge"
@@ -236,6 +236,12 @@
                                                                                   data-badge-role="item"
                                                                                   {% if nb_livraison_cmd_a_livrer %}aria-label="{{ nb_livraison_cmd_a_livrer }} livraison{{ nb_livraison_cmd_a_livrer|pluralize }} à effectuer"{% else %}hidden aria-hidden="true"{% endif %}>
                                                                                 {% if nb_livraison_cmd_a_livrer %}{% if nb_livraison_cmd_a_livrer > 99 %}99+{% else %}{{ nb_livraison_cmd_a_livrer }}{% endif %}{% endif %}
+                                                                            </span>
+                                                                            {% elif perm.url == 'ecom_chat_inbox' %}
+                                                                            <span class="mag-nav-badge mag-nav-badge--sm js-chat-client-badge"
+                                                                                  data-badge-role="item"
+                                                                                  {% if nb_chat_clients_pending %}aria-label="{{ nb_chat_clients_pending }} conversation{{ nb_chat_clients_pending|pluralize }} en attente"{% else %}hidden aria-hidden="true"{% endif %}>
+                                                                                {% if nb_chat_clients_pending %}{% if nb_chat_clients_pending > 99 %}99+{% else %}{{ nb_chat_clients_pending }}{% endif %}{% endif %}
                                                                             </span>
                                                                             {% endif %}
                                                                         </span>
@@ -739,6 +745,7 @@
                     updateEcomNavBadges(
                         data.nb_cmd_ligne_attente || 0,
                         data.nb_livraison_cmd_a_livrer || 0,
+                        data.nb_chat_clients_pending || 0,
                         data.nb_interfaces_notif || 0
                     );
                     if (data.notifications.length === 0) {
@@ -777,6 +784,9 @@
                         } else if (notif.type === 'commande_en_ligne') {
                             iconClass = 'fa fa-shopping-cart';
                             typeClass = 'type-warning';
+                        } else if (notif.type === 'chat_client') {
+                            iconClass = 'fa fa-comments';
+                            typeClass = 'type-info';
                         }
                         const notifHref = notif.url || 'javascript:void(0);';
                         const notifUrlAttr = notif.url ? ' data-has-url="1"' : '';
@@ -875,7 +885,7 @@
             });
         }
 
-        function updateEcomNavBadges(nbAttente, nbALivrer, nbInterfaces) {
+        function updateEcomNavBadges(nbAttente, nbALivrer, nbChat, nbInterfaces) {
             setNavBadge(
                 '.js-cmd-line-badge',
                 nbAttente,
@@ -885,6 +895,11 @@
                 '.js-livraison-cmd-badge',
                 nbALivrer,
                 n => `${n} livraison${n > 1 ? 's' : ''} à effectuer`
+            );
+            setNavBadge(
+                '.js-chat-client-badge',
+                nbChat,
+                n => `${n} conversation${n > 1 ? 's' : ''} chat en attente`
             );
             setNavBadge(
                 '.js-interfaces-badge',

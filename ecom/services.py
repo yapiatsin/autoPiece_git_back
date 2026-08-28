@@ -109,6 +109,20 @@ def count_livraisons_cmd_ligne_a_livrer(user) -> int:
     return filter_commandes_livraison_online_for_user(user, qs).count()
 
 
+def count_chat_clients_pending(user) -> int:
+    """Nombre de conversations chat en attente (badge navbar)."""
+    if not getattr(user, 'is_authenticated', False):
+        return 0
+    role = getattr(user, 'role', None)
+    if not (user.is_superuser or role in ROLES_STAFF_CMD):
+        return 0
+    from ecom import chatbots
+    from ecom.models import ChatConversation
+    return chatbots.staff_list_conversations(
+        user, status=ChatConversation.STATUS_PENDING
+    ).count()
+
+
 def liste_pays_actifs():
     from .models import PaysLivraison
     return PaysLivraison.objects.filter(actif=True).order_by('nom')

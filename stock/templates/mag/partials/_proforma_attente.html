@@ -8,6 +8,36 @@
     padding: 0.5rem;
     width: 100%;
 }
+.proforma-attente-card-container {
+    position: relative;
+    height: 100%;
+}
+.proforma-attente-card__delete {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.55rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fff;
+    color: #dc2626;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.proforma-attente-card__delete:hover {
+    background: #fef2f2;
+    border-color: #f87171;
+    color: #b91c1c;
+}
+.proforma-attente-card__delete:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
 @media (min-width: 576px) {
     .proforma-attente-card-wrap { width: 50%; }
 }
@@ -56,7 +86,7 @@ button.proforma-attente-card {
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
-    padding: 0.75rem 0.9rem;
+    padding: 0.75rem 2.75rem 0.75rem 0.9rem;
     background: linear-gradient(90deg, #fff7ed, #ffffff);
     border-bottom: 1px solid #ffedd5;
 }
@@ -159,37 +189,46 @@ button.proforma-attente-card {
 
 {% for panier in paniers_proforma %}
 <div class="proforma-attente-card-wrap">
-    <button type="button"
-            class="proforma-attente-card"
-            onclick="afficherDetailProforma('{{ panier.ticket }}')"
-            title="Voir la proforma {{ panier.ticket }}">
-        <div class="proforma-attente-card__head">
-            <span class="proforma-attente-card__ticket">N° {{ panier.ticket }}</span>
-            <span class="proforma-attente-card__badge">
-                <i class="fa fa-clock-o" aria-hidden="true"></i> Attente
-            </span>
-        </div>
-        <div class="proforma-attente-card__visual">
-            <i class="icon-doc" aria-hidden="true"></i>
-        </div>
-        <div class="proforma-attente-card__body">
-            <div class="proforma-attente-card__client">
-                {{ panier.nom_client|default:"Client non renseigné" }}
+    <div class="proforma-attente-card-container">
+        <button type="button"
+                class="proforma-attente-card"
+                onclick="afficherDetailProforma('{{ panier.ticket }}')"
+                title="Voir la proforma {{ panier.ticket }}">
+            <div class="proforma-attente-card__head">
+                <span class="proforma-attente-card__ticket">N° {{ panier.ticket }}</span>
+                <span class="proforma-attente-card__badge">
+                    <i class="fa fa-clock-o" aria-hidden="true"></i> Attente
+                </span>
             </div>
-            <div class="proforma-attente-card__meta">
-                <i class="fa fa-calendar" aria-hidden="true"></i>
-                <span>{{ panier.date_creation|date:"d/m/Y" }}</span>
-                {% if panier.local_entrepot %}
-                <span aria-hidden="true">·</span>
-                <span>{{ panier.local_entrepot.nom }}</span>
-                {% endif %}
+            <div class="proforma-attente-card__visual">
+                <i class="icon-doc" aria-hidden="true"></i>
             </div>
-            <div class="proforma-attente-card__footer">
-                <span class="proforma-attente-card__footer-label">Total</span>
-                <span class="proforma-attente-card__total">{{ panier.total|floatformat:0 }} FCFA</span>
+            <div class="proforma-attente-card__body">
+                <div class="proforma-attente-card__client">
+                    {{ panier.nom_client|default:"Client non renseigné" }}
+                </div>
+                <div class="proforma-attente-card__meta">
+                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                    <span>{{ panier.date_creation|date:"d/m/Y" }}</span>
+                    {% if panier.local_entrepot %}
+                    <span aria-hidden="true">·</span>
+                    <span>{{ panier.local_entrepot.nom }}</span>
+                    {% endif %}
+                </div>
+                <div class="proforma-attente-card__footer">
+                    <span class="proforma-attente-card__footer-label">Total</span>
+                    <span class="proforma-attente-card__total">{{ panier.total|floatformat:0 }} FCFA</span>
+                </div>
             </div>
-        </div>
-    </button>
+        </button>
+        <button type="button"
+                class="proforma-attente-card__delete"
+                onclick="supprimerProforma('{{ panier.ticket }}')"
+                title="Supprimer la proforma"
+                aria-label="Supprimer la proforma {{ panier.ticket }}">
+            <i class="fa fa-trash" aria-hidden="true"></i>
+        </button>
+    </div>
 </div>
 {% empty %}
 <div class="proforma-attente-empty">

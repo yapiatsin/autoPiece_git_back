@@ -1,0 +1,378 @@
+{% extends "mag/base_mag_ecom.html" %}
+{% load static %}
+
+{% block title %}AUTO-PIECE — Historique chat{% endblock title %}
+{% block page %}Historique chat{% endblock page %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-chat-inbox.css' %}">
+{% endblock extra_head %}
+
+{% block main_content %}
+{% with stats=chat_stats %}
+{% include "mag/partials/_periode_filter_modal.html" %}
+<div class="mag-chat-inbox-page col-12 px-0">
+  <div class="mag-cmd-line-section">
+    <div class="mag-cmd-kpi-grid mag-cmd-kpi-grid--4" id="mag-chat-stats">
+      <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+          <div class="mag-stat-heading">
+            <span class="mag-stat-icon"><i class="fa fa-comments"></i></span>
+            <p class="mag-stat-label">Total conversation</p>
+          </div>
+        </div>
+        <div class="mag-stat-card-bottom">
+          <strong class="mag-stat-value" data-stat="total">{{ stats.total|default:0 }}</strong>
+          <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+            <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,20 12,16 24,18 36,10 48,13 60,7 72,9 88,4"></polyline>
+          </svg>
+        </div>
+        <span class="mag-stat-hint">Période sélectionnée</span>
+      </article>
+
+      <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+          <div class="mag-stat-heading">
+            <span class="mag-stat-icon"><i class="fa fa-envelope-o"></i></span>
+            <p class="mag-stat-label">Messages reçu</p>
+          </div>
+        </div>
+        <div class="mag-stat-card-bottom">
+          <strong class="mag-stat-value" data-stat="messages_recus">{{ stats.messages_recus|default:0 }}</strong>
+          <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+            <rect x="2" y="16" width="6" height="12" rx="1.5"></rect>
+            <rect x="12" y="10" width="6" height="18" rx="1.5"></rect>
+            <rect x="22" y="14" width="6" height="14" rx="1.5"></rect>
+            <rect x="32" y="6" width="6" height="22" rx="1.5"></rect>
+            <rect x="42" y="11" width="6" height="17" rx="1.5"></rect>
+          </svg>
+        </div>
+        <span class="mag-stat-hint">Messages clients</span>
+      </article>
+
+      <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+          <div class="mag-stat-heading">
+            <span class="mag-stat-icon"><i class="fa fa-comments-o"></i></span>
+            <p class="mag-stat-label">Conversation en cours</p>
+          </div>
+        </div>
+        <div class="mag-stat-card-bottom">
+          <strong class="mag-stat-value" data-stat="en_cours">{{ stats.en_cours|default:0 }}</strong>
+          <svg class="mag-stat-spark" viewBox="0 0 88 28" aria-hidden="true">
+            <polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,22 14,18 28,20 42,12 56,14 70,8 88,6"></polyline>
+          </svg>
+        </div>
+        <span class="mag-stat-hint">En attente + actives</span>
+      </article>
+
+      <article class="mag-stat-card">
+        <div class="mag-stat-card-top">
+          <div class="mag-stat-heading">
+            <span class="mag-stat-icon"><i class="fa fa-check-circle"></i></span>
+            <p class="mag-stat-label">Conversation terminée</p>
+          </div>
+        </div>
+        <div class="mag-stat-card-bottom">
+          <strong class="mag-stat-value" data-stat="terminees">{{ stats.terminees|default:0 }}</strong>
+          <svg class="mag-stat-bars" viewBox="0 0 52 28" aria-hidden="true">
+            <rect x="2" y="18" width="6" height="10" rx="1.5"></rect>
+            <rect x="12" y="12" width="6" height="16" rx="1.5"></rect>
+            <rect x="22" y="8" width="6" height="20" rx="1.5"></rect>
+            <rect x="32" y="14" width="6" height="14" rx="1.5"></rect>
+            <rect x="42" y="6" width="6" height="22" rx="1.5"></rect>
+          </svg>
+        </div>
+        <span class="mag-stat-hint">Fermées ou refusées</span>
+      </article>
+    </div>
+  </div>
+
+  <div class="mag-chat-workspace">
+    <div class="mag-chat-page"
+         id="mag-chat-history"
+         data-list-url="{% url 'ecom_chat_api_history' %}"
+         data-delete-url-template="{% url 'ecom_chat_api_delete' 0 %}"
+         data-messages-url-template="{% url 'ecom_chat_api_messages' 0 %}"
+         data-poll-ms="8000"
+         data-periode="{{ periode_active|default:'mois' }}"
+         data-date-debut="{{ date_debut|date:'Y-m-d' }}"
+         data-date-fin="{{ date_fin|date:'Y-m-d' }}">
+      <aside class="mag-chat-list">
+        <div class="mag-chat-list__head">
+          <h2>Historique</h2>
+          {% if filtre_resume %}<span class="mag-chat-badge mag-chat-badge--period">{{ filtre_resume }}</span>{% endif %}
+        </div>
+        <div class="mag-chat-filters">
+          <button type="button" class="mag-chat-filter is-active" data-filter="">Toutes</button>
+          <button type="button" class="mag-chat-filter" data-filter="pending">En attente</button>
+          <button type="button" class="mag-chat-filter" data-filter="active">Actives</button>
+          <button type="button" class="mag-chat-filter" data-filter="closed">Fermées</button>
+          <button type="button" class="mag-chat-filter" data-filter="refused">Refusées</button>
+        </div>
+        <div class="mag-chat-items" id="mag-chat-items"></div>
+      </aside>
+
+      <section class="mag-chat-main" id="mag-chat-main">
+        <div class="mag-chat-main__empty" id="mag-chat-empty">
+          <i class="fa fa-history" aria-hidden="true"></i>
+          <p>Sélectionnez une conversation pour consulter l’historique.</p>
+        </div>
+        <div id="mag-chat-detail" hidden>
+          <div class="mag-chat-main__head">
+            <div class="mag-chat-main__meta">
+              <strong id="mag-chat-detail-name">—</strong>
+              <span id="mag-chat-detail-status">—</span>
+            </div>
+            <div class="mag-chat-actions" id="mag-chat-history-actions">
+              <button type="button" class="mag-chat-btn mag-chat-btn--delete" id="mag-chat-delete">
+                <i class="fa fa-trash" aria-hidden="true"></i> Supprimer
+              </button>
+            </div>
+          </div>
+          <div class="mag-chat-thread" id="mag-chat-thread"></div>
+          <p class="mag-chat-error" id="mag-chat-error" hidden></p>
+        </div>
+      </section>
+    </div>
+
+    <aside class="mag-chat-mascot" aria-hidden="true">
+      <img src="{% static 'avatar.png' %}" alt="" width="480" height="640" loading="lazy">
+    </aside>
+  </div>
+</div>
+{% csrf_token %}
+{% endwith %}
+{% endblock main_content %}
+
+{% block extra_js %}
+{% include "mag/partials/_periode_filter_js.html" %}
+<script>
+(function () {
+  var root = document.getElementById('mag-chat-history');
+  if (!root) return;
+
+  var listUrl = root.getAttribute('data-list-url');
+  var deleteTpl = root.getAttribute('data-delete-url-template');
+  var messagesTpl = root.getAttribute('data-messages-url-template');
+  var pollMs = parseInt(root.getAttribute('data-poll-ms') || '8000', 10) || 8000;
+
+  var itemsEl = document.getElementById('mag-chat-items');
+  var emptyEl = document.getElementById('mag-chat-empty');
+  var detailEl = document.getElementById('mag-chat-detail');
+  var nameEl = document.getElementById('mag-chat-detail-name');
+  var statusEl = document.getElementById('mag-chat-detail-status');
+  var threadEl = document.getElementById('mag-chat-thread');
+  var errorEl = document.getElementById('mag-chat-error');
+  var deleteBtn = document.getElementById('mag-chat-delete');
+
+  var selectedId = null;
+  var filterStatus = '';
+  var pollTimer = null;
+  var lastThreadKey = '';
+
+  var STATUS_LABELS = {
+    pending: 'En attente',
+    active: 'Active',
+    refused: 'Refusée',
+    closed: 'Fermée'
+  };
+
+  function csrfToken() {
+    var input = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    if (input && input.value) return input.value;
+    var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+  }
+
+  function urlFor(tpl, id) {
+    return tpl.replace(/\/0\//, '/' + id + '/');
+  }
+
+  function formatTime(iso) {
+    if (!iso) return '';
+    try {
+      var d = new Date(iso);
+      return d.toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function showError(msg) {
+    if (!errorEl) return;
+    if (!msg) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+      return;
+    }
+    errorEl.hidden = false;
+    errorEl.textContent = msg;
+  }
+
+  function buildListUrl() {
+    var params = new URLSearchParams(window.location.search);
+    if (filterStatus) params.set('status', filterStatus);
+    else params.delete('status');
+    var qs = params.toString();
+    return qs ? (listUrl + '?' + qs) : listUrl;
+  }
+
+  function renderList(items) {
+    if (!itemsEl) return;
+    itemsEl.innerHTML = '';
+    if (!items.length) {
+      itemsEl.innerHTML = '<p style="padding:18px;color:#888;font-size:13px;margin:0;">Aucune conversation sur cette période.</p>';
+      return;
+    }
+    items.forEach(function (c) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mag-chat-item' + (selectedId === c.id ? ' is-active' : '');
+      btn.setAttribute('data-id', c.id);
+      btn.innerHTML =
+        '<div class="mag-chat-item__top">' +
+          '<span class="mag-chat-item__name"></span>' +
+          '<span class="mag-chat-item__time"></span>' +
+        '</div>' +
+        '<p class="mag-chat-item__preview"></p>' +
+        '<span class="mag-chat-item__status mag-chat-item__status--' + c.status + '"></span>';
+      btn.querySelector('.mag-chat-item__name').textContent = c.client_label || 'Client';
+      btn.querySelector('.mag-chat-item__time').textContent = formatTime(c.last_message_at || c.created_at);
+      btn.querySelector('.mag-chat-item__preview').textContent = c.preview || c.subject || '';
+      btn.querySelector('.mag-chat-item__status').textContent = STATUS_LABELS[c.status] || c.status;
+      btn.addEventListener('click', function () {
+        selectedId = c.id;
+        loadConversation(c.id);
+        refreshList();
+      });
+      itemsEl.appendChild(btn);
+    });
+  }
+
+  function bubbleClass(type) {
+    if (type === 'staff') return 'mag-chat-bubble mag-chat-bubble--staff';
+    if (type === 'system' || type === 'bot') return 'mag-chat-bubble mag-chat-bubble--system';
+    return 'mag-chat-bubble mag-chat-bubble--client';
+  }
+
+  function renderConversation(conv) {
+    if (!conv) return;
+    emptyEl.hidden = true;
+    detailEl.hidden = false;
+    nameEl.textContent = conv.client_label || 'Client';
+    statusEl.textContent = STATUS_LABELS[conv.status] || conv.status;
+    var key = (conv.messages || []).map(function (m) { return m.id; }).join(',') + '|' + conv.status;
+    if (key === lastThreadKey) return;
+    lastThreadKey = key;
+    threadEl.innerHTML = '';
+    (conv.messages || []).forEach(function (m) {
+      var el = document.createElement('div');
+      el.className = bubbleClass(m.sender_type);
+      el.textContent = m.body || '';
+      threadEl.appendChild(el);
+    });
+    threadEl.scrollTop = threadEl.scrollHeight;
+    showError('');
+  }
+
+  function setStats(stats) {
+    if (!stats) return;
+    var rootStats = document.getElementById('mag-chat-stats');
+    if (!rootStats) return;
+    Object.keys(stats).forEach(function (key) {
+      var el = rootStats.querySelector('[data-stat="' + key + '"]');
+      if (el) el.textContent = String(stats[key] != null ? stats[key] : 0);
+    });
+  }
+
+  function clearDetail() {
+    selectedId = null;
+    lastThreadKey = '';
+    detailEl.hidden = true;
+    emptyEl.hidden = false;
+  }
+
+  function refreshList() {
+    fetch(buildListUrl(), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data || !data.ok) return;
+        setStats(data.stats);
+        renderList(data.conversations || []);
+      })
+      .catch(function () {});
+  }
+
+  function loadConversation(id) {
+    if (!id) return;
+    fetch(urlFor(messagesTpl, id), {
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.conversation) renderConversation(data.conversation);
+      })
+      .catch(function () {});
+  }
+
+  function postAction(url) {
+    return fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken()
+      },
+      body: '{}'
+    }).then(function (r) {
+      return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+    });
+  }
+
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function () {
+      if (!selectedId) return;
+      if (!window.confirm('Supprimer définitivement cette conversation et tous ses messages ?')) return;
+      postAction(urlFor(deleteTpl, selectedId))
+        .then(function (res) {
+          if (!res.ok) {
+            showError((res.data && res.data.error) || 'Impossible de supprimer.');
+            return;
+          }
+          clearDetail();
+          refreshList();
+        });
+    });
+  }
+
+  root.querySelectorAll('.mag-chat-filter').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      root.querySelectorAll('.mag-chat-filter').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      filterStatus = btn.getAttribute('data-filter') || '';
+      refreshList();
+    });
+  });
+
+  function tick() {
+    refreshList();
+    if (selectedId) loadConversation(selectedId);
+  }
+
+  tick();
+  pollTimer = setInterval(tick, pollMs);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    } else if (!pollTimer) {
+      tick();
+      pollTimer = setInterval(tick, pollMs);
+    }
+  });
+})();
+</script>
+{% endblock extra_js %}

@@ -18,6 +18,7 @@
                         <th>Versé</th>
                         <th>Reste</th>
                         <th>Paiement</th>
+                        <th>Moyen</th>
                         <th>Caissier(ère)</th>
                         <th class="text-center">Actions</th>
                     </tr>
@@ -53,6 +54,7 @@
                             <span class="mag-cmd-badge mag-cmd-badge--annuler">Impayée</span>
                             {% endif %}
                         </td>
+                        <td>{{ c.libelle_paiement|default:"—" }}</td>
                         <td>{{ c.utilisateur.username|default:"—" }}</td>
                         <td>
                             <div class="mag-cmd-actions mag-cmd-actions--row">
@@ -73,7 +75,7 @@
                     </tr>
                     {% empty %}
                     <tr class="mag-table-skip-filter">
-                        <td colspan="10" class="text-center text-muted py-4">Aucune commande pour la période sélectionnée.</td>
+                        <td colspan="11" class="text-center text-muted py-4">Aucune commande pour la période sélectionnée.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

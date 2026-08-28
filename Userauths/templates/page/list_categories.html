@@ -1,267 +1,63 @@
-{# Template unifié pour les catégories - fonctionne en mode standalone ET AJAX #}
-<div class="container-fluid">
-    <div class="row clearfix">
-        <div class="col-lg-12">
-            <div class="card" style='border-radius:18px; overflow-y: auto; box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;'>
-                <div class="header text-info">
-                    <h2 class="text-info">
-                        <i class="fa fa-tags"></i> {{ categories|length }} Catégorie{{ categories|length|pluralize }}
-                    </h2>
-                </div>
-                <div class="body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover dataTable js-exportable">
-                            <thead>
-                                <tr class='text'>
-                                    <th>#</th>
-                                    <th>Nom de la Catégorie</th>
-                                    <th>ID</th>
-                                    <th>Nombre de Permissions</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for category in categories %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td><strong> {{ category.categorie }}</strong></td>
-                                    <td><code>{{ category.cid }}</code></td>
-                                    <td>
-                                        <span class="badge badge-outline-info badge-lg">{{ category.num_permissions }} permission{{ category.num_permissions|pluralize }}</span>
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                onclick="editCategory({{ category.id }})" title="Modifier">
-                                            <i class="fa fa-edit"></i> Modifier
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                onclick="deleteCategoryConfirm({{ category.id }}, '{{ category.categorie }}')" title="Supprimer">
-                                            <i class="fa fa-trash"></i> Supprimer
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center">
-                                        <div class="alert alert-info">
-                                            <i class="fa fa-info-circle"></i> Aucune catégorie trouvée.
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<div class="card mag-cmd-line-card">
+    <div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:10px;">
+        <h2 class="mb-0">{{ categories|length }} catégorie{% if categories|length != 1 %}s{% endif %}</h2>
+    </div>
+    <div class="body">
+        <div class="mag-table-shell" x-data="magTableFilter(10)">
+            {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Rechercher une catégorie…" %}
+            <div class="table-responsive">
+                <table class="table mag-data-table mag-data-table--fit mb-0">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Catégorie</th>
+                            <th>Code</th>
+                            <th>Permissions</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td class="mag-cmd-cell-wrap">
+                                <span class="mag-cmd-numero">{{ category.categorie }}</span>
+                                <p class="mag-cmd-meta">ID interne {{ category.id }}</p>
+                            </td>
+                            <td><code class="mag-cmd-meta mb-0">{{ category.cid }}</code></td>
+                            <td>
+                                <span class="mag-cmd-badge mag-cmd-badge--valider">
+                                    {{ category.num_permissions }} permission{{ category.num_permissions|pluralize }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="mag-cmd-actions mag-cmd-actions--row">
+                                    <button type="button"
+                                            class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                            title="Modifier"
+                                            onclick="editCategory({{ category.id }})">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                            title="Supprimer"
+                                            onclick="deleteCategoryConfirm({{ category.id }}, '{{ category.categorie|escapejs }}')">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="mag-table-skip-filter">
+                            <td colspan="5" class="text-center text-muted py-4">Aucune catégorie trouvée.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
+            {% if categories %}
+            {% include "mag/partials/_table_pager.html" %}
+            {% endif %}
         </div>
     </div>
 </div>
-
-<!-- Modal pour ajouter/modifier une catégorie -->
-<div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog" aria-labelledby="categoryModalLabel">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content" style="border-radius: 18px;">
-            <div class="modal-header">
-                <h6 class="title" id="categoryModalLabel"><i class="fa fa-tag"></i> Nouvelle Catégorie</h6>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div id="categoryFormContainer">
-                <!-- Le formulaire sera chargé ici automatiquement -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-(function() {
-    'use strict';
-    // Charger le formulaire de création dès le chargement de la page
-    function loadCreateForm() {
-        $.ajax({
-            url: '{% url "create_perm_category" %}',
-            type: 'GET',
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
-            success: function(data) {
-                $('#categoryFormContainer').html(data);
-            },
-            error: function(xhr) {
-                console.error('Erreur lors du chargement du formulaire:', xhr);
-                $('#categoryFormContainer').html('<div class="alert alert-danger m-3"><i class="fa fa-exclamation-triangle"></i> Erreur lors du chargement du formulaire.</div>');
-            }
-        });
-    }
-    
-    // Charger le formulaire au chargement de la page
-    $(document).ready(function() {
-        loadCreateForm();
-    });
-    
-    // Fonction pour ouvrir le modal de catégorie
-    window.openCategoryModal = function() {
-        // S'assurer que le formulaire de création est chargé
-        if (!$('#categoryFormContainer form').length) {
-            loadCreateForm();
-        }
-        $('#categoryModalLabel').html('<i class="fa fa-tag"></i> Nouvelle Catégorie');
-        $('#addCategoryModal').modal('show');
-    };
-
-    // Fonction pour éditer une catégorie
-    window.editCategory = function(pk) {
-        $('#addCategoryModal').modal('show');
-        $.ajax({
-            url: '/permissions/categories/' + pk + '/update/',
-            type: 'GET',
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
-            success: function(data) {
-                $('#categoryFormContainer').html(data);
-                $('#categoryModalLabel').html('<i class="fa fa-edit"></i> Modifier Catégorie');
-            },
-            error: function(xhr) {
-                console.error('Erreur AJAX:', xhr);
-                $('#categoryFormContainer').html(
-                    '<div class="alert alert-danger m-3">' +
-                    '<i class="fa fa-exclamation-triangle"></i> Erreur lors du chargement.<br><small>' + 
-                    (xhr.responseJSON?.message || xhr.statusText) + '</small></div>'
-                );
-            }
-        });
-    };
-
-    // Fonction de confirmation de suppression
-    window.deleteCategoryConfirm = function(pk, name) {
-        if (confirm('⚠️ Êtes-vous sûr de vouloir supprimer la catégorie "' + name + '" ?\n\nCette action est irréversible.')) {
-            deleteCategory(pk);
-        }
-    };
-
-    // Fonction pour supprimer une catégorie
-    function deleteCategory(pk) {
-        $('#addCategoryModal').modal('show');
-        $.ajax({
-            url: '/permissions/categories/' + pk + '/delete/',
-            type: 'GET',
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
-            success: function(data) {
-                $('#categoryFormContainer').html(data);
-                $('#categoryModalLabel').html('<i class="fa fa-trash text-danger"></i> Supprimer Catégorie');
-            },
-            error: function(xhr) {
-                console.error('Erreur AJAX:', xhr);
-                $('#categoryFormContainer').html(
-                    '<div class="alert alert-danger m-3">' +
-                    '<i class="fa fa-exclamation-triangle"></i> Erreur lors du chargement.<br><small>' + 
-                    (xhr.responseJSON?.message || xhr.statusText) + '</small></div>'
-                );
-            }
-        });
-    }
-
-    // Gestion de l'ouverture du modal (création)
-    $('#addCategoryModal').on('show.bs.modal', function(e) {
-        var button = $(e.relatedTarget);
-        var pk = button.data('pk');
-        
-        // Si c'est une création et qu'il n'y a pas de formulaire, le charger
-        if (!pk && !$('#categoryFormContainer form').length) {
-            loadCreateForm();
-        }
-        // Réinitialiser le label si c'est une création
-        if (!pk) {
-            $('#categoryModalLabel').html('<i class="fa fa-tag"></i> Nouvelle Catégorie');
-        }
-    });
-
-    // Réinitialisation du modal à la fermeture
-    $('#addCategoryModal').on('hidden.bs.modal', function() {
-        // Recharger le formulaire de création pour la prochaine fois
-        if (!$('#categoryFormContainer form').length || $('#categoryFormContainer form').is('#deleteCategoryForm')) {
-            loadCreateForm();
-        }
-        $('#categoryModalLabel').html('<i class="fa fa-tag"></i> Nouvelle Catégorie');
-    });
-
-    // Soumission du formulaire de catégorie
-    $(document).on('submit', '#categoryForm', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var objectId = form.data('object-id');
-        var url = objectId 
-            ? '/permissions/categories/' + objectId + '/update/'
-            : '{% url "create_perm_category" %}';
-        
-        $.ajax({
-            url: url,
-            type: 'POST',
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
-            data: form.serialize(),
-            success: function(data) {
-                if (data.success) {
-                    $('#addCategoryModal').modal('hide');
-                    // Recharger selon le contexte
-                    if (window.parent && window.parent !== window && typeof window.parent.reloadCategoriesContent === 'function') {
-                        window.parent.reloadCategoriesContent();
-                    } else if (typeof reloadCategoriesList === 'function') {
-                        reloadCategoriesList();
-                    } else {
-                        location.reload();
-                    }
-                } else {
-                    $('#categoryFormContainer').html(data.html || '<div class="alert alert-danger m-3">Erreur lors de l\'enregistrement.</div>');
-                }
-            },
-            error: function(xhr) {
-                console.error('Erreur:', xhr);
-                var errorMsg = xhr.responseJSON?.message || 'Une erreur est survenue. Veuillez réessayer.';
-                alert('❌ ' + errorMsg);
-            }
-        });
-    });
-
-    // Soumission du formulaire de suppression
-    $(document).on('submit', '#deleteCategoryForm', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var pk = form.data('category-id') || form.closest('[data-pk]').data('pk');
-        var url = '/permissions/categories/' + pk + '/delete/';
-        
-        $.ajax({
-            url: url,
-            type: 'POST',
-            headers: {'X-Requested-With': 'XMLHttpRequest'},
-            data: form.serialize(),
-            success: function(data) {
-                if (data.success) {
-                    $('#addCategoryModal').modal('hide');
-                    // Recharger selon le contexte
-                    if (window.parent && window.parent !== window && typeof window.parent.reloadCategoriesContent === 'function') {
-                        window.parent.reloadCategoriesContent();
-                    } else if (typeof reloadCategoriesList === 'function') {
-                        reloadCategoriesList();
-                    } else {
-                        location.reload();
-                    }
-                } else {
-                    alert('❌ ' + (data.message || 'Erreur lors de la suppression'));
-                }
-            },
-            error: function(xhr) {
-                console.error('Erreur:', xhr);
-                alert('❌ Une erreur est survenue lors de la suppression.');
-            }
-        });
-    });
-
-    // Fonction globale pour recharger la liste (utilisée depuis le modal parent)
-    window.reloadCategoriesList = function() {
-        if (window.parent && window.parent !== window && typeof window.parent.reloadCategoriesContent === 'function') {
-            window.parent.reloadCategoriesContent();
-        } else {
-            location.reload();
-        }
-    };
-})();
-</script>

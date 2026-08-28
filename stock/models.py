@@ -791,6 +791,7 @@ class Notification(models.Model):
         ('stock_alerte', 'Alerte de Stock'),
         ('transfert_demande', 'Demande de transfert'),
         ('commande_en_ligne', 'Commande en ligne'),
+        ('chat_client', 'Chat client'),
         ('info', 'Information'),
         ('warning', 'Avertissement'),
         ('success', 'Succès'),

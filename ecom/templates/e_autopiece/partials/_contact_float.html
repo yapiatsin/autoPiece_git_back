@@ -8,40 +8,46 @@
         <span class="contact-float__icon" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></span>
         <span class="contact-float__label">{% trans 'WhatsApp' %}</span>
     </a>
-    <button type="button"
-            class="contact-float__btn contact-float__btn--chat"
-            id="contact-float-chat-btn"
-            title="{% trans 'Chatbot' %}"
-            aria-expanded="false"
-            aria-controls="contact-chatbot">
+    <button type="button" class="contact-float__btn contact-float__btn--chat" id="contact-float-chat-btn" title="{% trans 'Chatbot' %}"
+        aria-expanded="false" aria-controls="contact-chatbot">
         <span class="contact-float__icon" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
         <span class="contact-float__label">{% trans 'Chatbot' %}</span>
     </button>
 </aside>
 
-<div class="contact-chatbot" id="contact-chatbot" hidden>
+<div class="contact-chatbot" id="contact-chatbot" hidden
+     data-thread-url="{% url 'ecom_chat_thread' %}"
+     data-poll-ms="4000">
     <div class="contact-chatbot__panel" role="dialog" aria-labelledby="contact-chatbot-title" aria-modal="true">
         <div class="contact-chatbot__head">
             <div class="contact-chatbot__avatar" aria-hidden="true"><i class="fa-solid fa-comments"></i></div>
             <div class="contact-chatbot__meta">
                 <strong id="contact-chatbot-title">{% trans 'Assistant Auto-Pièce' %}</strong>
-                <span>{% trans 'En ligne · répond rapidement' %}</span>
+                <span id="contact-chatbot-status">{% trans 'En ligne · répond rapidement' %}</span>
             </div>
             <button type="button" class="contact-chatbot__close" id="contact-chatbot-close" aria-label="{% trans 'Fermer' %}">
                 <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
         </div>
-        <div class="contact-chatbot__body">
-            <div class="contact-chatbot__bubble">
-                {% trans "Bonjour ! Comment puis-je vous aider aujourd’hui ?" %}
+        <div class="contact-chatbot__scroll">
+            <div class="contact-chatbot__body" id="contact-chatbot-body">
+                <div class="contact-chatbot__bubble contact-chatbot__bubble--bot" data-welcome="1">
+                    {% trans "Bonjour ! Comment puis-je vous aider aujourd’hui ?" %}
+                </div>
             </div>
-            <div class="contact-chatbot__actions">
+            <div class="contact-chatbot__actions" id="contact-chatbot-chips" data-chips="1">
                 <a href="{% url 'ecom_support' %}" class="contact-chatbot__chip">{% trans 'Centre d’assistance' %}</a>
                 <a href="{% url 'ecom_contact' %}" class="contact-chatbot__chip">{% trans 'Contact' %}</a>
                 <a href="https://wa.me/2250787532210" class="contact-chatbot__chip" target="_blank" rel="noopener noreferrer">{% trans 'Écrire sur WhatsApp' %}</a>
             </div>
+            <div class="contact-chatbot__new-wrap" id="contact-chatbot-new-wrap" hidden>
+                <button type="button" class="contact-chatbot__new-btn" id="contact-chatbot-new">
+                    {% trans 'Nouvelle conversation' %}
+                </button>
+            </div>
         </div>
         <form class="contact-chatbot__form" id="contact-chatbot-form" autocomplete="off">
+            {% csrf_token %}
             <input type="text" name="message" placeholder="{% trans 'Écrivez votre message…' %}" aria-label="{% trans 'Message' %}">
             <button type="submit" aria-label="{% trans 'Envoyer' %}"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
         </form>

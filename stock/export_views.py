@@ -717,13 +717,13 @@ def export_pieces_categorie_pdf(request, pk):
 # ── Livraisons magasin ────────────────────────────────────────────────────
 
 def _qs_livraisons(request):
+    from stock.views import _qs_paniers_livraison_magasin
+
     filt = periode_filter_context(request, request.user, reset_url_name='livraisons')
     localite = filt['localite_active']
     qs = (
-        Panier.objects.filter(
-            valide=True,
-            panier_paye=True,
-            commande_en_ligne=False,
+        _qs_paniers_livraison_magasin(localite)
+        .filter(
             panier_livre=False,
             date_creation__range=[filt['date_debut'], filt['date_fin']],
         )
@@ -731,8 +731,6 @@ def _qs_livraisons(request):
         .prefetch_related('commands')
         .order_by('-date_creation')
     )
-    if localite:
-        qs = qs.filter(local_entrepot=localite)
     return qs, filt
 
 

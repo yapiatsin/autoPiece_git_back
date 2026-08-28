@@ -185,3 +185,112 @@ class CommuneLivraison(models.Model):
 
     def __str__(self):
         return f'{self.nom} ({self.ville.nom})'
+
+class ChatConversation(models.Model):
+    """Conversation chatbot e-commerce (client ↔ staff, IA plus tard)."""
+
+    STATUS_PENDING = 'pending'
+    STATUS_ACTIVE = 'active'
+    STATUS_REFUSED = 'refused'
+    STATUS_CLOSED = 'closed'
+    STATUS_CHOICES = (
+        (STATUS_PENDING, 'En attente'),
+        (STATUS_ACTIVE, 'Active'),
+        (STATUS_REFUSED, 'Refusée'),
+        (STATUS_CLOSED, 'Fermée'),
+    )
+
+    HANDLER_STAFF = 'staff'
+    HANDLER_AI = 'ai'
+    HANDLER_CHOICES = (
+        (HANDLER_STAFF, 'Conseiller'),
+        (HANDLER_AI, 'IA'),
+    )
+
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='chat_conversations_client',
+        null=True,
+        blank=True,
+    )
+    session_key = models.CharField(max_length=40, blank=True, default='', db_index=True)
+    staff = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='chat_conversations_staff',
+        null=True,
+        blank=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+        db_index=True,
+    )
+    handler_mode = models.CharField(
+        max_length=20,
+        choices=HANDLER_CHOICES,
+        default=HANDLER_STAFF,
+    )
+    subject = models.CharField(max_length=255, blank=True, default='')
+    last_message_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    closed_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Conversation chat'
+        verbose_name_plural = 'Conversations chat'
+        ordering = ['-last_message_at', '-created_at']
+        indexes = [
+            models.Index(fields=['status', '-last_message_at']),
+            models.Index(fields=['session_key', 'status']),
+            models.Index(fields=['client', 'status']),
+        ]
+
+    def __str__(self):
+        who = self.client or self.session_key or 'anonyme'
+        return f'Chat {self.pk} — {who} ({self.status})'
+
+
+class ChatMessage(models.Model):
+    """Message d'une conversation chatbot."""
+
+    SENDER_CLIENT = 'client'
+    SENDER_STAFF = 'staff'
+    SENDER_SYSTEM = 'system'
+    SENDER_BOT = 'bot'
+    SENDER_CHOICES = (
+        (SENDER_CLIENT, 'Client'),
+        (SENDER_STAFF, 'Staff'),
+        (SENDER_SYSTEM, 'Système'),
+        (SENDER_BOT, 'Bot'),
+    )
+
+    conversation = models.ForeignKey(
+        ChatConversation,
+        on_delete=models.CASCADE,
+        related_name='messages',
+    )
+    sender_type = models.CharField(max_length=20, choices=SENDER_CHOICES)
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='chat_messages',
+        null=True,
+        blank=True,
+    )
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Message chat'
+        verbose_name_plural = 'Messages chat'
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['conversation', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.sender_type}: {self.body[:40]}'

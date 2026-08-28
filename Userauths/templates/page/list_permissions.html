@@ -1,221 +1,140 @@
 {% extends "mag/base_mag_ecom.html" %}
 {% load static %}
 
-{% block title %}Auto-Piece - Permissions{% endblock title %}
-{% block page_title %}Gestion des permissions{% endblock page_title %}
+{% block title %}AUTO-PIECE — Permissions{% endblock title %}
 {% block page %}Permissions personnalisées{% endblock page %}
 
 {% block page_action_buttons %}
-<button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#importModal">
-    <i class="fa fa-upload"></i> Importer
+<button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#importModal">
+    <i class="fa fa-upload"></i>
 </button>
-<a href="{% url 'export_permissions_excel' %}" class="btn btn-outline-primary btn-sm">
-    <i class="fa fa-file-excel-o"></i> Exporter
+<a href="{% url 'export_permissions_excel' %}" class="btn btn-outline-secondary btn-sm" title="Exporter Excel">
+    <i class="fa fa-file-excel-o"></i>
 </a>
-<a href="{% url 'list_perm_categories' %}" class="btn btn-outline-warning btn-sm">
-    <i class="fa fa-tags"></i> Catégories
+<a href="{% url 'list_perm_categories' %}" class="btn btn-outline-secondary btn-sm" title="Catégories">
+    <i class="fa fa-tags"></i>
 </a>
-<button type="button" class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#addPermissionModal" onclick="openPermissionModal()">
-    <i class="icon-plus"></i> Nouvelle permission
+<button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#addPermissionModal" onclick="openPermissionModal()" title="Nouvelle permission">
+    <i class="fa fa-plus"></i>
 </button>
 {% endblock page_action_buttons %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-permissions.css' %}">
 {% include "mag/partials/_dashboard_kpi_styles.html" %}
 {% endblock extra_head %}
 
 {% block main_content %}
-<div class="col-lg-12 p-2 mt-2">
-    <div class="row dashboard-kpi-row w-100 mx-0 mb-3">
-        <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
-            <div class="card top_widget dashboard-kpi dashboard-kpi--sales">
-                <div class="body">
-                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-lock"></i></span></div>
-                    <div class="content">
-                        <div class="text mb-1 text-uppercase">Permissions</div>
-                        <h4 class="number mb-0">{{ permissions_total }}</h4>
-                        <small class="text-muted">{% if search_query or category_filter %}Résultat filtré{% else %}Total enregistré{% endif %}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
-            <div class="card top_widget dashboard-kpi dashboard-kpi--entry">
-                <div class="body">
-                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-tags"></i></span></div>
-                    <div class="content">
-                        <div class="text mb-1 text-uppercase">Catégories</div>
-                        <h4 class="number mb-0">{{ categories|length }}</h4>
-                        <small class="text-muted">Types de menu</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6 col-sm-6 mt-2">
-            <div class="card top_widget dashboard-kpi dashboard-kpi--stock">
-                <div class="body">
-                    <div class="icon"><span class="dash-kpi-icon"><i class="fa fa-filter"></i></span></div>
-                    <div class="content">
-                        <div class="text mb-1 text-uppercase">Filtre</div>
-                        <h4 class="number mb-0" style="font-size:1rem;">
-                            {% if category_filter or search_query %}Actif{% else %}Aucun{% endif %}
-                        </h4>
-                        <small class="text-muted">
-                            {% if search_query %}« {{ search_query }} »{% elif category_filter %}Catégorie{% else %}Tous affichés{% endif %}
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="mag-cmd-line-page col-12 px-0">
+    <div class="mag-cmd-line-section">
+        {% include "partials/_kpi_row_permissions.html" %}
     </div>
-</div>
 
-<div class="col-lg-12 p-2 mt-2">
-    <div class="card">
-        <div class="header d-flex justify-content-between align-items-center flex-wrap" style="gap:12px;">
-            <h2 class="mb-0">
-                {{ permissions_total }} permission{% if permissions_total != 1 %}s{% endif %}
-                {% if page_obj.paginator.num_pages > 1 %}
-                <small class="text-muted font-weight-normal">
-                    · page {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}
-                </small>
-                {% endif %}
-                {% if search_query %}
-                <small class="text-muted font-weight-normal">· « {{ search_query }} »</small>
-                {% endif %}
-            </h2>
-            <form method="get" action="{% url 'list_permissions' %}" class="d-flex align-items-center" style="gap:8px; min-width:280px; max-width:520px; flex:1;">
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fa fa-search"></i></span>
-                    </div>
-                    <input type="search"
-                           name="search"
-                           value="{{ search_query }}"
-                           class="form-control"
-                           placeholder="Nom, URL, catégorie…"
-                           autocomplete="off">
-                    <select name="category" class="form-control" style="max-width:160px;">
-                        <option value="">Toutes</option>
+    <div class="mag-cmd-line-section">
+        <div class="card mag-cmd-line-card">
+            <div class="header mag-perms-header d-flex justify-content-between align-items-center flex-nowrap" style="gap:12px;">
+                <h2 class="mb-0 flex-shrink-0">
+                    {{ permissions_total }} permission{% if permissions_total != 1 %}s{% endif %}
+                    {% if page_obj.paginator.num_pages > 1 %}
+                    <small class="text-muted font-weight-normal">· page {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</small>
+                    {% endif %}
+                </h2>
+                <form method="get" action="{% url 'list_permissions' %}" class="mag-perms-filter-toolbar">
+                    <select name="category" class="mag-perms-filter-toolbar__select" onchange="this.form.submit()">
+                        <option value="">Toutes les catégories</option>
                         {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:"s" %}selected{% endif %}>
-                            {{ cat.categorie }}
-                        </option>
+                        <option value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.categorie }}</option>
                         {% endfor %}
                     </select>
-                    <div class="input-group-append">
-                        <button type="submit" class="btn btn-primary">Chercher</button>
-                        {% if search_query or category_filter %}
-                        <a href="{% url 'list_permissions' %}" class="btn btn-outline-secondary" title="Réinitialiser">
-                            <i class="fa fa-times"></i>
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="body">
-            <div class="mag-table-shell" x-data="magTableFilter()">
-                {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Filtrer dans le tableau…" %}
-                <div class="table-responsive">
-                    <table class="table table-hover mag-data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nom</th>
-                                <th>Catégorie</th>
-                                <th>URL / Name</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for permission in permissions %}
-                            <tr>
-                                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
-                                <td><strong>{{ permission.name }}</strong></td>
-                                <td>
-                                    <span class="badge badge-outline-info">{{ permission.categorie.categorie }}</span>
-                                </td>
-                                <td><code>{{ permission.url }}</code></td>
-                                <td class="text-center">
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-warning"
-                                            title="Modifier"
-                                            onclick="editPermission({{ permission.id }})">
-                                        <i class="fa fa-pencil"></i>
-                                    </button>
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-danger"
-                                            title="Supprimer"
-                                            onclick="deletePermissionConfirm({{ permission.id }}, '{{ permission.name|escapejs }}')">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr class="mag-table-skip-filter">
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    {% if search_query or category_filter %}
-                                    Aucune permission ne correspond à votre recherche.
-                                    {% else %}
-                                    Aucune permission enregistrée.
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <tr class="mag-table-skip-filter">
-                                <td colspan="5" class="border-0 pt-3 pb-2">
-                                    <div class="d-flex flex-wrap justify-content-between align-items-center" style="gap:12px;">
-                                        <small class="text-muted mb-0">
-                                            {% if permissions_total %}
-                                            Affichage {{ page_obj.start_index }}–{{ page_obj.end_index }}
-                                            sur {{ permissions_total }}
-                                            {% else %}
-                                            Aucun résultat
-                                            {% endif %}
-                                        </small>
-                                        {% if page_obj.paginator.num_pages > 1 %}
-                                        <nav aria-label="Pagination des permissions">
-                                            <ul class="pagination pagination-sm mb-0">
-                                                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-                                                    {% if page_obj.has_previous %}
-                                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" aria-label="Précédent">
-                                                        <i class="fa fa-chevron-left"></i>
-                                                    </a>
-                                                    {% else %}
-                                                    <span class="page-link"><i class="fa fa-chevron-left"></i></span>
-                                                    {% endif %}
-                                                </li>
-                                                {% for num in page_obj.paginator.page_range %}
-                                                    {% if num == page_obj.number %}
-                                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                                                    {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
-                                                    <li class="page-item">
-                                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">{{ num }}</a>
-                                                    </li>
-                                                    {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
-                                                    <li class="page-item disabled"><span class="page-link">…</span></li>
-                                                    {% endif %}
-                                                {% endfor %}
-                                                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-                                                    {% if page_obj.has_next %}
-                                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" aria-label="Suivant">
-                                                        <i class="fa fa-chevron-right"></i>
-                                                    </a>
-                                                    {% else %}
-                                                    <span class="page-link"><i class="fa fa-chevron-right"></i></span>
-                                                    {% endif %}
-                                                </li>
-                                            </ul>
-                                        </nav>
+                    <label class="mag-perms-filter-toolbar__search">
+                        <i class="fa fa-search" aria-hidden="true"></i>
+                        <input type="search" name="search" value="{{ search_query }}" placeholder="Nom, URL…" autocomplete="off">
+                    </label>
+                    <button type="submit" class="mag-perms-filter-toolbar__btn">Chercher</button>
+                    {% if search_query or category_filter %}
+                    <a href="{% url 'list_permissions' %}" class="mag-perms-filter-toolbar__reset" title="Réinitialiser">
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+            <div class="body">
+                <div class="mag-table-shell" x-data="magTableFilter(15)">
+                    {% include "mag/partials/_alpine_table_toolbar.html" with search_placeholder="Filtrer dans le tableau…" %}
+                    <div class="table-responsive">
+                        <table class="table mag-data-table mag-data-table--fit mb-0">
+                            <thead>
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Permission</th>
+                                    <th>Catégorie</th>
+                                    <th>URL</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for permission in permissions %}
+                                <tr>
+                                    <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                                    <td class="mag-cmd-cell-wrap">
+                                        <span class="mag-cmd-numero">{{ permission.name }}</span>
+                                        <p class="mag-cmd-meta">ID {{ permission.id }}</p>
+                                    </td>
+                                    <td>
+                                        <span class="mag-cmd-badge mag-cmd-badge--valider">{{ permission.categorie.categorie }}</span>
+                                    </td>
+                                    <td><code class="mag-cmd-meta mb-0">{{ permission.url }}</code></td>
+                                    <td>
+                                        <div class="mag-cmd-actions mag-cmd-actions--row">
+                                            <button type="button"
+                                                    class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                                    title="Modifier"
+                                                    onclick="editPermission({{ permission.id }})">
+                                                <i class="fa fa-pencil"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                                    title="Supprimer"
+                                                    onclick="deletePermissionConfirm({{ permission.id }}, '{{ permission.name|escapejs }}')">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr class="mag-table-skip-filter">
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        {% if search_query or category_filter %}
+                                        Aucune permission ne correspond à votre recherche.
+                                        {% else %}
+                                        Aucune permission enregistrée.
                                         {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if page_obj.paginator.num_pages > 1 %}
+                    <nav class="mag-cmd-pager mt-3" aria-label="Pagination des permissions">
+                        {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}"
+                           class="mag-cmd-pager-btn">Previous</a>
+                        {% else %}
+                        <span class="mag-cmd-pager-btn disabled" aria-disabled="true">Previous</span>
+                        {% endif %}
+                        <span class="mag-cmd-pager-page">
+                            Page <strong>{{ page_obj.number }}</strong> / {{ page_obj.paginator.num_pages }}
+                        </span>
+                        {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}"
+                           class="mag-cmd-pager-btn">Next</a>
+                        {% else %}
+                        <span class="mag-cmd-pager-btn disabled" aria-disabled="true">Next</span>
+                        {% endif %}
+                    </nav>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -256,20 +175,16 @@
                     <div class="form-group">
                         <label>Fichier Excel (.xlsx)</label>
                         <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
-                        <small class="form-text text-muted">
-                            Colonne A = Nom · Colonne B = Catégorie · Colonne C = URL
-                        </small>
+                        <small class="form-text text-muted">Colonne A = Nom · Colonne B = Catégorie · Colonne C = URL</small>
                     </div>
                     <div class="form-check">
                         <input type="checkbox" name="update_existing" class="form-check-input" id="updateExisting">
-                        <label class="form-check-label" for="updateExisting">
-                            Mettre à jour les permissions existantes
-                        </label>
+                        <label class="form-check-label" for="updateExisting">Mettre à jour les permissions existantes</label>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-outline-success">Importer</button>
+                    <button type="submit" class="btn btn-success">Importer</button>
                 </div>
             </form>
         </div>
@@ -301,9 +216,7 @@ function editPermission(pk) {
             $('#permissionModalLabel').text('Modifier la permission');
         },
         error: function(xhr, status, error) {
-            $('#permissionFormContainer').html(
-                '<div class="alert alert-danger m-3">Impossible de charger le formulaire.<br><small>' + error + '</small></div>'
-            );
+            $('#permissionFormContainer').html('<div class="alert alert-danger m-3">Impossible de charger le formulaire.<br><small>' + error + '</small></div>');
         }
     });
 }
@@ -321,11 +234,8 @@ function deletePermission(pk) {
         data: { 'csrfmiddlewaretoken': '{{ csrf_token }}' },
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         success: function(data) {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.message || 'Erreur lors de la suppression');
-            }
+            if (data.success) location.reload();
+            else alert(data.message || 'Erreur lors de la suppression');
         },
         error: function() {
             alert('Une erreur est survenue. Veuillez réessayer.');
@@ -344,9 +254,7 @@ function loadCreatePermissionForm() {
             $('#permissionModalLabel').text('Nouvelle permission');
         },
         error: function(xhr, status, error) {
-            $('#permissionFormContainer').html(
-                '<div class="alert alert-danger m-3">Impossible de charger le formulaire.<br><small>' + error + '</small></div>'
-            );
+            $('#permissionFormContainer').html('<div class="alert alert-danger m-3">Impossible de charger le formulaire.<br><small>' + error + '</small></div>');
         }
     });
 }
@@ -362,9 +270,7 @@ function openPermissionModal() {
 $('#addPermissionModal').on('show.bs.modal', function(e) {
     var button = $(e.relatedTarget);
     var pk = button && button.data ? button.data('pk') : null;
-    if (!pk) {
-        loadCreatePermissionForm();
-    }
+    if (!pk) loadCreatePermissionForm();
 });
 
 $('#addPermissionModal').on('hidden.bs.modal', function() {
@@ -376,10 +282,7 @@ $(document).on('submit', '#permissionForm', function(e) {
     e.preventDefault();
     var form = $(this);
     var objectId = form.data('object-id');
-    var url = objectId
-        ? PERM_URLS.update.replace('__ID__', objectId)
-        : PERM_URLS.create;
-
+    var url = objectId ? PERM_URLS.update.replace('__ID__', objectId) : PERM_URLS.create;
     $.ajax({
         url: url,
         type: 'POST',

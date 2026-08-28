@@ -2148,6 +2148,38 @@ def valider_panier_proforma(request, ticket_id):
         'message': f'La proforma N°{panier.ticket} a été validée avec succès.'
     })
 
+
+@require_POST
+@login_required(login_url='connexion')
+def supprimer_proforma(request, ticket_id):
+    """Supprime une proforma en attente sans modifier le stock."""
+    localite = get_user_localite(request.user)
+    filtre = {
+        'ticket': ticket_id,
+        'proforma': True,
+        'valide': False,
+    }
+    if localite:
+        filtre['local_entrepot'] = localite
+    panier = get_object_or_404(Panier, **filtre)
+
+    commande = Commande.objects.filter(panier=panier, profoma=1).first()
+    if commande and commande.paye:
+        return JsonResponse({
+            'success': False,
+            'message': 'Impossible de supprimer une proforma déjà payée.',
+        }, status=400)
+
+    ticket_label = panier.ticket or ticket_id
+    with transaction.atomic():
+        panier.delete()
+
+    return JsonResponse({
+        'success': True,
+        'message': f'La proforma N°{ticket_label} a été supprimée.',
+    })
+
+
 @login_required(login_url='connexion')
 def imprimer_proforma_pdf(request, ticket_id):
     """Proforma imprimable (HTML) ou PDF (?format=pdf), même mise en page que le bon de transfert."""
@@ -2349,6 +2381,22 @@ def _paniers_caisse_en_attente(localite=None, q=None):
     return paniers
 
 
+def _qs_paniers_livraison_magasin(localite=None):
+    """Paniers magasin pour la livraison (hors commandes web / e-commerce)."""
+    qs = (
+        Panier.objects.filter(
+            valide=True,
+            panier_paye=True,
+            commande_en_ligne=False,
+        )
+        .exclude(commands__commande_en_ligne=True)
+        .distinct()
+    )
+    if localite:
+        qs = qs.filter(local_entrepot=localite)
+    return qs
+
+
 def ajax_reload_paniers(request):
     """
     Vue AJAX pour recharger la liste des paniers non payés,
@@ -2372,46 +2420,24 @@ def ajax_reload_livraisons(request):
     localite = get_user_localite(request.user)
 
     # Récupérer les paniers payés et non livrés (hors commandes e-commerce)
-    liste_panier = Panier.objects.filter(
+    liste_panier = _qs_paniers_livraison_magasin(localite).filter(
         date_creation__month=date.today().month,
-        valide=True,
-        panier_paye=True,
         panier_livre=False,
-        commande_en_ligne=False,
     ).order_by('panier_livre', '-date_creation')
-    if localite:
-        liste_panier = liste_panier.filter(local_entrepot=localite)
 
     # Calculer les statistiques
-    base_day = Panier.objects.filter(
-        date_creation=date.today(),
-        valide=True,
-        panier_paye=True,
-        commande_en_ligne=False,
-    )
-    base_month = Panier.objects.filter(
+    base_day = _qs_paniers_livraison_magasin(localite).filter(date_creation=date.today())
+    base_month = _qs_paniers_livraison_magasin(localite).filter(
         date_creation__month=date.today().month,
-        valide=True,
-        panier_paye=True,
-        commande_en_ligne=False,
     )
-    if localite:
-        base_day = base_day.filter(local_entrepot=localite)
-        base_month = base_month.filter(local_entrepot=localite)
 
     tot_panier_day = base_day.count()
     tot_panier = base_month.count()
     tot_en_at = base_day.filter(panier_livre=False).count()
-    tot_livre = Panier.objects.filter(
+    tot_livre = _qs_paniers_livraison_magasin(localite).filter(
         date_livr_panier=date.today(),
-        valide=True,
-        panier_paye=True,
         panier_livre=True,
-        commande_en_ligne=False,
-    )
-    if localite:
-        tot_livre = tot_livre.filter(local_entrepot=localite)
-    tot_livre = tot_livre.count()
+    ).count()
     
     html = render_to_string('mag/partials/_liste_livraisons.html', {'liste_panier': liste_panier})
     return JsonResponse({
@@ -3179,7 +3205,7 @@ def _cmdes_liste_queryset(request):
         Commande.objects.filter(
             date_creation__range=[filt['date_debut'], filt['date_fin']]
         )
-        .select_related('utilisateur', 'ticket', 'bon_paiement', 'panier')
+        .select_related('utilisateur', 'ticket', 'bon_paiement', 'panier', 'moyen_paiement')
         .order_by('-date_creation')
     )
     if localite:
@@ -4586,29 +4612,19 @@ class LivraisonView(TemplateView):
         today = date.today()
         mois = calendar.month_name[today.month]
 
-        base_period = Panier.objects.filter(
-            valide=True,
-            panier_paye=True,
-            commande_en_ligne=False,
+        base_period = _qs_paniers_livraison_magasin(localite).filter(
             date_creation__range=[date_debut, date_fin],
         )
-        if localite:
-            base_period = base_period.filter(local_entrepot=localite)
 
         liste_panier = base_period.filter(panier_livre=False).order_by('-date_creation')
         tot_panier = base_period.count()
         tot_en_at = base_period.filter(panier_livre=False).count()
         tot_panier_day = base_period.filter(date_creation=today).count()
 
-        livre_period = Panier.objects.filter(
-            valide=True,
-            panier_paye=True,
-            commande_en_ligne=False,
+        livre_period = _qs_paniers_livraison_magasin(localite).filter(
             panier_livre=True,
             date_livr_panier__range=[date_debut, date_fin],
         )
-        if localite:
-            livre_period = livre_period.filter(local_entrepot=localite)
         tot_mens_livre = livre_period.count()
         tot_livre = livre_period.filter(date_livr_panier=today).count()
 
@@ -5278,6 +5294,11 @@ def get_notifications(request):
                         notif_url = reverse('ecom_cmd_line')
                     except Exception:
                         notif_url = None
+            elif notif.type_notification == 'chat_client':
+                try:
+                    notif_url = reverse('ecom_chat_inbox')
+                except Exception:
+                    notif_url = None
             notifications_data.append({
                 'id': str(notif.id),
                 'titre': notif.titre,
@@ -5294,9 +5315,11 @@ def get_notifications(request):
     from ecom.services import (
         count_commandes_ligne_en_attente,
         count_livraisons_cmd_ligne_a_livrer,
+        count_chat_clients_pending,
     )
     nb_cmd_ligne_attente = count_commandes_ligne_en_attente(request.user)
     nb_livraison_cmd_a_livrer = count_livraisons_cmd_ligne_a_livrer(request.user)
+    nb_chat_clients_pending = count_chat_clients_pending(request.user)
 
     slots = get_stock_alert_slots()
     horaires = [f"{h:02d}h{m:02d}" for h, m in slots]
@@ -5306,7 +5329,8 @@ def get_notifications(request):
         'nb_non_lues': nb_non_lues,
         'nb_cmd_ligne_attente': nb_cmd_ligne_attente,
         'nb_livraison_cmd_a_livrer': nb_livraison_cmd_a_livrer,
-        'nb_interfaces_notif': nb_cmd_ligne_attente + nb_livraison_cmd_a_livrer,
+        'nb_chat_clients_pending': nb_chat_clients_pending,
+        'nb_interfaces_notif': nb_cmd_ligne_attente + nb_livraison_cmd_a_livrer + nb_chat_clients_pending,
         'is_admin_like': is_admin_like,
         'user_localite': user_localite.nom if user_localite else None,
         'alertes_stock': {
@@ -5361,6 +5385,11 @@ def _notification_url(notif):
                 return reverse('ecom_cmd_line')
             except Exception:
                 return None
+    if notif.type_notification == 'chat_client':
+        try:
+            return reverse('ecom_chat_inbox')
+        except Exception:
+            return None
     return None
 
 

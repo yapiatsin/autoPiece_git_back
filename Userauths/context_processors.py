@@ -92,6 +92,7 @@ PERMISSION_MENU_ICONS = {
     'zones_livraison': 'fa fa-map-marker',
     'cmd_line': 'fa fa-shopping-cart',
     'livraison_cmd_online': 'fa fa-motorcycle',
+    'ecom_chat_inbox': 'fa fa-comments',
     'paniers': 'fa fa-handshake-o',
     'caissiere': 'fa fa-money',
     'livraisons': 'fa fa-truck',
@@ -187,6 +188,8 @@ def user_permissions_menu(request):
                 grouped[label]['has_cmd_line'] = True
             if any(p.url == 'livraison_cmd_online' for p in grouped[label]['permissions']):
                 grouped[label]['has_livraison_cmd'] = True
+            if any(p.url == 'ecom_chat_inbox' for p in grouped[label]['permissions']):
+                grouped[label]['has_chat_client'] = True
         else:
             for perm in valid_perms:
                 perm.menu_icon = _permission_menu_icon(perm.url)
@@ -197,6 +200,7 @@ def user_permissions_menu(request):
                 'icon': icon,
                 'has_cmd_line': any(p.url == 'cmd_line' for p in valid_perms),
                 'has_livraison_cmd': any(p.url == 'livraison_cmd_online' for p in valid_perms),
+                'has_chat_client': any(p.url == 'ecom_chat_inbox' for p in valid_perms),
             }
 
     order_index = {name: i for i, name in enumerate(CATEGORY_DISPLAY_ORDER)}
@@ -212,15 +216,19 @@ def user_permissions_menu(request):
         from ecom.services import (
             count_commandes_ligne_en_attente,
             count_livraisons_cmd_ligne_a_livrer,
+            count_chat_clients_pending,
         )
         nb_attente = count_commandes_ligne_en_attente(request.user)
         nb_a_livrer = count_livraisons_cmd_ligne_a_livrer(request.user)
+        nb_chat = count_chat_clients_pending(request.user)
         context['nb_cmd_ligne_attente'] = nb_attente
         context['nb_livraison_cmd_a_livrer'] = nb_a_livrer
-        context['nb_interfaces_notif'] = nb_attente + nb_a_livrer
+        context['nb_chat_clients_pending'] = nb_chat
+        context['nb_interfaces_notif'] = nb_attente + nb_a_livrer + nb_chat
     except Exception:
         context['nb_cmd_ligne_attente'] = 0
         context['nb_livraison_cmd_a_livrer'] = 0
+        context['nb_chat_clients_pending'] = 0
         context['nb_interfaces_notif'] = 0
 
     return context
