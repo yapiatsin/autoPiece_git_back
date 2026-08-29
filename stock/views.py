@@ -18,6 +18,7 @@ from .bon_commande_vente import (
     creer_bon_commande_paiement,
     generate_bon_commande_vente_pdf,
     nom_fichier_bon_commande_vente,
+    sauvegarder_pdf_bon,
     titre_bon_commande_vente,
 )
 from .stock_local_service import (
@@ -3055,6 +3056,8 @@ def imprimer_bon_commande_vente(request, ticket_numero):
             pdf_bytes = generate_bon_commande_vente_pdf(
                 bon, commande, panier, list(panier_items)
             )
+            bon.fichier_pdf = sauvegarder_pdf_bon(bon, pdf_bytes)
+            bon.save(update_fields=['fichier_pdf'])
         except Exception as exc:
             return HttpResponse(f'Erreur PDF : {exc}', status=500)
         nom_ascii, nom_utf8_enc = nom_fichier_bon_commande_vente(bon)

@@ -164,7 +164,7 @@ def generate_bon_commande_vente_pdf(bon, commande, panier, panier_items):
     c.rect(pad_x, y - header_h_row, content_w, header_h_row, fill=1, stroke=0)
     c.setFillColor(COLOR_BORDER)
     c.rect(pad_x, y - header_h_row, content_w, header_h_row, fill=0, stroke=1)
-    c.setFillColor(colors.HexColor('#1e3d34'))
+    c.setFillColor(colors.HexColor('#c2410c'))
     c.setFont('Helvetica-Bold', 7)
     for i, h in enumerate(headers):
         if i >= 2:

@@ -11,11 +11,11 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-COLOR_HEADER = colors.HexColor('#1e3d34')
-COLOR_TITLE = colors.HexColor('#5a7d6c')
-COLOR_TABLE_HEAD = colors.HexColor('#e8efe6')
-COLOR_BORDER = colors.HexColor('#9cb39a')
-COLOR_BORDER_LIGHT = colors.HexColor('#c5d4c0')
+COLOR_HEADER = colors.HexColor('#ff8b00')
+COLOR_TITLE = colors.HexColor('#c2410c')
+COLOR_TABLE_HEAD = colors.HexColor('#fff7ed')
+COLOR_BORDER = colors.HexColor('#fed7aa')
+COLOR_BORDER_LIGHT = colors.HexColor('#e7e5e4')
 COLOR_LABEL = colors.HexColor('#6b6b6b')
 COLOR_NOTES_BG = colors.HexColor('#fafaf8')
 
@@ -123,7 +123,7 @@ def generate_demande_transfert_pdf(demande, lignes, *, total_quantite, total_val
     c.rect(pad_x, y - header_h_row, content_w, header_h_row, fill=1, stroke=0)
     c.setFillColor(COLOR_BORDER)
     c.rect(pad_x, y - header_h_row, content_w, header_h_row, fill=0, stroke=1)
-    c.setFillColor(colors.HexColor('#1e3d34'))
+    c.setFillColor(colors.HexColor('#c2410c'))
     c.setFont('Helvetica-Bold', 7)
     for i, h in enumerate(headers):
         x = col_x(i) + 3

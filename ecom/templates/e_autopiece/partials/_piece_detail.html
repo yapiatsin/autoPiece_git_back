@@ -38,7 +38,6 @@
                     {% endif %}
                     <div class="ecom-pd-zoom__frame">
                         <img src="{{ gallery.0.url }}" alt="{{ gallery.0.alt }}" class="ecom-pd-zoom__img" data-ecom-zoom-img>
-                        <div class="ecom-pd-zoom__lens" aria-hidden="true"></div>
                     </div>
                 </div>
                 {% if gallery|length > 1 %}
@@ -411,25 +410,14 @@
     var stage = gallery.querySelector('[data-ecom-zoom]');
     var img = gallery.querySelector('[data-ecom-zoom-img]');
     var frame = gallery.querySelector('.ecom-pd-zoom__frame');
-    var lens = gallery.querySelector('.ecom-pd-zoom__lens');
     var thumbs = gallery.querySelectorAll('.ecom-pd__thumb[data-ecom-gallery-src]');
-    var zoomLevel = 2.4;
-    var touchZooming = false;
-
-    function getLensSize() {
-        if (window.matchMedia('(max-width: 575px)').matches) return 100;
-        if (window.matchMedia('(max-width: 991px)').matches) return 110;
-        return 130;
-    }
+    var scale = 2.5;
 
     function resetZoom() {
-        if (!stage) return;
+        if (!stage || !img) return;
         stage.classList.remove('is-zooming');
-        touchZooming = false;
-        if (lens) {
-            lens.style.opacity = '0';
-            lens.style.backgroundImage = '';
-        }
+        img.style.transform = 'scale(1)';
+        img.style.transformOrigin = 'center center';
     }
 
     function pointerCoords(event) {
@@ -439,33 +427,18 @@
         return { x: event.clientX, y: event.clientY };
     }
 
-    function updateLens(event) {
-        if (!stage || !img || !frame || !lens || !img.src) return;
+    function zoomAt(event) {
+        if (!stage || !img || !frame) return;
         var rect = frame.getBoundingClientRect();
         if (!rect.width || !rect.height) return;
-
         var point = pointerCoords(event);
-        var x = point.x - rect.left;
-        var y = point.y - rect.top;
-        if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
-            resetZoom();
-            return;
-        }
-
-        var lensSize = getLensSize();
-        var half = lensSize / 2;
-        var lensX = Math.max(0, Math.min(rect.width - lensSize, x - half));
-        var lensY = Math.max(0, Math.min(rect.height - lensSize, y - half));
-
-        lens.style.width = lensSize + 'px';
-        lens.style.height = lensSize + 'px';
-        lens.style.left = lensX + 'px';
-        lens.style.top = lensY + 'px';
-        lens.style.backgroundImage = 'url("' + img.src + '")';
-        lens.style.backgroundSize = (rect.width * zoomLevel) + 'px ' + (rect.height * zoomLevel) + 'px';
-        lens.style.backgroundPosition = (-(x * zoomLevel - half)) + 'px ' + (-(y * zoomLevel - half)) + 'px';
-        lens.style.opacity = '1';
+        var x = ((point.x - rect.left) / rect.width) * 100;
+        var y = ((point.y - rect.top) / rect.height) * 100;
+        x = Math.max(0, Math.min(100, x));
+        y = Math.max(0, Math.min(100, y));
         stage.classList.add('is-zooming');
+        img.style.transformOrigin = x + '% ' + y + '%';
+        img.style.transform = 'scale(' + scale + ')';
     }
 
     thumbs.forEach(function (thumb) {
@@ -487,26 +460,23 @@
         });
     });
 
-    if (!stage || !img || !frame || !lens) return;
+    if (!stage || !img || !frame) return;
 
-    stage.addEventListener('mouseenter', updateLens);
-    stage.addEventListener('mousemove', updateLens);
+    stage.addEventListener('mouseenter', zoomAt);
+    stage.addEventListener('mousemove', zoomAt);
     stage.addEventListener('mouseleave', resetZoom);
 
     stage.addEventListener('touchstart', function (event) {
         if (!event.touches || event.touches.length !== 1) return;
-        touchZooming = true;
-        updateLens(event);
+        zoomAt(event);
     }, { passive: true });
 
     stage.addEventListener('touchmove', function (event) {
-        if (!touchZooming || !event.touches || event.touches.length !== 1) return;
-        updateLens(event);
+        if (!event.touches || event.touches.length !== 1) return;
+        zoomAt(event);
     }, { passive: true });
 
     stage.addEventListener('touchend', resetZoom);
     stage.addEventListener('touchcancel', resetZoom);
-
-    window.addEventListener('resize', resetZoom);
 })();
 </script>

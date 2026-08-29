@@ -57,6 +57,8 @@
                                 <th>Total</th>
                                 <th>Statut</th>
                                 <th>Paiement</th>
+                                <th>Livreur</th>
+                                <th class="text-center">Détail</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -106,40 +108,62 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <div class="mag-cmd-actions">
-                                        <button type="button" class="btn mag-cmd-btn mag-cmd-btn--ghost" onclick="afficherDetailLivraisonCmd('{{ cmd.pk }}')">Détail</button>
+                                    {% if cmd.livreur %}
+                                    {{ cmd.livreur.get_full_name|default:cmd.livreur.username }}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="mag-cmd-actions mag-cmd-actions--row mag-cmd-actions--center">
+                                        <button type="button"
+                                                class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                                onclick="afficherDetailLivraisonCmd('{{ cmd.pk }}')"
+                                                title="Voir le détail">
+                                            <i class="fa fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mag-cmd-actions mag-cmd-actions--row mag-cmd-actions--center">
                                         {% if cmd.statut_commande == 'annuler' %}
-                                        <span class="mag-cmd-badge mag-cmd-badge--annuler">Annulée</span>
+                                        <span class="text-muted">—</span>
                                         {% elif peut_agir_livreur and cmd.livreur_id == request.user.pk %}
                                             {% if not cmd.paye %}
                                             <form method="post" action="{% url 'ecom_livraison_cmd_payer' cmd.pk %}">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn mag-cmd-btn mag-cmd-btn--primary" onclick="return confirm('Confirmer le paiement et décrémenter le stock ?');">Payer</button>
+                                                <button type="submit"
+                                                        class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                                        onclick="return confirm('Confirmer le paiement et décrémenter le stock ?');"
+                                                        title="Encaisser">
+                                                    <i class="fa fa-money"></i>
+                                                </button>
                                             </form>
-                                            <button type="button" class="btn mag-cmd-btn mag-cmd-btn--ok" disabled>Livrer</button>
+                                            <button type="button" class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon" disabled title="Livrer (paiement requis)">
+                                                <i class="fa fa-truck"></i>
+                                            </button>
                                             {% elif cmd.statut_commande != 'livrer' %}
-                                            <span class="mag-cmd-badge mag-cmd-badge--paye">Payée</span>
                                             <form method="post" action="{% url 'ecom_livraison_cmd_livrer' cmd.pk %}">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn mag-cmd-btn mag-cmd-btn--ok" onclick="return confirm('Confirmer la livraison ?');">Livrer</button>
+                                                <button type="submit"
+                                                        class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                                        onclick="return confirm('Confirmer la livraison ?');"
+                                                        title="Marquer livrée">
+                                                    <i class="fa fa-truck"></i>
+                                                </button>
                                             </form>
                                             {% else %}
-                                            <span class="mag-cmd-badge mag-cmd-badge--livrer">Livrée</span>
+                                            <span class="text-muted">—</span>
                                             {% endif %}
                                         {% else %}
-                                            {% if cmd.livreur %}<small class="text-muted">{{ cmd.livreur.get_full_name|default:cmd.livreur.username }}</small>{% endif %}
-                                            {% if cmd.statut_commande == 'livrer' %}
-                                            <span class="mag-cmd-badge mag-cmd-badge--livrer">Livrée</span>
-                                            {% elif cmd.paye %}
-                                            <span class="mag-cmd-badge mag-cmd-badge--paye">Payée</span>
-                                            {% endif %}
+                                        <span class="text-muted">—</span>
                                         {% endif %}
                                     </div>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr class="mag-table-skip-filter">
-                                <td colspan="10" class="text-center text-muted py-4">Aucune livraison pour cette période.</td>
+                                <td colspan="12" class="text-center text-muted py-4">Aucune livraison pour cette période.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

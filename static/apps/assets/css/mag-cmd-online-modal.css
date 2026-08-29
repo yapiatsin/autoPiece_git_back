@@ -92,6 +92,10 @@
     font-size: 0.82rem;
 }
 
+.mag-cmd-invoice-modal .ecom-inv-item-category {
+    font-size: 0.72rem;
+}
+
 .mag-cmd-invoice-modal .ecom-inv-item-code {
     font-size: 0.72rem;
 }
@@ -105,11 +109,16 @@
 }
 
 .mag-cmd-invoice-modal .ecom-inv-footer {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
 }
 
 .mag-cmd-invoice-modal .ecom-inv-footer-title {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
+}
+
+.mag-cmd-invoice-modal .ecom-inv-footer p {
+    font-size: 0.72rem;
+    line-height: 1.4;
 }
 
 .mag-cmd-invoice-modal .ecom-inv-rule {

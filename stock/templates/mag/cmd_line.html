@@ -48,6 +48,8 @@
                                 <th>Total</th>
                                 <th>Statut</th>
                                 <th>Livreur</th>
+                                <th>Assignation</th>
+                                <th class="text-center">Détail</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -117,42 +119,61 @@
                                         {% if cmd.client_confirme_reception %}<span class="mag-cmd-badge mag-cmd-badge--recu">Reçue</span>{% endif %}
                                     </div>
                                 </td>
-                                <td>{{ cmd.livreur.username|default:"—" }}</td>
                                 <td>
-                                    <div class="mag-cmd-actions">
+                                    {% if cmd.livreur %}
+                                    {{ cmd.livreur.get_full_name|default:cmd.livreur.username }}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if cmd.statut_commande == 'annuler' or cmd.statut_commande == 'livrer' or cmd.panier.mode_reception != 'livraison' %}
+                                    <span class="text-muted">—</span>
+                                    {% else %}
+                                    <form method="post" action="{% url 'cmd_line_assigner' cmd.pk %}" class="mag-cmd-assign">
+                                        {% csrf_token %}
+                                        <select name="livreur_id" required>
+                                            <option value="">Livreur…</option>
+                                            {% for l in livreurs %}
+                                            <option value="{{ l.pk }}" {% if cmd.livreur_id == l.pk %}selected{% endif %}>{{ l.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn mag-cmd-btn mag-cmd-btn--primary" title="Assigner le livreur">Assigner</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="mag-cmd-actions mag-cmd-actions--row mag-cmd-actions--center">
                                         <button type="button"
-                                                class="btn mag-cmd-btn mag-cmd-btn--ghost"
-                                                onclick="afficherDetailCmdLine('{{ cmd.pk }}')">
-                                            Détail
+                                                class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                                onclick="afficherDetailCmdLine('{{ cmd.pk }}')"
+                                                title="Voir le détail">
+                                            <i class="fa fa-eye"></i>
                                         </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mag-cmd-actions mag-cmd-actions--row mag-cmd-actions--center">
                                         {% if cmd.statut_commande == 'annuler' %}
-                                        <span class="mag-cmd-badge mag-cmd-badge--annuler">Annulée</span>
-                                        {% else %}
-                                        {% if cmd.statut_commande == 'en_attente' %}
+                                        <span class="text-muted">—</span>
+                                        {% elif cmd.statut_commande == 'en_attente' %}
                                         <form method="post" action="{% url 'cmd_line_valider' cmd.pk %}">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn mag-cmd-btn mag-cmd-btn--ok">Valider</button>
+                                            <button type="submit"
+                                                    class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"
+                                                    title="Valider la commande">
+                                                <i class="fa fa-check"></i>
+                                            </button>
                                         </form>
-                                        {% endif %}
-                                        {% if cmd.panier.mode_reception == 'livraison' and cmd.statut_commande != 'livrer' %}
-                                        <form method="post" action="{% url 'cmd_line_assigner' cmd.pk %}" class="mag-cmd-assign">
-                                            {% csrf_token %}
-                                            <select name="livreur_id" required>
-                                                <option value="">Livreur…</option>
-                                                {% for l in livreurs %}
-                                                <option value="{{ l.pk }}" {% if cmd.livreur_id == l.pk %}selected{% endif %}>{{ l.username }}</option>
-                                                {% endfor %}
-                                            </select>
-                                            <button type="submit" class="btn mag-cmd-btn mag-cmd-btn--primary">Assigner</button>
-                                        </form>
-                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">—</span>
                                         {% endif %}
                                     </div>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr class="mag-table-skip-filter">
-                                <td colspan="9" class="text-center text-muted py-4">Aucune commande en ligne pour cette période.</td>
+                                <td colspan="11" class="text-center text-muted py-4">Aucune commande en ligne pour cette période.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

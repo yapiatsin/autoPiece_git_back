@@ -8609,8 +8609,8 @@ only screen and (max-width: 767px) {
 
 .ecom-inv-item-category {
     display: block;
-    margin-top: 0.2rem;
-    font-size: 1.25rem;
+    margin-top: 0.15rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--color-primary, #ff8b00);
     text-align: left;
@@ -8654,17 +8654,17 @@ only screen and (max-width: 767px) {
 }
 
 .ecom-inv-footer-title {
-    margin: 0 0 0.75rem;
-    font-size: 1.35rem;
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--ecom-inv-ink);
 }
 
 .ecom-inv-footer p {
-    margin: 0 0 0.45rem;
-    font-size: 1.3rem;
+    margin: 0 0 0.3rem;
+    font-size: 0.8rem;
     color: var(--ecom-inv-muted);
-    line-height: 1.5;
+    line-height: 1.45;
 }
 
 .ecom-invoice-actions {
@@ -8750,7 +8750,11 @@ only screen and (max-width: 767px) {
     .ecom-inv-value,
     .ecom-inv-table tbody td,
     .ecom-inv-footer p {
-        font-size: 1.25rem;
+        font-size: 0.85rem;
+    }
+
+    .ecom-inv-footer-title {
+        font-size: 0.9rem;
     }
 
     .ecom-inv-table thead th {
@@ -8758,7 +8762,11 @@ only screen and (max-width: 767px) {
     }
 
     .ecom-inv-item-name {
-        font-size: 1.3rem;
+        font-size: 0.95rem;
+    }
+
+    .ecom-inv-item-category {
+        font-size: 0.78rem;
     }
 
     .ecom-inv-total-amount {
@@ -9035,7 +9043,7 @@ only screen and (max-width: 767px) {
     body.ecom-invoice-body .ecom-inv-item-category {
         display: block !important;
         margin-top: 1mm !important;
-        font-size: 11pt !important;
+        font-size: 9pt !important;
         font-weight: 600 !important;
         color: #ff8b00 !important;
         text-align: left !important;
@@ -9076,14 +9084,14 @@ only screen and (max-width: 767px) {
     }
 
     body.ecom-invoice-body .ecom-inv-footer-title {
-        font-size: 12pt !important;
+        font-size: 9pt !important;
         font-weight: 700 !important;
         margin: 0 0 2mm !important;
         text-align: left !important;
     }
 
     body.ecom-invoice-body .ecom-inv-footer p {
-        font-size: 11pt !important;
+        font-size: 8pt !important;
         color: #555 !important;
         text-align: left !important;
         margin: 0 0 1.5mm !important;
@@ -10094,8 +10102,7 @@ only screen and (max-width: 767px) {
 
 .ecom-pd-zoom {
     overflow: hidden;
-    cursor: crosshair;
-    touch-action: none;
+    cursor: zoom-in;
 }
 
 .ecom-pd-zoom__frame {
@@ -10106,40 +10113,29 @@ only screen and (max-width: 767px) {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
 .ecom-pd-zoom__img {
     display: block;
     max-width: 100%;
+    transform: scale(1);
+    transform-origin: center center;
+    transition: transform 0.12s ease-out;
+    will-change: transform;
     pointer-events: none;
     user-select: none;
     -webkit-user-drag: none;
 }
 
-.ecom-pd-zoom__lens {
-    position: absolute;
-    z-index: 4;
-    border-radius: 50%;
-    border: 3px solid #fff;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
-    background-color: #fff;
-    background-repeat: no-repeat;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.12s ease;
+.ecom-pd-zoom.is-zooming .ecom-pd-zoom__img {
+    transition: none;
 }
 
-.ecom-pd-zoom.is-zooming .ecom-pd-zoom__lens {
-    opacity: 1;
-}
-
-.ecom-pd-zoom.is-zooming::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    background: rgba(255, 255, 255, 0.08);
-    pointer-events: none;
+@media (hover: none) {
+    .ecom-pd-zoom {
+        cursor: default;
+    }
 }
 
 .ecom-pd__placeholder {
@@ -10759,11 +10755,6 @@ only screen and (max-width: 767px) {
     .ecom-pd__stage img,
     .ecom-pd-zoom__img {
         max-height: 240px;
-    }
-
-    .ecom-pd-zoom__lens {
-        width: 110px !important;
-        height: 110px !important;
     }
 
     .ecom-pd__share {
