@@ -34,13 +34,13 @@ from .views import *
 from . import views
 urlpatterns = [
     #piece
-    path('tableau de bords', TableauBordsView.as_view(), name='tbord'),
-    path('top vente', topBestPiecView.as_view(), name='topventes'),
-    path('Pièce en rupture', PieceRuptureView.as_view(), name='piece_rupture'),
-    path('vente', VenteView.as_view(), name='mesventes'),
+    path('tableau-de-bords', TableauBordsView.as_view(), name='tbord'),
+    path('top-vente', topBestPiecView.as_view(), name='topventes'),
+    path('piece-en-rupture', PieceRuptureView.as_view(), name='piece_rupture'),
+    path('mes-ventes', VenteView.as_view(), name='mesventes'),
     path('vente/export-excel/', export_ventes_excel, name='export_ventes_excel'),
     
-    path('Nouvelle categorie', AddCategorieView.as_view(), name="add_categorie"),
+    path('nouvelle-categorie', AddCategorieView.as_view(), name="add_categorie"),
     path('modifier_categorie/<int:pk>/edit', UpdateCategorieView.as_view(), name='update_categorie'),
     path('sous-categorie/nouvelle/', add_sous_categorie, name='add_sous_categorie'),
     path('sous-categorie/modele-excel/', download_modele_sous_categories_excel, name='download_modele_sous_categories_excel'),
@@ -50,9 +50,9 @@ urlpatterns = [
     path('ajax/sous-categories/', ajax_sous_categories, name='ajax_sous_categories'),
     path('produit/<int:pk>/pièce', AddPieceView.as_view(), name='add_piece'),
     path('produit/<int:pk>/modele-excel/', download_modele_pieces_excel, name='download_modele_pieces_excel'),
-    path('Supprimer categorie /<int:pk>/fatme', delete_categorie, name="delet_categorie"),
+    path('supprimer-categorie/<int:pk>/fatme', delete_categorie, name="delet_categorie"),
 
-    path('Nouveau panier', AddPanierView.as_view(), name="paniers"),
+    path('nouveau-panier', AddPanierView.as_view(), name="paniers"),
     path('ajax/search-articles/', ajax_search_articles, name='ajax_search_articles'),
     path('ajax/search-articles-proforma/', ajax_search_articles_proforma, name='ajax_search_articles_proforma'),
     # Vue unifiée (fusion des 4 anciennes fonctions). L'action est passée via kwargs
@@ -65,10 +65,10 @@ urlpatterns = [
     # Endpoint générique (optionnel) : action passée dans le body POST.
     path('ajax/panier/<int:pk>/', panier_action, name='panier_action'),
     path('ajax/panier-accueil/etat/', ajax_panier_accueil_state, name='ajax_panier_accueil_state'),
-    path('valide panier', valider_paniers, name='valid_panier'),
+    path('valide-panier', valider_paniers, name='valid_panier'),
     
     # URLs pour la proforma
-    path('Nouvelle proforma', AddProformaView.as_view(), name='add_proforma'),
+    path('nouvelle-proforma', AddProformaView.as_view(), name='add_proforma'),
     # Vue unifiée proforma — même noms d'URL conservés pour rétro-compatibilité
     path('Article/<int:pk>/ajouter_au_panier_proforma', panier_proforma_action, {'action': 'add'},       name='add_panier_proforma'),
     path('ajax/add_panier_proforma/<int:pk>/',          panier_proforma_action, {'action': 'increment'}, name='ajax_add_panier_proforma'),
@@ -79,7 +79,7 @@ urlpatterns = [
     
     path('valider_proforma', valider_proforma, name='valider_proforma'),
     path('valider_proforma/<str:ticket_id>/', valider_proforma, name='valider_proforma'),
-    path('Proformas en attente', ProformaAttenteView.as_view(), name='proforma_attente'),
+    path('proformas-en-attente', ProformaAttenteView.as_view(), name='proforma_attente'),
     path('ajax/search-proformas/', ajax_search_proformas, name='ajax_search_proformas'),
     path('ajax/detail_proforma/<str:ticket_id>/', ajax_detail_proforma, name='ajax_detail_proforma'),
     path('valider_panier_proforma/<str:ticket_id>/', valider_panier_proforma, name='valider_panier_proforma'),
@@ -118,7 +118,7 @@ urlpatterns = [
     path('zones-livraison/toggle/', zones_livraison_toggle, name='zones_livraison_toggle'),
     path('zones-livraison/delete/', zones_livraison_delete, name='zones_livraison_delete'),
     
-    path('liste des pièces/', MonStockView.as_view(), name="stock"),
+    path('liste-des-pieces/', MonStockView.as_view(), name="stock"),
     path('pieces-archivees/', PieceArchiveView.as_view(), name='pieces_archivees'),
     path('piece/<int:pk>/prix-local/', ajax_definir_prix_local, name='ajax_definir_prix_local'),
     path('piece/<int:pk>/entrestock', EntreSockPieceView.as_view(), name='entrestock'),
