@@ -35,6 +35,7 @@ pour la déployer. Caddy, déjà présent sur le VPS, termine le TLS.
 | `scripts/reset_and_load.py` | Vide la base cible puis y charge l'export |
 | `scripts/clean_orphan_fks.py` | Diagnostic des clés étrangères orphelines |
 | `scripts/backup_db.sh`, `scripts/restore_db.sh` | Sauvegarde et restauration |
+| `Makefile` | Raccourcis d'exploitation (`make deploy`, `make logs-web`, ...) |
 
 ## 2. Modifications du code applicatif
 
@@ -201,6 +202,52 @@ Une fois le HTTPS confirmé stable, passer `SECURE_HSTS_SECONDS=31536000` dans l
 
 ---
 
+## 8 bis. Workflow quotidien après une modification
+
+Un `Makefile` reprend les mêmes noms de cibles que celui d'E-Printer Web.
+`make` seul affiche la liste complète.
+
+**Tant que les secrets GitHub ne sont pas créés**, l'image est construite sur le
+VPS. Depuis le poste de développement :
+
+```bash
+git add -A && git commit -m "..." && git push
+```
+
+Puis en SSH sur le VPS :
+
+```bash
+cd /opt/autopiece && make deploy
+```
+
+`make deploy` fait `git pull --ff-only` puis `make rebuild`, qui récupère
+l'image depuis GHCR. Tant que GitHub Actions ne publie pas encore d'image,
+utiliser à la place :
+
+```bash
+cd /opt/autopiece && git pull --ff-only && make rebuild-local
+```
+
+**Une fois les secrets créés** (§5), il n'y a plus rien à faire sur le VPS : le
+`git push` déclenche le build sur GitHub puis le déploiement par SSH.
+
+Quelques cibles utiles au quotidien :
+
+| Commande | Effet |
+|---|---|
+| `make status` | état des conteneurs |
+| `make logs-web` | journaux Django en continu |
+| `make reload` | applique une modification du `.env` |
+| `make connect-web` | shell dans le conteneur |
+| `make backup` | sauvegarde base + médias |
+| `make fix-perms` | rétablit les droits de `media/` après un `scp` |
+| `make caddy-reload` | valide **puis** recharge Caddy (refuse si invalide) |
+
+`make restart` ne relit pas le `.env` — c'est `make reload` qu'il faut dans ce
+cas, car seul un `up --force-recreate` réinjecte les variables d'environnement.
+
+---
+
 ## 9. Exploitation
 
 Journaux applicatifs en continu :
@@ -266,6 +313,15 @@ sous-catégories par défaut. Le tirage est bien aléatoire, mais l'espace est
 champ (`length=12`) ou élargir l'alphabet supprimerait ce risque ; cela demande
 une migration et n'a pas été fait ici pour rester dans le périmètre du
 déploiement.
+
+**Pas d'underscore dans un nom de service.** Django valide l'en-tête `Host`
+avec le motif `^([a-z0-9.-]+|...)(:[0-9]+)?$`, qui exclut les underscores
+(RFC 1123). Un service nommé `autopiece_web` fait donc répondre 400 à toute
+requête portant ce `Host`, avant même la consultation de `ALLOWED_HOSTS` — la
+sonde active de Caddy échoue en permanence et le proxy sert des 502. D'où les
+tirets dans `autopiece-web` et `autopiece-db`. Le nom interne doit par ailleurs
+figurer dans `DJANGO_ALLOWED_HOSTS`, comme `127.0.0.1` pour le `HEALTHCHECK`
+Docker.
 
 **Le fichier `.env` n'est jamais versionné.** Il est créé à la main sur le VPS
 et lu par `docker compose` au démarrage. Après l'avoir modifié, relancer
