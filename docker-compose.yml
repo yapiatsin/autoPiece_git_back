@@ -2,7 +2,7 @@
 #
 #   docker compose pull && docker compose up -d
 #
-# Les services s'appellent `autopiece_web` et `autopiece_db`, et non `web` /
+# Les services s'appellent `autopiece-web` et `autopiece-db`, et non `web` /
 # `db`, parce qu'ils partagent le reseau du Caddy deja en place sur le VPS.
 # Celui-ci sert deja une autre application dont le service se nomme `web` : deux
 # conteneurs portant le meme nom sur un meme reseau se partageraient l'alias DNS
@@ -13,7 +13,7 @@
 # conteneur par son nom sur le reseau partage. Voir deploy/Caddyfile.example.
 
 services:
-  autopiece_db:
+  autopiece-db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -35,7 +35,7 @@ services:
     networks:
       - autopiece
 
-  autopiece_web:
+  autopiece-web:
     # Image publiee par GitHub Actions sur GHCR. `build` sert au premier
     # deploiement et au depannage (docker compose up -d --build).
     image: ${WEB_IMAGE:-ghcr.io/yapiatsin/autopiece_git_back:latest}
@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
-      autopiece_db:
+      autopiece-db:
         condition: service_healthy
     env_file:
       - .env
@@ -52,7 +52,7 @@ services:
       # Force la configuration production quelles que soient les valeurs du .env
       # heritees du poste de developpement.
       DB_ENGINE: postgresql
-      DB_HOST: autopiece_db
+      DB_HOST: autopiece-db
       DB_PORT: "5432"
       MEDIA_ROOT: /app/media
     volumes:
@@ -76,7 +76,7 @@ volumes:
   pgdata:
 
 networks:
-  # Reseau prive de la pile : seul autopiece_web joint la base.
+  # Reseau prive de la pile : seul autopiece-web joint la base.
   autopiece:
     driver: bridge
 

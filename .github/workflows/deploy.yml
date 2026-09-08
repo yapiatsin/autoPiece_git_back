@@ -153,5 +153,5 @@ jobs:
               sleep 5
             done
             echo "L'application ne repond pas — journaux :"
-            cd ${{ secrets.VPS_APP_DIR }} && docker compose logs --tail=80 autopiece_web
+            cd ${{ secrets.VPS_APP_DIR }} && docker compose logs --tail=80 autopiece-web
             exit 1

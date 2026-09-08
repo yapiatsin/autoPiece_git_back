@@ -10,9 +10,9 @@ pour la déployer. Caddy, déjà présent sur le VPS, termine le TLS.
                             └────── ssh ───────────────┼──▶ VPS /opt/autopiece
                                                        │     docker compose pull && up -d
                                                        │
-   Internet ──443──▶ eprinters_caddy ──▶ autopiece_web:8000 (gunicorn + WhiteNoise)
+   Internet ──443──▶ eprinters_caddy ──▶ autopiece-web:8000 (gunicorn + WhiteNoise)
                      (conteneur, deja                    │
-                      en place sur le VPS)               └──▶ autopiece_db (PostgreSQL 16)
+                      en place sur le VPS)               └──▶ autopiece-db (PostgreSQL 16)
 
   Caddy joint l'application par son nom de conteneur, sur un reseau Docker
   partage : il ne peut pas passer par 127.0.0.1, qui designerait Caddy lui-meme.
@@ -26,7 +26,7 @@ pour la déployer. Caddy, déjà présent sur le VPS, termine le TLS.
 |---|---|
 | `Dockerfile` | Image de production en deux étapes (build des dépendances, puis exécution) |
 | `docker/entrypoint.sh` | Attente de la base, migrations, `collectstatic`, `compilemessages`, gunicorn |
-| `docker-compose.yml` | Pile `autopiece_web` + `autopiece_db`, greffee sur le reseau de Caddy |
+| `docker-compose.yml` | Pile `autopiece-web` + `autopiece-db`, greffee sur le reseau de Caddy |
 | `.dockerignore` | Exclut `env/`, `.env`, `db.sqlite3`, `media/`, `staticfiles/` de l'image |
 | `.github/workflows/deploy.yml` | Vérifications, build, push GHCR, déploiement SSH |
 | `.env.prod.example` | Modèle de configuration à copier en `.env` sur le VPS |
@@ -160,7 +160,7 @@ scp data_export.json root@<IP_VPS>:/opt/autopiece/ && scp -r media/. root@<IP_VP
 Puis sur le VPS :
 
 ```bash
-cd /opt/autopiece && docker compose cp data_export.json autopiece_web:/tmp/data_export.json && docker compose exec autopiece_web python scripts/reset_and_load.py /tmp/data_export.json
+cd /opt/autopiece && docker compose cp data_export.json autopiece-web:/tmp/data_export.json && docker compose exec autopiece-web python scripts/reset_and_load.py /tmp/data_export.json
 ```
 
 Le script vide la base cible, charge l'export, puis relance `migrate` pour
@@ -197,7 +197,7 @@ globales (adresse ACME, `trusted_proxies`) sont déjà définies dans le Caddyfi
 principal, et une seconde ferait échouer le chargement complet.
 
 Une fois le HTTPS confirmé stable, passer `SECURE_HSTS_SECONDS=31536000` dans le
-`.env` du VPS et relancer `docker compose up -d autopiece_web`.
+`.env` du VPS et relancer `docker compose up -d autopiece-web`.
 
 ---
 
@@ -206,17 +206,17 @@ Une fois le HTTPS confirmé stable, passer `SECURE_HSTS_SECONDS=31536000` dans l
 Journaux applicatifs en continu :
 
 ```bash
-cd /opt/autopiece && docker compose logs -f autopiece_web
+cd /opt/autopiece && docker compose logs -f autopiece-web
 ```
 
 Console Django et console PostgreSQL :
 
 ```bash
-cd /opt/autopiece && docker compose exec autopiece_web python manage.py shell
+cd /opt/autopiece && docker compose exec autopiece-web python manage.py shell
 ```
 
 ```bash
-cd /opt/autopiece && docker compose exec autopiece_db psql -U autopiece -d autopiece
+cd /opt/autopiece && docker compose exec autopiece-db psql -U autopiece -d autopiece
 ```
 
 **Sauvegardes** — base et médias, avec rotation sur 14 exemplaires :
@@ -241,7 +241,7 @@ cd /opt/autopiece && ./scripts/restore_db.sh backups/db-20260908-020000.sql.gz
 l'ancien SHA dans `WEB_IMAGE` puis :
 
 ```bash
-cd /opt/autopiece && docker compose up -d autopiece_web
+cd /opt/autopiece && docker compose up -d autopiece-web
 ```
 
 ---
@@ -269,7 +269,7 @@ déploiement.
 
 **Le fichier `.env` n'est jamais versionné.** Il est créé à la main sur le VPS
 et lu par `docker compose` au démarrage. Après l'avoir modifié, relancer
-`docker compose up -d autopiece_web` pour que les nouvelles valeurs soient prises en compte.
+`docker compose up -d autopiece-web` pour que les nouvelles valeurs soient prises en compte.
 
 **`DEBUG` vaut `False` par défaut.** Un `.env` incomplet fait donc échouer le
 démarrage plutôt que d'exposer les traces d'erreur en production.

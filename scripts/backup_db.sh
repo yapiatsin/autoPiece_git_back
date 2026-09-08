@@ -12,7 +12,7 @@ DB_NAME="${DB_NAME:-autopiece}"
 DB_USER="${DB_USER:-autopiece}"
 
 echo "[backup] Dump PostgreSQL -> backups/db-${STAMP}.sql.gz"
-docker compose exec -T autopiece_db pg_dump -U "$DB_USER" -d "$DB_NAME" \
+docker compose exec -T autopiece-db pg_dump -U "$DB_USER" -d "$DB_NAME" \
   | gzip > "backups/db-${STAMP}.sql.gz"
 
 echo "[backup] Archive des medias -> backups/media-${STAMP}.tar.gz"
