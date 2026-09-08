@@ -92,7 +92,7 @@ ps: status ## Alias de status
 
 health: ## Attend que l'application réponde et affiche l'état
 	@echo "==> Attente de la sonde applicative..."
-	@curl -sS --retry 40 --retry-delay 3 --retry-all-errors --retry-connrefused \
+	@curl -s --retry 40 --retry-delay 3 --retry-all-errors --retry-connrefused \
 		-o /dev/null -w "    healthz [HTTP %{http_code}]\n" $(HEALTH_URL) || true
 	@$(COMPOSE) ps
 
@@ -147,11 +147,11 @@ check: ## Vérifications de configuration en mode production
 # DONNÉES
 # =============================================================================
 backup: ## Sauvegarde base + médias dans ./backups
-	./scripts/backup_db.sh
+	bash scripts/backup_db.sh
 
 restore: ## Restaure un dump : make restore DUMP=backups/db-....sql.gz
 	@test -n "$(DUMP)" || { echo "Usage : make restore DUMP=backups/db-....sql.gz"; exit 1; }
-	./scripts/restore_db.sh $(DUMP)
+	bash scripts/restore_db.sh $(DUMP)
 
 import-data: ## Écrase la base avec un export : make import-data FILE=data_export.json
 	@test -n "$(FILE)" || { echo "Usage : make import-data FILE=data_export.json"; exit 1; }
