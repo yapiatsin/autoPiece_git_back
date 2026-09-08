@@ -91,6 +91,13 @@ urlpatterns = [
     path('imprimante/scan/', printer_scan_view, name='printer_scan'),
     path('imprimante/connect/', printer_connect_view, name='printer_connect'),
     path('imprimante/test/', printer_test_view, name='printer_test'),
+    # Flux ESC/POS brut : le serveur compose, le navigateur du poste envoie.
+    path('imprimante/escpos/test/', printer_escpos_test_view, name='printer_escpos_test'),
+    path(
+        'imprimante/escpos/recu/<str:ticket_numero>/',
+        printer_escpos_recu_view,
+        name='printer_escpos_recu',
+    ),
     path('ajax/reload_paniers/', ajax_reload_paniers, name='ajax_reload_paniers'),
     path('ajax/reload_liste_commandes/', ajax_reload_liste_commandes, name='ajax_reload_liste_commandes'),
     path('ajax/caisse_detail/<str:ticket_id>/', ajax_caisse_detail, name='ajax_caisse_detail'),

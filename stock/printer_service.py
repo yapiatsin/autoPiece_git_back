@@ -236,6 +236,32 @@ class EscPosWriter:
             pass
 
 
+class _BufferDevice:
+    """Cible d'ecriture compatible avec EscPosWriter, qui accumule en memoire.
+
+    EscPosWriter.raw() appelle self.dev.write(endpoint, data) : il suffit donc
+    d'un objet exposant la meme methode pour produire le flux ESC/POS sans
+    aucun peripherique. C'est ce qui permet au serveur de composer le ticket et
+    de le laisser envoyer par le navigateur du poste de caisse (WebUSB), la ou
+    l'imprimante est reellement branchee.
+    """
+
+    def __init__(self):
+        self.buffer = bytearray()
+
+    def write(self, endpoint, data):  # signature imposee par EscPosWriter
+        self.buffer.extend(data)
+        return len(data)
+
+
+def _new_buffer_writer() -> tuple[_BufferDevice, EscPosWriter]:
+    """Prepare un writer memoire, initialise comme une session USB reelle."""
+    sink = _BufferDevice()
+    writer = EscPosWriter(sink, ep_out=0)
+    writer.raw(b"\x1b\x40")  # ESC @ : reinitialisation, comme _usb_printer_session
+    return sink, writer
+
+
 @contextmanager
 def _usb_printer_session(vid, pid):
     backend = _require_backend()
@@ -288,27 +314,42 @@ def _usb_printer_session(vid, pid):
                 pass
 
 
+def _compose_test_page(w, vid, pid):
+    """Compose la page de test dans un writer, USB reel ou tampon memoire."""
+    w.write("P&B Auto-Pieces", align="center", bold=True, double=True)
+    w.write("=" * w.inner, align="center")
+    w.write("PAGE DE TEST", align="center", bold=True)
+    w.write("=" * w.inner, align="center")
+    w.write(f"VID  : 0x{vid:04X}", align="left")
+    w.write(f"PID  : 0x{pid:04X}", align="left")
+    w.write(f"Date : {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}", align="left")
+    w.write("-" * w.inner, align="center")
+    w.write("Si vous lisez ce ticket,", align="center")
+    w.write("l'imprimante est connectee.", align="center")
+    w.write("=" * w.inner, align="center")
+    w.feed_cut(6)
+
+
 def print_test_page(vid, pid):
     vid, pid = resolve_vid_pid(vid, pid)
     with _usb_printer_session(vid, pid) as w:
-        w.write("P&B Auto-Pieces", align="center", bold=True, double=True)
-        w.write("=" * w.inner, align="center")
-        w.write("PAGE DE TEST", align="center", bold=True)
-        w.write("=" * w.inner, align="center")
-        w.write(f"VID  : 0x{vid:04X}", align="left")
-        w.write(f"PID  : 0x{pid:04X}", align="left")
-        w.write(f"Date : {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}", align="left")
-        w.write("-" * w.inner, align="center")
-        w.write("Si vous lisez ce ticket,", align="center")
-        w.write("l'imprimante est connectee.", align="center")
-        w.write("=" * w.inner, align="center")
-        w.feed_cut(6)
+        _compose_test_page(w, vid, pid)
     time.sleep(0.4)
 
 
-def print_receipt(commande, panier_items, vid=None, pid=None):
-    """
-    Imprime le reçu de caisse après validation du paiement.
+def build_test_page_bytes(vid=None, pid=None) -> bytes:
+    """Page de test au format ESC/POS, a envoyer par le navigateur (WebUSB)."""
+    vid, pid = resolve_vid_pid(vid, pid)
+    sink, writer = _new_buffer_writer()
+    _compose_test_page(writer, vid, pid)
+    return bytes(sink.buffer)
+
+
+def _compose_receipt(w, commande, panier_items):
+    """Compose le recu de caisse dans un writer, USB reel ou tampon memoire.
+
+    La mise en page vient de stock.receipt_layout, partagee avec le PDF : il n'y
+    a qu'une seule definition du ticket, quel que soit le canal d'impression.
     """
     from stock.receipt_layout import (
         build_receipt_item_rows,
@@ -320,57 +361,75 @@ def print_receipt(commande, panier_items, vid=None, pid=None):
         RECEIPT_FOOTER_LINES,
     )
 
-    vid, pid = resolve_vid_pid(vid, pid)
     caissier = caissier_label(commande)
 
+    w.write("P&B Auto-Pieces", align="center", bold=True, double=True)
+    w.write("*" * w.inner, align="center")
+    w.write("REÇU DE CAISSE", align="center", bold=True)
+    w.write("*" * w.inner, align="center")
+
+    commande_label = f"{commande.numero_commande}"
+    date_label = commande_date_label(commande)
+    w.write(spaced_line(commande_label, date_label, w.inner), align="left")
+    w.write(f"Caissier : {caissier}", align="left")
+    w.write("-" * w.inner, align="center")
+
+    w.write(f"{'Désignation':<20}{'Qte':>4}{'PU':>7}{'Tot':>7}", align="left", bold=True)
+    for kind, *rest in build_receipt_item_rows(panier_items, commande):
+        if kind == "row":
+            desig, qte, pu, tot = rest
+            w.write(f"{desig:<20}{qte:>4}{pu:>7}{tot:>7}", align="left")
+        else:
+            w.write(rest[0], align="left")
+
+    w.write("-" * w.inner, align="center")
+    w.raw(b"\x1b\x33\x14")
+
+    w.write(total_line("Total Brut", commande.total_sans_remise, w.inner), align="left")
+    rl = remise_line(commande, w.inner)
+    if rl:
+        w.write(rl, align="left")
+    w.write(total_line("Total Net", commande.total, w.inner), align="left")
+    tva = Decimal(str(commande.montant_tva or 0))
+    if tva > 0:
+        w.write(total_line("TVA", tva, w.inner), align="left")
+    timbre = Decimal(str(commande.montant_timbre or 0))
+    if timbre > 0:
+        w.write(total_line("Timbre fiscal", timbre, w.inner), align="left")
+    if tva > 0 or timbre > 0:
+        w.write(total_line("A PAYER", commande.total_a_encaisser, w.inner), align="left")
+    w.write(total_line("Payé", commande.montant_paye, w.inner), align="left")
+    w.write(total_line("Rendu", commande.montant_reste, w.inner), align="left")
+
+    moyen = getattr(commande, "libelle_paiement", None) or "—"
+    w.write(spaced_line("Payer par", moyen, w.inner), align="left")
+
+    w.raw(b"\x1b\x33\x1e")
+    w.write("-" * w.inner, align="center")
+    for line in RECEIPT_FOOTER_LINES:
+        w.raw(f"\n{line}\n".encode("cp850", errors="replace"))
+    w.feed_cut(10)
+
+
+def print_receipt(commande, panier_items, vid=None, pid=None):
+    """
+    Imprime le reçu de caisse après validation du paiement.
+    """
+    vid, pid = resolve_vid_pid(vid, pid)
     with _usb_printer_session(vid, pid) as w:
-        w.write("P&B Auto-Pieces", align="center", bold=True, double=True)
-        w.write("*" * w.inner, align="center")
-        w.write("REÇU DE CAISSE", align="center", bold=True)
-        w.write("*" * w.inner, align="center")
-
-        commande_label = f"{commande.numero_commande}"
-        date_label = commande_date_label(commande)
-        w.write(spaced_line(commande_label, date_label, w.inner), align="left")
-        w.write(f"Caissier : {caissier}", align="left")
-        w.write("-" * w.inner, align="center")
-
-        w.write(f"{'Désignation':<20}{'Qte':>4}{'PU':>7}{'Tot':>7}", align="left", bold=True)
-        for kind, *rest in build_receipt_item_rows(panier_items, commande):
-            if kind == "row":
-                desig, qte, pu, tot = rest
-                w.write(f"{desig:<20}{qte:>4}{pu:>7}{tot:>7}", align="left")
-            else:
-                w.write(rest[0], align="left")
-
-        w.write("-" * w.inner, align="center")
-        w.raw(b"\x1b\x33\x14")
-
-        w.write(total_line("Total Brut", commande.total_sans_remise, w.inner), align="left")
-        rl = remise_line(commande, w.inner)
-        if rl:
-            w.write(rl, align="left")
-        w.write(total_line("Total Net", commande.total, w.inner), align="left")
-        tva = Decimal(str(commande.montant_tva or 0))
-        if tva > 0:
-            w.write(total_line("TVA", tva, w.inner), align="left")
-        timbre = Decimal(str(commande.montant_timbre or 0))
-        if timbre > 0:
-            w.write(total_line("Timbre fiscal", timbre, w.inner), align="left")
-        if tva > 0 or timbre > 0:
-            w.write(total_line("A PAYER", commande.total_a_encaisser, w.inner), align="left")
-        w.write(total_line("Payé", commande.montant_paye, w.inner), align="left")
-        w.write(total_line("Rendu", commande.montant_reste, w.inner), align="left")
-
-        moyen = getattr(commande, "libelle_paiement", None) or "—"
-        w.write(spaced_line("Payer par", moyen, w.inner), align="left")
-
-        w.raw(b"\x1b\x33\x1e")
-        w.write("-" * w.inner, align="center")
-        for line in RECEIPT_FOOTER_LINES:
-            w.raw(f"\n{line}\n".encode("cp850", errors="replace"))
-        w.feed_cut(10)
+        _compose_receipt(w, commande, panier_items)
     time.sleep(0.5)
+
+
+def build_receipt_bytes(commande, panier_items) -> bytes:
+    """Recu de caisse au format ESC/POS, a envoyer par le navigateur (WebUSB).
+
+    Aucun peripherique n'est touche : le serveur ne fait que composer les
+    octets, que le poste de caisse pousse ensuite vers son imprimante.
+    """
+    sink, writer = _new_buffer_writer()
+    _compose_receipt(writer, commande, panier_items)
+    return bytes(sink.buffer)
 
 
 def get_session_printer(request) -> dict | None:

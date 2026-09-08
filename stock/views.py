@@ -2,6 +2,7 @@ import calendar
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 import json
+import logging
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import user_passes_test
@@ -115,6 +116,8 @@ from django.utils import timezone
 from django.utils.timezone import now
 from django.utils.dateparse import parse_date
 from calendar import monthrange, SUNDAY
+
+logger = logging.getLogger(__name__)
 
 
 def get_user_localite(user):
@@ -2231,6 +2234,23 @@ def imprimer_recu_commande(request, ticket_id):
     panier_items = list(PanierItem.objects.filter(panier=panier))
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    # Le bon de commande passe encore par une impression USB cote serveur, qui
+    # ne fonctionne que si Django tourne sur la machine de caisse. En
+    # production le serveur est distant : on renvoie un message actionnable
+    # plutot qu'une erreur technique, le bon restant imprimable depuis son
+    # apercu PDF.
+    from stock import printer_service
+    if not (printer_service.HAS_USB and printer_service.backend_status().get('backend_ok')):
+        error = (
+            "Impression directe indisponible depuis le serveur. "
+            "Ouvrez le bon de commande et imprimez-le depuis le navigateur."
+        )
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': error}, status=503)
+        messages.warning(request, error)
+        return redirect('caissiere')
+
     try:
         print_order_receipt_thermal(commande, panier_items)
         if is_ajax:
@@ -2329,6 +2349,69 @@ def printer_test_view(request):
         return JsonResponse({'success': False, 'error': f"Erreur impression : {e}"}, status=500)
 
     return JsonResponse({'success': True, 'message': "Page de test envoyée à l'imprimante."})
+
+
+# --- Impression depuis le poste de caisse (WebUSB) --------------------------
+# Le serveur est distant : il ne voit aucun peripherique USB. Il se contente
+# donc de composer le flux ESC/POS, que le navigateur du caissier pousse vers
+# l'imprimante reellement branchee sur sa machine. La mise en page reste celle
+# de stock.printer_service, partagee avec l'impression USB directe locale.
+
+@login_required(login_url='connexion')
+def printer_escpos_test_view(request):
+    """GET → page de test au format ESC/POS brut, a envoyer via WebUSB."""
+    from stock import printer_service
+
+    def _parse_int(value):
+        if value is None:
+            return None
+        s = str(value).strip()
+        try:
+            return int(s, 16) if s.lower().startswith('0x') else int(s)
+        except (ValueError, TypeError):
+            return None
+
+    vid = _parse_int(request.GET.get('vid'))
+    pid = _parse_int(request.GET.get('pid'))
+    payload = printer_service.build_test_page_bytes(vid, pid)
+    response = HttpResponse(payload, content_type='application/octet-stream')
+    response['Content-Disposition'] = 'attachment; filename="test.escpos"'
+    response['Cache-Control'] = 'no-store'
+    return response
+
+
+@login_required(login_url='connexion')
+def printer_escpos_recu_view(request, ticket_numero):
+    """GET → recu de caisse au format ESC/POS brut, a envoyer via WebUSB.
+
+    Memes controles que reimprimer_recu_paiement : commande payee, et localite
+    de l'utilisateur autorisee sur ce panier.
+    """
+    from stock import printer_service
+
+    localite = get_user_localite(request.user)
+    ticket = get_object_or_404(Ticket, numero=ticket_numero)
+    commande = ticket.commande
+    if not commande.paye:
+        return JsonResponse(
+            {'success': False, 'error': "Cette commande n'est pas encore payée."},
+            status=400,
+        )
+    panier = commande.panier
+    if localite and panier.local_entrepot_id != localite.id:
+        return JsonResponse(
+            {'success': False, 'error': "Accès refusé à cette localité."},
+            status=403,
+        )
+
+    panier_items = list(
+        PanierItem.objects.filter(panier=panier).select_related('piece')
+    )
+    payload = printer_service.build_receipt_bytes(commande, panier_items)
+    response = HttpResponse(payload, content_type='application/octet-stream')
+    response['Content-Disposition'] = f'attachment; filename="recu-{ticket_numero}.escpos"'
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 def _moyens_paiement_caisse():
@@ -3026,17 +3109,43 @@ def reimprimer_recu_paiement(request, ticket_numero):
         PanierItem.objects.filter(panier=panier).select_related('piece')
     )
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    # Impression USB directe : ne fonctionne que si le serveur tourne sur la
+    # machine ou l'imprimante est branchee (poste de developpement). En
+    # production le serveur est distant, on passe donc au repli PDF.
+    from stock import printer_service
+    if printer_service.HAS_USB and printer_service.backend_status().get('backend_ok'):
+        try:
+            printer_service.print_receipt_for_request(request, commande, panier_items)
+            msg = f"Reçu de paiement {ticket_numero} réimprimé."
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': msg})
+            messages.success(request, msg)
+            return redirect('caissiere')
+        except Exception as exc:
+            logger.warning('Reimpression USB %s : %s', ticket_numero, exc)
+
+    # Repli : on sert le PDF du ticket, que le caissier imprime depuis son
+    # navigateur. Il est regenere s'il manque (ticket ancien, media purge).
     try:
-        generate_receipt_pdf(request, commande, panier_items)
-        msg = f"Reçu de paiement {ticket_numero} réimprimé."
+        if not ticket.fichier_pdf:
+            ticket.fichier_pdf = generate_receipt_pdf_file(commande, panier_items)
+            ticket.save(update_fields=['fichier_pdf'])
+        pdf_url = ticket.fichier_pdf.url
+    except Exception as exc:
+        error = f"Reçu indisponible : {exc}"
         if is_ajax:
-            return JsonResponse({'success': True, 'message': msg})
-        messages.success(request, msg)
-    except Exception as e:
-        if is_ajax:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
-        messages.error(request, f"Erreur impression : {e}")
-    return redirect('caissiere')
+            return JsonResponse({'success': False, 'error': error}, status=500)
+        messages.error(request, error)
+        return redirect('caissiere')
+
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'pdf_url': pdf_url,
+            'message': f"Reçu {ticket_numero} disponible en PDF.",
+        })
+    return redirect(pdf_url)
 
 @login_required(login_url='connexion')
 def imprimer_bon_commande_vente(request, ticket_numero):

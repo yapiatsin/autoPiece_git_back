@@ -331,6 +331,9 @@ def payload_succes_caisse(request, commande, panier, panier_items, ticket, bon_p
         return {
             'success': True,
             'pending': False,
+            # Le navigateur du poste s'en sert pour recuperer le flux ESC/POS
+            # et imprimer le recu sur l'imprimante branchee en local.
+            'ticket_numero': ticket.numero,
             'warning': 'Paiement enregistré, bon de commande non généré.',
         }
     ctx_bon = context_bon_commande_vente(bon_paiement, commande, panier, panier_items)
@@ -355,6 +358,9 @@ def payload_succes_caisse(request, commande, panier, panier_items, ticket, bon_p
         'pdf_url': print_url + '?format=pdf',
         'print_title': ctx_bon['print_title'],
         'numero_bon': bon_paiement.numero_bon,
+        # Le navigateur du poste s'en sert pour recuperer le flux ESC/POS et
+        # imprimer le recu sur l'imprimante branchee en local.
+        'ticket_numero': ticket.numero,
     }
 
 

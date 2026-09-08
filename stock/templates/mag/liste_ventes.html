@@ -133,32 +133,15 @@
 {% include "mag/partials/_periode_filter_js.html" %}
 <script>
 (function () {
+    // Réimpression déléguée au module partagé (webusb-printer.js) : le serveur
+    // compose le flux ESC/POS, ce navigateur le pousse vers l'imprimante
+    // branchée sur le poste. Repli automatique sur le PDF si WebUSB manque.
     function reprintRecuPaiement(ticket, btn) {
         if (!ticket) return;
         const originalHTML = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-        const url = "{% url 'reimprimer_recu_paiement' 'TICKET_ID' %}".replace('TICKET_ID', ticket);
-        const csrf = (document.cookie.split('; ').find(c => c.startsWith('csrftoken=')) || '').split('=')[1];
-        fetch(url, {
-            method: "POST",
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrf || '',
-            }
-        })
-        .then(r => r.json().then(data => ({ ok: r.ok, data })))
-        .then(({ ok, data }) => {
-            if (ok && data.success) {
-                if (typeof toastr !== 'undefined') toastr.success(data.message || "Reçu de paiement réimprimé.");
-            } else if (typeof toastr !== 'undefined') {
-                toastr.error(data.error || "Erreur lors de l'impression.");
-            }
-        })
-        .catch(() => {
-            if (typeof toastr !== 'undefined') toastr.error("Erreur réseau lors de l'impression.");
-        })
-        .finally(() => {
+        window.AutoPiecePrinter.reprintReceipt(ticket).finally(() => {
             btn.disabled = false;
             btn.innerHTML = originalHTML;
         });

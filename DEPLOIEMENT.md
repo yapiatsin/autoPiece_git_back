@@ -335,14 +335,29 @@ cd /opt/autopiece && docker compose up -d autopiece-web
 
 ## 10. Points d'attention
 
-**Impression thermique USB.** `stock/printer_service.py` pilote l'imprimante
-Epson TM-T20III en USB depuis le processus Django. Cela fonctionnait parce que
-le serveur tournait sur le poste de caisse ; sur le VPS il n'y a aucun
-périphérique USB et `HAS_USB` sera faux. Le code retombe déjà sur la génération
-d'un PDF (`stock/receipt_ticket_pdf.py`), que le caissier imprime depuis son
-navigateur. Si l'impression directe reste indispensable, il faudra un petit
-agent local sur le poste de caisse, appelé par le navigateur — c'est un chantier
-à part entière, non couvert ici.
+**Impression thermique — pilotée par le poste, pas par le serveur.**
+`stock/printer_service.py` pilotait l'imprimante Epson TM-T20III en USB depuis
+le processus Django. Cela fonctionnait parce que le serveur tournait sur le
+poste de caisse ; sur le VPS il n'y a aucun périphérique USB. Le serveur se
+contente donc désormais de **composer le flux ESC/POS**
+(`build_receipt_bytes`, `build_test_page_bytes`), servi par
+`/stocks/imprimante/escpos/…`, et c'est le navigateur du caissier qui le pousse
+vers l'imprimante via **WebUSB** (`static/apps/assets/js/webusb-printer.js`).
+La mise en page reste unique : `stock/receipt_layout.py`, partagée avec le PDF.
+
+Conditions côté poste : Chrome ou Edge (WebUSB n'existe ni sur Firefox ni sur
+Safari), page en HTTPS, et pilote **WinUSB installé via Zadig** sur
+l'imprimante. Une autorisation est demandée une fois par poste, au premier
+« Détecter ». L'impression après encaissement est ensuite automatique.
+
+Conséquence assumée : avec WinUSB, l'Epson n'apparaît pas dans les imprimantes
+Windows et n'est donc pas utilisable par `Ctrl+P`. Les deux pilotes s'excluent.
+Si WebUSB est indisponible, la réimpression bascule seule sur le reçu PDF.
+
+Le **bon de commande** (avant paiement) utilise encore
+`print_order_receipt_thermal`, une implémentation USB distincte à écritures
+brutes, non convertie. Sur le VPS son bouton de réimpression renvoie un message
+explicite ; le bon reste imprimable depuis son aperçu PDF.
 
 **Collision de `sid`.** `Categorie.cid` et `SousCategorie.sid` utilisent
 `ShortUUIDField(length=6, alphabet="abcd1234")`, soit 8⁶ = 262 144 valeurs

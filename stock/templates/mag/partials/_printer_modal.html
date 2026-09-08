@@ -1,4 +1,6 @@
 {# Modal de connexion d'imprimante USB — inclus dans appbases.html #}
+{# Deux modes : WebUSB (le navigateur pilote l'imprimante du poste, cas de la #}
+{# production) et scan serveur (Django tourne sur la machine, cas du dev local). #}
 <div class="modal fade" id="printerModal" tabindex="-1" role="dialog" aria-labelledby="printerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content" style="border-radius:18px;">
@@ -15,8 +17,12 @@
                 <div id="printer-status-empty" class="text-center p-3">
                     <i class="fa fa-usb text-muted" style="font-size:48px;"></i>
                     <p class="mt-2 text-muted mb-0">Aucune imprimante connectée</p>
-                    <small class="text-muted">Branchez une imprimante USB puis cliquez sur « Détecter ».</small>
-                    <p class="text-muted small mt-2 mb-0">
+                    <small class="text-muted">Branchez l'imprimante sur ce poste, puis cliquez sur « Détecter ».</small>
+                    <p class="text-muted small mt-2 mb-0" id="printer-hint-webusb" style="display:none;">
+                        <i class="fa fa-info-circle"></i>
+                        Le navigateur vous demandera d'autoriser l'imprimante. Une seule fois par poste.
+                    </p>
+                    <p class="text-muted small mt-2 mb-0" id="printer-hint-zadig" style="display:none;">
                         <i class="fa fa-info-circle"></i>
                         Zadig : choisissez <strong>WinUSB</strong> (pas « USB Serial CDC ») pour l'Epson TM-T20III.
                     </p>
@@ -44,6 +50,7 @@
                             <tr><th>Bus / Adresse</th><td id="printer-info-bus">—</td></tr>
                         </tbody>
                     </table>
+                    <p class="text-muted small mt-2 mb-0" id="printer-mode-label"></p>
                     <div id="printer-multiple-warning" class="alert alert-info mt-2 mb-0 p-2" style="display:none; font-size:13px;">
                         <i class="fa fa-info-circle"></i>
                         <span id="printer-multiple-text"></span>
@@ -78,8 +85,13 @@
     const PRINTER_CONNECT_URL = "{% url 'printer_connect' %}";
     const PRINTER_TEST_URL = "{% url 'printer_test' %}";
 
+    const printer = window.AutoPiecePrinter;
+    // WebUSB exige un contexte sécurisé : HTTPS, ou localhost en développement.
+    const webusb = !!(printer && printer.isSupported());
+
     let detectedPrinters = [];
     let selectedPrinter = null;
+    let webusbDevice = null;
 
     function $id(id) { return document.getElementById(id); }
 
@@ -90,13 +102,20 @@
         });
     }
 
-    function fillPrinterDetails(p) {
+    function showError(message) {
+        $id('printer-error-message').textContent = message;
+        showState('error');
+    }
+
+    function fillPrinterDetails(p, mode) {
         $id('printer-info-manufacturer').textContent = p.manufacturer || '—';
         $id('printer-info-product').textContent = p.product || '—';
         $id('printer-info-vid').textContent = p.vid_hex + ' (' + p.vid + ')';
         $id('printer-info-pid').textContent = p.pid_hex + ' (' + p.pid + ')';
         $id('printer-info-serial').textContent = p.serial || '—';
-        $id('printer-info-bus').textContent = (p.bus ?? '—') + ' / ' + (p.address ?? '—');
+        $id('printer-info-bus').textContent =
+            (p.bus === null || p.bus === undefined) ? '—' : (p.bus + ' / ' + p.address);
+        $id('printer-mode-label').textContent = mode || '';
         $id('btn-test-print').disabled = false;
     }
 
@@ -104,6 +123,50 @@
         const m = document.cookie.match(/csrftoken=([^;]+)/);
         return m ? m[1] : '';
     }
+
+    /* ---------------------------------------------------------------- WebUSB */
+
+    function detectWebusb() {
+        showState('loading');
+        // On regarde d'abord les périphériques déjà autorisés : cela évite de
+        // rouvrir le sélecteur du navigateur à chaque ouverture de la boîte.
+        printer.authorizedDevices()
+            .then(devices => devices.length ? devices[0] : printer.requestDevice())
+            .then(device => {
+                webusbDevice = device;
+                selectedPrinter = printer.describe(device);
+                fillPrinterDetails(
+                    selectedPrinter,
+                    "Pilotée par ce navigateur (WebUSB) — l'impression part de ce poste."
+                );
+                showState('connected');
+                printer.notify('success', "Imprimante autorisée sur ce poste.");
+            })
+            .catch(err => {
+                // Fermer le sélecteur sans choisir lève une NotFoundError : ce
+                // n'est pas une panne, on revient simplement à l'état initial.
+                if (err && err.name === 'NotFoundError') {
+                    showState('empty');
+                    printer.notify('warning', "Aucune imprimante sélectionnée.");
+                    return;
+                }
+                showError(err && err.message ? err.message : "Échec de la détection.");
+            })
+            .finally(() => { $id('btn-detect-printer').disabled = false; });
+    }
+
+    function testPrintWebusb() {
+        const btn = $id('btn-test-print');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Impression…';
+        printer.printTest()
+            .then(() => printer.notify('success', "Page de test envoyée à l'imprimante."))
+            .catch(err => printer.notify('error', err.message || "Erreur d'impression."))
+            .finally(() => { btn.disabled = false; btn.innerHTML = originalHTML; });
+    }
+
+    /* ------------------------------------------------- Scan serveur (dev local) */
 
     function savePrinter(p) {
         if (!p) return Promise.resolve();
@@ -117,35 +180,25 @@
         }).then(r => r.json()).catch(() => ({}));
     }
 
-    function detect() {
+    function detectServer() {
         showState('loading');
-        $id('btn-test-print').disabled = true;
-        $id('btn-detect-printer').disabled = true;
-
         fetch(PRINTER_SCAN_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => r.json().then(data => ({ ok: r.ok, data })))
             .then(({ ok, data }) => {
                 if (!ok || !data.success) {
-                    $id('printer-error-message').textContent = data.error || "Erreur lors du scan USB.";
-                    showState('error');
+                    showError(
+                        (data.error || "Erreur lors du scan USB.")
+                        + " Ce navigateur ne gère pas WebUSB : utilisez Chrome ou Edge "
+                        + "pour piloter une imprimante branchée sur ce poste."
+                    );
                     return;
                 }
                 detectedPrinters = data.printers || [];
                 if (detectedPrinters.length === 0) {
                     showState('empty');
-                    if (typeof toastr !== 'undefined') toastr.warning("Aucune imprimante USB détectée.");
+                    printer && printer.notify('warning', "Aucune imprimante USB détectée.");
                     return;
                 }
-                if (data.saved_printer && detectedPrinters.length === 0) {
-                    selectedPrinter = data.saved_printer;
-                    fillPrinterDetails(selectedPrinter);
-                    showState('connected');
-                    if (typeof toastr !== 'undefined') {
-                        toastr.info("Imprimante mémorisée (non branchée) : " + (selectedPrinter.product || selectedPrinter.vid_hex));
-                    }
-                    return;
-                }
-
                 const pick = (list) => {
                     if (data.saved_printer) {
                         const saved = list.find(x =>
@@ -155,7 +208,7 @@
                     return list[0];
                 };
                 selectedPrinter = pick(detectedPrinters);
-                fillPrinterDetails(selectedPrinter);
+                fillPrinterDetails(selectedPrinter, "Pilotée par le serveur (USB direct).");
 
                 const warn = $id('printer-multiple-warning');
                 const select = $id('printer-select');
@@ -173,25 +226,13 @@
                     warn.style.display = 'none';
                 }
                 showState('connected');
-                savePrinter(selectedPrinter).then(res => {
-                    if (typeof toastr !== 'undefined') {
-                        const msg = (res && res.success)
-                            ? "Imprimante enregistrée pour les reçus automatiques."
-                            : ("Imprimante : " + (selectedPrinter.product || selectedPrinter.vid_hex));
-                        toastr.success(msg);
-                    }
-                });
+                savePrinter(selectedPrinter);
             })
-            .catch(err => {
-                $id('printer-error-message').textContent = "Erreur réseau lors du scan.";
-                showState('error');
-            })
-            .finally(() => {
-                $id('btn-detect-printer').disabled = false;
-            });
+            .catch(() => showError("Erreur réseau lors du scan."))
+            .finally(() => { $id('btn-detect-printer').disabled = false; });
     }
 
-    function testPrint() {
+    function testPrintServer() {
         if (!selectedPrinter) return;
         const btn = $id('btn-test-print');
         const originalHTML = btn.innerHTML;
@@ -210,18 +251,25 @@
         .then(r => r.json().then(data => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
             if (ok && data.success) {
-                if (typeof toastr !== 'undefined') toastr.success(data.message || "Page de test envoyée.");
+                printer && printer.notify('success', data.message || "Page de test envoyée.");
             } else {
-                if (typeof toastr !== 'undefined') toastr.error(data.error || "Erreur d'impression.");
+                printer && printer.notify('error', data.error || "Erreur d'impression.");
             }
         })
-        .catch(() => {
-            if (typeof toastr !== 'undefined') toastr.error("Erreur réseau lors du test d'impression.");
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = originalHTML;
-        });
+        .catch(() => printer && printer.notify('error', "Erreur réseau lors du test."))
+        .finally(() => { btn.disabled = false; btn.innerHTML = originalHTML; });
+    }
+
+    /* ------------------------------------------------------------------ Liaison */
+
+    function detect() {
+        $id('btn-test-print').disabled = true;
+        $id('btn-detect-printer').disabled = true;
+        if (webusb) { detectWebusb(); } else { detectServer(); }
+    }
+
+    function testPrint() {
+        if (webusb) { testPrintWebusb(); } else { testPrintServer(); }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -232,7 +280,7 @@
         if (btnTest) btnTest.addEventListener('click', testPrint);
         if (select) select.addEventListener('change', function () {
             selectedPrinter = detectedPrinters[parseInt(this.value, 10)] || detectedPrinters[0];
-            fillPrinterDetails(selectedPrinter);
+            fillPrinterDetails(selectedPrinter, "Pilotée par le serveur (USB direct).");
             savePrinter(selectedPrinter);
         });
 
@@ -240,9 +288,27 @@
         $('#printerModal').on('show.bs.modal', function () {
             detectedPrinters = [];
             selectedPrinter = null;
+            webusbDevice = null;
             $id('btn-test-print').disabled = true;
             $id('printer-multiple-warning').style.display = 'none';
+            $id('printer-hint-webusb').style.display = webusb ? '' : 'none';
+            $id('printer-hint-zadig').style.display = '';
             showState('empty');
+
+            // Imprimante déjà autorisée sur ce poste : on l'affiche sans
+            // redemander, l'ouverture du sélecteur exigeant un clic.
+            if (webusb) {
+                printer.authorizedDevices().then(devices => {
+                    if (!devices.length) return;
+                    webusbDevice = devices[0];
+                    selectedPrinter = printer.describe(devices[0]);
+                    fillPrinterDetails(
+                        selectedPrinter,
+                        "Pilotée par ce navigateur (WebUSB) — l'impression part de ce poste."
+                    );
+                    showState('connected');
+                });
+            }
         });
     });
 })();
