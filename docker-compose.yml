@@ -57,9 +57,15 @@ services:
       MEDIA_ROOT: /app/media
     volumes:
       # Uploads utilisateurs : doivent survivre a chaque redeploiement.
+      # Le conteneur tourne en uid 1000 et un bind mount conserve les
+      # permissions de l'hote : ce dossier doit lui appartenir, sinon
+      # l'application ne peut plus enregistrer d'image.
+      #   chown -R 1000:1000 /opt/autopiece/media
       - ./media:/app/media
-      # Statiques collectes, conserves hors du conteneur pour inspection.
-      - ./staticfiles:/app/staticfiles
+      # `staticfiles` n'est volontairement PAS monte : collectstatic ecrit dans
+      # le conteneur et WhiteNoise sert les fichiers depuis la. Un montage
+      # supplementaire n'apporterait rien tant que Caddy ne sert pas /static en
+      # direct, et ajouterait le meme piege de permissions.
     ports:
       - "127.0.0.1:8010:8000"
     networks:

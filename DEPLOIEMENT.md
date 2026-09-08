@@ -71,8 +71,12 @@ pour la déployer. Caddy, déjà présent sur le VPS, termine le TLS.
 ## 4. Préparer le VPS
 
 ```bash
-cd /opt && git clone https://github.com/yapiatsin/autoPiece_git_back.git autopiece && cd autopiece && mkdir -p media staticfiles backups && cp .env.prod.example .env
+cd /opt && git clone https://github.com/yapiatsin/autoPiece_git_back.git autopiece && cd autopiece && mkdir -p media backups && chown -R 1000:1000 media && cp .env.prod.example .env
 ```
+
+Le `chown` n'est pas optionnel : le conteneur tourne en utilisateur non
+privilégié `uid 1000`, et un bind mount conserve les permissions de l'hôte.
+Sans lui, l'application ne peut pas enregistrer les images téléversées.
 
 Générer une clé secrète **différente de celle du poste de développement** :
 
