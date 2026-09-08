@@ -21,6 +21,16 @@ db.sqlite3
 staticfiles/
 media/
 
+# Sauvegardes et exports : ils contiennent l'integralite des donnees clients.
+# Sans ces lignes, un build lance sur le VPS (make rebuild-local) les embarque
+# dans l'image, qui est ensuite publiee sur un registre de conteneurs.
+backups/
+data_export.json
+*.sql
+*.sql.gz
+*.dump
+*.tar.gz
+
 # Git et outillage
 .git/
 .github/

@@ -243,6 +243,46 @@ Quelques cibles utiles au quotidien :
 | `make fix-perms` | rétablit les droits de `media/` après un `scp` |
 | `make caddy-reload` | valide **puis** recharge Caddy (refuse si invalide) |
 
+### Modification de modèle : le cycle des migrations
+
+L'entrypoint lance `migrate --noinput` à chaque démarrage du conteneur, donc un
+`rebuild-local` applique les migrations tout seul. Ce qui doit être fait à la
+main, c'est **générer le fichier de migration sur le poste de développement et
+le commiter** — modifier `models.py` sans lui ne produit rien en production.
+
+Sur le poste de développement :
+
+```bash
+python manage.py makemigrations
+```
+
+```bash
+python manage.py migrate
+```
+
+Le second applique la migration sur le SQLite local : c'est là qu'on voit
+qu'elle passe, avant qu'elle ne touche la production. Puis commit et push du
+modèle **et** du fichier de migration.
+
+Sur le VPS, en sauvegardant d'abord si la migration détruit des données
+(suppression de colonne ou de table) :
+
+```bash
+cd /opt/autopiece && make backup && git pull --ff-only && make rebuild-local
+```
+
+Si une migration échoue, l'entrypoint s'arrête et le conteneur boucle en
+redémarrage : le site renvoie 502. `make logs-web` donne la cause, et
+`make restore DUMP=backups/db-....sql.gz` remet la base d'aplomb.
+
+Deux garde-fous : le job `checks` de GitHub Actions lance
+`makemigrations --check --dry-run` à chaque push et échoue si un modèle a changé
+sans migration ; et `make makemigrations` refuse de s'exécuter sur le VPS — la
+commande y écrirait le fichier dans le conteneur, où il disparaîtrait au
+prochain rebuild alors que la migration resterait marquée comme appliquée en
+base, rendant tout `migrate` ultérieur impossible. `make migrate-check` affiche
+l'état réel des migrations appliquées.
+
 `make restart` ne relit pas le `.env` — c'est `make reload` qu'il faut dans ce
 cas, car seul un `up --force-recreate` réinjecte les variables d'environnement.
 

@@ -24,7 +24,7 @@ HEALTH_URL   ?= http://127.0.0.1:8010/healthz/
 .PHONY: help up down restart reload status ps logs logs-web logs-db \
 		rebuild rebuild-local pull build deploy \
 		connect-web connect-db shell dbshell \
-		migrate makemigrations collectstatic superuser check health \
+		migrate makemigrations migrate-check collectstatic superuser check health \
 		backup restore import-data fix-perms \
 		caddy-validate caddy-reload caddy-logs \
 		prune env-check
@@ -131,8 +131,27 @@ dbshell: connect-db ## Alias de connect-db
 migrate: ## Applique les migrations
 	$(DJANGO) migrate
 
-makemigrations: ## Génère les migrations manquantes (à commiter ensuite)
-	$(DJANGO) makemigrations
+makemigrations: ## (refusé en production — voir le message)
+	@echo ""
+	@echo "  Refusé : les migrations se génèrent sur le poste de développement."
+	@echo ""
+	@echo "  Lancée ici, la commande écrirait le fichier DANS le conteneur. Il"
+	@echo "  disparaîtrait au prochain rebuild, alors que la migration resterait"
+	@echo "  enregistrée comme appliquée en base : tout migrate ultérieur"
+	@echo "  échouerait sur une dépendance introuvable."
+	@echo ""
+	@echo "  Sur Windows :"
+	@echo "    python manage.py makemigrations"
+	@echo "    python manage.py migrate          # test sur le SQLite local"
+	@echo "    git add -A && git commit && git push"
+	@echo ""
+	@echo "  Puis ici :"
+	@echo "    git pull --ff-only && make rebuild-local"
+	@echo ""
+	@exit 1
+
+migrate-check: ## Liste les migrations et leur état d'application
+	$(DJANGO) showmigrations
 
 collectstatic: ## Recollecte les fichiers statiques
 	$(DJANGO) collectstatic --noinput
