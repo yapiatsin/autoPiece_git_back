@@ -2,12 +2,18 @@
 #
 #   docker compose pull && docker compose up -d
 #
-# Le service `web` n'est PAS expose sur l'exterieur : il ecoute uniquement sur
-# 127.0.0.1:8010 et c'est Caddy (deja present sur le VPS) qui termine le TLS et
-# relaie le trafic. Voir deploy/Caddyfile.example.
+# Les services s'appellent `autopiece_web` et `autopiece_db`, et non `web` /
+# `db`, parce qu'ils partagent le reseau du Caddy deja en place sur le VPS.
+# Celui-ci sert deja une autre application dont le service se nomme `web` : deux
+# conteneurs portant le meme nom sur un meme reseau se partageraient l'alias DNS
+# et Caddy enverrait une partie du trafic au mauvais service.
+#
+# Le port 8000 n'est publie que sur 127.0.0.1:8010, pour les sondes et le
+# depannage depuis le VPS. Le trafic public passe par Caddy, qui joint le
+# conteneur par son nom sur le reseau partage. Voir deploy/Caddyfile.example.
 
 services:
-  db:
+  autopiece_db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -29,16 +35,16 @@ services:
     networks:
       - autopiece
 
-  web:
-    # Image publiee par GitHub Actions sur GHCR. `build` ne sert qu'en local
-    # (docker compose up --build) ou en depannage sur le VPS.
+  autopiece_web:
+    # Image publiee par GitHub Actions sur GHCR. `build` sert au premier
+    # deploiement et au depannage (docker compose up -d --build).
     image: ${WEB_IMAGE:-ghcr.io/yapiatsin/autopiece_git_back:latest}
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
-      db:
+      autopiece_db:
         condition: service_healthy
     env_file:
       - .env
@@ -46,22 +52,30 @@ services:
       # Force la configuration production quelles que soient les valeurs du .env
       # heritees du poste de developpement.
       DB_ENGINE: postgresql
-      DB_HOST: db
+      DB_HOST: autopiece_db
       DB_PORT: "5432"
       MEDIA_ROOT: /app/media
     volumes:
       # Uploads utilisateurs : doivent survivre a chaque redeploiement.
       - ./media:/app/media
-      # Statiques collectes : montes pour que Caddy puisse les servir en direct.
+      # Statiques collectes, conserves hors du conteneur pour inspection.
       - ./staticfiles:/app/staticfiles
     ports:
       - "127.0.0.1:8010:8000"
     networks:
       - autopiece
+      - caddy
 
 volumes:
   pgdata:
 
 networks:
+  # Reseau prive de la pile : seul autopiece_web joint la base.
   autopiece:
     driver: bridge
+
+  # Reseau du Caddy deja en service sur le VPS. Il n'est pas cree ici : le nom
+  # exact se renseigne dans CADDY_NETWORK, cote .env.
+  caddy:
+    external: true
+    name: ${CADDY_NETWORK:?CADDY_NETWORK manquant dans .env}

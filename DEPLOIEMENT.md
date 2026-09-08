@@ -10,10 +10,12 @@ pour la déployer. Caddy, déjà présent sur le VPS, termine le TLS.
                             └────── ssh ───────────────┼──▶ VPS /opt/autopiece
                                                        │     docker compose pull && up -d
                                                        │
-   Internet ──443──▶ Caddy ──▶ 127.0.0.1:8010 ──▶ conteneur web (gunicorn)
-                       │                                 │
-                       └── /static/ et /media/ servis    └──▶ conteneur db (PostgreSQL 16)
-                           directement depuis le disque
+   Internet ──443──▶ eprinters_caddy ──▶ autopiece_web:8000 (gunicorn + WhiteNoise)
+                     (conteneur, deja                    │
+                      en place sur le VPS)               └──▶ autopiece_db (PostgreSQL 16)
+
+  Caddy joint l'application par son nom de conteneur, sur un reseau Docker
+  partage : il ne peut pas passer par 127.0.0.1, qui designerait Caddy lui-meme.
 ```
 
 ---
@@ -24,7 +26,7 @@ pour la déployer. Caddy, déjà présent sur le VPS, termine le TLS.
 |---|---|
 | `Dockerfile` | Image de production en deux étapes (build des dépendances, puis exécution) |
 | `docker/entrypoint.sh` | Attente de la base, migrations, `collectstatic`, `compilemessages`, gunicorn |
-| `docker-compose.yml` | Pile `web` + `db` pour le VPS |
+| `docker-compose.yml` | Pile `autopiece_web` + `autopiece_db`, greffee sur le reseau de Caddy |
 | `.dockerignore` | Exclut `env/`, `.env`, `db.sqlite3`, `media/`, `staticfiles/` de l'image |
 | `.github/workflows/deploy.yml` | Vérifications, build, push GHCR, déploiement SSH |
 | `.env.prod.example` | Modèle de configuration à copier en `.env` sur le VPS |
@@ -60,7 +62,9 @@ pour la déployer. Caddy, déjà présent sur le VPS, termine le TLS.
 
 - Un enregistrement DNS `A` pointant le domaine vers l'IP du VPS.
 - Docker et le plugin Compose installés sur le VPS (`docker compose version`).
-- Caddy déjà en service (le dossier `/opt/caddy-sites` existe).
+- Caddy déjà en service. Sur ce VPS il tourne dans le conteneur
+  `eprinters_caddy`, qui detient les ports 80/443 et importe
+  `/etc/caddy/sites/*.caddy` (dossier hote `/opt/caddy-sites`).
 
 ---
 
@@ -76,9 +80,18 @@ Générer une clé secrète **différente de celle du poste de développement** 
 docker run --rm python:3.13-slim python -c "import secrets; print(secrets.token_urlsafe(64))"
 ```
 
-Puis éditer `/opt/autopiece/.env` : y reporter cette clé, le domaine réel dans
-`DJANGO_ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` et `PUBLIC_BASE_URL`, un mot de
-passe PostgreSQL solide, et les identifiants e-mail, Pusher et GeniusPay.
+Relever le nom du reseau Docker de Caddy, indispensable pour que le proxy
+puisse joindre l'application :
+
+```bash
+docker inspect eprinters_caddy --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{"
+"}}{{end}}'
+```
+
+Puis éditer `/opt/autopiece/.env` : y reporter cette clé secrète, ce nom de
+réseau dans `CADDY_NETWORK`, le domaine réel dans `DJANGO_ALLOWED_HOSTS`,
+`CSRF_TRUSTED_ORIGINS` et `PUBLIC_BASE_URL`, un mot de passe PostgreSQL solide,
+et les identifiants e-mail, Pusher et GeniusPay.
 
 ## 5. Secrets GitHub
 
@@ -143,7 +156,7 @@ scp data_export.json root@<IP_VPS>:/opt/autopiece/ && scp -r media/. root@<IP_VP
 Puis sur le VPS :
 
 ```bash
-cd /opt/autopiece && docker compose cp data_export.json web:/tmp/data_export.json && docker compose exec web python scripts/reset_and_load.py /tmp/data_export.json
+cd /opt/autopiece && docker compose cp data_export.json autopiece_web:/tmp/data_export.json && docker compose exec autopiece_web python scripts/reset_and_load.py /tmp/data_export.json
 ```
 
 Le script vide la base cible, charge l'export, puis relance `migrate` pour
@@ -155,19 +168,32 @@ puis supprimer `data_export.json` du VPS.
 
 ## 8. Activer le domaine et le HTTPS
 
-Copier `deploy/Caddyfile.example` dans la configuration Caddy du VPS (par
-exemple `/opt/caddy-sites/autopiece.caddy`), remplacer `autopiece.example.com`
-par le domaine réel, puis recharger Caddy :
+Déposer le bloc de site dans le dossier importé par Caddy, en y mettant le
+domaine réel :
 
 ```bash
-caddy reload --config /etc/caddy/Caddyfile
+cd /opt/autopiece && cp deploy/Caddyfile.example /opt/caddy-sites/10-autopiece.caddy && sed -i 's/autopiece.example.com/LE-DOMAINE-REEL/g' /opt/caddy-sites/10-autopiece.caddy
 ```
 
-Si Caddy tourne lui-même dans un conteneur, voir la note en fin de
-`deploy/Caddyfile.example` : `127.0.0.1` y désigne le conteneur Caddy, pas l'hôte.
+Valider la configuration **avant** de recharger : une erreur de syntaxe ferait
+échouer tout le Caddyfile, y compris le site `eprinters` déjà en production.
+
+```bash
+docker exec eprinters_caddy caddy validate --config /etc/caddy/Caddyfile
+```
+
+Puis seulement :
+
+```bash
+docker exec eprinters_caddy caddy reload --config /etc/caddy/Caddyfile
+```
+
+Le bloc ne doit contenir aucune section globale entre accolades : les options
+globales (adresse ACME, `trusted_proxies`) sont déjà définies dans le Caddyfile
+principal, et une seconde ferait échouer le chargement complet.
 
 Une fois le HTTPS confirmé stable, passer `SECURE_HSTS_SECONDS=31536000` dans le
-`.env` du VPS et relancer `docker compose up -d web`.
+`.env` du VPS et relancer `docker compose up -d autopiece_web`.
 
 ---
 
@@ -176,17 +202,17 @@ Une fois le HTTPS confirmé stable, passer `SECURE_HSTS_SECONDS=31536000` dans l
 Journaux applicatifs en continu :
 
 ```bash
-cd /opt/autopiece && docker compose logs -f web
+cd /opt/autopiece && docker compose logs -f autopiece_web
 ```
 
 Console Django et console PostgreSQL :
 
 ```bash
-cd /opt/autopiece && docker compose exec web python manage.py shell
+cd /opt/autopiece && docker compose exec autopiece_web python manage.py shell
 ```
 
 ```bash
-cd /opt/autopiece && docker compose exec db psql -U autopiece -d autopiece
+cd /opt/autopiece && docker compose exec autopiece_db psql -U autopiece -d autopiece
 ```
 
 **Sauvegardes** — base et médias, avec rotation sur 14 exemplaires :
@@ -211,7 +237,7 @@ cd /opt/autopiece && ./scripts/restore_db.sh backups/db-20260908-020000.sql.gz
 l'ancien SHA dans `WEB_IMAGE` puis :
 
 ```bash
-cd /opt/autopiece && docker compose up -d web
+cd /opt/autopiece && docker compose up -d autopiece_web
 ```
 
 ---
@@ -239,7 +265,7 @@ déploiement.
 
 **Le fichier `.env` n'est jamais versionné.** Il est créé à la main sur le VPS
 et lu par `docker compose` au démarrage. Après l'avoir modifié, relancer
-`docker compose up -d web` pour que les nouvelles valeurs soient prises en compte.
+`docker compose up -d autopiece_web` pour que les nouvelles valeurs soient prises en compte.
 
 **`DEBUG` vaut `False` par défaut.** Un `.env` incomplet fait donc échouer le
 démarrage plutôt que d'exposer les traces d'erreur en production.

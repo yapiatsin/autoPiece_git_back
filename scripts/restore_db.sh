@@ -14,17 +14,17 @@ read -r -p "Ecraser la base '${DB_NAME}' avec ${DUMP} ? [oui/NON] " reply
 [ "$reply" = "oui" ] || { echo "Annule."; exit 1; }
 
 echo "[restore] Arret de l'application..."
-docker compose stop web
+docker compose stop autopiece_web
 
 echo "[restore] Recreation de la base..."
-docker compose exec -T db psql -U "$DB_USER" -d postgres \
+docker compose exec -T autopiece_db psql -U "$DB_USER" -d postgres \
   -c "DROP DATABASE IF EXISTS \"${DB_NAME}\";"
-docker compose exec -T db psql -U "$DB_USER" -d postgres \
+docker compose exec -T autopiece_db psql -U "$DB_USER" -d postgres \
   -c "CREATE DATABASE \"${DB_NAME}\" OWNER \"${DB_USER}\";"
 
 echo "[restore] Chargement du dump..."
-gunzip -c "$DUMP" | docker compose exec -T db psql -U "$DB_USER" -d "$DB_NAME"
+gunzip -c "$DUMP" | docker compose exec -T autopiece_db psql -U "$DB_USER" -d "$DB_NAME"
 
 echo "[restore] Redemarrage de l'application..."
-docker compose up -d web
+docker compose up -d autopiece_web
 echo "[restore] Termine."

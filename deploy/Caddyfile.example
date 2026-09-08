@@ -1,58 +1,62 @@
-# Bloc a ajouter dans la configuration Caddy deja presente sur le VPS
-# (typiquement un fichier dans /opt/caddy-sites/ importe par le Caddyfile
-# principal). Remplacer autopiece.example.com par le domaine reel.
+# Bloc de site Auto-Piece, a deposer dans /opt/caddy-sites/ sur le VPS
+# (dossier monte dans le conteneur eprinters_caddy sur /etc/caddy/sites, importe
+# par la derniere ligne du Caddyfile principal : import /etc/caddy/sites/*.caddy).
 #
-# Caddy obtient et renouvelle seul le certificat Let's Encrypt : il faut
-# simplement que l'enregistrement DNS A du domaine pointe deja sur l'IP du VPS
-# et que les ports 80 et 443 soient ouverts.
+#   cp deploy/Caddyfile.example /opt/caddy-sites/10-autopiece.caddy
+#   sed -i 's/autopiece.example.com/LE-DOMAINE-REEL/g' /opt/caddy-sites/10-autopiece.caddy
+#   docker exec eprinters_caddy caddy reload --config /etc/caddy/Caddyfile
+#
+# Ne PAS y ajouter de bloc global entre accolades : les options globales (email
+# ACME, trusted_proxies) sont deja definies dans le Caddyfile principal, et un
+# second bloc global ferait echouer le chargement de toute la configuration —
+# y compris le site eprinters.
+#
+# Le domaine est ecrit en clair ici, contrairement au site eprinters qui utilise
+# {$DOMAIN} : cette variable appartient au conteneur Caddy et pointe deja sur
+# l'autre application. En introduire une seconde imposerait de modifier la pile
+# eprinters, ce que ce deploiement evite.
 
-autopiece.example.com, www.autopiece.example.com {
+www.autopiece.example.com {
+	redir https://autopiece.example.com{uri} permanent
+}
+
+autopiece.example.com {
 
 	encode zstd gzip
 
-	# Fichiers statiques et medias servis directement par Caddy, sans reveiller
-	# gunicorn. Les chemins correspondent aux montages de docker-compose.yml.
-	handle_path /static/* {
-		root * /opt/autopiece/staticfiles
-		file_server
-		header Cache-Control "public, max-age=31536000, immutable"
+	# Imports Excel et photos de pieces.
+	request_body {
+		max_size 25MB
 	}
 
-	handle_path /media/* {
-		root * /opt/autopiece/media
-		file_server
-		header Cache-Control "public, max-age=86400"
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
 	}
 
-	# Tout le reste part vers le conteneur applicatif, qui n'ecoute que sur la
-	# boucle locale. Les en-tetes X-Forwarded-* sont ajoutes par Caddy et lus
-	# par Django (SECURE_PROXY_SSL_HEADER).
+	# Tout passe par l'application. Contrairement au site eprinters, /static et
+	# /media ne sont pas servis en direct par Caddy : ce conteneur n'a pas acces
+	# aux volumes d'Auto-Piece, et lui en donner l'acces obligerait a modifier la
+	# pile eprinters. Cote application, WhiteNoise sert les statiques (compresses,
+	# avec en-tetes de cache) et Django sert les medias. C'est suffisant a cette
+	# echelle ; si le trafic image devient lourd, monter /opt/autopiece/media dans
+	# le conteneur Caddy et ajouter un handle_path /media/* ici.
 	handle {
-		reverse_proxy 127.0.0.1:8010 {
+		reverse_proxy autopiece_web:8000 {
+			header_up X-Real-IP {remote_host}
 			health_uri /healthz/
 			health_interval 30s
 			health_timeout 5s
 		}
 	}
 
-	# Limite d'envoi : suffisante pour les imports Excel et les photos de pieces.
-	request_body {
-		max_size 25MB
-	}
-
 	log {
-		output file /var/log/caddy/autopiece.log {
-			roll_size 20MiB
+		output file /data/autopiece-access.log {
+			roll_size 10mb
 			roll_keep 5
 		}
+		format json
 	}
 }
-
-# ---------------------------------------------------------------------------
-# Si Caddy tourne lui-meme dans un conteneur Docker, 127.0.0.1 designe le
-# conteneur Caddy et non l'hote. Deux solutions :
-#   1. Ajouter le conteneur Caddy au reseau `autopiece` et remplacer l'adresse
-#      par `reverse_proxy autopiece-web-1:8000`.
-#   2. Declarer `extra_hosts: ["host.docker.internal:host-gateway"]` sur le
-#      service Caddy et utiliser `reverse_proxy host.docker.internal:8010`.
-# ---------------------------------------------------------------------------

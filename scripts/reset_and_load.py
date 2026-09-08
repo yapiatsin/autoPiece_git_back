@@ -14,7 +14,7 @@ directement, on charge l'export, puis on relance `migrate` pour reconstruire
 les types de contenu et les permissions (le seeder, base sur get_or_create,
 retrouve alors les lignes importees et n'ajoute rien).
 
-    docker compose exec -T web python scripts/reset_and_load.py /tmp/data.json --yes
+    docker compose exec -T autopiece_web python scripts/reset_and_load.py /tmp/data.json --yes
 
 ATTENTION : toutes les donnees applicatives presentes sont detruites.
 """
