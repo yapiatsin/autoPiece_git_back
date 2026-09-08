@@ -1,11 +1,11 @@
 {% load static %}
-{# Impression thermique depuis le poste de caisse.
+<!-- Impression thermique depuis le poste de caisse.
    Le serveur est distant et ne voit aucun périphérique USB : il compose le flux
    ESC/POS, et ce module le pousse vers l'imprimante branchée sur la machine du
    caissier via WebUSB.
 
    À inclure dans TOUS les gabarits de base, avant le bloc extra_js, pour que
-   window.AutoPiecePrinter existe quand les scripts de page s'exécutent. #}
+   window.AutoPiecePrinter existe quand les scripts de page s'exécutent. -->
 <script type="text/javascript">
     window.AUTOPIECE_PRINT_URLS = {
         escposTest: "{% url 'printer_escpos_test' %}",
