@@ -8,6 +8,15 @@ cd "$(dirname "$0")/.."
 mkdir -p backups
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
+
+# Les identifiants sont lus dans le .env, pas dans l'environnement du shell :
+# cron n'herite de rien, et une valeur codee en dur ferait echouer la sauvegarde
+# le jour ou DB_USER change — exactement le moment ou l'on en aurait besoin.
+env_value() {
+  sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" .env 2>/dev/null | head -1
+}
+DB_NAME="${DB_NAME:-$(env_value DB_NAME)}"
+DB_USER="${DB_USER:-$(env_value DB_USER)}"
 DB_NAME="${DB_NAME:-autopiece}"
 DB_USER="${DB_USER:-autopiece}"
 

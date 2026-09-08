@@ -7,6 +7,13 @@ set -euo pipefail
 DUMP="${1:?Usage: restore_db.sh <fichier.sql.gz>}"
 cd "$(dirname "$0")/.."
 
+# Identifiants lus dans le .env plutot que codes en dur : une restauration
+# dirigee vers la mauvaise base serait difficilement rattrapable.
+env_value() {
+  sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" .env 2>/dev/null | head -1
+}
+DB_NAME="${DB_NAME:-$(env_value DB_NAME)}"
+DB_USER="${DB_USER:-$(env_value DB_USER)}"
 DB_NAME="${DB_NAME:-autopiece}"
 DB_USER="${DB_USER:-autopiece}"
 

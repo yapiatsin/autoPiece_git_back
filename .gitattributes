@@ -1,0 +1,32 @@
+# Le depot est edite sous Windows et deploye sous Linux. Sans ces regles, Git
+# peut enregistrer des fins de ligne CRLF : un script shell ainsi stocke echoue
+# sur le VPS avec « /bin/bash^M: bad interpreter », et un Makefile en CRLF
+# produit des recettes invalides. On force donc LF pour tout ce qui est execute.
+
+* text=auto eol=lf
+
+*.sh        text eol=lf
+*.py        text eol=lf
+Makefile    text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.caddy     text eol=lf
+*.example   text eol=lf
+.env*       text eol=lf
+
+# Binaires : jamais de conversion.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.mo    binary
+*.dll   binary
+*.sqlite3 binary
