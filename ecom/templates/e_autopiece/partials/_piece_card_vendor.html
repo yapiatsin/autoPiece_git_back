@@ -16,7 +16,12 @@
             <a href="{{ piece.get_absolute_url }}" class="thumbnail-preview">
                 {% if quantite|default:0 > 0 %}
                 <div class="badge">
-                    <span>{{ quantite }}<br>{% trans "stock" %}</span>
+                    <span>{% trans "Disponible" %}</span>
+                    <i class="fa-solid fa-bookmark"></i>
+                </div>
+                {% elif localite_code %}
+                <div class="badge">
+                    <span>{% trans "Rupture" %}</span>
                     <i class="fa-solid fa-bookmark"></i>
                 </div>
                 {% endif %}
@@ -63,7 +68,7 @@
 
             <p class="ecom-vendor-stock-line">
                 {% if quantite|default:0 > 0 %}
-                <span class="is-ok">{% blocktrans with qty=quantite %}Quantité disponible : {{ qty }}{% endblocktrans %}</span>
+                <span class="is-ok">{% trans "Disponible" %}</span>
                 {% else %}
                 <span class="is-out">{% trans "Rupture de stock" %}</span>
                 {% endif %}

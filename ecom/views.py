@@ -28,6 +28,7 @@ from .models import (
     VilleLivraison,
     VueRecentePiece,
     ChatConversation,
+    ContactMessage,
 )
 from .forms import EcomAccountAddressForm, EcomAccountProfileForm, NewsletterForm
 from .context_processors import ECOM_API_PATH_PREFIXES, get_ecom_cart_context, safe_ecom_next_url
@@ -227,6 +228,14 @@ def contact(request):
         if not name or not email or not subject or not message:
             messages.error(request, 'Veuillez remplir tous les champs obligatoires.')
         else:
+            ContactMessage.objects.create(
+                nom=name,
+                email=email,
+                telephone=phone,
+                sujet=subject,
+                services=services,
+                message=message,
+            )
             messages.success(
                 request,
                 'Merci ! Votre message a bien été envoyé. Nous vous répondrons rapidement.',
@@ -2681,3 +2690,147 @@ def chat_api_typing(request, conversation_id):
     conv = chatbots.maybe_auto_close_idle(conv)
     chatbots.staff_signal_typing(conv, request.user)
     return JsonResponse({'ok': True, 'conversation_id': conv.pk})
+
+
+CONTACT_SUBJECT_LABELS = {
+    'commande': 'Suivi de commande',
+    'piece': "Disponibilité d'une pièce",
+    'livraison': 'Livraison / retrait',
+    'autre': 'Autre demande',
+    'info': 'Information',
+    'retour': 'Retour / SAV',
+}
+
+CONTACT_SERVICE_LABELS = {
+    'pieces': 'Pièces auto',
+    'commande': 'Suivi commande',
+    'livraison': 'Livraison',
+    'retrait': 'Retrait localité',
+    'devis': 'Devis (Proforma)',
+    'sav': 'SAV',
+    'autre': 'Autre',
+}
+
+
+def _contact_message_stats():
+    return {
+        'total': ContactMessage.objects.count(),
+        'nouveau': ContactMessage.objects.filter(status=ContactMessage.STATUS_NOUVEAU).count(),
+        'lu': ContactMessage.objects.filter(status=ContactMessage.STATUS_LU).count(),
+        'repondu': ContactMessage.objects.filter(status=ContactMessage.STATUS_REPONDU).count(),
+        'archive': ContactMessage.objects.filter(status=ContactMessage.STATUS_ARCHIVE).count(),
+    }
+
+
+def _serialize_contact_message(msg):
+    services = msg.services if isinstance(msg.services, list) else []
+    return {
+        'id': msg.pk,
+        'nom': msg.nom,
+        'email': msg.email,
+        'telephone': msg.telephone or '',
+        'sujet': msg.sujet or '',
+        'sujet_label': CONTACT_SUBJECT_LABELS.get(msg.sujet, msg.sujet or 'Sans sujet'),
+        'services': services,
+        'services_labels': [CONTACT_SERVICE_LABELS.get(svc, svc) for svc in services],
+        'message': msg.message,
+        'status': msg.status,
+        'status_label': dict(ContactMessage.STATUS_CHOICES).get(msg.status, msg.status),
+        'created_at': msg.created_at.isoformat() if msg.created_at else '',
+    }
+
+
+@login_required(login_url='connexion')
+def messages_contact(request):
+    """Page magasin : inbox des messages du formulaire de contact."""
+    denied = _deny_client_access(request)
+    if denied:
+        return denied
+    if not _require_staff_cmd(request.user):
+        messages.error(request, 'Accès réservé au personnel du magasin.')
+        return redirect('tbord')
+    stats = _contact_message_stats()
+    return render(request, 'mag/messages_contact.html', {
+        'stats': stats,
+        'nouveau_count': stats['nouveau'],
+    })
+
+
+@login_required(login_url='connexion')
+@require_GET
+def messages_contact_api_list(request):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    qs = ContactMessage.objects.all()
+    status_filter = (request.GET.get('status') or '').strip()
+    if status_filter in dict(ContactMessage.STATUS_CHOICES):
+        qs = qs.filter(status=status_filter)
+    q = (request.GET.get('q') or '').strip()
+    if q:
+        qs = qs.filter(
+            Q(nom__icontains=q) |
+            Q(email__icontains=q) |
+            Q(sujet__icontains=q) |
+            Q(message__icontains=q) |
+            Q(telephone__icontains=q)
+        )
+    items = [_serialize_contact_message(msg) for msg in qs[:200]]
+    stats = _contact_message_stats()
+    return JsonResponse({
+        'ok': True,
+        'messages': items,
+        'nouveau_count': stats['nouveau'],
+        'stats': stats,
+    })
+
+
+@login_required(login_url='connexion')
+@require_GET
+def messages_contact_api_detail(request, message_id):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    msg = get_object_or_404(ContactMessage, pk=message_id)
+    if msg.status == ContactMessage.STATUS_NOUVEAU:
+        msg.status = ContactMessage.STATUS_LU
+        msg.save(update_fields=['status', 'updated_at'])
+        msg.refresh_from_db()
+    return JsonResponse({
+        'ok': True,
+        'message': _serialize_contact_message(msg),
+        'stats': _contact_message_stats(),
+    })
+
+
+@login_required(login_url='connexion')
+@require_POST
+def messages_contact_api_status(request, message_id):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    msg = get_object_or_404(ContactMessage, pk=message_id)
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except json.JSONDecodeError:
+        payload = {}
+    status = (payload.get('status') or request.POST.get('status') or '').strip()
+    if status not in dict(ContactMessage.STATUS_CHOICES):
+        return JsonResponse({'ok': False, 'error': 'Statut invalide.'}, status=400)
+    msg.status = status
+    msg.save(update_fields=['status', 'updated_at'])
+    return JsonResponse({
+        'ok': True,
+        'message': _serialize_contact_message(msg),
+        'stats': _contact_message_stats(),
+    })
+
+
+@login_required(login_url='connexion')
+@require_POST
+def messages_contact_api_delete(request, message_id):
+    if not _require_staff_cmd(request.user):
+        return JsonResponse({'error': 'Accès refusé.'}, status=403)
+    msg = get_object_or_404(ContactMessage, pk=message_id)
+    msg.delete()
+    return JsonResponse({
+        'ok': True,
+        'stats': _contact_message_stats(),
+    })

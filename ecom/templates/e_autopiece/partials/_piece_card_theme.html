@@ -9,9 +9,9 @@
                 {% include 'e_autopiece/partials/_piece_image.html' %}
             </a>
             {% if quantite|default:0 > 0 %}
-            <span class="ecom-article-card__badge">{{ quantite }} {% trans "en stock" %}</span>
+            <span class="ecom-article-card__badge">{% trans "Disponible" %}</span>
             {% elif piece.stock_total and not localite_code %}
-            <span class="ecom-article-card__badge">{{ piece.stock_total }} {% trans "total" %}</span>
+            <span class="ecom-article-card__badge">{% trans "Disponible" %}</span>
             {% elif localite_code and quantite|default:0 == 0 %}
             <span class="ecom-article-card__badge is-out">{% trans "Rupture" %}</span>
             {% endif %}
@@ -48,14 +48,15 @@
                 {% if localite_nom %}{{ localite_nom }} · {% endif %}{{ piece.numero_piece }}
                 {% if quantite is not None %}
                     {% if quantite > 0 %}
-                    · {% blocktrans with qty=quantite %}{{ qty }} dispo.{% endblocktrans %}
+                    · {% trans "Disponible" %}
                     {% else %}
                     · {% trans "Rupture de stock" %}
                     {% endif %}
                 {% elif show_all_stocks and piece.stocks_disponibles %}
-                    · {% for stock in piece.stocks_disponibles %}{{ stock.local_entrepot.nom }}: {{ stock.quantite_disponible }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    · {% for stock in piece.stocks_disponibles %}{{ stock.local_entrepot.nom }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    · {% trans "Disponible" %}
                 {% elif piece.stock_total %}
-                    · {% blocktrans with qty=piece.stock_total %}{{ qty }} au total{% endblocktrans %}
+                    · {% trans "Disponible" %}
                 {% endif %}
             </p>
 

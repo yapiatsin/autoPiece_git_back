@@ -187,6 +187,52 @@ class CommuneLivraison(models.Model):
         return f'{self.nom} ({self.ville.nom})'
 
 
+class ContactMessage(models.Model):
+    """Message envoyé depuis le formulaire de contact e-commerce."""
+
+    SUJET_CHOICES = (
+        ('info', 'Information'),
+        ('commande', 'Commande'),
+        ('livraison', 'Livraison'),
+        ('retour', 'Retour / SAV'),
+        ('autre', 'Autre'),
+    )
+
+    STATUS_NOUVEAU = 'nouveau'
+    STATUS_LU = 'lu'
+    STATUS_REPONDU = 'repondu'
+    STATUS_ARCHIVE = 'archive'
+    STATUS_CHOICES = (
+        (STATUS_NOUVEAU, 'Nouveau'),
+        (STATUS_LU, 'Lu'),
+        (STATUS_REPONDU, 'Répondu'),
+        (STATUS_ARCHIVE, 'Archivé'),
+    )
+
+    nom = models.CharField(max_length=200)
+    email = models.EmailField()
+    telephone = models.CharField(max_length=30, blank=True, default='')
+    sujet = models.CharField(max_length=100, blank=True, default='')
+    services = models.JSONField(default=list, blank=True)
+    message = models.TextField()
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_NOUVEAU,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Message de contact'
+        verbose_name_plural = 'Messages de contact'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.nom} — {self.sujet or "Sans sujet"} ({self.created_at:%d/%m/%Y})'
+
+
 class ChatConversation(models.Model):
     """Conversation chatbot e-commerce (client ↔ staff, IA plus tard)."""
 

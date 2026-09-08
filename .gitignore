@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Deploiement Docker
+staticfiles/
+backups/
+.env.prod
+data_export.json

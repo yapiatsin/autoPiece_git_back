@@ -1,0 +1,157 @@
+name: Build & Deploy
+
+# Chaque push sur main construit l'image, la publie sur GHCR puis la deploie
+# sur le VPS. Le declenchement manuel permet de rejouer un deploiement.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Un seul deploiement a la fois : evite deux `docker compose up` concurrents.
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # ---------------------------------------------------------------------------
+  checks:
+    name: Verifications Django
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Installer les dependances
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libcairo2-dev
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: manage.py check --deploy
+        # Valeurs factices : on verifie la coherence de la configuration, pas
+        # les secrets reels. SQLite suffit, aucune migration n'est appliquee.
+        env:
+          SECRET_KEY: ci-secret-key-not-used-in-production
+          DEBUG: 'False'
+          DB_ENGINE: sqlite
+          DJANGO_ALLOWED_HOSTS: example.com
+          CSRF_TRUSTED_ORIGINS: https://example.com
+          EMAIL_HOST: smtp.example.com
+          EMAIL_PORT: '587'
+          EMAIL_USE_TLS: 'True'
+          EMAIL_HOST_USER: ci@example.com
+          EMAIL_HOST_PASSWORD: ci-password
+        run: |
+          python manage.py check --deploy --fail-level ERROR
+          python manage.py makemigrations --check --dry-run
+
+  # ---------------------------------------------------------------------------
+  build:
+    name: Construire et publier l'image
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Normaliser le nom de l'image
+        id: meta
+        # GHCR n'accepte que des noms en minuscules ; le depot contient des
+        # majuscules (autoPiece_git_back), il faut donc les convertir.
+        run: |
+          repo_lc="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "image=${{ env.REGISTRY }}/${repo_lc}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Connexion a GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:latest
+            ${{ steps.meta.outputs.image }}:${{ github.sha }}
+          # Cache partage entre executions : evite de recompiler pycairo a chaque push.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deployer sur le VPS
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploiement SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            cd ${{ secrets.VPS_APP_DIR }}
+
+            # Authentification GHCR (necessaire tant que le paquet est prive).
+            echo "${{ secrets.GHCR_TOKEN }}" \
+              | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
+
+            # Epingle la revision deployee : un rollback se fait en remettant
+            # l'ancien SHA dans cette variable puis en relancant `up -d`.
+            export WEB_IMAGE="${{ needs.build.outputs.image }}:${{ github.sha }}"
+            # `sed` reussit meme sans correspondance : il faut donc tester la
+            # presence de la ligne avant de choisir entre remplacer et ajouter.
+            if grep -q '^WEB_IMAGE=' .env; then
+              sed -i "s|^WEB_IMAGE=.*|WEB_IMAGE=${WEB_IMAGE}|" .env
+            else
+              echo "WEB_IMAGE=${WEB_IMAGE}" >> .env
+            fi
+
+            docker compose pull
+            docker compose up -d --remove-orphans
+
+            # Purge des images orphelines pour ne pas saturer le disque du VPS.
+            docker image prune -f
+
+      - name: Verifier que le service repond
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          script: |
+            for i in $(seq 1 20); do
+              if curl -fsS http://127.0.0.1:8010/healthz/ >/dev/null; then
+                echo "Application en ligne."
+                exit 0
+              fi
+              echo "Tentative $i/20..."
+              sleep 5
+            done
+            echo "L'application ne repond pas — journaux :"
+            cd ${{ secrets.VPS_APP_DIR }} && docker compose logs --tail=80 web
+            exit 1

@@ -33,6 +33,7 @@ CUSTOM_PERMISSIONS = [{'categorie': 'Comptes', 'name': 'Active Compte', 'url': '
  {'categorie': 'Interfaces', 'name': 'Commandes en ligne', 'url': 'cmd_line'},
  {'categorie': 'Interfaces', 'name': 'Chat clients', 'url': 'ecom_chat_inbox'},
  {'categorie': 'Interfaces', 'name': 'Historique chat clients', 'url': 'ecom_chat_history'},
+ {'categorie': 'Interfaces', 'name': 'Messages de contact', 'url': 'ecom_messages_contact'},
  {'categorie': 'Interfaces', 'name': 'Livraison commande client', 'url': 'livraison_cmd_online'},
  {'categorie': 'Interfaces', 'name': 'Gestion des paramètres', 'url': 'gestion_parametre'},
  {'categorie': 'Interfaces', 'name': 'Service accueil', 'url': 'paniers'},

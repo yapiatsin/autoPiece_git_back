@@ -1,0 +1,58 @@
+# Bloc a ajouter dans la configuration Caddy deja presente sur le VPS
+# (typiquement un fichier dans /opt/caddy-sites/ importe par le Caddyfile
+# principal). Remplacer autopiece.example.com par le domaine reel.
+#
+# Caddy obtient et renouvelle seul le certificat Let's Encrypt : il faut
+# simplement que l'enregistrement DNS A du domaine pointe deja sur l'IP du VPS
+# et que les ports 80 et 443 soient ouverts.
+
+autopiece.example.com, www.autopiece.example.com {
+
+	encode zstd gzip
+
+	# Fichiers statiques et medias servis directement par Caddy, sans reveiller
+	# gunicorn. Les chemins correspondent aux montages de docker-compose.yml.
+	handle_path /static/* {
+		root * /opt/autopiece/staticfiles
+		file_server
+		header Cache-Control "public, max-age=31536000, immutable"
+	}
+
+	handle_path /media/* {
+		root * /opt/autopiece/media
+		file_server
+		header Cache-Control "public, max-age=86400"
+	}
+
+	# Tout le reste part vers le conteneur applicatif, qui n'ecoute que sur la
+	# boucle locale. Les en-tetes X-Forwarded-* sont ajoutes par Caddy et lus
+	# par Django (SECURE_PROXY_SSL_HEADER).
+	handle {
+		reverse_proxy 127.0.0.1:8010 {
+			health_uri /healthz/
+			health_interval 30s
+			health_timeout 5s
+		}
+	}
+
+	# Limite d'envoi : suffisante pour les imports Excel et les photos de pieces.
+	request_body {
+		max_size 25MB
+	}
+
+	log {
+		output file /var/log/caddy/autopiece.log {
+			roll_size 20MiB
+			roll_keep 5
+		}
+	}
+}
+
+# ---------------------------------------------------------------------------
+# Si Caddy tourne lui-meme dans un conteneur Docker, 127.0.0.1 designe le
+# conteneur Caddy et non l'hote. Deux solutions :
+#   1. Ajouter le conteneur Caddy au reseau `autopiece` et remplacer l'adresse
+#      par `reverse_proxy autopiece-web-1:8000`.
+#   2. Declarer `extra_hosts: ["host.docker.internal:host-gateway"]` sur le
+#      service Caddy et utiliser `reverse_proxy host.docker.internal:8010`.
+# ---------------------------------------------------------------------------

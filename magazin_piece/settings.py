@@ -8,11 +8,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 
 SECRET_KEY = config('SECRET_KEY')
-DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
-# ALLOWED_HOSTS = []
-# CSRF_TRUSTED_ORIGINS = []
+# En production le .env doit contenir DEBUG=False (valeur par defaut ici).
+DEBUG = config('DEBUG', default=False, cast=bool)
+
+
+def _csv(value):
+    """'a, b ,c' -> ['a', 'b', 'c'] (entrees vides ignorees)."""
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+# Ex. DJANGO_ALLOWED_HOSTS=autopiece.ci,www.autopiece.ci
+ALLOWED_HOSTS = _csv(config('DJANGO_ALLOWED_HOSTS', default='*'))
+
+# Ex. CSRF_TRUSTED_ORIGINS=https://autopiece.ci,https://www.autopiece.ci
+CSRF_TRUSTED_ORIGINS = _csv(config('CSRF_TRUSTED_ORIGINS', default=''))
 
 # Application definition
 INSTALLED_APPS = [
@@ -35,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -102,34 +113,28 @@ WSGI_APPLICATION = 'magazin_piece.wsgi.application'
 # # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    },
+# Bascule sqlite (dev) <-> postgresql (production) via DB_ENGINE dans le .env.
+if config('DB_ENGINE', default='sqlite') == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST'),
+            'PORT': config('DB_PORT', default='5432'),
+            'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=60, cast=int),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'magasin_piece',
-    #     'USER': 'magasin_piece_user',
-    #     'PASSWORD': 'kEz2jKPbm8U7os7mLwdMtqq7C8igzNQk',
-    #     'HOST': 'dpg-cr8dbt23esus73b56la0-a.oregon-postgres.render.com',
-    #     'PORT': '5432',
-    # }
 
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': config('DB_NAME'),
-    #     'USER':config('DB_USER'),
-    #     'PASSWORD': config('DB_PASSWORD'),
-    #     'HOST':config('DB_HOST'),
-    #     'PORT':config('DB_PORT'),
-    # }
-}
-
-# DATABASES = {
-
-# }
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -185,7 +190,55 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
  #STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = config('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
+
+# WhiteNoise sert les fichiers statiques depuis le conteneur (compresses, sans
+# manifeste : un asset reference mais absent ne fait pas echouer collectstatic).
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
+
+# --- Securite / reverse proxy -------------------------------------------------
+# Caddy termine le TLS et transmet X-Forwarded-Proto : sans cela Django croit
+# que la requete est en clair et casse les redirections + cookies secure.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
+# Mettre SECURE_COOKIES=False tant que le site est expose en HTTP simple (IP nue),
+# sinon la session et le jeton CSRF ne sont jamais renvoyes par le navigateur.
+_secure_cookies = config('SECURE_COOKIES', default=not DEBUG, cast=bool)
+SESSION_COOKIE_SECURE = _secure_cookies
+CSRF_COOKIE_SECURE = _secure_cookies
+SESSION_COOKIE_HTTPONLY = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+# Redirection HTTP -> HTTPS assuree par Caddy, pas par Django (evite les boucles).
+SECURE_SSL_REDIRECT = False
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=0, cast=int)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# --- Journalisation : tout sur stdout, recupere par `docker compose logs` ------
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {'format': '[{asctime}] {levelname} {name} {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'simple'},
+    },
+    'root': {'handlers': ['console'], 'level': config('LOG_LEVEL', default='INFO')},
+    'loggers': {
+        'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False},
+    },
+}
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 

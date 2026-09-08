@@ -1,0 +1,67 @@
+# Pile de production Auto-Piece — a deployer dans /opt/autopiece sur le VPS.
+#
+#   docker compose pull && docker compose up -d
+#
+# Le service `web` n'est PAS expose sur l'exterieur : il ecoute uniquement sur
+# 127.0.0.1:8010 et c'est Caddy (deja present sur le VPS) qui termine le TLS et
+# relaie le trafic. Voir deploy/Caddyfile.example.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-autopiece}
+      POSTGRES_USER: ${DB_USER:-autopiece}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD manquant dans .env}
+      # Encodage et tri fixes : evite les divergences d'index entre machines.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Depot des dumps produits par scripts/backup_db.sh
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-autopiece} -d ${DB_NAME:-autopiece}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - autopiece
+
+  web:
+    # Image publiee par GitHub Actions sur GHCR. `build` ne sert qu'en local
+    # (docker compose up --build) ou en depannage sur le VPS.
+    image: ${WEB_IMAGE:-ghcr.io/yapiatsin/autopiece_git_back:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Force la configuration production quelles que soient les valeurs du .env
+      # heritees du poste de developpement.
+      DB_ENGINE: postgresql
+      DB_HOST: db
+      DB_PORT: "5432"
+      MEDIA_ROOT: /app/media
+    volumes:
+      # Uploads utilisateurs : doivent survivre a chaque redeploiement.
+      - ./media:/app/media
+      # Statiques collectes : montes pour que Caddy puisse les servir en direct.
+      - ./staticfiles:/app/staticfiles
+    ports:
+      - "127.0.0.1:8010:8000"
+    networks:
+      - autopiece
+
+volumes:
+  pgdata:
+
+networks:
+  autopiece:
+    driver: bridge

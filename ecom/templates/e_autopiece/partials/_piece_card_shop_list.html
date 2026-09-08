@@ -3,12 +3,17 @@
     <a href="{{ piece.get_absolute_url }}" class="thumbnail-preview">
         {% if quantite and quantite > 0 %}
         <div class="badge">
-            <span>{{ quantite }}<br>{% trans "stock" %}</span>
+            <span>{% trans "Disponible" %}</span>
+            <i class="fa-solid fa-bookmark"></i>
+        </div>
+        {% elif localite_code and quantite|default:0 == 0 %}
+        <div class="badge">
+            <span>{% trans "Rupture" %}</span>
             <i class="fa-solid fa-bookmark"></i>
         </div>
         {% elif piece.stock_total %}
         <div class="badge">
-            <span>{{ piece.stock_total }}<br>{% trans "total" %}</span>
+            <span>{% trans "Disponible" %}</span>
             <i class="fa-solid fa-bookmark"></i>
         </div>
         {% endif %}
@@ -29,15 +34,21 @@
                 <h4 class="title">{{ piece.designation }}</h4>
             </a>
             {% if localite_nom %}
-            <span class="availability">{{ localite_nom }} — {{ piece.numero_piece }}</span>
-            {% elif show_all_stocks %}
             <span class="availability">
-                {% for stock in piece.stocks_disponibles %}
-                {{ stock.local_entrepot.nom }}: {{ stock.quantite_disponible }}{% if not forloop.last %} · {% endif %}
-                {% endfor %}
+                {{ localite_nom }} — {{ piece.numero_piece }}
+                · {% if quantite|default:0 > 0 %}{% trans "Disponible" %}{% else %}{% trans "Rupture de stock" %}{% endif %}
+            </span>
+            {% elif show_all_stocks and piece.stocks_disponibles %}
+            <span class="availability">
+                {{ piece.numero_piece }} ·
+                {% for stock in piece.stocks_disponibles %}{{ stock.local_entrepot.nom }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                · {% trans "Disponible" %}
             </span>
             {% else %}
-            <span class="availability">{{ piece.numero_piece }}</span>
+            <span class="availability">
+                {{ piece.numero_piece }}
+                {% if piece.stock_total %} · {% trans "Disponible" %}{% endif %}
+            </span>
             {% endif %}
             <div class="price-area">
                 <span class="current">{{ prix_affiche|floatformat:0 }} FCFA</span>

@@ -19,7 +19,7 @@ LOGO_CID = 'pb_logo'
 
 
 def _logo_path():
-    return Path(settings.BASE_DIR) / 'static' / 'icn.png'
+    return Path(settings.BASE_DIR) / 'static' / 'logo.png'
 
 
 def get_email_branding_context():
@@ -34,15 +34,15 @@ def _email_brand_context():
         'has_logo': has_logo,
         'logo_src': f'cid:{LOGO_CID}' if has_logo else '',
         'logo_cid': LOGO_CID,
-        'color_primary': '#DC2626',
+        'color_primary': '#FF7A20',
         'color_secondary': '#F97316',
         'color_green': '#16a34a',
-        'color_text': '#3d3d3d',
-        'color_heading': '#1a1a1a',
-        'color_muted': '#6b7280',
-        'color_bg': '#f8fafc',
+        'color_text': '#5A6570',
+        'color_heading': '#333E50',
+        'color_muted': '#7D8590',
+        'color_bg': '#F0F2F5',
         'color_card': '#ffffff',
-        'color_accent_bg': '#fff7ed',
+        'color_accent_bg': '#FFF7F0',
     }
 
 
@@ -53,7 +53,7 @@ def _attach_logo(email):
     with logo_path.open('rb') as logo_file:
         logo_img = MIMEImage(logo_file.read())
     logo_img.add_header('Content-ID', f'<{LOGO_CID}>')
-    logo_img.add_header('Content-Disposition', 'inline', filename='icn.png')
+    logo_img.add_header('Content-Disposition', 'inline', filename='logo.png')
     email.attach(logo_img)
 
 

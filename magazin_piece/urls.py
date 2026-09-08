@@ -8,8 +8,11 @@ from django.views.i18n import set_language
 from django.views.static import serve
 from ecom.views import page_not_found
 from stock.geniuspay_views import geniuspay_webhook
+from magazin_piece.health import healthz
 
 urlpatterns = [
+    # Sonde lue par le HEALTHCHECK Docker et le reverse proxy.
+    path('healthz/', healthz, name='healthz'),
     path('admin/', admin.site.urls, name='admin'),
     path('i18n/', include('django.conf.urls.i18n')),
     path('webhooks/geniuspay/', geniuspay_webhook, name='geniuspay_webhook'),

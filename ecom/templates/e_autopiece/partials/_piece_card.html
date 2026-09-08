@@ -22,14 +22,14 @@
             <div class="stock-par-localite mt-2 mb-2">
                 {% for stock in piece.stocks_disponibles %}
                 <span class="d-inline-block badge bg-light text-dark border me-1 mb-1">
-                    {{ stock.local_entrepot.nom }}: <strong>{{ stock.quantite_disponible }}</strong>
+                    {{ stock.local_entrepot.nom }}: <strong>{% trans "Disponible" %}</strong>
                 </span>
                 {% empty %}
-                <span class="text-muted small">{% trans "Aucun stock" %}</span>
+                <span class="text-muted small">{% trans "Rupture de stock" %}</span>
                 {% endfor %}
             </div>
             {% if piece.stock_total %}
-            <p class="small mb-1"><strong>{% trans "Total toutes localités" %} :</strong> {{ piece.stock_total }}</p>
+            <p class="small mb-1"><strong>{% trans "Statut" %} :</strong> {% trans "Disponible" %}</p>
             {% endif %}
             <div class="price-area">
                 <span class="current">{{ piece.prix_affiche|floatformat:0 }} FCFA</span>

@@ -5,94 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compte créé — {{ site_name }}</title>
 </head>
-<body style="margin:0;padding:0;background-color:{{ color_bg }};font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:{{ color_bg }};padding:32px 16px;">
+<body style="margin:0;padding:0;background-color:{{ color_bg }};font-family:'Segoe UI',Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:{{ color_bg }};padding:48px 16px;">
         <tr>
             <td align="center">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;background-color:{{ color_card }};border-radius:16px;overflow:hidden;border:1px solid #e8d4d4;box-shadow:0 8px 24px rgba(168,50,50,0.1);">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:480px;background-color:{{ color_card }};border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(51,62,80,0.08);">
+                    <!-- Confetti accents -->
                     <tr>
-                        <td style="height:4px;background-color:{{ color_primary }};font-size:0;line-height:0;">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td align="center" style="padding:28px 32px 16px;">
-                            {% if has_logo %}
-                            <img src="{{ logo_src }}" alt="{{ site_name }}" width="160" height="auto" style="display:block;max-width:160px;width:160px;height:auto;border:0;outline:none;text-decoration:none;">
-                            {% else %}
-                            <p style="margin:0;font-size:20px;font-weight:700;color:{{ color_primary }};">{{ site_name }}</p>
-                            {% endif %}
-                            <p style="margin:12px 0 0;font-size:13px;color:{{ color_muted }};">{{ site_tagline }}</p>
+                        <td style="padding:0;font-size:0;line-height:0;height:8px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td width="12%" align="center" style="padding:10px 0 0;"><span style="display:inline-block;width:8px;height:8px;background:#FF6B9D;border-radius:2px;transform:rotate(20deg);"></span></td>
+                                    <td width="14%" align="center" style="padding:4px 0 0;"><span style="display:inline-block;width:6px;height:6px;background:#5B8DEF;border-radius:50%;"></span></td>
+                                    <td width="12%" align="center" style="padding:14px 0 0;"><span style="display:inline-block;width:10px;height:4px;background:#FFD166;border-radius:2px;"></span></td>
+                                    <td width="14%">&nbsp;</td>
+                                    <td width="12%" align="center" style="padding:8px 0 0;"><span style="display:inline-block;width:7px;height:7px;background:#06D6A0;border-radius:2px;"></span></td>
+                                    <td width="14%" align="center" style="padding:2px 0 0;"><span style="display:inline-block;width:5px;height:5px;background:#FF7A20;border-radius:50%;"></span></td>
+                                    <td width="12%" align="center" style="padding:12px 0 0;"><span style="display:inline-block;width:9px;height:5px;background:#C77DFF;border-radius:2px;"></span></td>
+                                    <td width="10%" align="center" style="padding:6px 0 0;"><span style="display:inline-block;width:6px;height:6px;background:#FF6B9D;border-radius:2px;"></span></td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
+
+                    <!-- Logo -->
                     <tr>
-                        <td style="padding:8px 32px 28px;color:{{ color_text }};font-size:15px;line-height:1.65;">
-                            <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:{{ color_heading }};">Compte créé avec succès</h1>
-                            <p style="margin:0 0 12px;">Bonjour <strong>{{ user.username }}</strong>,</p>
-                            <p style="margin:0 0 20px;">Nous sommes ravis de vous informer que votre compte a été créé avec succès sur <strong style="color:{{ color_primary }};">{{ site_name }}</strong>.</p>
+                        <td align="center" style="padding:28px 40px 8px;">
+                            {% if has_logo %}
+                            <img src="{{ logo_src }}" alt="{{ site_name }}" width="140" height="auto" style="display:block;max-width:140px;width:140px;height:auto;border:0;outline:none;text-decoration:none;">
+                            {% else %}
+                            <p style="margin:0;font-size:22px;font-weight:700;color:{{ color_primary }};letter-spacing:-0.3px;">{{ site_name }}</p>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td align="center" style="padding:16px 40px 8px;">
+                            <h1 style="margin:0 0 12px;font-size:26px;font-weight:700;color:{{ color_heading }};line-height:1.3;letter-spacing:-0.4px;">Bienvenue à bord&nbsp;!</h1>
+                            <p style="margin:0 0 8px;font-size:15px;color:{{ color_muted }};line-height:1.6;">Bonjour <strong style="color:{{ color_heading }};">{{ user.username }}</strong>,</p>
+                            <p style="margin:0 0 28px;font-size:15px;color:{{ color_muted }};line-height:1.6;">Votre compte a été créé avec succès sur <strong style="color:{{ color_heading }};">{{ site_name }}</strong>. Prêt à trouver vos pièces automobiles&nbsp;?</p>
 
                             {% if temporary_password %}
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:{{ color_accent_bg }};border-radius:10px;border-left:4px solid {{ color_primary }};margin-bottom:20px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:20px;">
                                 <tr>
-                                    <td style="padding:16px 18px;font-size:14px;color:{{ color_text }};">
-                                        <p style="margin:0 0 8px;font-weight:700;color:{{ color_primary }};">Vos identifiants de connexion</p>
-                                        <p style="margin:0 0 6px;"><strong>Email :</strong> {{ user.email }}</p>
-                                        <p style="margin:0;"><strong>Mot de passe temporaire :</strong></p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                                <tr>
-                                    <td align="center" style="padding:8px 0 24px;">
-                                        <div style="display:inline-block;padding:14px 28px;border-radius:14px;background-color:{{ color_primary }};color:#ffffff;font-size:22px;font-weight:700;letter-spacing:2px;font-family:'Courier New',monospace;">
-                                            {{ temporary_password }}
-                                        </div>
+                                    <td align="center" style="padding:16px 20px;background-color:{{ color_accent_bg }};border-radius:12px;">
+                                        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:{{ color_primary }};text-transform:uppercase;letter-spacing:0.5px;">Identifiants temporaires</p>
+                                        <p style="margin:0 0 4px;font-size:14px;color:{{ color_text }};">{{ user.email }}</p>
+                                        <p style="margin:12px 0 0;display:inline-block;padding:10px 20px;background-color:{{ color_primary }};color:#ffffff;font-size:18px;font-weight:700;letter-spacing:2px;font-family:'Courier New',monospace;border-radius:6px;">{{ temporary_password }}</p>
                                     </td>
                                 </tr>
                             </table>
                             {% else %}
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:{{ color_accent_bg }};border-radius:10px;border-left:4px solid {{ color_primary }};margin-bottom:20px;">
-                                <tr>
-                                    <td style="padding:16px 18px;font-size:14px;color:{{ color_text }};">
-                                        <p style="margin:0 0 8px;font-weight:700;color:{{ color_primary }};">Votre compte</p>
-                                        <p style="margin:0 0 6px;"><strong>Nom d'utilisateur :</strong> {{ user.username }}</p>
-                                        <p style="margin:0;"><strong>Email :</strong> {{ user.email }}</p>
-                                    </td>
-                                </tr>
-                            </table>
+                            <p style="margin:0 0 24px;font-size:14px;color:{{ color_muted }};">{{ user.email }}</p>
                             {% endif %}
 
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <!-- CTA -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 28px;">
                                 <tr>
-                                    <td align="center" style="padding:0 0 16px;">
-                                        <a href="{{ activation_url }}" style="display:inline-block;padding:12px 28px;border-radius:50px;background-color:{{ color_primary }};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">Activer mon compte</a>
+                                    <td align="center" bgcolor="{{ color_primary }}" style="border-radius:6px;background-color:{{ color_primary }};">
+                                        <a href="{{ activation_url }}" style="display:inline-block;padding:14px 40px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:6px;letter-spacing:0.2px;">Activer mon compte</a>
                                     </td>
                                 </tr>
                             </table>
 
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:{{ color_accent_bg }};border-radius:10px;border-left:4px solid {{ color_primary }};">
-                                <tr>
-                                    <td style="padding:16px 18px;font-size:14px;color:{{ color_text }};">
-                                        <p style="margin:0 0 8px;font-weight:700;color:{{ color_primary }};">Important</p>
-                                        <ul style="margin:0;padding-left:18px;">
-                                            <li>Cliquez sur <strong>Activer mon compte</strong> pour valider votre adresse email (lien valide 24&nbsp;h).</li>
-                                            <li>Vous ne pourrez pas vous connecter tant que votre compte n'est pas activé.</li>
-                                            {% if temporary_password %}
-                                            <li>Changez votre mot de passe dès votre première connexion.</li>
-                                            <li>Ne partagez jamais vos identifiants avec personne.</li>
-                                            {% endif %}
-                                        </ul>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <p style="margin:20px 0 0;">Merci de faire partie de <strong>{{ site_tagline }}</strong>.</p>
-                            <p style="margin:12px 0 0;">Cordialement,<br>L'équipe support</p>
+                            <p style="margin:0 0 4px;font-size:13px;color:{{ color_muted }};line-height:1.5;">Lien valide 24&nbsp;h. Vous ne pourrez pas vous connecter tant que le compte n'est pas activé.</p>
+                            {% if temporary_password %}
+                            <p style="margin:8px 0 0;font-size:13px;color:{{ color_muted }};line-height:1.5;">Changez votre mot de passe dès la première connexion.</p>
+                            {% endif %}
                         </td>
                     </tr>
+
+                    <!-- Bottom confetti -->
                     <tr>
-                        <td style="padding:20px 32px 28px;border-top:1px solid #e8d4d4;text-align:center;font-size:12px;color:{{ color_muted }};background-color:{{ color_bg }};">
-                            <p style="margin:0 0 6px;">© {{ site_name }} — Tous droits réservés</p>
-                            <p style="margin:0;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+                        <td style="padding:16px 0 8px;font-size:0;line-height:0;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td width="18%" align="center"><span style="display:inline-block;width:6px;height:6px;background:#5B8DEF;border-radius:50%;"></span></td>
+                                    <td width="16%" align="center"><span style="display:inline-block;width:8px;height:4px;background:#FFD166;border-radius:2px;"></span></td>
+                                    <td width="20%">&nbsp;</td>
+                                    <td width="16%" align="center"><span style="display:inline-block;width:7px;height:7px;background:#FF6B9D;border-radius:2px;"></span></td>
+                                    <td width="14%" align="center"><span style="display:inline-block;width:5px;height:5px;background:#06D6A0;border-radius:50%;"></span></td>
+                                    <td width="16%" align="center"><span style="display:inline-block;width:9px;height:5px;background:#C77DFF;border-radius:2px;"></span></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding:20px 40px 32px;">
+                            <p style="margin:0 0 4px;font-size:12px;color:{{ color_muted }};">© {{ site_name }} — {{ site_tagline }}</p>
+                            <p style="margin:0;font-size:11px;color:#A0A8B0;">Email automatique, merci de ne pas y répondre.</p>
                         </td>
                     </tr>
                 </table>

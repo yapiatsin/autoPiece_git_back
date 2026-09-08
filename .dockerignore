@@ -1,0 +1,41 @@
+# Environnements virtuels et caches Python
+env/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets et bases locales : injectes a l'execution, jamais dans l'image
+.env
+.env.*
+!.env.example
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+
+# Fichiers generes / uploads : montes en volume sur le VPS
+staticfiles/
+media/
+
+# Git et outillage
+.git/
+.github/
+.gitignore
+.claude/
+"How to use Claude"/
+
+# Documentation et scripts de dev
+*.md
+!README.md
+_cleanup_static.py
+_fix_dash.py
+dummy
+EPSON*
+
+# Divers OS
+.DS_Store
+Thumbs.db
