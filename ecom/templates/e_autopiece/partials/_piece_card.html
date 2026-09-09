@@ -6,7 +6,9 @@
             {% if piece.image %}
             <img src="{{ piece.image.url }}" alt="{{ piece.designation }}">
             {% else %}
-            <img src="{% static 'e_assets/images/grocery/07.html' %}" alt="{{ piece.designation }}">
+            {# Meme repli que _piece_card_shop_list : l'ancienne image du theme
+               (grocery/07) n'a jamais existe et affichait une icone cassee. #}
+            <div class="ecom-piece-placeholder" aria-hidden="true"><i class="fa-solid fa-gears"></i></div>
             {% endif %}
         </a>
         <div class="body-content">

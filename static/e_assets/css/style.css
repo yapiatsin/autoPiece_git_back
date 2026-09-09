@@ -10005,163 +10005,123 @@ Background Image
 }
 
 .bg_image--1 {
-    background-image: url(../images/bg/bg-image-1.html);
 }
 
 .bg_image--2 {
-    background-image: url(../images/bg/bg-image-2.html);
 }
 
 .bg_image--3 {
-    background-image: url(../images/bg/bg-image-3.html);
 }
 
 .bg_image--4 {
-    background-image: url(../images/bg/bg-image-4.html);
 }
 
 .bg_image--5 {
-    background-image: url(../images/bg/bg-image-5.html);
 }
 
 .bg_image--6 {
-    background-image: url(../images/bg/bg-image-6.html);
 }
 
 .bg_image--7 {
-    background-image: url(../images/bg/bg-image-7.html);
 }
 
 .bg_image--8 {
-    background-image: url(../images/bg/bg-image-8.html);
 }
 
 .bg_image--9 {
-    background-image: url(../images/bg/bg-image-9.html);
 }
 
 .bg_image--10 {
-    background-image: url(../images/bg/bg-image-10.html);
 }
 
 .bg_image--11 {
-    background-image: url(../images/bg/bg-image-11.html);
 }
 
 .bg_image--12 {
-    background-image: url(../images/bg/bg-image-12.html);
 }
 
 .bg_image--13 {
-    background-image: url(../images/bg/bg-image-13.html);
 }
 
 .bg_image--14 {
-    background-image: url(../images/bg/bg-image-14.html);
 }
 
 .bg_image--15 {
-    background-image: url(../images/bg/bg-image-15.html);
 }
 
 .bg_image--16 {
-    background-image: url(../images/bg/bg-image-16.html);
 }
 
 .bg_image--17 {
-    background-image: url(../images/bg/bg-image-17.html);
 }
 
 .bg_image--18 {
-    background-image: url(../images/bg/bg-image-18.html);
 }
 
 .bg_image--19 {
-    background-image: url(../images/bg/bg-image-19.html);
 }
 
 .bg_image--20 {
-    background-image: url(../images/bg/bg-image-20.html);
 }
 
 .bg_image--21 {
-    background-image: url(../images/bg/bg-image-21.html);
 }
 
 .bg_image--22 {
-    background-image: url(../images/bg/bg-image-22.html);
 }
 
 .bg_image--23 {
-    background-image: url(../images/bg/bg-image-23.html);
 }
 
 .bg_image--24 {
-    background-image: url(../images/bg/bg-image-24.html);
 }
 
 .bg_image--25 {
-    background-image: url(../images/bg/bg-image-25.html);
 }
 
 .bg_image--26 {
-    background-image: url(../images/bg/bg-image-26.html);
 }
 
 .bg_image--27 {
-    background-image: url(../images/bg/bg-image-27.html);
 }
 
 .bg_image--28 {
-    background-image: url(../images/bg/bg-image-28.html);
 }
 
 .bg_image--29 {
-    background-image: url(../images/bg/bg-image-29.html);
 }
 
 .bg_image--30 {
-    background-image: url(../images/bg/bg-image-30.html);
 }
 
 .bg_image--31 {
-    background-image: url(../images/bg/bg-image-31.html);
 }
 
 .bg_image--32 {
-    background-image: url(../images/bg/bg-image-32.html);
 }
 
 .bg_image--33 {
-    background-image: url(../images/bg/bg-image-33.html);
 }
 
 .bg_image--34 {
-    background-image: url(../images/bg/bg-image-34.html);
 }
 
 .bg_image--35 {
-    background-image: url(../images/bg/bg-image-35.html);
 }
 
 .bg_image--36 {
-    background-image: url(../images/bg/bg-image-36.html);
 }
 
 .bg_image--37 {
-    background-image: url(../images/bg/bg-image-37.html);
 }
 
 .bg_image--38 {
-    background-image: url(../images/bg/bg-image-38.html);
 }
 
 .bg_image--39 {
-    background-image: url(../images/bg/bg-image-39.html);
 }
 
 .bg_image--40 {
-    background-image: url(../images/bg/bg-image-40.html);
 }
 
 /* Height and width */
@@ -15069,7 +15029,6 @@ body.sal-disabled [data-sal|=flip] {
 
 /* elements */
 .about-banner-area-bg {
-    background-image: url(../images/about/01.html);
     height: 582px;
     display: flex;
     align-items: center;
@@ -16862,7 +16821,7 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 #anywhere-home {
-    cursor: url(../images/banner/shape/close.html), auto;
+    cursor: pointer;
     background: #0e1013;
     position: fixed;
     width: 100%;
@@ -17227,15 +17186,12 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .bg_one-banner {
-    background-image: url(../images/banner/01.html);
 }
 
 .bg_one-banner {
-    background-image: url(../images/banner/01.html);
 }
 
 .bg_one-banner.two {
-    background-image: url(../images/banner/08.html);
 }
 
 .category-area-main-wrapper-one {
@@ -17269,7 +17225,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .bg_banner-2 {
-    background-image: url(../images/banner/02.html);
     height: 520px;
     border-radius: 6px;
 }
@@ -17365,7 +17320,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .banner-bg-full_1 {
-    background-image: url(../images/banner/03.html);
     height: 600px;
     display: flex;
     align-items: flex-start;
@@ -17376,7 +17330,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .banner-bg-full_1.img-two {
-    background-image: url(../images/banner/09.html);
 }
 
 .banner-inner-content-three .pre {
@@ -17440,7 +17393,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .banner-bg_4 {
-    background-image: url(../images/banner/04.html);
     height: 650px;
     overflow: hidden;
     position: relative;
@@ -17569,7 +17521,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .banner-left-five-area-start {
-    background-image: url(../images/banner/05.html);
     height: 550px;
     display: flex;
     align-items: center;
@@ -17638,7 +17589,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .banner-five-right-content {
-    background-image: url(../images/banner/06.html);
     height: 550px;
     border-radius: 4px;
     position: relative;
@@ -17668,7 +17618,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .bg_store-banner {
-    background-image: url(../images/banner/07.html);
 }
 
 .banner-content-store {
@@ -18057,7 +18006,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .single-feature-card {
-    background-image: url(../images/category/01.html);
     height: 400px;
     border-radius: 6px;
     background-repeat: no-repeat;
@@ -18080,27 +18028,21 @@ li.with-megamenu:hover .rts-megamenu {
 
 .single-feature-card.style-three {
     height: 350px;
-    background-image: url(../images/category/05-2.html);
 }
 
 .single-feature-card.style-three.two {
-    background-image: url(../images/category/06-2.html);
 }
 
 .single-feature-card.style-three.three {
-    background-image: url(../images/category/07-2.html);
 }
 
 .single-feature-card.two {
-    background-image: url(../images/category/02.html);
 }
 
 .single-feature-card.three {
-    background-image: url(../images/category/03.html);
 }
 
 .single-feature-card.four {
-    background-image: url(../images/category/04.html);
 }
 
 .single-feature-card .rts-btn {
@@ -18830,7 +18772,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .single-discount-with-bg {
-    background-image: url(../images/discount-product/01.html);
     padding: 40px 50px;
     background-repeat: no-repeat;
     background-size: cover;
@@ -18851,7 +18792,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .single-discount-with-bg.bg-2 {
-    background-image: url(../images/discount-product/02.html);
 }
 
 .single-discount-with-bg .title {
@@ -19689,7 +19629,6 @@ li.with-megamenu:hover .rts-megamenu {
 
 .blog-sidebar-single-wized.with-add {
     position: relative;
-    background-image: url(../images/blog/thumb/12.html);
     padding: 80px 40px;
 }
 
@@ -20549,7 +20488,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .feature-product-area-single {
-    background-image: url(../images/feature/01.html);
     height: 255px;
     padding: 50px 60px;
     position: relative;
@@ -20858,7 +20796,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .feature-product-area-large-2 {
-    background-image: url(../images/feature/02.html);
     height: 305px;
     border-radius: 6px;
     display: flex;
@@ -20866,7 +20803,6 @@ li.with-megamenu:hover .rts-megamenu {
 }
 
 .feature-product-area-large-2.bg_2 {
-    background-image: url(../images/feature/03.html);
 }
 
 .feature-product-area-large-2 .inner-feature-product-content {
@@ -22930,7 +22866,6 @@ body.modal-open {
 }
 
 .rts-contact-main-wrapper-banner {
-    background-image: url(../images/contact/01.html);
 }
 
 .contact-banner-content {
@@ -24922,7 +24857,6 @@ body.modal-open {
 }
 
 .banner-vendor-details {
-    background-image: url(../images/vendor/01.html);
     height: 400px;
     border-radius: 6px;
     position: relative;
@@ -24974,7 +24908,6 @@ body.modal-open {
     border-radius: 6px;
     margin-top: 30px;
     margin-left: -30px;
-    background-image: url(../images/vendor/02.html);
 }
 
 @media only screen and (max-width: 1199px) {
@@ -25327,7 +25260,6 @@ body.modal-open {
 }
 
 .invoice-banner {
-    background-image: url(../images/invoice/01.html);
     height: 177px;
     margin-top: 30px;
     border-radius: 5px;
@@ -25847,7 +25779,7 @@ header.header-three .sub-dropdown .submenu.third-lvl.base {
 }
 
 #anywhere-home {
-    cursor: url(../images/banner/shape/close.html), auto;
+    cursor: pointer;
     background: #0e1013;
     position: fixed;
     width: 100%;
@@ -27477,7 +27409,7 @@ header.header-three .sub-dropdown .submenu.third-lvl.base {
 
 .product-details-popup .product-thumb-area {
     margin-right: 40px !important;
-    cursor: url(../images/banner/shape/zoom.html), auto;
+    cursor: zoom-in;
 }
 
 .product-details-popup .product-thumb {
@@ -28237,7 +28169,6 @@ header.header-three .sub-dropdown .submenu.third-lvl.base {
 #myModal-1 .modal-dialog {
     max-width: 1064px !important;
     height: 530px !important;
-    background-image: url(../images/popover/01.html);
     border-radius: 10px;
 }
 
