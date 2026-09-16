@@ -218,7 +218,14 @@ def enrichir_piece_stock(piece: Piece, local: LocalEntrepot | None = None) -> Pi
 def queryset_pieces_local(local: LocalEntrepot):
     from stock.models import Piece as PieceModel
 
-    qs = PieceModel.objects.select_related('categorie', 'sous_categorie')
+    stocks_qs = StockLocal.objects.filter(
+        active_sortie=True,
+        quantite_disponible__gt=0,
+    ).select_related('local_entrepot').order_by('local_entrepot__nom')
+
+    qs = PieceModel.objects.select_related('categorie', 'sous_categorie').prefetch_related(
+        Prefetch('stocks', queryset=stocks_qs, to_attr='stocks_disponibles'),
+    )
     qs = annotate_pieces_for_localite(qs, local)
     return filter_pieces_avec_stock(qs, local).order_by('designation')
 

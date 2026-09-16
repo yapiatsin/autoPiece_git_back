@@ -137,6 +137,68 @@
     color: #16a34a;
 }
 
+.caisse-qr-share {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.caisse-qr-share__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.caisse-qr-wa-panel {
+    text-align: left;
+    padding: 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.caisse-qr-wa-panel__label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.caisse-qr-wa-panel__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.caisse-qr-wa-panel__row .form-control {
+    flex: 1 1 160px;
+    min-width: 0;
+}
+
+.caisse-qr-wa-panel__row #btn-send-whatsapp {
+    flex: 0 0 auto;
+    margin-top: 0;
+}
+
+@media (max-width: 420px) {
+    .caisse-qr-wa-panel__row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .caisse-qr-wa-panel__row #btn-send-whatsapp {
+        width: 100%;
+        margin-top: 4px;
+    }
+}
+
+.caisse-qr-wa-panel__hint {
+    line-height: 1.35;
+}
+
 #btn-valider-panier:disabled,
 #btn-valider-panier.panier-btn-valider:disabled {
     opacity: 0.65;

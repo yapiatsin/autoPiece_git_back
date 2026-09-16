@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmez la liaison de votre compte Google</title>
+</head>
+<body style="margin:0;padding:0;background:{{ color_bg|default:'#f4f5f7' }};font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{{ color_bg|default:'#f4f5f7' }};padding:32px 12px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                    <tr>
+                        <td align="center" style="padding:32px 32px 8px;">
+                            <img src="cid:logo" alt="{{ site_name }}" style="max-height:56px;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:16px 32px 32px;">
+                            <h1 style="margin:0 0 16px;font-size:22px;color:{{ color_heading|default:'#1f2937' }};">Confirmez la liaison de votre compte Google</h1>
+
+                            <p style="margin:0 0 20px;font-size:15px;color:{{ color_muted|default:'#6b7280' }};line-height:1.6;">
+                                Bonjour {{ user.first_name|default:user.username }},<br><br>
+                                Quelqu'un vient de se connecter à <strong style="color:{{ color_heading|default:'#1f2937' }};">{{ site_name }}</strong>
+                                avec un compte Google portant votre adresse e-mail. Comme vous possédez déjà
+                                un compte créé avec un mot de passe, nous vous demandons de confirmer :
+                            </p>
+
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                                <tr>
+                                    <td align="center" style="background:{{ color_bg|default:'#f4f5f7' }};border-radius:12px;padding:20px;">
+                                        <span style="font-size:34px;font-weight:700;letter-spacing:10px;color:{{ color_heading|default:'#1f2937' }};font-family:'Courier New',Consolas,monospace;">{{ otp }}</span>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin:0 0 20px;font-size:14px;color:{{ color_muted|default:'#6b7280' }};line-height:1.6;">
+                                Ce code expire dans <strong>{{ expires_in }}</strong>. Une fois la liaison faite,
+                                vos prochaines connexions par Google seront immédiates.
+                            </p>
+
+                            <p style="margin:0;padding:14px 16px;background:#fef3c7;border-radius:10px;font-size:13px;color:#92400e;line-height:1.6;">
+                                <strong>Vous n'êtes pas à l'origine de cette demande&nbsp;?</strong>
+                                Ignorez cet e-mail : sans ce code, aucune liaison n'est possible et votre
+                                compte reste protégé par son mot de passe.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding:0 32px 28px;">
+                            <p style="margin:0;font-size:12px;color:{{ color_muted|default:'#9ca3af' }};">
+                                {{ site_name }} — message automatique, merci de ne pas y répondre.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -113,10 +113,3 @@ currentTheme && (document.documentElement.setAttribute("data-theme", currentThem
         "theme-orange5": "#38C172"
     }
 };
-var Tawk_API = Tawk_API || {},
-    Tawk_LoadStart = new Date;
-! function() {
-    var e = document.createElement("script"),
-        t = document.getElementsByTagName("script")[0];
-    e.async = !0, e.src = "https://embed.tawk.to/5c6d4867f324050cfe342c69/default", e.charset = "UTF-8", e.setAttribute("crossorigin", "*"), t.parentNode.insertBefore(e, t)
-}();

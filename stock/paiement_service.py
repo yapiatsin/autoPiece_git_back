@@ -15,6 +15,7 @@ from stock.geniuspay import (
     GeniusPayError,
     initier_paiement,
     montant_xof,
+    normalize_phone_for_api,
     recuperer_paiement,
 )
 from stock.paiement_labels import extraire_canal_depuis_payload
@@ -52,16 +53,7 @@ def abs_url(name, request=None, query=None, **kwargs) -> str:
 
 
 def normalize_ci_phone(raw: str) -> str:
-    digits = ''.join(c for c in (raw or '') if c.isdigit())
-    if not digits:
-        return ''
-    if digits.startswith('225'):
-        return '+' + digits
-    if len(digits) == 10 and digits.startswith('0'):
-        return '+225' + digits
-    if (raw or '').startswith('+'):
-        return '+' + digits
-    return '+225' + digits
+    return normalize_phone_for_api(raw)
 
 
 def customer_from_commande(commande: Commande) -> dict:

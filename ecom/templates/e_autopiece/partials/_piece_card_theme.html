@@ -45,18 +45,15 @@
                 <a href="{{ piece.get_absolute_url }}">{{ piece.designation }}</a>
             </h3>
             <p class="ecom-article-card__desc">
-                {% if localite_nom %}{{ localite_nom }} · {% endif %}{{ piece.numero_piece }}
-                {% if quantite is not None %}
-                    {% if quantite > 0 %}
-                    · {% trans "Disponible" %}
-                    {% else %}
-                    · {% trans "Rupture de stock" %}
-                    {% endif %}
-                {% elif show_all_stocks and piece.stocks_disponibles %}
-                    · {% for stock in piece.stocks_disponibles %}{{ stock.local_entrepot.nom }}{% if not forloop.last %}, {% endif %}{% endfor %}
-                    · {% trans "Disponible" %}
-                {% elif piece.stock_total %}
-                    · {% trans "Disponible" %}
+                <span class="ecom-article-card__ref">{{ piece.numero_piece }}</span>
+                {% if piece.stocks_disponibles %}
+                <span class="ecom-article-card__locals-wrap">
+                    {% include 'e_autopiece/partials/_piece_localites_preview.html' with piece=piece compact=True %}
+                </span>
+                {% elif localite_nom %}
+                <span class="ecom-article-card__locals-wrap">{{ localite_nom }}</span>
+                {% elif quantite is not None and quantite|default:0 == 0 %}
+                <span class="ecom-article-card__locals-wrap">{% trans "Rupture de stock" %}</span>
                 {% endif %}
             </p>
 

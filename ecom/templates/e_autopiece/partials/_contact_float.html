@@ -1,6 +1,6 @@
 {% load i18n %}
 <aside class="contact-float" aria-label="{% trans 'Contact rapide' %}">
-    <a href="https://wa.me/2250787532210"
+    <a href="{{ WHATSAPP_BUSINESS_URL|default:'https://wa.me/2250787532210' }}"
        class="contact-float__btn contact-float__btn--whatsapp"
        target="_blank"
        rel="noopener noreferrer"
@@ -42,7 +42,7 @@
             <div class="contact-chatbot__actions" id="contact-chatbot-chips" data-chips="1">
                 <a href="{% url 'ecom_support' %}" class="contact-chatbot__chip">{% trans 'Centre d’assistance' %}</a>
                 <a href="{% url 'ecom_contact' %}" class="contact-chatbot__chip">{% trans 'Contact' %}</a>
-                <a href="https://wa.me/2250787532210" class="contact-chatbot__chip" target="_blank" rel="noopener noreferrer">{% trans 'Écrire sur WhatsApp' %}</a>
+                <a href="{{ WHATSAPP_BUSINESS_URL|default:'https://wa.me/2250787532210' }}" class="contact-chatbot__chip" target="_blank" rel="noopener noreferrer">{% trans 'Écrire sur WhatsApp' %}</a>
             </div>
             <div class="contact-chatbot__new-wrap" id="contact-chatbot-new-wrap" hidden>
                 <button type="button" class="contact-chatbot__new-btn" id="contact-chatbot-new">
@@ -58,12 +58,38 @@
     </div>
 </div>
 {% if PUSHER_KEY %}
-<script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+<script src="https://js.pusher.com/8.4.0/pusher.min.js" defer></script>
 <script>
 (function () {
-    if (typeof Pusher === 'undefined' || window.ecomChatPusher) return;
-    window.ecomChatPusher = new Pusher('{{ PUSHER_KEY|escapejs }}', {
-        cluster: '{{ PUSHER_CLUSTER|default:"eu"|escapejs }}'
+    var KEY = '{{ PUSHER_KEY|escapejs }}';
+    var CLUSTER = '{{ PUSHER_CLUSTER|default:"eu"|escapejs }}';
+
+    // Connexion paresseuse : tant que le chat n'est pas ouvert, aucune socket
+    // n'est ouverte. Évite les « WebSocket is closed before the connection is
+    // established » sur les pages quittées avant la fin du handshake.
+    window.ecomChatPusherConnect = function () {
+        if (window.ecomChatPusher) return window.ecomChatPusher;
+        if (typeof Pusher === 'undefined') return null;
+        Pusher.logToConsole = false;
+        // Les requêtes HTTP internes de Pusher posent des écouteurs « unload »,
+        // interdits par la Permissions-Policy du navigateur : on les neutralise.
+        if (Pusher.Runtime && Pusher.Runtime.addUnloadListener) {
+            Pusher.Runtime.addUnloadListener = function () {};
+            Pusher.Runtime.removeUnloadListener = function () {};
+        }
+        window.ecomChatPusher = new Pusher(KEY, {
+            cluster: CLUSTER,
+            forceTLS: true,
+            enableStats: false
+        });
+        return window.ecomChatPusher;
+    };
+
+    // Ferme proprement la socket avant de quitter la page.
+    window.addEventListener('pagehide', function () {
+        if (window.ecomChatPusher) {
+            try { window.ecomChatPusher.disconnect(); } catch (e) {}
+        }
     });
 })();
 </script>

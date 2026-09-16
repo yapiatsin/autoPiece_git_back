@@ -186,3 +186,27 @@ def send_account_activation_email(user, request, temporary_password=None):
         request=request,
         temporary_password=temporary_password,
     )
+
+
+def send_google_link_otp_email(user, otp):
+    """Code de confirmation avant de lier un compte Google a un compte existant.
+
+    Envoye uniquement quand l'adresse Google correspond a un compte deja cree
+    avec un mot de passe : il faut alors prouver que la personne controle aussi
+    ce compte-la, et pas seulement la boite Google.
+    """
+    try:
+        _send_branded_email(
+            subject='Confirmez la liaison de votre compte Google — AUTO-PIECE',
+            recipient=user.email,
+            template_name='email/google_link_otp.html',
+            context={
+                'user': user,
+                'otp': otp,
+                'expires_in': '5 minutes',
+            },
+        )
+        return True
+    except Exception as e:
+        logger.error("Erreur envoi email OTP liaison Google: %s", e, exc_info=True)
+        return False

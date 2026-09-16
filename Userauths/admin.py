@@ -39,9 +39,9 @@ class CreneauDisponibiliteInline(admin.TabularInline):
 
 @admin.register(LocalEntrepot)
 class LocalEntrepotAdmin(admin.ModelAdmin):
-    list_display = ['code', 'nom', 'latitude', 'longitude', 'statut', 'statut_ouverture_display']
+    list_display = ['code', 'nom', 'contact', 'latitude', 'longitude', 'statut', 'statut_ouverture_display']
     list_filter = ['statut', 'nom']
-    search_fields = ['nom']
+    search_fields = ['nom', 'contact']
     list_editable = ['statut']
     inlines = [CreneauDisponibiliteInline]
 

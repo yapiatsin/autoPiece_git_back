@@ -63,6 +63,28 @@ PROTECTED_USERAUTHS_URL_NAMES = frozenset({
 
 STOCK_PATH_PREFIX = '/stocks/'
 
+# Actions techniques de la caisse couvertes par la permission d'interface « caissiere ».
+# Sans cela, un caissier peut ouvrir /caisse/paiement/ mais le POST de validation
+# (valid_pay_article) est refusé en 403 → « Erreur lors du paiement ».
+CAISSE_IMPLIED_BY_CAISSIERE = frozenset({
+    'valid_pay_article',
+    'caisse_geniuspay_retour',
+    'caisse_geniuspay_statut',
+    'ajax_caisse_detail',
+    'ajax_reload_paniers',
+    'ajax_calcul_timbre',
+    'reimprimer_recu_paiement',
+    'imprimer_bon_commande_vente',
+    'imprimer_recu_commande',
+    'export_caisse_ventes_excel',
+    'export_caisse_ventes_pdf',
+})
+
+# parent_url -> urls enfants autorisées si l'utilisateur a le parent
+IMPLIED_PERMISSIONS = {
+    'caissiere': CAISSE_IMPLIED_BY_CAISSIERE,
+}
+
 
 def get_permission_name_from_url(request):
     """
@@ -77,12 +99,17 @@ def get_permission_name_from_url(request):
 
 
 def user_has_permission(user, permission_url):
-    """Vérifie si un utilisateur a une permission spécifique."""
+    """Vérifie si un utilisateur a une permission spécifique (ou une permission parente)."""
     if not user.is_authenticated:
         return False
     if user.is_superuser:
         return True
-    return user.custom_permissions.filter(url=permission_url).exists()
+    if user.custom_permissions.filter(url=permission_url).exists():
+        return True
+    for parent, children in IMPLIED_PERMISSIONS.items():
+        if permission_url in children and user.custom_permissions.filter(url=parent).exists():
+            return True
+    return False
 
 
 def _path_has_exempt_prefix(path):

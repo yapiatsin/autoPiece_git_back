@@ -162,6 +162,37 @@
                     <p class="small text-muted mt-3 mb-0" id="caisse-qr-ref"></p>
                     <p class="small text-muted mt-2 mb-0">En attente de confirmation du paiement…</p>
                     <a id="caisse-qr-link" class="d-inline-block mt-2" href="#" target="_blank" rel="noopener">Ouvrir la page de paiement</a>
+
+                    <div class="caisse-qr-share mt-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm caisse-qr-share__btn" id="btn-copy-pay-link">
+                            <i class="fa fa-copy" aria-hidden="true"></i>
+                            <span>Copier le lien</span>
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm caisse-qr-share__btn" id="btn-share-whatsapp">
+                            <i class="fa fa-whatsapp" aria-hidden="true"></i>
+                            <span>Partager sur WhatsApp</span>
+                        </button>
+                    </div>
+
+                    <div class="caisse-qr-wa-panel mt-3" id="caisse-qr-wa-panel" hidden>
+                        <label class="caisse-qr-wa-panel__label" for="caisse-qr-wa-phone">Numéro WhatsApp</label>
+                        <div class="caisse-qr-wa-panel__row">
+                            <input type="tel"
+                                   id="caisse-qr-wa-phone"
+                                   class="form-control form-control-sm"
+                                   inputmode="tel"
+                                   autocomplete="tel"
+                                   placeholder="Ex. 07 87 53 22 10"
+                                   value="">
+                            <button type="button" class="btn btn-success btn-sm" id="btn-send-whatsapp">
+                                <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                                Envoyer
+                            </button>
+                        </div>
+                        <p class="caisse-qr-wa-panel__hint small text-muted mb-0 mt-1">
+                            Prérempli avec le WhatsApp Auto-Pièce. Modifiez-le pour envoyer au client.
+                        </p>
+                    </div>
                 </div>
                 <div class="modal-footer justify-content-center">
                     <button type="button" class="btn btn-outline-danger" id="btn-annuler-geniuspay-qr">
@@ -405,14 +436,21 @@
             const btnValider = form.querySelector("button[type='submit']");
             if (btnValider) btnValider.disabled = true;
             const formData = new FormData(form);
+            const csrf = (document.cookie.split('; ').find(c => c.startsWith('csrftoken=')) || '').split('=')[1];
             fetch(form.action, {
                 method: "POST",
                 body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                credentials: "same-origin",
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrf || '',
+                }
             })
             .then(r => r.json().then(data => ({ ok: r.ok, data })).catch(() => ({
                 ok: false,
-                data: { success: false, error: "Erreur lors du paiement" },
+                data: { success: false, error: r.status === 403
+                    ? "Accès refusé : permission de validation du paiement manquante."
+                    : "Erreur lors du paiement" },
             })))
             .then(({ data }) => {
                 if (data.pending && data.checkout_url) {
@@ -450,7 +488,7 @@
                     ouvrirModalBonCommande(data);
                 }
             } else if (!data.success) {
-                toastr.error(data.error || "Erreur lors du paiement");
+                toastr.error(data.error || data.message || "Erreur lors du paiement");
             }
         }
 
@@ -490,8 +528,113 @@
             }, 3000);
         }
 
+        const CAISSE_WHATSAPP_DEFAULT = "{{ WHATSAPP_BUSINESS_NUMBER|default:'2250787532210'|escapejs }}";
+        let caissePayLink = "";
+
+        function formatWaDisplayNumber(digits) {
+            const d = String(digits || "").replace(/\D/g, "");
+            if (d.startsWith("225") && d.length >= 13) {
+                const local = d.slice(3);
+                return local.replace(/(\d{2})(?=\d)/g, "$1 ").trim();
+            }
+            return d;
+        }
+
+        function normalizeWaPhone(raw) {
+            let digits = String(raw || "").replace(/\D/g, "");
+            if (!digits) return "";
+            if (digits.startsWith("225") && digits.length >= 13) return digits.slice(0, 13);
+            if (digits.length === 10 && digits.startsWith("0")) return "225" + digits;
+            if (digits.length === 10) return "225" + digits;
+            if (digits.length === 8) return "22507" + digits;
+            if (digits.length >= 10 && digits.length <= 15) return digits;
+            return "";
+        }
+
+        function getCaissePayLink() {
+            const link = document.getElementById("caisse-qr-link");
+            return caissePayLink || (link && link.href) || "";
+        }
+
+        function buildWhatsappPaymentMessage() {
+            const amount = (document.getElementById("caisse-qr-amount")?.textContent || "").trim();
+            const ref = (document.getElementById("caisse-qr-ref")?.textContent || "").trim();
+            const url = getCaissePayLink();
+            let msg = "Bonjour, voici votre lien de paiement Auto-Pièce";
+            if (amount) msg += " (" + amount + ")";
+            msg += ".";
+            if (ref) msg += "\n" + ref + ".";
+            msg += "\n\n" + url;
+            return msg;
+        }
+
+        function copyCaissePayLink() {
+            const url = getCaissePayLink();
+            if (!url || url === "#" || url.endsWith("#")) {
+                toastr.warning("Lien de paiement indisponible.");
+                return;
+            }
+            const done = () => toastr.success("Lien de paiement copié.");
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(done).catch(() => {
+                    const ta = document.createElement("textarea");
+                    ta.value = url;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    ta.remove();
+                    done();
+                });
+            } else {
+                const ta = document.createElement("textarea");
+                ta.value = url;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                ta.remove();
+                done();
+            }
+        }
+
+        function toggleWhatsappSharePanel(show) {
+            const panel = document.getElementById("caisse-qr-wa-panel");
+            const phone = document.getElementById("caisse-qr-wa-phone");
+            if (!panel) return;
+            if (show) {
+                panel.hidden = false;
+                if (phone) {
+                    if (!phone.value.trim()) {
+                        phone.value = formatWaDisplayNumber(CAISSE_WHATSAPP_DEFAULT);
+                    }
+                    phone.focus();
+                    phone.select();
+                }
+            } else {
+                panel.hidden = true;
+            }
+        }
+
+        function sendWhatsappPaymentLink() {
+            const phoneInput = document.getElementById("caisse-qr-wa-phone");
+            const raw = phoneInput ? phoneInput.value : CAISSE_WHATSAPP_DEFAULT;
+            const phone = normalizeWaPhone(raw) || normalizeWaPhone(CAISSE_WHATSAPP_DEFAULT);
+            const url = getCaissePayLink();
+            if (!url || url === "#" || url.endsWith("#")) {
+                toastr.warning("Lien de paiement indisponible.");
+                return;
+            }
+            if (!phone) {
+                toastr.error("Numéro WhatsApp invalide.");
+                if (phoneInput) phoneInput.focus();
+                return;
+            }
+            const waUrl = "https://wa.me/" + phone + "?text=" + encodeURIComponent(buildWhatsappPaymentMessage());
+            window.open(waUrl, "_blank", "noopener,noreferrer");
+        }
+
         function ouvrirModalGeniusPayQr(data) {
             const url = data.checkout_url || '';
+            caissePayLink = url;
             const img = document.getElementById("caisse-qr-img");
             const link = document.getElementById("caisse-qr-link");
             const ref = document.getElementById("caisse-qr-ref");
@@ -503,13 +646,31 @@
             if (link) link.href = url;
             if (ref) ref.textContent = data.reference ? ("Réf. " + data.reference) : "";
             if (amount && totalEl) amount.textContent = (totalEl.textContent || "").trim() + " Fcfa";
+            toggleWhatsappSharePanel(false);
+            const phone = document.getElementById("caisse-qr-wa-phone");
+            if (phone) phone.value = formatWaDisplayNumber(CAISSE_WHATSAPP_DEFAULT);
             $("#modalGeniusPayQr").modal("show");
         }
 
         function fermerModalGeniusPayQr() {
             stopGeniusPayPoll();
+            toggleWhatsappSharePanel(false);
+            caissePayLink = "";
             $("#modalGeniusPayQr").modal("hide");
         }
+
+        document.getElementById("btn-copy-pay-link")?.addEventListener("click", copyCaissePayLink);
+        document.getElementById("btn-share-whatsapp")?.addEventListener("click", function () {
+            const panel = document.getElementById("caisse-qr-wa-panel");
+            toggleWhatsappSharePanel(panel ? panel.hidden : true);
+        });
+        document.getElementById("btn-send-whatsapp")?.addEventListener("click", sendWhatsappPaymentLink);
+        document.getElementById("caisse-qr-wa-phone")?.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sendWhatsappPaymentLink();
+            }
+        });
 
         document.getElementById("btn-annuler-geniuspay-qr")?.addEventListener("click", function () {
             fermerModalGeniusPayQr();
@@ -517,6 +678,7 @@
         });
         $("#modalGeniusPayQr").on("hidden.bs.modal", function () {
             stopGeniusPayPoll();
+            toggleWhatsappSharePanel(false);
         });
 
         function getSelectedMoyenInput() {

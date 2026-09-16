@@ -1,6 +1,8 @@
 /* En-tete fixe au scroll : recherche + navigation collees en haut */
 .ap-sticky-header {
     width: 100%;
+    position: relative;
+    z-index: 999;
 }
 
 .ap-sticky-header.is-stuck {

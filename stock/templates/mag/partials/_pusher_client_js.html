@@ -9,8 +9,38 @@
     }
     if (window.magPusher) return;
     Pusher.logToConsole = false;
-    window.magPusher = new Pusher('{{ PUSHER_KEY|escapejs }}', {
-        cluster: '{{ PUSHER_CLUSTER|default:"eu"|escapejs }}'
+    // Les requêtes HTTP internes de Pusher posent des écouteurs « unload »,
+    // interdits par la Permissions-Policy du navigateur : on les neutralise.
+    if (Pusher.Runtime && Pusher.Runtime.addUnloadListener) {
+        Pusher.Runtime.addUnloadListener = function () {};
+        Pusher.Runtime.removeUnloadListener = function () {};
+    }
+    var pusher = new Pusher('{{ PUSHER_KEY|escapejs }}', {
+        cluster: '{{ PUSHER_CLUSTER|default:"eu"|escapejs }}',
+        forceTLS: true,
+        enableStats: false
+    });
+    window.magPusher = pusher;
+
+    // Hors connexion, Pusher boucle sur la socket puis sur son repli SockJS :
+    // la console se remplit d'ERR_INTERNET_DISCONNECTED. On coupe tant que le
+    // poste est hors ligne et on reconnecte au retour du réseau.
+    function suivreReseau() {
+        if (navigator.onLine === false) {
+            try { pusher.disconnect(); } catch (e) {}
+        } else if (pusher.connection.state === 'disconnected'
+                   || pusher.connection.state === 'failed') {
+            try { pusher.connect(); } catch (e) {}
+        }
+    }
+    window.addEventListener('offline', suivreReseau);
+    window.addEventListener('online', suivreReseau);
+    suivreReseau();
+
+    // Ferme proprement la socket avant de quitter la page, sinon Chrome signale
+    // « WebSocket is closed before the connection is established ».
+    window.addEventListener('pagehide', function () {
+        try { pusher.disconnect(); } catch (e) {}
     });
 })();
 </script>

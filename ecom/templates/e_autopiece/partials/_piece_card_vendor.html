@@ -63,7 +63,12 @@
             </a>
 
             <span class="availability">
-                {% if localite_nom %}{{ localite_nom }} — {% endif %}{{ piece.numero_piece }}
+                {{ piece.numero_piece }}
+                {% if piece.stocks_disponibles %}
+                · {% include 'e_autopiece/partials/_piece_localites_preview.html' with piece=piece compact=True %}
+                {% elif localite_nom %}
+                · {{ localite_nom }}
+                {% endif %}
             </span>
 
             <p class="ecom-vendor-stock-line">

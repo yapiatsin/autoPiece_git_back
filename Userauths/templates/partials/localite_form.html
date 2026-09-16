@@ -7,6 +7,14 @@
             {% if form.nom.errors %}<div class="text-danger small">{{ form.nom.errors }}</div>{% endif %}
         </div>
     </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <label for="{{ form.contact.id_for_label }}">Contact</label>
+            {{ form.contact }}
+            <small class="form-text text-muted">Numéro de téléphone de l’agence (optionnel).</small>
+            {% if form.contact.errors %}<div class="text-danger small">{{ form.contact.errors }}</div>{% endif %}
+        </div>
+    </div>
     <div class="col-md-6">
         <div class="form-group">
             <label for="{{ form.latitude.id_for_label }}">Latitude</label>

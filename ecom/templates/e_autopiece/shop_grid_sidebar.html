@@ -77,11 +77,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var sousSelect = topForm.querySelector('select[name="sous_categorie"]');
         if (sousSelect) {
             sousSelect.value = checkedSous.length === 1 ? checkedSous[0] : '';
-            if (window.jQuery && jQuery.fn.niceSelect) {
-                var $sous = jQuery(sousSelect);
-                if ($sous.next().hasClass('nice-select')) $sous.niceSelect('update');
-            }
         }
+
         var checkedLoc = form.querySelector('input[name="localite"]:checked');
         var locSelect = topForm.querySelector('select[name="localite"]');
         if (locSelect) {
@@ -162,16 +159,35 @@ document.addEventListener('DOMContentLoaded', function () {
             if (priceRoot) priceRoot.removeAttribute('data-ecom-bound');
         }
 
-        syncTopFromSidebar();
-        bindQtyControls();
-        initPriceRangeFilter();
-        document.querySelectorAll('.ecom-geo-selects').forEach(function (el) {
-            el.removeAttribute('data-geo-bound');
-            if (window.ecomBindVilleCommune) window.ecomBindVilleCommune(el);
-        });
-        bindCatSousCascade();
-        bindCatSousPanels();
+        try {
+            syncTopFromSidebar();
+            bindQtyControls();
+            initPriceRangeFilter();
+            document.querySelectorAll('.ecom-geo-selects').forEach(function (el) {
+                el.removeAttribute('data-geo-bound');
+                if (window.ecomBindVilleCommune) window.ecomBindVilleCommune(el);
+            });
+            bindCatSousCascade();
+            bindCatSousPanels();
+        } finally {
+            /* Les <select> sont recréés par innerHTML : nice-select doit être réappliqué */
+            refreshShopNiceSelects();
+        }
         return true;
+    }
+
+    function refreshShopNiceSelects() {
+        if (!(window.jQuery && jQuery.fn.niceSelect)) return;
+        var $selects = jQuery('#ecom-shop-results select.ecom-shop-ghost-select');
+        if (!$selects.length) return;
+        /* Retirer les wrappers sans destroy() (évite de débrancher les handlers globaux) */
+        $selects.each(function () {
+            var $el = jQuery(this);
+            var $wrap = $el.next('.nice-select');
+            if ($wrap.length) $wrap.remove();
+            $el.show();
+        });
+        $selects.niceSelect();
     }
 
     function fetchShop(params, pushState) {
@@ -403,12 +419,16 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             sousSel.value = current;
             if (sousSel.value !== current) sousSel.value = '';
+            /* Met à jour le menu custom s'il existe déjà (changement catégorie avant AJAX) */
             if (window.jQuery && jQuery.fn.niceSelect) {
                 var $el = jQuery(sousSel);
                 if ($el.next().hasClass('nice-select')) $el.niceSelect('update');
             }
         }
-        catSel.addEventListener('change', apply);
+        if (catSel.getAttribute('data-cascade-bound') !== '1') {
+            catSel.setAttribute('data-cascade-bound', '1');
+            catSel.addEventListener('change', apply);
+        }
         apply();
     }
 
@@ -467,6 +487,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initPriceRangeFilter();
     bindCatSousCascade();
     bindCatSousPanels();
+    refreshShopNiceSelects();
 });
 </script>
 {% include 'e_autopiece/partials/_ecom_ville_commune_js.html' %}

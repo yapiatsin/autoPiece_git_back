@@ -6,8 +6,8 @@
             {% if piece.image %}
             <img src="{{ piece.image.url }}" alt="{{ piece.designation }}">
             {% else %}
-            {# Meme repli que _piece_card_shop_list : l'ancienne image du theme
-               (grocery/07) n'a jamais existe et affichait une icone cassee. #}
+            {% comment %}Meme repli que _piece_card_shop_list : l'ancienne image
+            du theme (grocery/07) n'a jamais existe et affichait une icone cassee.{% endcomment %}
             <div class="ecom-piece-placeholder" aria-hidden="true"><i class="fa-solid fa-gears"></i></div>
             {% endif %}
         </a>
@@ -22,17 +22,8 @@
             </a>
             <span class="availability">{{ piece.numero_piece }}</span>
             <div class="stock-par-localite mt-2 mb-2">
-                {% for stock in piece.stocks_disponibles %}
-                <span class="d-inline-block badge bg-light text-dark border me-1 mb-1">
-                    {{ stock.local_entrepot.nom }}: <strong>{% trans "Disponible" %}</strong>
-                </span>
-                {% empty %}
-                <span class="text-muted small">{% trans "Rupture de stock" %}</span>
-                {% endfor %}
+                {% include 'e_autopiece/partials/_piece_localites_preview.html' with piece=piece %}
             </div>
-            {% if piece.stock_total %}
-            <p class="small mb-1"><strong>{% trans "Statut" %} :</strong> {% trans "Disponible" %}</p>
-            {% endif %}
             <div class="price-area">
                 <span class="current">{{ piece.prix_affiche|floatformat:0 }} FCFA</span>
                 {% if not local_selectionne %}

@@ -33,23 +33,16 @@
             <a href="{{ piece.get_absolute_url }}">
                 <h4 class="title">{{ piece.designation }}</h4>
             </a>
-            {% if localite_nom %}
-            <span class="availability">
-                {{ localite_nom }} — {{ piece.numero_piece }}
-                · {% if quantite|default:0 > 0 %}{% trans "Disponible" %}{% else %}{% trans "Rupture de stock" %}{% endif %}
-            </span>
-            {% elif show_all_stocks and piece.stocks_disponibles %}
-            <span class="availability">
-                {{ piece.numero_piece }} ·
-                {% for stock in piece.stocks_disponibles %}{{ stock.local_entrepot.nom }}{% if not forloop.last %}, {% endif %}{% endfor %}
-                · {% trans "Disponible" %}
-            </span>
-            {% else %}
             <span class="availability">
                 {{ piece.numero_piece }}
-                {% if piece.stock_total %} · {% trans "Disponible" %}{% endif %}
+                {% if piece.stocks_disponibles %}
+                · {% include 'e_autopiece/partials/_piece_localites_preview.html' with piece=piece compact=True %}
+                {% elif localite_nom %}
+                · {{ localite_nom }}
+                {% elif quantite is not None and quantite|default:0 == 0 %}
+                · {% trans "Rupture de stock" %}
+                {% endif %}
             </span>
-            {% endif %}
             <div class="price-area">
                 <span class="current">{{ prix_affiche|floatformat:0 }} FCFA</span>
                 {% if piece.prix_unitaire and piece.prix_unitaire != prix_affiche %}

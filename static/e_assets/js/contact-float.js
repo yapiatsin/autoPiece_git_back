@@ -71,6 +71,7 @@
   function openChatbot() {
     if (chatAnimating || chatIsOpen) return;
     chatAnimating = true;
+    ensureTypingRealtime();
     measureGenieTarget();
 
     requestAnimationFrame(function () {
@@ -407,12 +408,21 @@
     }
   }
 
-  if (window.ecomChatPusher) {
+  // Temps réel (indicateur « écrit… ») : connexion seulement à l'ouverture du chat.
+  var realtimeReady = false;
+  function ensureTypingRealtime() {
+    if (realtimeReady) return;
+    var client = window.ecomChatPusher;
+    if (!client && typeof window.ecomChatPusherConnect === 'function') {
+      client = window.ecomChatPusherConnect();
+    }
+    if (!client) return;
     try {
-      var chatChannel = window.ecomChatPusher.subscribe('magasin-chat');
+      var chatChannel = client.subscribe('magasin-chat');
       chatChannel.bind('typing', function (payload) {
         handleTypingEvent(payload);
       });
+      realtimeReady = true;
     } catch (e) {}
   }
 

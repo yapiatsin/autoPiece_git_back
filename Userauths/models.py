@@ -13,6 +13,13 @@ import uuid
 class LocalEntrepot(models.Model):
     code = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=100)
+    contact = models.CharField(
+        max_length=30,
+        null=True,
+        blank=True,
+        verbose_name='Contact',
+        help_text='Numéro de téléphone de l’agence (optionnel)',
+    )
     latitude = models.DecimalField(
         max_digits=9, decimal_places=7, null=True, blank=True,
         help_text="Latitude GPS (ex: 5.345317 pour Abidjan-Plateau)",
@@ -26,7 +33,6 @@ class LocalEntrepot(models.Model):
         verbose_name='Statut',
         help_text='Coché = Ouvert, décoché = Fermé',
     )
-
     def __str__(self):
         return self.nom
 
@@ -254,9 +260,11 @@ class CustomPermission(models.Model):
 class PWD_FORGET(models.Model):
     PURPOSE_PASSWORD_RESET = 'password_reset'
     PURPOSE_ACTIVATION = 'activation'
+    PURPOSE_GOOGLE_LINK = 'google_link'
     PURPOSE_CHOICES = (
         (PURPOSE_PASSWORD_RESET, 'Réinitialisation mot de passe'),
         (PURPOSE_ACTIVATION, 'Activation compte'),
+        (PURPOSE_GOOGLE_LINK, 'Liaison compte Google'),
     )
 
     otp = models.IntegerField()
@@ -294,3 +302,35 @@ class EmailVerificationToken(models.Model):
         expiry = self.created_at + timedelta(hours=24)
         return timezone.now() < expiry
 
+
+class GoogleIdentity(models.Model):
+    """Lien entre un compte Auto-Piece et un compte Google.
+
+    La cle est `sub`, l'identifiant stable attribue par Google : contrairement a
+    l'e-mail, il ne change jamais, meme si l'utilisateur renomme son adresse.
+    L'e-mail n'est conserve qu'a titre indicatif, pour l'affichage.
+    """
+
+    user = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='google_identity',
+    )
+    sub = models.CharField(
+        max_length=255,
+        unique=True,
+        db_index=True,
+        verbose_name='Identifiant Google',
+    )
+    email = models.EmailField()
+    picture = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_login_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Identite Google'
+        verbose_name_plural = 'Identites Google'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Google {self.email} → {self.user.username}"

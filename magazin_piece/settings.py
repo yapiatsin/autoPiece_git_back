@@ -265,10 +265,23 @@ GENIUSPAY_API_KEY = config('GENIUSPAY_API_KEY', default='').strip()
 GENIUSPAY_API_SECRET = config('GENIUSPAY_API_SECRET', default='').strip()
 GENIUSPAY_BASE_URL = config(
     'GENIUSPAY_BASE_URL',
-    default='https://geniuspay.ci/api/v1/merchant',
+    default='https://pay.genius.ci/api/v1/merchant',
 ).strip().rstrip('/')
 GENIUSPAY_WEBHOOK_SECRET = config('GENIUSPAY_WEBHOOK_SECRET', default='').strip()
 GENIUSPAY_MIN_AMOUNT = 200
+
+# WhatsApp business (e-com + partage lien paiement caisse) — chiffres seuls, ex. 2250787532210
+WHATSAPP_BUSINESS_NUMBER = config(
+    'WHATSAPP_BUSINESS_NUMBER',
+    default='2250787532210',
+).strip().lstrip('+')
+
+# Connexion par compte Google (Google Identity Services).
+# L'identifiant client est public : il est expose dans la page de connexion et
+# sert au navigateur a demander un jeton. C'est le SERVEUR qui valide ensuite ce
+# jeton aupres de Google, aucun secret n'est donc necessaire ici.
+# Vide = bouton Google masque, l'application reste utilisable sans.
+GOOGLE_OAUTH_CLIENT_ID = config('GOOGLE_OAUTH_CLIENT_ID', default='').strip()
 
 # Chatbot e-com — clé IA (non utilisée pour l’instant)
 CHATBOT_AI_API_KEY = config('CHATBOT_AI_API_KEY', default='').strip()

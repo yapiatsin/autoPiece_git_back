@@ -26,7 +26,7 @@
                 {% with gallery=piece.gallery_images %}
                 {% if gallery %}
                 <div class="ecom-pd__stage ecom-pd-zoom" data-ecom-zoom>
-                    {% if piece.quantite_disponible > 0 or piece.stock_total %}
+                    {% if piece.stocks_disponibles %}
                     <span class="ecom-pd__badge">{% trans "En stock" %}</span>
                     {% else %}
                     <span class="ecom-pd__badge is-out">{% trans "Rupture" %}</span>
@@ -58,7 +58,7 @@
                 {% endif %}
                 {% else %}
                 <div class="ecom-pd__stage">
-                    {% if piece.quantite_disponible > 0 or piece.stock_total %}
+                    {% if piece.stocks_disponibles %}
                     <span class="ecom-pd__badge">{% trans "En stock" %}</span>
                     {% else %}
                     <span class="ecom-pd__badge is-out">{% trans "Rupture" %}</span>
@@ -78,7 +78,7 @@
 
             <div class="ecom-pd__info">
                 <div class="ecom-pd__status">
-                    {% if piece.quantite_disponible > 0 or piece.stock_total %}
+                    {% if piece.stocks_disponibles %}
                     <span class="ecom-pd__stars" aria-hidden="true">
                         <i class="fa-solid fa-star"></i>
                         <i class="fa-solid fa-star"></i>
@@ -129,18 +129,25 @@
                         <dt>{% trans "Référence" %}</dt>
                         <dd>{{ piece.numero_piece }}</dd>
                     </div>
-                    {% if local_selectionne %}
-                    <div>
-                        <dt>{% trans "Stock local" %}</dt>
-                        <dd>{{ piece.quantite_disponible }}</dd>
+                    <div class="ecom-pd__meta-locals">
+                        <dt>{% trans "Disponible à" %}</dt>
+                        <dd>
+                            {% if piece.stocks_disponibles %}
+                            <ul class="ecom-pd__locals">
+                                {% for stock in piece.stocks_disponibles %}
+                                <li>
+                                    <a href="{% url 'ecom_localite_detail' stock.local_entrepot.code %}" class="ecom-pd__local-link">
+                                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                        {{ stock.local_entrepot.nom }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <span class="is-out">{% trans "Rupture de stock" %}</span>
+                            {% endif %}
+                        </dd>
                     </div>
-                    {% endif %}
-                    {% if piece.stock_total %}
-                    <div>
-                        <dt>{% trans "Stock total" %}</dt>
-                        <dd>{{ piece.stock_total }}</dd>
-                    </div>
-                    {% endif %}
                 </dl>
 
                 {% if user.is_authenticated and local_selectionne and piece.quantite_disponible > 0 %}
@@ -231,7 +238,7 @@
             <div class="ecom-pd__bar-item">
                 <i class="fa-solid fa-warehouse"></i>
                 <div>
-                    <strong>{% trans "Stock local" %}</strong>
+                    <strong>{% trans "Agences" %}</strong>
                     <p>{% if local_selectionne %}{{ local_selectionne.nom }}{% else %}{% trans "Selon localité" %}{% endif %}</p>
                 </div>
             </div>
@@ -239,7 +246,13 @@
                 <i class="fa-solid fa-boxes-stacked"></i>
                 <div>
                     <strong>{% trans "Disponibilité" %}</strong>
-                    <p>{% if piece.stock_total %}{{ piece.stock_total }} {% trans "au total" %}{% else %}{% trans "Voir les stocks" %}{% endif %}</p>
+                    <p>
+                        {% if piece.stocks_disponibles %}
+                            {% blocktrans count counter=piece.stocks_disponibles|length %}{{ counter }} localité{% plural %}{{ counter }} localités{% endblocktrans %}
+                        {% else %}
+                            {% trans "Indisponible" %}
+                        {% endif %}
+                    </p>
                 </div>
             </div>
             <div class="ecom-pd__bar-item">
@@ -282,7 +295,7 @@
                             data-bs-target="#piece-stock-pane" type="button" role="tab"
                             aria-controls="piece-stock-pane" aria-selected="false">
                             <i class="fa-solid fa-truck" aria-hidden="true"></i>
-                            {% trans "Stock & livraison" %}
+                            {% trans "Localités & livraison" %}
                         </button>
                     </li>
                 </ul>
@@ -347,30 +360,19 @@
                     </div>
                     <div class="tab-pane fade" id="piece-stock-pane" role="tabpanel" aria-labelledby="piece-stock-tab" tabindex="0">
                         <h3 class="ecom-pd__h">{% trans "Disponibilité par localité" %}</h3>
-                        <div class="table-responsive">
-                            <table class="ecom-pd__table">
-                                <thead>
-                                    <tr>
-                                        <th>{% trans "Localité" %}</th>
-                                        <th>{% trans "Quantité" %}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for stock in piece.stocks_disponibles %}
-                                    <tr>
-                                        <td>{{ stock.local_entrepot.nom }}</td>
-                                        <td>{{ stock.quantite_disponible }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="2">{% trans "Aucun stock disponible." %}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% if piece.stock_total %}
-                        <p class="ecom-pd__note"><span>{% trans "Total :" %}</span> {{ piece.stock_total }}</p>
+                        {% if piece.stocks_disponibles %}
+                        <ul class="ecom-pd__locals">
+                            {% for stock in piece.stocks_disponibles %}
+                            <li>
+                                <a href="{% url 'ecom_localite_detail' stock.local_entrepot.code %}" class="ecom-pd__local-link">
+                                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                    {{ stock.local_entrepot.nom }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="ecom-pd__note is-out">{% trans "Aucun stock disponible." %}</p>
                         {% endif %}
                         {% if local_selectionne %}
                         <p class="ecom-pd__note">{% trans "Commande depuis" %} : <strong>{{ local_selectionne.nom }}</strong></p>

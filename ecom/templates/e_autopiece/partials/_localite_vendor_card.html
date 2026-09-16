@@ -22,9 +22,13 @@
     <div class="ecom-localite-ticket__body">
         <dl class="ecom-localite-ticket__rows">
             <div class="ecom-localite-ticket__row">
-                <dt>{% trans "Pièces disponibles" %}</dt>
-                <dd class="is-accent">
-                    {% blocktrans count counter=loc.nb_pieces|default:0 %}{{ counter }} pièce{% plural %}{{ counter }} pièces{% endblocktrans %}
+                <dt>{% trans "Disponibilité" %}</dt>
+                <dd class="{% if loc.nb_pieces %}is-accent{% else %}is-out{% endif %}">
+                    {% if loc.nb_pieces %}
+                    {% trans "Pièces en stock" %}
+                    {% else %}
+                    {% trans "Aucune pièce disponible" %}
+                    {% endif %}
                 </dd>
             </div>
             <div class="ecom-localite-ticket__row">
@@ -33,7 +37,13 @@
             </div>
             <div class="ecom-localite-ticket__row">
                 <dt>{% trans "Contact" %}</dt>
-                <dd>+225 07 00 00 00 00</dd>
+                <dd>
+                    {% if loc.contact %}
+                    <a href="tel:{{ loc.contact }}">{{ loc.contact }}</a>
+                    {% else %}
+                    —
+                    {% endif %}
+                </dd>
             </div>
         </dl>
 

@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import *
+from .google_views import google_login_view, google_otp_view
 
 urlpatterns = [
     path('', pbholdingsiteview, name='pbholdingsite'),
@@ -8,6 +9,11 @@ urlpatterns = [
     path('activation/<str:token>/', activate_account_view, name='activate-account'),
     path('renvoyer-activation/', resend_activation_view, name='resend-activation'),
     path('Deconnexion', Deconnexion, name='deconnexion'),
+
+    # Connexion par compte Google : le navigateur poste le jeton d'identite,
+    # le serveur le verifie puis connecte ou demande un code de liaison.
+    path('google/connexion/', google_login_view, name='google_login'),
+    path('google/code/', google_otp_view, name='google_otp'),
 
     path('mot-de-passe-oublie/', ForgotPasswordView.as_view(), name='forgot'),
     path('otp/', OptValid.as_view(), name='otp'),

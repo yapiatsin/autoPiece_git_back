@@ -130,7 +130,7 @@
                                         <a href="#" class="ecom-lang-trigger" aria-haspopup="true" aria-expanded="false">
                                             <i class="fa-solid fa-globe ecom-lang-trigger-icon" aria-hidden="true"></i>
                                             <span class="ecom-lang-trigger-label">
-                                                {% if LANGUAGE_CODE == 'en' %}English{% else %}Français{% endif %}
+                                                {% if LANGUAGE_CODE == 'fr' %}Français{% endif %}
                                             </span>
                                             <i class="fa-solid fa-chevron-down ecom-lang-trigger-chevron" aria-hidden="true"></i>
                                         </a>
@@ -144,19 +144,6 @@
                                                         <span class="ecom-lang-name">Français</span>
                                                         {% if LANGUAGE_CODE == 'fr' %}
                                                             <i class="fa-solid fa-check ecom-lang-check" aria-hidden="true"></i>
-                                                        {% endif %}
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            <li>
-                                                <form action="{% url 'set_language' %}" method="post" class="ecom-lang-form">{% csrf_token %}
-                                                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
-                                                    <button type="submit" name="language" value="en"
-                                                            class="lang-switch-btn ecom-lang-option{% if LANGUAGE_CODE == 'en' %} is-active{% endif %}">
-                                                        <span class="ecom-lang-flag" aria-hidden="true">EN</span>
-                                                        <span class="ecom-lang-name">English</span>
-                                                        {% if LANGUAGE_CODE == 'en' %}
-                                                        <i class="fa-solid fa-check ecom-lang-check" aria-hidden="true"></i>
                                                         {% endif %}
                                                     </button>
                                                 </form>
@@ -353,9 +340,12 @@
                             <!-- button-area -->
                             <div class="right-btn-area">
                                 <a href="{% url 'ecom_privacy_policy' %}" class="btn-narrow">{% trans "Politique de confidentialite" %}</a>
-                                <button type="button" class="rts-btn ecom-origin-btn">
-                                    {% trans "100% Pièces d'origine" %}
-                                </button>
+                                <span class="ecom-origin-badge" title="{% trans "100% Pièces d'origine" %}">
+                                    <img src="{% static 'e_assets/images/feature/orig.png' %}"
+                                         alt="{% trans "100% Pièces d'origine" %}"
+                                         width="320"
+                                         height="320">
+                                </span>
                             </div>
                             <!-- button-area end -->
                         </div>
@@ -372,6 +362,12 @@
                                     </a>
                                 </div>
                                 <div class="ecom-mobile-header__actions">
+                                    <span class="ecom-origin-badge ecom-origin-badge--mobile" title="{% trans "100% Pièces d'origine" %}">
+                                        <img src="{% static 'e_assets/images/feature/orig.png' %}"
+                                             alt="{% trans "100% Pièces d'origine" %}"
+                                             width="320"
+                                             height="320">
+                                    </span>
                                     {% if user.is_authenticated %}
                                     <a href="{% url 'ecom_account' %}" class="ecom-mobile-header__icon-btn" aria-label="{% trans 'Mon compte' %}">
                                         <i class="fa-regular fa-user" aria-hidden="true"></i>
@@ -597,7 +593,7 @@
                                 <li><a href="https://www.facebook.com/share/1ELqYZVhk1/" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a></li>
                                 <li><a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a></li>
                                 <li><a href="https://www.tiktok.com/@pb.autopiece?_r=1&_t=ZS-99QbHeQbUMG" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a></li>
-                                <li><a href="https://wa.me/2250787532210" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a></li>
+                                <li><a href="{{ WHATSAPP_BUSINESS_URL|default:'https://wa.me/2250787532210' }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a></li>
                                 <li><a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a></li>
                             </ul>
                         </div>

@@ -354,12 +354,17 @@ class ProfileSelfProfilForm(forms.ModelForm):
 class LocalEntrepotForm(forms.ModelForm):
     class Meta:
         model = LocalEntrepot
-        fields = ('nom', 'latitude', 'longitude', 'statut')
+        fields = ('nom', 'contact', 'latitude', 'longitude', 'statut')
         widgets = {
             'nom': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Nom de la localité',
                 'autocomplete': 'off',
+            }),
+            'contact': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: +225 07 00 00 00 00',
+                'autocomplete': 'tel',
             }),
             'latitude': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -379,6 +384,7 @@ class LocalEntrepotForm(forms.ModelForm):
             }),
         }
         labels = {
+            'contact': 'Contact',
             'statut': 'Ouvert',
         }
 

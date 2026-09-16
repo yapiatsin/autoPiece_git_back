@@ -1,0 +1,18 @@
+{% load i18n %}
+{# Aperçu localités (max 2 + …). Attend piece.stocks_disponibles. #}
+{% with stocks=piece.stocks_disponibles %}
+{% if stocks %}
+<span class="ecom-piece-locals{% if compact %} ecom-piece-locals--compact{% endif %}" title="{% for stock in stocks %}{{ stock.local_entrepot.nom }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+    {% for stock in stocks %}
+        {% if forloop.counter <= 2 %}
+        <span class="ecom-piece-locals__item">{{ stock.local_entrepot.nom }}</span>{% if forloop.counter < 2 and not forloop.last %}<span class="ecom-piece-locals__sep">,</span> {% endif %}
+        {% endif %}
+    {% endfor %}
+    {% if stocks|length > 2 %}
+    <span class="ecom-piece-locals__more" aria-hidden="true">…</span>
+    {% endif %}
+</span>
+{% else %}
+<span class="ecom-piece-locals ecom-piece-locals--empty">{% trans "Rupture de stock" %}</span>
+{% endif %}
+{% endwith %}

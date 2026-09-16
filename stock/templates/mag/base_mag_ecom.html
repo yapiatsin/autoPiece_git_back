@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Template Dossier Santé">
     <meta name="author" content="DevHTechnologie, design by: YAIB, DevHTechnologie.com">
-    <link rel="icon" href="{% static 'medicon/favicon.ico' %}" type="image/x-icon">
+    <link rel="icon" href="{% static 'icn.png' %}" type="image/png">
     {% comment %} <link rel="icon" href="{% static "favicon.ico" %}" type="image/x-icon"> {% endcomment %}
     <!-- VENDOR CSS — Font Awesome 4.7 (CDN, polices complètes ; le dossier vendor local n’a pas les .woff/.ttf) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -599,7 +599,11 @@
     <script src="{% static 'apps/assets/bundles/libscripts.bundle.js' %}"></script>
     <script src="{% static 'apps/assets/bundles/vendorscripts.bundle.js' %}"></script>
     <!-- page js file -->
-    <script src="{% static 'apps/assets/bundles/mainscripts.bundle.js' %}"></script>
+    {% comment %}?v= : le bundle a servi le widget tawk.to du theme d'origine, que les
+    navigateurs gardent en cache disque pendant des heures. Changer l'URL est le seul
+    moyen de forcer le rechargement sur les postes deja empoisonnes. A incrementer a
+    chaque modification du bundle.{% endcomment %}
+    <script src="{% static 'apps/assets/bundles/mainscripts.bundle.js' %}?v=2"></script>
     {# DataTables désactivé par défaut — filtres Alpine sur les listes #}
     <!-- page vendor js file -->
     <script src="{% static 'apps/assets/vendor/toastr/toastr.js' %}"></script>
@@ -607,8 +611,6 @@
     <script src="{% static 'apps/js/pages/ui/dialogs.js' %}"></script>
     
     <script src="{% static 'apps/assets/vendor/sweetalert/sweetalert.min.js' %}"></script> 
-    <script src="{% static 'apps/js/pages/treeview/jstree.js' %}"></script>
-    <script src="{% static 'apps/js/pages/treeview/bootstrap-treeview.js' %}"></script>
     <script src="{% static 'apps/js/h-menu.js' %}"></script>
 
     {% include 'mag/partials/_printer_assets.html' %}

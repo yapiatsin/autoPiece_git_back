@@ -288,6 +288,61 @@ cas, car seul un `up --force-recreate` réinjecte les variables d'environnement.
 
 ---
 
+## 8 ter. Connexion par compte Google
+
+Sans identifiant client, le bouton n'apparaît pas et l'application fonctionne
+normalement. Pour l'activer :
+
+**1. Créer l'identifiant OAuth.** Console Google Cloud → *APIs & Services* →
+*Credentials* → *Create credentials* → *OAuth client ID* → type **Application
+Web**. Renseigner les **origines JavaScript autorisées** :
+
+```
+https://holding-projet.tech
+http://localhost:8000
+```
+
+Ce sont bien les *origines* (schéma + domaine), sans chemin ni barre finale.
+L'URI de redirection n'est pas utilisée : Google Identity Services renvoie le
+jeton au navigateur, pas par redirection.
+
+**2. Renseigner l'identifiant.** Dans le `.env` du VPS et celui du poste de
+développement :
+
+```
+GOOGLE_OAUTH_CLIENT_ID=xxxxxxxxx-yyyyyyyy.apps.googleusercontent.com
+```
+
+Cet identifiant est **public** — il figure dans le HTML de la page de connexion.
+Il n'y a pas de secret client à protéger : c'est le serveur qui valide le jeton
+auprès de Google, via `google-auth`.
+
+**3. Appliquer.** `make reload` sur le VPS (et non `restart`, qui ne relit pas
+le `.env`). La migration `Userauths.0002` est appliquée automatiquement au
+démarrage du conteneur.
+
+### Les trois parcours
+
+| Situation | Comportement |
+|---|---|
+| Compte Google déjà lié | connexion immédiate |
+| Adresse inconnue | création d'un compte de rôle `client`, sans mot de passe, connexion immédiate |
+| Adresse d'un compte existant | code à 6 chiffres envoyé par e-mail, à saisir avant la liaison |
+
+Le code n'est demandé que dans le troisième cas, et **une seule fois** : une
+fois la liaison faite, les connexions suivantes relèvent du premier cas. Sans
+lui, il suffirait de créer une adresse Google homonyme d'un compte existant pour
+en prendre le contrôle. Après une connexion Google réussie, un code envoyé à
+cette même adresse ne prouverait rien de plus — d'où son absence dans les deux
+premiers cas.
+
+Détails d'implémentation : `Userauths/google_auth.py` (vérification du jeton,
+OTP), `Userauths/google_views.py` (les deux vues), modèle `GoogleIdentity` (clé
+sur le `sub` Google, stable même si l'utilisateur change d'adresse). Le code
+expire en 5 minutes et tolère 5 tentatives.
+
+---
+
 ## 9. Exploitation
 
 Journaux applicatifs en continu :

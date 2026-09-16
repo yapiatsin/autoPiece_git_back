@@ -2398,7 +2398,7 @@ def printer_escpos_recu_view(request, ticket_numero):
             status=400,
         )
     panier = commande.panier
-    if localite and panier.local_entrepot_id != localite.id:
+    if localite and panier.local_entrepot_id != localite.pk:
         return JsonResponse(
             {'success': False, 'error': "Accès refusé à cette localité."},
             status=403,
@@ -3103,7 +3103,7 @@ def reimprimer_recu_paiement(request, ticket_numero):
             status=400,
         )
     panier = commande.panier
-    if localite and panier.local_entrepot_id != localite.id:
+    if localite and panier.local_entrepot_id != localite.pk:
         return JsonResponse({'success': False, 'error': 'Accès refusé à cette localité.'}, status=403)
     panier_items = list(
         PanierItem.objects.filter(panier=panier).select_related('piece')
