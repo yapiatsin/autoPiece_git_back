@@ -989,7 +989,9 @@ def confirmer_paiement_en_ligne(
     from django.core.exceptions import ValidationError
 
     commande = (
-        Commande.objects.select_for_update()
+        # of='self' : `moyen_paiement` et `panier__local_entrepot` nullables,
+        # donc jointure externe, que PostgreSQL refuse de verrouiller.
+        Commande.objects.select_for_update(of=('self',))
         .select_related('panier', 'panier__local_entrepot', 'moyen_paiement')
         .get(pk=commande.pk)
     )

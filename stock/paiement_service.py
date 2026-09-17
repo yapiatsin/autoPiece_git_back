@@ -268,10 +268,14 @@ def appliquer_confirmation_geniuspay(gp: GeniusPayPaiement, data: dict, request=
 
     moyen = get_moyen_geniuspay()
     with transaction.atomic():
-        gp = GeniusPayPaiement.objects.select_for_update().select_related(
+        # of='self' : `caissier` etant nullable, select_related produit une
+        # jointure externe et PostgreSQL refuse d'y appliquer FOR UPDATE.
+        # On ne verrouille donc que la ligne de paiement elle-meme.
+        gp = GeniusPayPaiement.objects.select_for_update(of=('self',)).select_related(
             'commande', 'commande__panier', 'caissier',
         ).get(pk=gp.pk)
-        commande = Commande.objects.select_for_update().select_related(
+        # Idem : `ticket` et `moyen_paiement` sont nullables.
+        commande = Commande.objects.select_for_update(of=('self',)).select_related(
             'panier', 'ticket', 'moyen_paiement',
         ).get(pk=gp.commande_id)
         _appliquer_canal_paiement(gp, data)
@@ -372,8 +376,10 @@ def finaliser_encaissement_caisse(
     """Encaissement caisse après paiement (espèces ou GeniusPay confirmé). Idempotent."""
     from stock.bon_commande_vente import creer_bon_commande_paiement
 
+    # of='self' : `moyen_paiement` et `ticket` nullables -> jointure externe,
+    # sur laquelle PostgreSQL refuse FOR UPDATE.
     commande = (
-        Commande.objects.select_for_update()
+        Commande.objects.select_for_update(of=('self',))
         .select_related('panier', 'moyen_paiement', 'ticket')
         .get(pk=commande.pk)
     )
