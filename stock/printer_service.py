@@ -432,6 +432,90 @@ def build_receipt_bytes(commande, panier_items) -> bytes:
     return bytes(sink.buffer)
 
 
+def _compose_order_slip(w, commande, panier_items):
+    """Compose le BON DE COMMANDE (avant paiement) dans un writer.
+
+    Remis au client pour qu'il se presente en caisse avec son numero de ticket.
+    Aucune ligne de paiement ni de rendu : ce bon n'est pas un recu.
+
+    La mise en page vient de stock.receipt_layout, comme le recu et le PDF :
+    une seule definition des prix, des remises et du decoupage des libelles.
+    """
+    from stock.receipt_layout import (
+        build_receipt_item_rows,
+        commande_date_label,
+        panier_localite,
+        remise_line,
+        spaced_line,
+        total_line,
+    )
+
+    w.write("P&B Auto-Pieces", align="center", bold=True, double=True)
+    w.write("*" * w.inner, align="center")
+    w.write("BON DE COMMANDE", align="center", bold=True)
+    w.write("(A presenter en caisse)", align="center")
+    w.write("*" * w.inner, align="center")
+
+    ticket_num = getattr(commande.panier, 'ticket', '') or f"TKT{commande.id}"
+    w.write(f"Ticket : {ticket_num}", align="left", bold=True)
+    w.write(
+        spaced_line(f"{commande.numero_commande}", commande_date_label(commande), w.inner),
+        align="left",
+    )
+    if commande.utilisateur:
+        w.write(f"Hote : {commande.utilisateur.username}", align="left")
+    local = panier_localite(commande)
+    if local:
+        w.write(f"Localite : {str(local)[:w.inner - 12]}", align="left")
+    w.write("-" * w.inner, align="center")
+
+    w.write(f"{'Désignation':<20}{'Qte':>4}{'PU':>7}{'Tot':>7}", align="left", bold=True)
+    for kind, *rest in build_receipt_item_rows(panier_items, commande):
+        if kind == "row":
+            desig, qte, pu, tot = rest
+            w.write(f"{desig:<20}{qte:>4}{pu:>7}{tot:>7}", align="left")
+        else:
+            w.write(rest[0], align="left")
+
+    w.write("-" * w.inner, align="center")
+    w.raw(b"\x1b\x33\x14")
+
+    w.write(total_line("Total Brut", commande.total_sans_remise, w.inner), align="left")
+    rl = remise_line(commande, w.inner)
+    if rl:
+        w.write(rl, align="left")
+    w.write(
+        spaced_line("A PAYER", f"{int(commande.total)} Fcfa", w.inner),
+        align="left", bold=True,
+    )
+
+    w.raw(b"\x1b\x33\x1e")
+    w.write("-" * w.inner, align="center")
+    for ligne in (
+        "Veuillez vous presenter a la caisse",
+        "pour effectuer le paiement.",
+        "Ce bon n'est pas un recu de paiement.",
+        "*** P&B Auto-Pieces ***",
+    ):
+        w.raw(f"\n{ligne}\n".encode("cp850", errors="replace"))
+    w.feed_cut(8)
+
+
+def print_order_slip(commande, panier_items, vid=None, pid=None):
+    """Imprime le bon de commande en USB direct (poste de developpement)."""
+    vid, pid = resolve_vid_pid(vid, pid)
+    with _usb_printer_session(vid, pid) as w:
+        _compose_order_slip(w, commande, panier_items)
+    time.sleep(0.5)
+
+
+def build_order_slip_bytes(commande, panier_items) -> bytes:
+    """Bon de commande au format ESC/POS, a envoyer par le navigateur (WebUSB)."""
+    sink, writer = _new_buffer_writer()
+    _compose_order_slip(writer, commande, panier_items)
+    return bytes(sink.buffer)
+
+
 def get_session_printer(request) -> dict | None:
     """Imprimante mémorisée en session Django."""
     data = request.session.get("usb_printer")

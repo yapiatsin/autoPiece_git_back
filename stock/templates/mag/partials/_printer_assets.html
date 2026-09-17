@@ -10,7 +10,9 @@
     window.AUTOPIECE_PRINT_URLS = {
         escposTest: "{% url 'printer_escpos_test' %}",
         escposRecu: "{% url 'printer_escpos_recu' 'TICKET_ID' %}",
-        recuPdf: "{% url 'reimprimer_recu_paiement' 'TICKET_ID' %}"
+        recuPdf: "{% url 'reimprimer_recu_paiement' 'TICKET_ID' %}",
+        escposBon: "{% url 'printer_escpos_bon' 'TICKET_ID' %}",
+        bonEnAttente: "{% url 'printer_bon_en_attente' %}"
     };
 </script>
 <script src="{% static 'apps/assets/js/webusb-printer.js' %}"></script>

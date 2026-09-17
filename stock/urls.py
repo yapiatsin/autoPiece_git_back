@@ -98,6 +98,16 @@ urlpatterns = [
         printer_escpos_recu_view,
         name='printer_escpos_recu',
     ),
+    path(
+        'imprimante/escpos/bon/<str:ticket_numero>/',
+        printer_escpos_bon_view,
+        name='printer_escpos_bon',
+    ),
+    path(
+        'imprimante/bon-en-attente/',
+        printer_bon_en_attente_view,
+        name='printer_bon_en_attente',
+    ),
     path('ajax/reload_paniers/', ajax_reload_paniers, name='ajax_reload_paniers'),
     path('ajax/reload_liste_commandes/', ajax_reload_liste_commandes, name='ajax_reload_liste_commandes'),
     path('ajax/caisse_detail/<str:ticket_id>/', ajax_caisse_detail, name='ajax_caisse_detail'),

@@ -299,6 +299,51 @@
             });
     }
 
+    /* Bon de commande mis en attente par la validation d'un panier.
+       Celle-ci se termine par une redirection : l'impression ne peut pas partir
+       dans sa reponse, c'est la page suivante qui reclame le ticket au serveur.
+       L'endpoint ne le rend qu'une fois, sinon le bon se reimprimerait a chaque
+       navigation. */
+    function printOrderSlip(ticketNumero, interactive) {
+        var template = urls().escposBon;
+        if (!template) return Promise.reject(new Error('URL de bon absente.'));
+        var url = template.replace('TICKET_ID', encodeURIComponent(ticketNumero));
+        return fetchBytes(url).then(function (bytes) {
+            return printBytes(bytes, interactive);
+        });
+    }
+
+    function autoPrintPendingOrderSlip() {
+        var url = urls().bonEnAttente;
+        if (!url || !isSupported()) return Promise.resolve(false);
+        return fetch(url, {
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+            .then(function (r) { return r.ok ? r.json() : {}; })
+            .then(function (data) {
+                if (!data || !data.ticket) return false;
+                return authorizedDevices().then(function (devices) {
+                    if (!devices.length) {
+                        notify('warning',
+                            "Bon de commande " + data.ticket + " non imprimé : "
+                            + "aucune imprimante autorisée sur ce poste.");
+                        return false;
+                    }
+                    return printOrderSlip(data.ticket, false)
+                        .then(function () {
+                            notify('success', 'Bon de commande ' + data.ticket + ' imprimé.');
+                            return true;
+                        })
+                        .catch(function (error) {
+                            notify('warning', "Bon non imprimé : " + (error.message || ''));
+                            return false;
+                        });
+                });
+            })
+            .catch(function () { return false; });
+    }
+
     function csrfToken() {
         var match = document.cookie.match(/csrftoken=([^;]+)/);
         return match ? match[1] : '';
@@ -307,6 +352,16 @@
     function notify(level, message) {
         if (typeof global.toastr !== 'undefined' && global.toastr[level]) {
             global.toastr[level](message);
+        }
+    }
+
+    // Un bon peut attendre depuis la validation d'un panier : on regarde a
+    // chaque chargement de page, sans jamais interrompre l'utilisateur.
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', autoPrintPendingOrderSlip);
+        } else {
+            autoPrintPendingOrderSlip();
         }
     }
 
@@ -322,6 +377,8 @@
         printTest: printTest,
         printReceipt: printReceipt,
         autoPrintReceipt: autoPrintReceipt,
+        printOrderSlip: printOrderSlip,
+        autoPrintPendingOrderSlip: autoPrintPendingOrderSlip,
         reprintReceipt: reprintReceipt,
         notify: notify,
     };

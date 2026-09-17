@@ -1706,15 +1706,22 @@ def valider_paniers(request):
 
     # Impression automatique du bon de commande (à remettre au client pour la caisse)
     panier_items_list = list(panier_items)
-    try:
-        print_order_receipt_thermal(commande, panier_items_list)
-        messages.success(request, "✅ Bon de commande imprimé sur l'imprimante Epson TM-T20III.")
-    except Exception as e:
-        messages.warning(
-            request,
-            f"⚠️ Impression du bon de commande impossible : {e}. "
-            f"Vous pouvez le réimprimer depuis la page caisse."
-        )
+    # Impression USB directe uniquement si le serveur voit lui-meme une
+    # imprimante — c'est le cas du poste de developpement. En production il est
+    # distant : on depose le ticket en session et c'est le navigateur du poste
+    # qui imprimera, via WebUSB, sur l'imprimante reellement branchee.
+    from stock import printer_service
+    imprime_par_le_serveur = False
+    if printer_service.HAS_USB and printer_service.backend_status().get('backend_ok'):
+        try:
+            printer_service.print_order_slip(commande, panier_items_list)
+            imprime_par_le_serveur = True
+            messages.success(request, "Bon de commande imprimé.")
+        except Exception as exc:
+            logger.warning("Impression USB du bon %s : %s", ticket.numero, exc)
+    if not imprime_par_le_serveur:
+        request.session[SESSION_BON_A_IMPRIMER] = ticket.numero
+        request.session.modified = True
 
     # Sauvegarde PDF du bon de commande
     try:
@@ -2412,6 +2419,55 @@ def printer_escpos_recu_view(request, ticket_numero):
     response['Content-Disposition'] = f'attachment; filename="recu-{ticket_numero}.escpos"'
     response['Cache-Control'] = 'no-store'
     return response
+
+
+@login_required(login_url='connexion')
+def printer_escpos_bon_view(request, ticket_numero):
+    """GET → bon de commande au format ESC/POS brut, a envoyer via WebUSB."""
+    from stock import printer_service
+
+    localite = get_user_localite(request.user)
+    filtre = {'ticket': ticket_numero}
+    if localite:
+        filtre['local_entrepot'] = localite
+    panier = get_object_or_404(Panier, **filtre)
+    commande = (
+        Commande.objects.filter(panier=panier).order_by('-date_creation').first()
+    )
+    if commande is None:
+        return JsonResponse(
+            {'success': False, 'error': "Aucune commande pour ce ticket."},
+            status=404,
+        )
+
+    panier_items = list(
+        PanierItem.objects.filter(panier=panier).select_related('piece')
+    )
+    payload = printer_service.build_order_slip_bytes(commande, panier_items)
+    response = HttpResponse(payload, content_type='application/octet-stream')
+    response['Content-Disposition'] = f'attachment; filename="bon-{ticket_numero}.escpos"'
+    response['Cache-Control'] = 'no-store'
+    return response
+
+
+# Cle de session portant le ticket dont le bon reste a imprimer. La validation
+# du panier se termine par une redirection : on ne peut pas declencher
+# l'impression dans sa reponse, le navigateur doit la reclamer sur la page
+# suivante.
+SESSION_BON_A_IMPRIMER = 'bon_a_imprimer'
+
+
+@login_required(login_url='connexion')
+def printer_bon_en_attente_view(request):
+    """GET → ticket dont le bon attend impression, puis oublie la demande.
+
+    Lue une seule fois : sans cela, le bon se reimprimerait a chaque
+    changement de page.
+    """
+    ticket = request.session.pop(SESSION_BON_A_IMPRIMER, None)
+    if ticket:
+        request.session.modified = True
+    return JsonResponse({'ticket': ticket or ''})
 
 
 def _moyens_paiement_caisse():
