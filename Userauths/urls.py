@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import *
-from .google_views import google_login_view, google_otp_view
+from .google_views import google_login_view, google_otp_view, google_otp_resend_view
 
 urlpatterns = [
     path('', pbholdingsiteview, name='pbholdingsite'),
@@ -14,6 +14,7 @@ urlpatterns = [
     # le serveur le verifie puis connecte ou demande un code de liaison.
     path('google/connexion/', google_login_view, name='google_login'),
     path('google/code/', google_otp_view, name='google_otp'),
+    path('google/code/renvoyer/', google_otp_resend_view, name='google_otp_resend'),
 
     path('mot-de-passe-oublie/', ForgotPasswordView.as_view(), name='forgot'),
     path('otp/', OptValid.as_view(), name='otp'),

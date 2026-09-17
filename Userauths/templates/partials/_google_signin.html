@@ -1,0 +1,105 @@
+{% load static %}
+{% comment %}
+Bouton « Se connecter avec Google », partage par la page de connexion et la
+page d'inscription. Le bloc entier disparait si GOOGLE_OAUTH_CLIENT_ID n'est
+pas renseigne : aucun bouton mort sur une installation non configuree.
+
+Le bouton rendu par Google est un iframe, non stylable. On affiche donc notre
+visuel et on superpose le bouton Google rendu transparent : le clic va bien a
+Google, l'utilisateur voit le notre.
+
+Variable attendue dans le contexte : google_client_id.
+{% endcomment %}
+{% if google_client_id %}
+<div class="auth-google">
+    <div class="auth-google__separator"><span>ou</span></div>
+    <div class="auth-google__wrap">
+        <span class="auth-google__custom" aria-hidden="true">
+            <img src="{% static 'google-signin.png' %}" alt="" class="auth-google__logo">
+            <span class="auth-google__label">{{ google_label|default:"Se connecter avec Google" }}</span>
+        </span>
+        <div id="google-signin-button" class="auth-google__native"></div>
+    </div>
+    <p id="google-signin-error" class="auth-google__error" role="alert" hidden></p>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+(function () {
+    var CLIENT_ID = "{{ google_client_id|escapejs }}";
+    var LOGIN_URL = "{% url 'google_login' %}";
+
+    function csrfToken() {
+        var m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? m[1] : '';
+    }
+
+    function showError(message) {
+        var box = document.getElementById('google-signin-error');
+        if (!box) return;
+        box.textContent = message;
+        box.hidden = false;
+    }
+
+    // Google remet ici un jeton d'identite signe. Il n'est jamais interprete
+    // dans le navigateur : seul le serveur le verifie aupres de Google.
+    function onCredential(response) {
+        var box = document.getElementById('google-signin-error');
+        if (box) box.hidden = true;
+
+        fetch(LOGIN_URL, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ credential: response.credential })
+        })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (res) {
+            if (res.ok && res.data.success && res.data.redirect) {
+                window.location.assign(res.data.redirect);
+                return;
+            }
+            showError(res.data.error || "Connexion Google impossible. Réessayez.");
+        })
+        .catch(function () {
+            showError("Erreur réseau pendant la connexion Google.");
+        });
+    }
+
+    function init() {
+        if (!window.google || !google.accounts || !google.accounts.id) return false;
+        google.accounts.id.initialize({
+            client_id: CLIENT_ID,
+            callback: onCredential,
+            ux_mode: 'popup',
+            context: '{{ google_context|default:"signin" }}'
+        });
+        google.accounts.id.renderButton(
+            document.getElementById('google-signin-button'),
+            { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with',
+              locale: 'fr', width: 320 }  // meme largeur que .auth-google__wrap
+        );
+        return true;
+    }
+
+    // Le script Google est charge en `defer` : il peut arriver apres nous.
+    document.addEventListener('DOMContentLoaded', function () {
+        if (init()) return;
+        var tentatives = 0;
+        var minuteur = setInterval(function () {
+            tentatives += 1;
+            if (init() || tentatives > 40) {
+                clearInterval(minuteur);
+                if (tentatives > 40) {
+                    showError("Le service Google n'a pas pu être chargé.");
+                }
+            }
+        }, 150);
+    });
+})();
+</script>
+{% endif %}

@@ -5,35 +5,69 @@
             <h3 class="cm-section__title">
                 <i class="fa fa-user-circle-o"></i> Information du compte
             </h3>
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 px-3 mb-3" role="alert">
+                {% for erreur in form.non_field_errors %}<div>{{ erreur }}</div>{% endfor %}
+            </div>
+            {% endif %}
+
             <div class="row">
                 <div class="col-md-6">
                     <div class="cm-field">
                         <label for="{{ form.username.id_for_label }}">Nom utilisateur</label>
                         {{ form.username }}
+                        {% for erreur in form.username.errors %}
+                        <span class="cm-error text-danger small d-block mt-1">{{ erreur }}</span>
+                        {% endfor %}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="cm-field">
                         <label for="{{ form.email.id_for_label }}">Email</label>
                         {{ form.email }}
+                        {% for erreur in form.email.errors %}
+                        <span class="cm-error text-danger small d-block mt-1">{{ erreur }}</span>
+                        {% endfor %}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="cm-field">
                         <label for="{{ form.role.id_for_label }}">Rôle</label>
                         {{ form.role }}
+                        {% for erreur in form.role.errors %}
+                        <span class="cm-error text-danger small d-block mt-1">{{ erreur }}</span>
+                        {% endfor %}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="cm-field">
                         <label for="{{ form.genre.id_for_label }}">Genre</label>
                         {{ form.genre }}
+                        {% for erreur in form.genre.errors %}
+                        <span class="cm-error text-danger small d-block mt-1">{{ erreur }}</span>
+                        {% endfor %}
                     </div>
                 </div>
-                <div class="col-12">
-                    <div class="cm-field mb-0">
+                <div class="col-md-6">
+                    <div class="cm-field">
                         <label for="{{ form.contact.id_for_label }}">Contact</label>
                         {{ form.contact }}
+                        {% for erreur in form.contact.errors %}
+                        <span class="cm-error text-danger small d-block mt-1">{{ erreur }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6" id="div-local-entrepot-edit">
+                    <div class="cm-field">
+                        <label for="{{ form.local_entrepot.id_for_label }}">
+                            Entrepôt <span class="cm-req">*</span>
+                        </label>
+                        {{ form.local_entrepot }}
+                        <span class="cm-hint">Obligatoire pour : Accueil, Caissier, Livreur, Chef agence.</span>
+                        {% for erreur in form.local_entrepot.errors %}
+                        <span class="cm-error text-danger small d-block mt-1">{{ erreur }}</span>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -46,3 +80,35 @@
         </button>
     </div>
 </form>
+
+<script>
+/* Ce partiel est injecte dans la modale par jQuery, qui execute les scripts
+   qu'il contient : la bascule se recable donc a chaque ouverture, y compris
+   apres un reaffichage pour erreur de validation.
+
+   Les identifiants portent le suffixe _edit (cf. UpdateCompteView.get_form_kwargs) :
+   sans lui, ils entreraient en collision avec le formulaire de creation deja
+   present sur la page. */
+(function () {
+    var ROLES_AVEC_LOCAL = ["accueil", "caissier", "livreur", "chefagence"];
+    var role = document.getElementById("id_role_edit");
+    var bloc = document.getElementById("div-local-entrepot-edit");
+    var select = document.getElementById("id_local_entrepot_edit");
+    if (!role || !bloc || !select) return;
+
+    function basculer() {
+        if (ROLES_AVEC_LOCAL.indexOf(role.value) !== -1) {
+            bloc.style.display = "";
+            select.setAttribute("required", "required");
+        } else {
+            bloc.style.display = "none";
+            select.removeAttribute("required");
+            // Un entrepot resterait rattache a un role qui n'en veut pas.
+            select.value = "";
+        }
+    }
+
+    role.addEventListener("change", basculer);
+    basculer();
+})();
+</script>

@@ -94,10 +94,23 @@ class APIV1AuthTests(APITestCase):
         }
         reg = self.client.post('/api/v1/auth/register/', payload, format='json')
         self.assertEqual(reg.status_code, status.HTTP_201_CREATED)
-        self.assertIn('access', reg.data)
+        # L'inscription ne delivre plus de jeton : le compte doit d'abord etre
+        # active par le code OTP envoye par courriel.
+        self.assertNotIn('access', reg.data)
+        self.assertIn('otp_expires_in', reg.data)
         user = CustomUser.objects.get(username='client_mobile')
         self.assertEqual(user.role, 'client')
+        self.assertFalse(user.is_active)
 
+        # Un compte non active ne peut pas ouvrir de session.
+        refuse = self.client.post('/api/v1/auth/login/', {
+            'email': 'mobile@test.com',
+            'password': 'TestPass123!',
+        }, format='json')
+        self.assertNotEqual(refuse.status_code, status.HTTP_200_OK)
+
+        user.is_active = True
+        user.save(update_fields=['is_active'])
         login = self.client.post('/api/v1/auth/login/', {
             'email': 'mobile@test.com',
             'password': 'TestPass123!',
@@ -169,20 +182,24 @@ class APIV1ClientFlowTests(APITestCase):
         self.assertEqual(favs.data['count'], 1)
 
     def test_account(self):
+        """/account/ ne porte plus que le profil : les statistiques ont ete
+        deplacees vers /dashboard/, qui accepte un filtre de periode."""
         response = self.client.get('/api/v1/account/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('stats', response.data)
-        stats = response.data['stats']
-        self.assertIn('total_achats_periode', stats)
-        self.assertIn('nb_commandes_periode', stats)
-        self.assertIn('mois', stats)
-        self.assertIn('annee', stats)
-        self.assertIn('annees_disponibles', stats)
+        self.assertIn('profile', response.data)
+        self.assertIn('profil', response.data)
 
-        filtered = self.client.get('/api/v1/account/', {'mois': 1, 'annee': 2020})
+    def test_dashboard(self):
+        response = self.client.get('/api/v1/dashboard/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for cle in ('total_achats_periode', 'nb_commandes_periode',
+                    'mois', 'annee', 'annees_disponibles'):
+            self.assertIn(cle, response.data, cle)
+
+        filtered = self.client.get('/api/v1/dashboard/', {'mois': 1, 'annee': 2020})
         self.assertEqual(filtered.status_code, status.HTTP_200_OK)
-        self.assertEqual(filtered.data['stats']['mois'], 1)
-        self.assertEqual(filtered.data['stats']['annee'], 2020)
+        self.assertEqual(filtered.data['mois'], 1)
+        self.assertEqual(filtered.data['annee'], 2020)
 
     def test_local_select(self):
         other = LocalEntrepot.objects.create(nom='Autre Local')

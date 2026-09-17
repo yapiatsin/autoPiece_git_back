@@ -112,9 +112,14 @@ def _redirect_after_login(user, request=None):
 # @login_required(login_url='connexion')
 def AddCompte(request):
     q = (request.GET.get('q') or '').strip()
-    # Comptes staff uniquement — les clients sont gérés sur compte_client
+    # Comptes staff uniquement — les clients sont gérés sur compte_client.
+    # Les superutilisateurs sont masqués : ce sont les comptes techniques
+    # d'administration, ils n'ont pas à être modifiés ni désactivés depuis
+    # cette page au risque de se verrouiller hors de l'application.
     comptes = CustomUser.objects.select_related('local_entrepot').exclude(
         role='client',
+    ).exclude(
+        is_superuser=True,
     ).order_by('username')
     if q:
         comptes = comptes.filter(
@@ -473,6 +478,19 @@ class UpdateCompteView(LoginRequiredMixin, UpdateView):
     template_name = "partials/compte_form.html"
     success_url = reverse_lazy('add_compte')
     success_message = 'Compte modifiée avec succès✓✓'
+
+    def get_form_kwargs(self):
+        """Suffixe les identifiants des champs de la modale.
+
+        La page add_compte affiche deja le formulaire de creation, qui rend
+        `id_role` et `id_local_entrepot`. Sans suffixe, la modale chargee en
+        AJAX dupliquerait ces identifiants : le script de bascule de la page
+        piloterait alors le mauvais champ, et le HTML serait invalide.
+        """
+        kwargs = super().get_form_kwargs()
+        kwargs['auto_id'] = 'id_%s_edit'
+        return kwargs
+
     def form_valid(self, form):
         response = super().form_valid(form)
         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
@@ -488,8 +506,8 @@ class UpdateCompteView(LoginRequiredMixin, UpdateView):
             return JsonResponse({"success": False, "html": html})
         return super().form_invalid(form)
 
-def _login_context(**extra):
-    """Contexte de la page de connexion.
+def _auth_context(**extra):
+    """Contexte commun aux pages de connexion et d'inscription.
 
     `google_client_id` conditionne l'affichage du bouton Google : vide, le bloc
     entier disparait du gabarit et l'application reste utilisable normalement.
@@ -510,7 +528,7 @@ def loginview(request):
         password = request.POST.get("password", "")
         if not username or not password:
             messages.error(request, "Veuillez renseigner vos identifiants.")
-            return render(request, "page/login.html", _login_context())
+            return render(request, "page/login.html", _auth_context())
 
         pending = CustomUser.objects.filter(username=username).first()
         if pending and pending.check_password(password) and not pending.is_active:
@@ -518,19 +536,19 @@ def loginview(request):
                 request,
                 "Votre compte n'est pas encore activé. Consultez l'email d'activation ou demandez un nouveau lien.",
             )
-            return render(request, "page/login.html", _login_context(show_resend=True))
+            return render(request, "page/login.html", _auth_context(show_resend=True))
 
         user = authenticate(request, username=username, password=password)
         if user is not None:
             if not user.is_active:
                 messages.warning(request, "Votre compte n'est pas encore activé.")
-                return render(request, "page/login.html", _login_context(show_resend=True))
+                return render(request, "page/login.html", _auth_context(show_resend=True))
             login(request, user)
             civilite = "Mme" if user.genre == "Femme" else "Mr"
             messages.success(request, f"Bienvenue {civilite} {user.username}")
             return _redirect_after_login(user, request)
         messages.error(request, "Identifiant ou mot de passe incorrect.")
-    return render(request, "page/login.html", _login_context())
+    return render(request, "page/login.html", _auth_context())
 
 def Deconnexion(request):
     user = request.user
@@ -1337,7 +1355,11 @@ def register_view(request):
                     messages.error(request, error)
     else:
         form = ClientRegistrationForm()
-    return render(request, 'page/register.html', {'form': form})
+    return render(request, 'page/register.html', _auth_context(
+        form=form,
+        google_label="S'inscrire avec Google",
+        google_context='signup',
+    ))
 
 
 def activate_account_view(request, token):

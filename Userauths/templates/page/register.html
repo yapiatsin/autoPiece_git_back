@@ -71,6 +71,8 @@
         <button type="submit" class="auth-btn-primary">Créer mon compte</button>
     </form>
 
+    {% include 'partials/_google_signin.html' %}
+
     <p class="auth-footer-text">
         Déjà inscrit ?
         <a href="{% url 'connexion' %}" class="auth-link">Se connecter</a>

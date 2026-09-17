@@ -53,6 +53,23 @@ jobs:
           python manage.py check --deploy --fail-level ERROR
           python manage.py makemigrations --check --dry-run
 
+      - name: Tests
+        # L'authentification et les paiements ne doivent jamais partir en
+        # production sans etre exerces : un echec ici bloque le deploiement.
+        env:
+          SECRET_KEY: ci-secret-key-not-used-in-production
+          DEBUG: 'False'
+          DB_ENGINE: sqlite
+          DJANGO_ALLOWED_HOSTS: example.com,testserver
+          CSRF_TRUSTED_ORIGINS: https://example.com
+          EMAIL_HOST: smtp.example.com
+          EMAIL_PORT: '587'
+          EMAIL_USE_TLS: 'True'
+          EMAIL_HOST_USER: ci@example.com
+          EMAIL_HOST_PASSWORD: ci-password
+          GOOGLE_OAUTH_CLIENT_ID: ci-client-id.apps.googleusercontent.com
+        run: python manage.py test --verbosity 2
+
   # ---------------------------------------------------------------------------
   build:
     name: Construire et publier l'image

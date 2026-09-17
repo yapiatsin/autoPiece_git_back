@@ -8,6 +8,7 @@ from .models import (
     ProfilUser,
     LocalEntrepot,
     CreneauDisponibilite,
+    GoogleIdentity,
 )
 
 
@@ -62,6 +63,30 @@ class CreneauDisponibiliteAdmin(admin.ModelAdmin):
     list_filter = ['jour', 'local_entrepot']
     search_fields = ['local_entrepot__nom']
     ordering = ['local_entrepot__nom', 'jour']
+
+
+@admin.register(GoogleIdentity)
+class GoogleIdentityAdmin(admin.ModelAdmin):
+    """Comptes Google liés.
+
+    Supprimer une ligne délie le compte : l'utilisateur devra reconfirmer par
+    code à sa prochaine connexion Google. Utile au départ d'un employé ou
+    quand une adresse Google change de mains.
+    """
+
+    list_display = ['user', 'email', 'created_at', 'last_login_at']
+    list_filter = ['created_at', 'last_login_at']
+    search_fields = ['user__username', 'user__email', 'email', 'sub']
+    ordering = ['-created_at']
+    list_select_related = ['user']
+    # `sub` vient de Google : le modifier casserait le lien sans rien réparer.
+    readonly_fields = ['sub', 'email', 'picture', 'created_at', 'last_login_at']
+    date_hierarchy = 'created_at'
+
+    def has_add_permission(self, request):
+        # Une identité ne se crée que par le parcours de connexion, qui seul
+        # peut vérifier le jeton auprès de Google.
+        return False
 
 
 admin.site.register(CustomUser, CustomUserAdmin)

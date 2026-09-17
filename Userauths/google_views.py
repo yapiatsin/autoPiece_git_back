@@ -127,6 +127,67 @@ def _remaining_seconds(data):
     return max(0, int(google_auth.OTP_EXPIRY_SECONDS - elapsed))
 
 
+# Renvoi de code : delai minimal entre deux envois, et plafond par demande.
+# Sans ces deux garde-fous, le bouton devient un moyen d'inonder une boite mail.
+RESEND_COOLDOWN_SECONDS = 60
+RESEND_MAX = 3
+
+
+@require_POST
+def google_otp_resend_view(request):
+    """Renvoie un nouveau code pour la liaison en cours."""
+    data = _pending(request)
+    if data is None:
+        messages.error(request, "La demande a expiré. Reprenez la connexion avec Google.")
+        return redirect('connexion')
+
+    user = google_auth.find_user_by_email(data['profile']['email'])
+    if user is None or user.pk != data['user_pk']:
+        request.session.pop(SESSION_KEY, None)
+        messages.error(request, "Compte introuvable.")
+        return redirect('connexion')
+
+    envois = data.get('resends', 0)
+    if envois >= RESEND_MAX:
+        messages.error(
+            request,
+            "Nombre de renvois atteint. Reprenez la connexion avec Google.",
+        )
+        return redirect('google_otp')
+
+    dernier = data.get('last_sent_at') or data['started_at']
+    attente = RESEND_COOLDOWN_SECONDS - (timezone.now() - datetime.fromisoformat(dernier)).total_seconds()
+    if attente > 0:
+        messages.warning(
+            request,
+            f"Patientez encore {int(attente)} seconde(s) avant de redemander un code.",
+        )
+        return redirect('google_otp')
+
+    code = google_auth.generate_otp(user)
+    if not send_google_link_otp_email(user, code):
+        messages.error(request, "L'envoi a échoué. Réessayez dans un instant.")
+        return redirect('google_otp')
+
+    # Le nouveau code repart pour une duree pleine. Les tentatives ne sont pas
+    # remises a zero : sinon il suffirait de redemander un code pour relancer
+    # indefiniment les essais de force brute.
+    maintenant = timezone.now().isoformat()
+    data['started_at'] = maintenant
+    data['last_sent_at'] = maintenant
+    data['resends'] = envois + 1
+    request.session[SESSION_KEY] = data
+    request.session.modified = True
+
+    restants = RESEND_MAX - data['resends']
+    messages.success(
+        request,
+        f"Nouveau code envoyé à {google_auth.mask_email(user.email)}."
+        + (f" Il vous reste {restants} renvoi(s)." if restants else ""),
+    )
+    return redirect('google_otp')
+
+
 def google_otp_view(request):
     """Saisie du code confirmant la liaison avec un compte existant."""
     data = _pending(request)
