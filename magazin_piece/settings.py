@@ -218,6 +218,18 @@ SESSION_COOKIE_HTTPONLY = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
+
+# Django impose « same-origin » par defaut depuis la version 4.0, ce qui coupe
+# window.opener pour toute fenetre surgissante d'une autre origine. Google
+# Identity Services ouvre accounts.google.com dans une telle fenetre et doit
+# renvoyer le jeton d'identite a la page appelante par cette reference : sans
+# assouplissement, la fenetre reste blanche et la connexion n'aboutit jamais.
+# « same-origin-allow-popups » conserve l'isolement de la page vis-a-vis des
+# documents qui l'ouvriraient, tout en laissant celles qu'elle ouvre repondre.
+SECURE_CROSS_ORIGIN_OPENER_POLICY = config(
+    'SECURE_CROSS_ORIGIN_OPENER_POLICY',
+    default='same-origin-allow-popups',
+).strip()
 # Redirection HTTP -> HTTPS assuree par Caddy, pas par Django (evite les boucles).
 SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=0, cast=int)

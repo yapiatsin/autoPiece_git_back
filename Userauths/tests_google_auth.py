@@ -364,3 +364,16 @@ class BoutonSurLesPages(TestCase):
             for nom in ("connexion", "register"):
                 html = self.client.get(reverse(nom)).content.decode("utf-8", "replace")
                 self.assertNotIn("google-signin-button", html, nom)
+
+
+class EnTetesDeLaPageDeConnexion(TestCase):
+    """La politique d'ouverture croisee doit laisser repondre la fenetre Google."""
+
+    def test_coop_autorise_les_fenetres_surgissantes(self):
+        """« same-origin » couperait window.opener et la fenetre Google
+        resterait blanche sans jamais renvoyer le jeton."""
+        reponse = self.client.get(reverse("connexion"))
+        coop = reponse.headers.get("Cross-Origin-Opener-Policy", "")
+        self.assertNotEqual(coop, "same-origin")
+        if coop:
+            self.assertIn("allow-popups", coop)
