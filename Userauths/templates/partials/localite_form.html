@@ -15,6 +15,28 @@
             {% if form.contact.errors %}<div class="text-danger small">{{ form.contact.errors }}</div>{% endif %}
         </div>
     </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <label for="{{ form.fne_point_de_vente.id_for_label }}">Point de vente FNE</label>
+            {{ form.fne_point_de_vente }}
+            <small class="form-text text-muted">
+                Nom <strong>exact</strong> du point de vente déclaré dans l’espace FNE (DGI)
+                pour cette localité (ex. « Caisse Koumassi »). Une localité = un PDV.
+            </small>
+            {% if form.fne_point_de_vente.errors %}<div class="text-danger small">{{ form.fne_point_de_vente.errors }}</div>{% endif %}
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <label for="{{ form.plafond_remise.id_for_label }}">Plafond de remise (Fcfa)</label>
+            {{ form.plafond_remise }}
+            <small class="form-text text-muted">
+                Montant maximum de remise autorisé pour cette localité.
+                Les plafonds des agents Accueil ne peuvent pas le dépasser.
+            </small>
+            {% if form.plafond_remise.errors %}<div class="text-danger small">{{ form.plafond_remise.errors }}</div>{% endif %}
+        </div>
+    </div>
     <div class="col-md-6">
         <div class="form-group">
             <label for="{{ form.latitude.id_for_label }}">Latitude</label>

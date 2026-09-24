@@ -60,6 +60,12 @@
                     <div class="localite-list-item-info">
                         <span class="localite-name">{{ loc.nom }}</span>
                         <div class="localite-list-meta">
+                            {% if loc.fne_point_de_vente %}
+                            <span class="text-muted">FNE : {{ loc.fne_point_de_vente }}</span>
+                            {% endif %}
+                            {% if loc.plafond_remise %}
+                            <span class="text-muted">Remise ≤ {{ loc.plafond_remise }} Fcfa</span>
+                            {% endif %}
                             {% if loc.statut %}
                             <span class="badge localite-badge-ouvert">Ouvert</span>
                             {% else %}

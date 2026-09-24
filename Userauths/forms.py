@@ -118,12 +118,21 @@ class CustomUserForm(forms.ModelForm):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'contact', 'role', 'genre', 'local_entrepot')
+        fields = (
+            'username', 'email', 'contact', 'role', 'genre',
+            'local_entrepot', 'plafond_remise',
+        )
         widgets = {
             'contact':        forms.TextInput(attrs={'class': 'form-control'}),
             'genre':          forms.Select(attrs={'class': 'form-control'}),
             'role':           forms.Select(attrs={'class': 'form-control'}),
             'local_entrepot': forms.Select(attrs={'class': 'form-control'}),
+            'plafond_remise': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'placeholder': 'Ex: 5000',
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -133,8 +142,11 @@ class CustomUserForm(forms.ModelForm):
             (value, label) for value, label in self.fields['role'].choices
             if value != 'client'
         ]
+        self.fields['plafond_remise'].required = False
+        self.fields['plafond_remise'].label = 'Plafond de remise (Fcfa)'
 
     def clean(self):
+        from decimal import Decimal, InvalidOperation
         cleaned_data = super().clean()
         role = cleaned_data.get('role')
         local_entrepot = cleaned_data.get('local_entrepot')
@@ -144,6 +156,29 @@ class CustomUserForm(forms.ModelForm):
                 'local_entrepot',
                 f"L'affectation à un entrepôt est obligatoire pour le rôle sélectionné."
             )
+        try:
+            plafond = Decimal(str(cleaned_data.get('plafond_remise') or 0))
+        except (InvalidOperation, TypeError, ValueError):
+            plafond = Decimal('0')
+            self.add_error('plafond_remise', 'Montant invalide.')
+        if plafond < 0:
+            self.add_error('plafond_remise', 'Le plafond ne peut pas être négatif.')
+            plafond = Decimal('0')
+        cleaned_data['plafond_remise'] = plafond
+        if role == 'accueil' and local_entrepot is not None:
+            local_max = local_entrepot.plafond_remise_montant()
+            if plafond > local_max:
+                self.add_error(
+                    'plafond_remise',
+                    (
+                        "Ne peut pas dépasser le plafond de la localité "
+                        f"« {local_entrepot.nom} » ({local_max} Fcfa). "
+                        "Augmentez d’abord le plafond de la localité si besoin."
+                    ),
+                )
+        if role != 'accueil':
+            # Hors Accueil, le plafond personnel n'a pas d'effet ; on le remet à 0.
+            cleaned_data['plafond_remise'] = Decimal('0')
         return cleaned_data
 
 
@@ -354,7 +389,10 @@ class ProfileSelfProfilForm(forms.ModelForm):
 class LocalEntrepotForm(forms.ModelForm):
     class Meta:
         model = LocalEntrepot
-        fields = ('nom', 'contact', 'latitude', 'longitude', 'statut')
+        fields = (
+            'nom', 'contact', 'fne_point_de_vente', 'plafond_remise',
+            'latitude', 'longitude', 'statut',
+        )
         widgets = {
             'nom': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -365,6 +403,17 @@ class LocalEntrepotForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Ex: +225 07 00 00 00 00',
                 'autocomplete': 'tel',
+            }),
+            'fne_point_de_vente': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: Caisse Koumassi',
+                'autocomplete': 'off',
+            }),
+            'plafond_remise': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'placeholder': 'Ex: 10000',
             }),
             'latitude': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -385,8 +434,21 @@ class LocalEntrepotForm(forms.ModelForm):
         }
         labels = {
             'contact': 'Contact',
+            'fne_point_de_vente': 'Point de vente FNE',
+            'plafond_remise': 'Plafond de remise (Fcfa)',
             'statut': 'Ouvert',
         }
+
+    def clean_plafond_remise(self):
+        from decimal import Decimal, InvalidOperation
+        value = self.cleaned_data.get('plafond_remise')
+        try:
+            montant = Decimal(str(value if value is not None else 0))
+        except (InvalidOperation, TypeError, ValueError):
+            raise forms.ValidationError('Montant invalide.')
+        if montant < 0:
+            raise forms.ValidationError('Le plafond ne peut pas être négatif.')
+        return montant
 
 
 class CreneauDisponibiliteForm(forms.ModelForm):

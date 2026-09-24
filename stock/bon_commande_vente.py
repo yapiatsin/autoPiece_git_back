@@ -106,8 +106,14 @@ def generate_bon_commande_vente_pdf(bon, commande, panier, panier_items):
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Bold', 14)
     c.drawString(margin, y + 13 * mm, 'P&B AUTO-PIECE')
-    c.setFont('Helvetica', 7)
-    c.drawString(margin, y + 9 * mm, 'Vente — Pièces détachées')
+    from stock.receipt_layout import entreprise_ncc
+    _ncc = entreprise_ncc()
+    if _ncc:
+        c.setFont('Helvetica', 8)
+        c.drawString(margin, y + 9 * mm, f'NCC : {_ncc}  ·  Vente — Pièces détachées')
+    else:
+        c.setFont('Helvetica', 7)
+        c.drawString(margin, y + 9 * mm, 'Vente — Pièces détachées')
     c.setFont('Helvetica', 8)
     date_txt = bon.date_emission.strftime('%d/%m/%Y %H:%M')
     c.drawRightString(page_w - margin, y + 13 * mm, 'Bon de commande — Caisse')

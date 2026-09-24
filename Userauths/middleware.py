@@ -14,6 +14,20 @@ from .permissions_utils import (
     should_enforce_custom_permission,
     user_has_permission,
 )
+from .session_control import enforce_single_session
+
+
+class SingleSessionMiddleware:
+    """Refuse deux sessions simultanées pour le même compte."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        denied = enforce_single_session(request)
+        if denied is not None:
+            return denied
+        return self.get_response(request)
 
 
 class CustomPermissionMiddleware:

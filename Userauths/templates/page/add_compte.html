@@ -78,6 +78,20 @@
                                         <span class="cm-hint">Obligatoire pour : Accueil, Caissier, Livreur, Chef agence.</span>
                                     </div>
                                 </div>
+                                <div class="col-md-6" id="div-plafond-remise">
+                                    <div class="cm-field">
+                                        <label for="{{ user_form.plafond_remise.id_for_label }}">
+                                            Plafond de remise (Fcfa)
+                                        </label>
+                                        {{ user_form.plafond_remise }}
+                                        <span class="cm-hint">
+                                            Accueil uniquement. ≤ plafond de la localité.
+                                        </span>
+                                        {% for erreur in user_form.plafond_remise.errors %}
+                                        <span class="cm-error text-danger small d-block mt-1">{{ erreur }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             </div>
                         </section>
 
@@ -332,6 +346,7 @@
     function toggleLocalEntrepot(roleSelect) {
         var div = document.getElementById("div-local-entrepot");
         var select = document.getElementById("id_local_entrepot");
+        var divPlafond = document.getElementById("div-plafond-remise");
         if (!div || !select) return;
         if (ROLES_AVEC_LOCAL.has(roleSelect.value)) {
             div.style.display = "block";
@@ -340,6 +355,9 @@
             div.style.display = "none";
             select.removeAttribute("required");
             select.value = "";
+        }
+        if (divPlafond) {
+            divPlafond.style.display = (roleSelect.value === "accueil") ? "block" : "none";
         }
     }
 

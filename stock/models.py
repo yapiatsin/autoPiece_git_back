@@ -651,7 +651,15 @@ class Commande(models.Model):
     paye = models.BooleanField(default=False)
     montant_paye = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     montant_reste = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
-    remise = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    remise = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        help_text=(
+            'Remise appliquée à la validation panier (Accueil). '
+            'Plafonnée par CustomUser.plafond_remise et LocalEntrepot.plafond_remise.'
+        ),
+    )
     utilisateur = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='commandes_validees', null=True, blank=True)
     profoma = models.PositiveIntegerField(default=0)
     moyen_paiement = models.ForeignKey(MoyenPaiement, on_delete=models.SET_NULL, null=True, blank=True)
@@ -752,6 +760,64 @@ class GeniusPayPaiement(models.Model):
         return f'{self.reference} ({self.get_statut_display()})'
 
 
+class FactureFNE(models.Model):
+    """Facture normalisée électronique (DGI) certifiée pour une vente en caisse."""
+    STATUT_EN_COURS = 'en_cours'
+    STATUT_CERTIFIEE = 'certifiee'
+    STATUT_ECHEC = 'echec'
+    STATUT_CHOICES = (
+        (STATUT_EN_COURS, 'Certification en cours'),
+        (STATUT_CERTIFIEE, 'Certifiée'),
+        (STATUT_ECHEC, 'Échec'),
+    )
+    commande = models.OneToOneField(
+        Commande,
+        on_delete=models.PROTECT,
+        related_name='facture_fne',
+    )
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default=STATUT_EN_COURS)
+    reference = models.CharField(
+        max_length=64, blank=True, default='', db_index=True,
+        help_text="Numéro de facture attribué par la FNE.",
+    )
+    fne_invoice_id = models.CharField(
+        max_length=64, blank=True, default='',
+        help_text="Identifiant FNE de la facture, requis pour émettre un avoir.",
+    )
+    ncc = models.CharField(max_length=32, blank=True, default='')
+    url_verification = models.TextField(
+        blank=True, default='',
+        help_text="Lien de vérification DGI, imprimé en QR code sur le reçu.",
+    )
+    montant_ttc = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    montant_tva = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    timbre = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    etablissement = models.CharField(max_length=150, blank=True, default='')
+    point_de_vente = models.CharField(max_length=150, blank=True, default='')
+    environnement = models.CharField(max_length=20, blank=True, default='')
+    alerte_sticker = models.BooleanField(default=False)
+    solde_sticker = models.IntegerField(null=True, blank=True)
+    date_certification = models.DateTimeField(null=True, blank=True)
+    tentatives = models.PositiveIntegerField(default=0)
+    erreur = models.TextField(blank=True, default='')
+    payload = models.JSONField(default=dict, blank=True)
+    raw_response = models.JSONField(default=dict, blank=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_maj = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date_creation']
+        verbose_name = 'Facture FNE'
+        verbose_name_plural = 'Factures FNE'
+
+    def __str__(self):
+        return f'{self.reference or self.commande.numero_commande} ({self.get_statut_display()})'
+
+    @property
+    def est_certifiee(self):
+        return self.statut == self.STATUT_CERTIFIEE
+
+
 class BonCommandePaiement(models.Model):
     """Bon de commande émis en caisse lors de la validation du paiement."""
     numero_bon = models.CharField(max_length=30, unique=True)
@@ -836,7 +902,6 @@ class TarifLivraison(models.Model):
         help_text="Raison du changement de tarif",
     )
     history = HistoricalRecords()
-
     class Meta:
         ordering = ['-date_effet']
         verbose_name = 'Tarif de livraison'

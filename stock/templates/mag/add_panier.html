@@ -101,9 +101,14 @@
                                        name="remiser"
                                        placeholder="0.00"
                                        inputmode="decimal"
-                                       autocomplete="off">
+                                       autocomplete="off"
+                                       data-plafond="{{ plafond_remise|default:0 }}">
                                 <span class="panier-remise-input-suffix">Fcfa</span>
                             </div>
+                            <small class="form-text text-muted mt-1">
+                                Plafond autorisé :
+                                <strong id="affiche-plafond-remise">{{ plafond_remise|default:0 }}</strong> Fcfa
+                            </small>
                         </div>
 
                         <button type="submit"
@@ -359,6 +364,7 @@
         const form = document.getElementById('quickForm');
 
         total = parseFloat(panierTotalEl.textContent.replace(',', '.')) || 0;
+        const plafondRemise = parseFloat(inputRemise.dataset.plafond || '0') || 0;
         function remiseEnPourcent(montantRemise, totalBrut) {
             if (!totalBrut || totalBrut <= 0 || !montantRemise || montantRemise <= 0) return '0';
             return ((montantRemise / totalBrut) * 100).toFixed(2);
@@ -369,6 +375,10 @@
             let remise = parseFloat(remiseStr);
             if (isNaN(remise) || remise < 0) remise = 0;
             else if (remise > total) remise = total;
+            if (plafondRemise >= 0 && remise > plafondRemise) {
+                remise = plafondRemise;
+                inputRemise.value = plafondRemise > 0 ? String(plafondRemise) : '0';
+            }
 
             let montantApresRemise = total - remise;
             afficheRemise.textContent = remiseEnPourcent(remise, total);
@@ -379,6 +389,15 @@
         inputRemise.addEventListener('input', calculerEtAfficher);
         form.addEventListener('submit', function(e) {
             calculerEtAfficher();
+            let remise = parseFloat((inputRemise.value || '0').replace(',', '.')) || 0;
+            if (remise > plafondRemise + 0.001) {
+                e.preventDefault();
+                alert(
+                    'Remise refusée : votre plafond est de ' + plafondRemise
+                    + ' Fcfa. Demandez une hausse de votre plafond Accueil.'
+                );
+                return;
+            }
             if (total <= 0) {
                 e.preventDefault();
                 alert('Le panier est vide.');

@@ -1,6 +1,7 @@
 from django.urls import path
 from stock.views import *
 from stock.geniuspay_views import caisse_geniuspay_statut, caisse_geniuspay_retour
+from stock.fne_views import caisse_fne_certifier, caisse_fne_pdf, printer_escpos_fne_view
 from stock.views import imprimer_bon_commande_vente
 from stock.export_views import (
     export_liste_ventes_excel, export_liste_ventes_pdf,
@@ -104,6 +105,11 @@ urlpatterns = [
         name='printer_escpos_bon',
     ),
     path(
+        'imprimante/escpos/fne/<str:ticket_numero>/',
+        printer_escpos_fne_view,
+        name='printer_escpos_fne',
+    ),
+    path(
         'imprimante/bon-en-attente/',
         printer_bon_en_attente_view,
         name='printer_bon_en_attente',
@@ -119,6 +125,8 @@ urlpatterns = [
     path('caisse/paiement/<str:ticket_id>/', valider_panier_paiement, name='valid_pay_article'),
     path('caisse/bon-commande/<str:ticket_numero>/imprimer/', imprimer_bon_commande_vente, name='imprimer_bon_commande_vente'),
     path('caisse/reimprimer-recu/<str:ticket_numero>/', reimprimer_recu_paiement, name='reimprimer_recu_paiement'),
+    path('caisse/fne/<str:ticket_numero>/certifier/', caisse_fne_certifier, name='caisse_fne_certifier'),
+    path('caisse/fne/<str:ticket_numero>/pdf/', caisse_fne_pdf, name='caisse_fne_pdf'),
     path('bons-commande-paiement/', BonCommandePaiementListView.as_view(), name='bons_commande_paiement'),
 
     path('livraison/', LivraisonView.as_view(), name='livraisons'),

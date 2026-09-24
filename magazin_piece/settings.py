@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'Userauths.middleware.SingleSessionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
@@ -77,9 +78,7 @@ SIMPLE_JWT = {
 
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-
     'AUTH_HEADER_TYPES': ('Bearer',),
-
     "ROTATE_REFRESH_TOKENS": True,   # ← optionnel mais recommandé
     "BLACKLIST_AFTER_ROTATION": True, # ← nécessaire pour que blacklist() fonctionne
 
@@ -282,6 +281,20 @@ GENIUSPAY_BASE_URL = config(
 GENIUSPAY_WEBHOOK_SECRET = config('GENIUSPAY_WEBHOOK_SECRET', default='').strip()
 GENIUSPAY_MIN_AMOUNT = 200
 
+# FNE — Facture Normalisée Électronique (DGI) : certification des ventes caisse en
+# espèces. Relu dans le .env à chaque appel par stock/fne.py (cf. GeniusPay).
+FNE_ENABLED = config('FNE_ENABLED', default=False, cast=bool)
+FNE_API_KEY = config('FNE_API_KEY', default='').strip()
+FNE_BASE_URL = config('FNE_BASE_URL', default='http://54.247.95.108/ws').strip().rstrip('/')
+FNE_ETABLISSEMENT = config('FNE_ETABLISSEMENT', default='').strip()
+# Repli optionnel : le PDV principal se configure par localité
+# (LocalEntrepot.fne_point_de_vente). Une localité = un point de vente FNE.
+FNE_POINT_DE_VENTE = config('FNE_POINT_DE_VENTE', default='').strip()
+FNE_NCC = config('FNE_NCC', default='').strip()
+FNE_CLIENT_TELEPHONE = config('FNE_CLIENT_TELEPHONE', default='').strip()
+FNE_CLIENT_EMAIL = config('FNE_CLIENT_EMAIL', default='').strip()
+FNE_TAXE_HORS_TVA = config('FNE_TAXE_HORS_TVA', default='TVAD').strip()
+
 # WhatsApp business (e-com + partage lien paiement caisse) — chiffres seuls, ex. 2250787532210
 WHATSAPP_BUSINESS_NUMBER = config(
     'WHATSAPP_BUSINESS_NUMBER',
@@ -373,6 +386,3 @@ JAZZMIN_SETTINGS = {
     # Add a language dropdown into the admin
     # "language_chooser": True,
 }
-
-
-

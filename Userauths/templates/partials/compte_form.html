@@ -70,6 +70,21 @@
                         {% endfor %}
                     </div>
                 </div>
+                <div class="col-md-6" id="div-plafond-remise-edit">
+                    <div class="cm-field">
+                        <label for="{{ form.plafond_remise.id_for_label }}">
+                            Plafond de remise (Fcfa)
+                        </label>
+                        {{ form.plafond_remise }}
+                        <span class="cm-hint">
+                            Accueil uniquement. ≤ plafond de la localité.
+                            Augmentez-le pour autoriser une remise plus élevée.
+                        </span>
+                        {% for erreur in form.plafond_remise.errors %}
+                        <span class="cm-error text-danger small d-block mt-1">{{ erreur }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </section>
     </div>
@@ -83,9 +98,7 @@
 
 <script>
 /* Ce partiel est injecte dans la modale par jQuery, qui execute les scripts
-   qu'il contient : la bascule se recable donc a chaque ouverture, y compris
-   apres un reaffichage pour erreur de validation.
-
+   qu'il contient : la bascule se recable donc a chaque ouverture, y compris apres un reaffichage pour erreur de validation.
    Les identifiants portent le suffixe _edit (cf. UpdateCompteView.get_form_kwargs) :
    sans lui, ils entreraient en collision avec le formulaire de creation deja
    present sur la page. */
@@ -94,6 +107,7 @@
     var role = document.getElementById("id_role_edit");
     var bloc = document.getElementById("div-local-entrepot-edit");
     var select = document.getElementById("id_local_entrepot_edit");
+    var blocPlafond = document.getElementById("div-plafond-remise-edit");
     if (!role || !bloc || !select) return;
 
     function basculer() {
@@ -106,8 +120,10 @@
             // Un entrepot resterait rattache a un role qui n'en veut pas.
             select.value = "";
         }
+        if (blocPlafond) {
+            blocPlafond.style.display = (role.value === "accueil") ? "" : "none";
+        }
     }
-
     role.addEventListener("change", basculer);
     basculer();
 })();

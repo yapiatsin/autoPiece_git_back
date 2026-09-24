@@ -20,6 +20,30 @@ class LocalEntrepot(models.Model):
         verbose_name='Contact',
         help_text='Numéro de téléphone de l’agence (optionnel)',
     )
+    # Nom EXACT du point de vente déclaré dans l'espace FNE (DGI) pour cette
+    # localité. Une localité = un PDV ; ne plus fixer FNE_POINT_DE_VENTE global.
+    fne_point_de_vente = models.CharField(
+        max_length=150,
+        blank=True,
+        default='',
+        verbose_name='Point de vente FNE',
+        help_text=(
+            'Nom exact du point de vente dans l’espace FNE (ex. « Caisse Koumassi »). '
+            'Obligatoire pour certifier les ventes de cette localité.'
+        ),
+    )
+    # Montant max de remise (Fcfa) autorisé sur les ventes de cette localité.
+    # Les plafonds des comptes Accueil ne peuvent pas le dépasser.
+    plafond_remise = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        verbose_name='Plafond de remise',
+        help_text=(
+            'Montant maximum de remise (Fcfa) pour cette localité. '
+            'Les plafonds des agents Accueil ne peuvent pas le dépasser.'
+        ),
+    )
     latitude = models.DecimalField(
         max_digits=9, decimal_places=7, null=True, blank=True,
         help_text="Latitude GPS (ex: 5.345317 pour Abidjan-Plateau)",
@@ -39,6 +63,19 @@ class LocalEntrepot(models.Model):
     @property
     def a_coordonnees(self):
         return self.latitude is not None and self.longitude is not None
+
+    @property
+    def point_de_vente_fne(self) -> str:
+        """Libellé envoyé à l'API FNE pour cette localité."""
+        return (self.fne_point_de_vente or '').strip()
+
+    def plafond_remise_montant(self):
+        """Plafond de remise de la localité en Decimal (≥ 0)."""
+        from decimal import Decimal
+        try:
+            return max(Decimal('0'), Decimal(str(self.plafond_remise or 0)))
+        except Exception:
+            return Decimal('0')
 
     def creneau_du_jour(self, jour=None):
         """Retourne le créneau du jour donné (0=lundi … 6=dimanche), ou None."""
@@ -62,7 +99,6 @@ class LocalEntrepot(models.Model):
     @property
     def statut_ouverture(self):
         return 'Ouvert' if self.statut else 'Fermé'
-
 
 JOURS_SEMAINE = (
     (0, 'Lundi'),
@@ -152,6 +188,29 @@ class CustomUser(AbstractUser):
     role = models.CharField(default="caissier",max_length=20, choices=ROLE_CHOICES)
     genre = models.CharField(default="Homme",max_length=20, choices=GENRE_CHOICES)
     local_entrepot = models.ForeignKey(LocalEntrepot, on_delete=models.SET_NULL, related_name='local_entrepot_users', null=True, blank=True)
+    # Plafond personnel (Fcfa) pour le rôle Accueil : ≤ plafond de la localité.
+    # Pour autoriser une remise plus élevée, augmenter ce plafond (sans dépasser la localité).
+    plafond_remise = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        verbose_name='Plafond de remise',
+        help_text=(
+            'Montant max de remise (Fcfa) pour un agent Accueil. '
+            'Doit être ≤ au plafond de sa localité. '
+            'Augmentez-le si l’agent doit accorder une remise plus élevée.'
+        ),
+    )
+    # Clé de la session Django active : une seule connexion à la fois par compte
+    # (évite deux postes caisse / navigateurs ouverts avec le même utilisateur).
+    active_session_key = models.CharField(
+        max_length=40,
+        blank=True,
+        default='',
+        db_index=True,
+        verbose_name='Session active',
+        help_text='Session web exclusive ; une nouvelle connexion déconnecte l’ancienne.',
+    )
     is_active = models.BooleanField(default=True)
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email"]
@@ -159,12 +218,50 @@ class CustomUser(AbstractUser):
     history = HistoricalRecords()
 
     def clean(self):
+        from decimal import Decimal
         from django.core.exceptions import ValidationError
         super().clean()
         if self.role in ROLES_AVEC_LOCAL and not self.local_entrepot_id:
             raise ValidationError(
                 {'local_entrepot': f"Un entrepôt est obligatoire pour le rôle « {self.get_role_display()} »."}
             )
+        if self.role == 'accueil' and self.local_entrepot_id:
+            local_max = self.local_entrepot.plafond_remise_montant()
+            try:
+                user_max = max(Decimal('0'), Decimal(str(self.plafond_remise or 0)))
+            except Exception:
+                user_max = Decimal('0')
+            if user_max > local_max:
+                raise ValidationError({
+                    'plafond_remise': (
+                        f"Le plafond Accueil ({user_max} Fcfa) ne peut pas dépasser "
+                        f"celui de la localité « {self.local_entrepot.nom} » "
+                        f"({local_max} Fcfa). Augmentez d’abord le plafond de la localité, "
+                        f"ou baissez celui du compte."
+                    ),
+                })
+
+    def plafond_remise_effectif(self, local=None):
+        """
+        Plafond applicable pour une remise panier.
+        - Accueil : min(plafond compte, plafond localité)
+        - Chef agence / admin / gestionnaire : plafond de la localité
+        - Autres : 0 (pas de remise à la validation panier)
+        """
+        from decimal import Decimal
+        loc = local or self.local_entrepot
+        local_max = loc.plafond_remise_montant() if loc is not None else Decimal('0')
+        role = getattr(self, 'role', None)
+        if self.is_superuser or role in ('admin', 'gestionnaire', 'chefagence'):
+            return local_max
+        if role == 'accueil':
+            try:
+                user_max = max(Decimal('0'), Decimal(str(self.plafond_remise or 0)))
+            except Exception:
+                user_max = Decimal('0')
+            return min(user_max, local_max)
+        return Decimal('0')
+
     def __str__(self):
         return '%s - %s ' %(self.username, self.email,)
 

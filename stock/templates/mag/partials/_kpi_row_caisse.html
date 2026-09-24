@@ -1,0 +1,67 @@
+{# Statistiques journalières de la caissière connectée #}
+<section class="caisse-stats" aria-label="Statistiques journalières">
+    <div class="caisse-stats__grid">
+        <article class="caisse-stat-card caisse-stat-card--tx">
+            <div class="caisse-stat-card__top">
+                <span class="caisse-stat-card__icon"><i class="fa fa-exchange"></i></span>
+                <span class="caisse-stat-card__label">Transactions</span>
+            </div>
+            <strong class="caisse-stat-card__value">{{ stats_caisse.nb_transactions }}</strong>
+            <span class="caisse-stat-card__hint">Encaissements du jour</span>
+        </article>
+
+        <article class="caisse-stat-card caisse-stat-card--cash">
+            <div class="caisse-stat-card__top">
+                <span class="caisse-stat-card__icon"><i class="fa fa-money"></i></span>
+                <span class="caisse-stat-card__label">Encaissé</span>
+            </div>
+            <strong class="caisse-stat-card__value">{{ stats_caisse.total_encaisse_fmt }}</strong>
+            <span class="caisse-stat-card__hint">Fcfa versés</span>
+        </article>
+
+        <article class="caisse-stat-card caisse-stat-card--sales">
+            <div class="caisse-stat-card__top">
+                <span class="caisse-stat-card__icon"><i class="fa fa-shopping-bag"></i></span>
+                <span class="caisse-stat-card__label">Ventes</span>
+            </div>
+            <strong class="caisse-stat-card__value">{{ stats_caisse.total_ventes_fmt }}</strong>
+            <span class="caisse-stat-card__hint">Fcfa · CA net remises</span>
+        </article>
+
+        <article class="caisse-stat-card caisse-stat-card--remise">
+            <div class="caisse-stat-card__top">
+                <span class="caisse-stat-card__icon"><i class="fa fa-percent"></i></span>
+                <span class="caisse-stat-card__label">Remises</span>
+            </div>
+            <strong class="caisse-stat-card__value">{{ stats_caisse.total_remises_fmt }}</strong>
+            <span class="caisse-stat-card__hint">Fcfa accordés</span>
+        </article>
+    </div>
+
+    <div class="caisse-stats__footer">
+        <div class="caisse-stats__pill" title="Paiements en espèces">
+            <i class="fa fa-money" aria-hidden="true"></i>
+            <span class="caisse-stats__pill-label">Espèces</span>
+            <strong>{{ stats_caisse.nb_especes }}</strong>
+            <span class="caisse-stats__pill-amt">{{ stats_caisse.encaisse_especes_fmt }} Fcfa</span>
+        </div>
+        <div class="caisse-stats__pill" title="Paiements numériques">
+            <i class="fa fa-mobile" aria-hidden="true"></i>
+            <span class="caisse-stats__pill-label">Numérique</span>
+            <strong>{{ stats_caisse.nb_numerique }}</strong>
+            <span class="caisse-stats__pill-amt">{{ stats_caisse.encaisse_numerique_fmt }} Fcfa</span>
+        </div>
+        <div class="caisse-stats__pill" title="Panier moyen">
+            <i class="fa fa-line-chart" aria-hidden="true"></i>
+            <span class="caisse-stats__pill-label">Ticket moyen</span>
+            <strong>{{ stats_caisse.ticket_moyen_fmt }}</strong>
+            <span class="caisse-stats__pill-amt">Fcfa</span>
+        </div>
+        <div class="caisse-stats__pill caisse-stats__pill--wait" title="Paniers en attente d’encaissement">
+            <i class="fa fa-hourglass-half" aria-hidden="true"></i>
+            <span class="caisse-stats__pill-label">En attente</span>
+            <strong>{{ stats_caisse.nb_attente }}</strong>
+            <span class="caisse-stats__pill-amt">paniers</span>
+        </div>
+    </div>
+</section>

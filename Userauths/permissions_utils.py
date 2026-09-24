@@ -74,6 +74,9 @@ CAISSE_IMPLIED_BY_CAISSIERE = frozenset({
     'ajax_reload_paniers',
     'ajax_calcul_timbre',
     'reimprimer_recu_paiement',
+    'caisse_fne_certifier',
+    'caisse_fne_pdf',
+    'printer_escpos_fne',
     'imprimer_bon_commande_vente',
     'imprimer_recu_commande',
     'export_caisse_ventes_excel',
@@ -81,8 +84,16 @@ CAISSE_IMPLIED_BY_CAISSIERE = frozenset({
 })
 
 # parent_url -> urls enfants autorisées si l'utilisateur a le parent
+# Reçus FNE : réimpression et relance de certification depuis la liste des ventes.
+FNE_IMPLIED_BY_LISTE_VENTES = frozenset({
+    'caisse_fne_certifier',
+    'caisse_fne_pdf',
+    'printer_escpos_fne',
+})
+
 IMPLIED_PERMISSIONS = {
     'caissiere': CAISSE_IMPLIED_BY_CAISSIERE,
+    'liste_ventes': FNE_IMPLIED_BY_LISTE_VENTES,
 }
 
 

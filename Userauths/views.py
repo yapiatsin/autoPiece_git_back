@@ -520,6 +520,8 @@ def _auth_context(**extra):
 
 def loginview(request):
     if request.user.is_authenticated:
+        from .session_control import claim_exclusive_session
+        claim_exclusive_session(request, request.user)
         messages.success(request, "Bienvenue à AUTO-PIECE")
         request.session['show_ecom_order_guide'] = True
         return _redirect_after_login(request.user, request)
@@ -544,6 +546,8 @@ def loginview(request):
                 messages.warning(request, "Votre compte n'est pas encore activé.")
                 return render(request, "page/login.html", _auth_context(show_resend=True))
             login(request, user)
+            from .session_control import claim_exclusive_session
+            claim_exclusive_session(request, user)
             civilite = "Mme" if user.genre == "Femme" else "Mr"
             messages.success(request, f"Bienvenue {civilite} {user.username}")
             return _redirect_after_login(user, request)
@@ -555,6 +559,9 @@ def Deconnexion(request):
     role = getattr(user, 'role', None)
     is_superuser = getattr(user, 'is_superuser', False)
     username = getattr(user, 'username', '') or 'utilisateur'
+    if getattr(user, 'is_authenticated', False):
+        from .session_control import clear_active_session
+        clear_active_session(user)
     logout(request)
     messages.success(request, f'Vous êtes deconnecté {username}')
 

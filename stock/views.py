@@ -75,7 +75,7 @@ from django.views.generic import ListView, DetailView, CreateView, DeleteView, U
 from django.contrib.auth.mixins import LoginRequiredMixin
 from Userauths.mixins import CustomPermissionRequiredMixin
 from Userauths.permissions_utils import user_has_permission
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import pandas as pd
 import textwrap
 import platform
@@ -177,9 +177,13 @@ def _pu_item_panier(item, *, panier=None, commande=None):
 def user_is_chef_agence(user):
     return user.is_superuser or getattr(user, 'role', None) in ('chefagence', 'admin')
 
-def parse_remise_montant(raw_value, total_brut):
+def parse_remise_montant(raw_value, total_brut, *, user=None, local=None):
     """
-    Remise saisie comme montant fixe (même devise que le panier), plafonné au total brut.
+    Remise saisie comme montant fixe (même devise que le panier), plafonnée au
+    total brut et au plafond Accueil / localité.
+
+    Retourne (montant, message_erreur_ou_None). Si message_erreur est renseigné,
+    la validation panier doit être refusée (ne pas appliquer silencieusement).
     """
     if total_brut is None:
         total_brut = Decimal('0.0')
@@ -194,7 +198,17 @@ def parse_remise_montant(raw_value, total_brut):
         remise = Decimal('0.0')
     if remise > total_brut:
         remise = total_brut
-    return remise
+
+    if user is not None and remise > 0:
+        loc = local or getattr(user, 'local_entrepot', None)
+        plafond = user.plafond_remise_effectif(loc)
+        if remise > plafond:
+            return remise, (
+                f"Remise de {remise} Fcfa refusée : votre plafond est de {plafond} Fcfa"
+                + (f" (localité « {loc.nom} » : {loc.plafond_remise_montant()} Fcfa)" if loc else "")
+                + ". Demandez une hausse de votre plafond Accueil (sans dépasser celui de la localité)."
+            )
+    return remise, None
 
 
 def remise_pourcentage(total_brut, montant_remise):
@@ -1376,6 +1390,7 @@ class AddPanierView(LoginRequiredMixin, View):
             'categories': categories,
             'total_quantite': total_quantite,
             'localite_panier': localite_panier,
+            'plafond_remise': request.user.plafond_remise_effectif(localite_panier),
         })
         
 @login_required(login_url='connexion')
@@ -1671,7 +1686,13 @@ def valider_paniers(request):
     # Calcul du total du panier
     panier_items = list(PanierItem.objects.filter(panier=panier).select_related('piece', 'panier'))
     total = total_panier_items(panier_items, panier.local_entrepot, panier=panier)
-    montant_remise = parse_remise_montant(request.POST.get('remiser'), total)
+    montant_remise, erreur_remise = parse_remise_montant(
+        request.POST.get('remiser'), total,
+        user=request.user, local=panier.local_entrepot,
+    )
+    if erreur_remise:
+        messages.error(request, erreur_remise)
+        return redirect('paniers')
     total_apres_remise = total - montant_remise
     commande = Commande.objects.create(
         panier=panier,
@@ -1770,6 +1791,7 @@ class AddProformaView(LoginRequiredMixin, View):
             'total_apres_remise': total_apres_remise,
             'categories': categories,
             'total_quantite': total_quantite,
+            'plafond_remise': request.user.plafond_remise_effectif(localite),
         })
 
 @login_required(login_url='connexion')
@@ -1984,7 +2006,13 @@ def valider_proforma(request, ticket_id=None):
         messages.error(request, "Le nom du client est obligatoire pour valider la proforma.")
         return redirect('add_proforma')
     
-    montant_remise = parse_remise_montant(request.POST.get('remiser'), total)
+    montant_remise, erreur_remise = parse_remise_montant(
+        request.POST.get('remiser'), total,
+        user=request.user, local=panier.local_entrepot,
+    )
+    if erreur_remise:
+        messages.error(request, erreur_remise)
+        return redirect('add_proforma')
     total_apres_remise = total - montant_remise
     
     # Création de la commande avec profoma=1
@@ -2492,6 +2520,93 @@ def _moyens_paiement_caisse():
     return [gp, espece]
 
 
+def _fmt_fcfa(value):
+    """Montant entier Fcfa avec séparateurs d’espace (affichage KPI)."""
+    try:
+        n = int(Decimal(str(value or 0)).to_integral_value(rounding=ROUND_HALF_UP))
+    except Exception:
+        try:
+            n = int(round(float(value or 0)))
+        except Exception:
+            n = 0
+    return f'{n:,}'.replace(',', ' ')
+
+
+def _stats_caisse_jour(user, localite=None, nb_attente=0):
+    """Statistiques journalières de la caissière connectée (encaissements du jour)."""
+    today = timezone.localdate()
+    qs = Commande.objects.filter(
+        paye=True,
+        commande_en_ligne=False,
+        utilisateur=user,
+    ).filter(
+        Q(panier__date_paie_panier=today)
+        | Q(bon_paiement__date_emission__date=today)
+        | Q(date_creation=today)
+    )
+    if localite:
+        qs = qs.filter(panier__local_entrepot=localite)
+    qs = qs.distinct()
+
+    agg = qs.aggregate(
+        nb=Count('id'),
+        total_ventes=Coalesce(Sum('total'), Decimal('0')),
+        total_encaisse=Coalesce(Sum('montant_paye'), Decimal('0')),
+        total_remises=Coalesce(Sum('remise'), Decimal('0')),
+        total_tva=Coalesce(Sum('montant_tva'), Decimal('0')),
+    )
+    nb = agg['nb'] or 0
+    total_ventes = agg['total_ventes'] or Decimal('0')
+    total_encaisse = agg['total_encaisse'] or Decimal('0')
+    total_remises = agg['total_remises'] or Decimal('0')
+    total_tva = agg['total_tva'] or Decimal('0')
+    ticket_moyen = (total_ventes / nb) if nb else Decimal('0')
+
+    nb_especes = qs.filter(moyen_paiement__code='espece').count()
+    nb_numerique = qs.filter(moyen_paiement__code='geniuspay').count()
+    encaisse_especes = qs.filter(moyen_paiement__code='espece').aggregate(
+        s=Coalesce(Sum('montant_paye'), Decimal('0'))
+    )['s'] or Decimal('0')
+    encaisse_numerique = qs.filter(moyen_paiement__code='geniuspay').aggregate(
+        s=Coalesce(Sum('montant_paye'), Decimal('0'))
+    )['s'] or Decimal('0')
+
+    display_name = (
+        (getattr(user, 'get_full_name', lambda: '')() or '').strip()
+        or getattr(user, 'username', '')
+        or 'Caissier(ère)'
+    )
+    role_label = ''
+    try:
+        role_label = user.get_role_display() if hasattr(user, 'get_role_display') else ''
+    except Exception:
+        role_label = getattr(user, 'role', '') or ''
+
+    return {
+        'date': today,
+        'caissier_nom': display_name,
+        'caissier_role': role_label,
+        'localite_nom': str(localite) if localite else '',
+        'nb_transactions': nb,
+        'nb_attente': nb_attente,
+        'total_ventes': total_ventes,
+        'total_encaisse': total_encaisse,
+        'total_remises': total_remises,
+        'total_tva': total_tva,
+        'ticket_moyen': ticket_moyen,
+        'nb_especes': nb_especes,
+        'nb_numerique': nb_numerique,
+        'encaisse_especes': encaisse_especes,
+        'encaisse_numerique': encaisse_numerique,
+        'total_ventes_fmt': _fmt_fcfa(total_ventes),
+        'total_encaisse_fmt': _fmt_fcfa(total_encaisse),
+        'total_remises_fmt': _fmt_fcfa(total_remises),
+        'ticket_moyen_fmt': _fmt_fcfa(ticket_moyen),
+        'encaisse_especes_fmt': _fmt_fcfa(encaisse_especes),
+        'encaisse_numerique_fmt': _fmt_fcfa(encaisse_numerique),
+    }
+
+
 def _paniers_caisse_en_attente(localite=None, q=None):
     """Paniers validés en attente d'encaissement, avec lignes et pièces préchargées.
 
@@ -2598,12 +2713,17 @@ def Caisse(request):
     paniers_non_valides = _paniers_caisse_en_attente(localite=localite)
     cmdes = (
         Commande.objects.filter(date_creation=dates, commande_en_ligne=False)
-        .select_related('utilisateur', 'panier', 'ticket', 'bon_paiement', 'moyen_paiement')
+        .select_related('utilisateur', 'panier', 'ticket', 'bon_paiement', 'moyen_paiement', 'facture_fne')
         .prefetch_related('paiements_geniuspay')
         .order_by('-date_creation')
     )
     if localite:
         cmdes = cmdes.filter(panier__local_entrepot=localite)
+    stats_caisse = _stats_caisse_jour(
+        request.user,
+        localite=localite,
+        nb_attente=len(paniers_non_valides),
+    )
     try:
         bon_commande_print_url_tpl = reverse(
             'imprimer_bon_commande_vente',
@@ -2612,9 +2732,12 @@ def Caisse(request):
     except Exception:
         bon_commande_print_url_tpl = '/stocks/caisse/bon-commande/__TICKET__/imprimer/'
     from .tva_service import get_taux_tva, tva_est_active
+    from .fne_service import fne_active
     context = {
         'paniers_non_valides': paniers_non_valides,
         'cmdes': cmdes,
+        'stats_caisse': stats_caisse,
+        'fne_active': fne_active(),
         'moyens_paiement': _moyens_paiement_caisse(),
         'bon_commande_print_url_tpl': bon_commande_print_url_tpl,
         'tva_active': tva_est_active(),
@@ -2758,6 +2881,10 @@ def print_order_receipt_thermal(commande, panier_items):
         dev.write(0x01, b'\x1b\x40')  # Init
         # En-tête
         write("P&B Auto-Pieces", align='center', bold=True, double_height=True)
+        from stock.receipt_layout import entreprise_ncc
+        _ncc = entreprise_ncc()
+        if _ncc:
+            write(f"NCC : {_ncc}", align='center', bold=True)
         write("*" * INNER_WIDTH, align='center')
         write("BON DE COMMANDE", align='center', bold=True)
         write("(A presenter en caisse)", align='center')
@@ -2869,6 +2996,12 @@ def generate_order_receipt_pdf_file(commande, panier_items):
     c.setFont("Helvetica-Bold", 14)
     c.drawCentredString(page_width / 2, y, "P&B Auto-Pieces")
     y -= 14
+    from stock.receipt_layout import entreprise_ncc
+    _ncc = entreprise_ncc()
+    if _ncc:
+        c.setFont("Helvetica-Bold", 10)
+        c.drawCentredString(page_width / 2, y, f"NCC : {_ncc}")
+        y -= 12
     c.setFont("Helvetica-Bold", 11)
     c.drawCentredString(page_width / 2, y, "BON DE COMMANDE")
     y -= 10
@@ -3079,6 +3212,11 @@ def valider_panier_paiement(request, ticket_id):
                 messages.error(request, str(exc))
                 return redirect('caissiere')
 
+            # Vente encaissée : certification DGI (FNE). Un échec n'annule pas
+            # le paiement, la caisse peut relancer depuis la liste des ventes.
+            from stock.fne_service import certifier_apres_encaissement
+            fne = certifier_apres_encaissement(request, result)
+
             bon_paiement = result['bon_paiement']
             if is_ajax:
                 payload = payload_succes_caisse(
@@ -3093,7 +3231,10 @@ def valider_panier_paiement(request, ticket_id):
                     payload['warning'] = payload.get('warning') or (
                         "Paiement OK, bon de commande non généré."
                     )
+                payload['fne'] = fne
                 return JsonResponse(payload)
+            if fne and not fne['certifiee']:
+                messages.warning(request, fne['message'])
             if not bon_paiement:
                 messages.warning(
                     request,
@@ -3472,7 +3613,7 @@ class ListeVentesView(LoginRequiredMixin, TemplateView):
         base = self._base_ventes_qs(localite)
         cmdes = (
             base.filter(date_creation__range=[filt['date_debut'], filt['date_fin']])
-            .select_related('utilisateur', 'ticket', 'bon_paiement', 'moyen_paiement')
+            .select_related('utilisateur', 'ticket', 'bon_paiement', 'moyen_paiement', 'facture_fne')
             .prefetch_related('paiements_geniuspay')
             .order_by('-date_creation', '-date')
         )
@@ -3486,6 +3627,8 @@ class ListeVentesView(LoginRequiredMixin, TemplateView):
         stats_mois = self._agg_ventes(base.filter(date_creation__range=[debut_mois, fin_mois]))
         stats_annee = self._agg_ventes(base.filter(date_creation__range=[debut_annee, fin_annee]))
 
+        from .fne_service import fne_active
+
         context.update(filt)
         context.update({
             'dates': today,
@@ -3496,6 +3639,7 @@ class ListeVentesView(LoginRequiredMixin, TemplateView):
             'stats_jour': stats_jour,
             'stats_mois': stats_mois,
             'stats_annee': stats_annee,
+            'fne_active': fne_active(),
         })
         context.update(export_urls(
             self.request, 'export_liste_ventes_excel', 'export_liste_ventes_pdf',

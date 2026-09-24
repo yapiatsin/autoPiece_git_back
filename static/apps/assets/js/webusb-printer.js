@@ -202,6 +202,15 @@
         });
     }
 
+    /* En-têtes à joindre aux requêtes qui encaissent (validation, suivi
+       GeniusPay) : si ce poste imprime via WebUSB, le serveur s'abstient, sinon
+       le ticket sortirait deux fois sur un poste où Django tourne en local. */
+    function impressionHeaders() {
+        return authorizedDevices().then(function (devices) {
+            return { 'X-Impression-Poste': devices.length ? '1' : '0' };
+        });
+    }
+
     function printBytes(bytes, interactive) {
         return resolveDevice(interactive !== false).then(function (device) {
             if (!device) {
@@ -299,6 +308,175 @@
             });
     }
 
+    /* Reçu FNE (facture normalisée électronique certifiée par la DGI). Il suit
+       le reçu de caisse : le serveur ne le rend que pour une vente certifiée. */
+    function printFneReceipt(ticketNumero, interactive) {
+        var template = urls().escposFne;
+        if (!template) return Promise.reject(new Error('URL de reçu FNE absente.'));
+        var url = template.replace('TICKET_ID', encodeURIComponent(ticketNumero));
+        return fetchBytes(url).then(function (bytes) {
+            return printBytes(bytes, interactive);
+        });
+    }
+
+    /* Impression automatique du reçu FNE, à enchaîner après autoPrintReceipt.
+       Sans imprimante autorisée, on le signale : le client doit repartir avec
+       sa facture certifiée, disponible en PDF depuis la liste des ventes. */
+    function autoPrintFneReceipt(ticketNumero) {
+        if (!ticketNumero) return Promise.resolve(false);
+        return authorizedDevices().then(function (devices) {
+            if (!devices.length) {
+                notify('info', 'Reçu FNE à imprimer depuis la liste des ventes (bouton QR).');
+                return false;
+            }
+            return printFneReceipt(ticketNumero, false)
+                .then(function () {
+                    notify('success', 'Reçu FNE imprimé.');
+                    return true;
+                })
+                .catch(function (error) {
+                    notify('warning', "Reçu FNE non imprimé : " + (error.message || 'erreur inconnue'));
+                    return false;
+                });
+        });
+    }
+
+    /* Réimpression du reçu FNE, avec repli sur son PDF si WebUSB manque. */
+    function reprintFneReceipt(ticketNumero) {
+        if (!isSupported()) {
+            return openFnePdf(ticketNumero, "Ce navigateur ne gère pas WebUSB.");
+        }
+        return printFneReceipt(ticketNumero)
+            .then(function () {
+                notify('success', "Reçu FNE " + ticketNumero + " envoyé à l'imprimante.");
+            })
+            .catch(function (error) {
+                return openFnePdf(ticketNumero, error.message);
+            });
+    }
+
+    function openFnePdf(ticketNumero, reason) {
+        var template = urls().fnePdf;
+        if (!template) {
+            notify('error', reason || "Impression impossible.");
+            return Promise.resolve();
+        }
+        notify('info', (reason ? reason + ' ' : '') + 'Ouverture du reçu FNE en PDF.');
+        global.open(template.replace('TICKET_ID', encodeURIComponent(ticketNumero)), '_blank', 'noopener');
+        return Promise.resolve();
+    }
+
+    /* Relance la certification DGI d'une vente encaissée dont la FNE a échoué. */
+    function certifyFne(ticketNumero) {
+        var template = urls().fneCertifier;
+        if (!template) return Promise.reject(new Error('URL de certification FNE absente.'));
+        if (!ticketNumero) return Promise.reject(new Error('Numéro de ticket manquant.'));
+        return fetch(template.replace('TICKET_ID', encodeURIComponent(ticketNumero)), {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken(),
+                'Accept': 'application/json',
+            },
+        })
+            .then(function (r) {
+                return r.text().then(function (text) {
+                    var data = {};
+                    if (text) {
+                        try {
+                            data = JSON.parse(text);
+                        } catch (parseErr) {
+                            data = {};
+                        }
+                    }
+                    return { status: r.status, ok: r.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (result.status === 403) {
+                    throw new Error(
+                        result.data.error
+                        || 'Accès refusé : permission de certification FNE manquante.'
+                    );
+                }
+                if (!result.data.success) {
+                    throw new Error(
+                        result.data.error
+                        || (result.data.fne && result.data.fne.message)
+                        || 'Certification FNE impossible.'
+                    );
+                }
+                return result.data.fne;
+            });
+    }
+
+    /* Bouton en attente pendant `work`, restauré en cas d'échec. */
+    function withSpinner(btn, work) {
+        var originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+        return Promise.resolve()
+            .then(work)
+            .then(
+                function (value) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    return value;
+                },
+                function (error) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    throw error;
+                }
+            );
+    }
+
+    /* Boutons FNE des listes de ventes (partial _fne_actions.html), sur toute
+       page qui charge ce module. */
+    function onFneButtonClick(e) {
+        if (!e.target || !e.target.closest) return;
+        var reprint = e.target.closest('.reprint-fne');
+        if (reprint) {
+            e.preventDefault();
+            e.stopPropagation();
+            var reprintTicket = reprint.getAttribute('data-ticket') || reprint.dataset.ticket;
+            notify('info', 'Impression du reçu FNE…');
+            withSpinner(reprint, function () {
+                return reprintFneReceipt(reprintTicket);
+            }).catch(function (error) {
+                notify('error', error.message || 'Impression FNE impossible.');
+            });
+            return;
+        }
+        var certify = e.target.closest('.certifier-fne');
+        if (!certify) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var ticket = certify.getAttribute('data-ticket') || certify.dataset.ticket;
+        if (!ticket) {
+            notify('error', 'Numéro de ticket manquant sur le bouton FNE.');
+            return;
+        }
+        notify('info', 'Certification FNE en cours…');
+        withSpinner(certify, function () { return certifyFne(ticket); })
+            .then(function (fne) {
+                notify('success', (fne && fne.message) || 'Facture FNE certifiée.');
+                // Le bouton devient celui de réimpression du reçu certifié.
+                certify.classList.remove('certifier-fne', 'text-danger');
+                certify.classList.add('reprint-fne');
+                certify.title = 'Réimprimer le reçu FNE ' + ((fne && fne.reference) || '');
+                certify.innerHTML = '<i class="fa fa-qrcode"></i>';
+                return autoPrintFneReceipt(ticket);
+            })
+            .catch(function (error) {
+                var msg = (error && error.message) || 'Certification FNE impossible.';
+                certify.title = 'FNE non certifiée : ' + msg + ' — cliquer pour relancer';
+                certify.classList.add('text-danger');
+                notify('error', msg);
+            });
+    }
+
     /* Bon de commande mis en attente par la validation d'un panier.
        Celle-ci se termine par une redirection : l'impression ne peut pas partir
        dans sa reponse, c'est la page suivante qui reclame le ticket au serveur.
@@ -345,14 +523,42 @@
     }
 
     function csrfToken() {
-        var match = document.cookie.match(/csrftoken=([^;]+)/);
-        return match ? match[1] : '';
+        if (global.AUTOPIECE_CSRF_TOKEN) {
+            return String(global.AUTOPIECE_CSRF_TOKEN);
+        }
+        var meta = typeof document !== 'undefined'
+            && document.querySelector('meta[name="csrf-token"]');
+        if (meta && meta.getAttribute('content')) {
+            return meta.getAttribute('content');
+        }
+        var input = typeof document !== 'undefined'
+            && document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (input && input.value) {
+            return input.value;
+        }
+        var match = typeof document !== 'undefined'
+            && document.cookie
+            && document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
     }
 
     function notify(level, message) {
-        if (typeof global.toastr !== 'undefined' && global.toastr[level]) {
+        if (!message) return;
+        if (typeof global.toastr !== 'undefined' && typeof global.toastr[level] === 'function') {
             global.toastr[level](message);
+            return;
         }
+        if (typeof global.console !== 'undefined' && global.console[level === 'error' ? 'error' : 'log']) {
+            global.console[level === 'error' ? 'error' : 'log']('[FNE]', message);
+        }
+        // Repli visible si toastr n'est pas chargé (évite l'impression « aucune action »).
+        if (level === 'error' && typeof global.alert === 'function') {
+            global.alert(message);
+        }
+    }
+
+    if (typeof document !== 'undefined') {
+        document.addEventListener('click', onFneButtonClick);
     }
 
     // Un bon peut attendre depuis la validation d'un panier : on regarde a
@@ -374,12 +580,17 @@
         send: send,
         fetchBytes: fetchBytes,
         printBytes: printBytes,
+        impressionHeaders: impressionHeaders,
         printTest: printTest,
         printReceipt: printReceipt,
         autoPrintReceipt: autoPrintReceipt,
         printOrderSlip: printOrderSlip,
         autoPrintPendingOrderSlip: autoPrintPendingOrderSlip,
         reprintReceipt: reprintReceipt,
+        printFneReceipt: printFneReceipt,
+        autoPrintFneReceipt: autoPrintFneReceipt,
+        reprintFneReceipt: reprintFneReceipt,
+        certifyFne: certifyFne,
         notify: notify,
     };
 })(window);

@@ -355,6 +355,7 @@ def _compose_receipt(w, commande, panier_items):
         build_receipt_item_rows,
         caissier_label,
         commande_date_label,
+        entreprise_ncc,
         remise_line,
         spaced_line,
         total_line,
@@ -364,6 +365,9 @@ def _compose_receipt(w, commande, panier_items):
     caissier = caissier_label(commande)
 
     w.write("P&B Auto-Pieces", align="center", bold=True, double=True)
+    ncc = entreprise_ncc()
+    if ncc:
+        w.write(f"NCC : {ncc}", align="center", bold=True)
     w.write("*" * w.inner, align="center")
     w.write("REÇU DE CAISSE", align="center", bold=True)
     w.write("*" * w.inner, align="center")
@@ -432,6 +436,55 @@ def build_receipt_bytes(commande, panier_items) -> bytes:
     return bytes(sink.buffer)
 
 
+def _write_qr(w, data: str, module_size: int = 6):
+    """QR code natif ESC/POS (GS ( k, modèle 2), centré. Supporté par les Epson TM-T20."""
+    payload = data.encode("ascii", errors="ignore")
+    store_len = len(payload) + 3
+    w.raw(b"\x1b\x61\x01")
+    w.raw(b"\x1d\x28\x6b\x04\x00\x31\x41\x32\x00")  # modèle 2
+    w.raw(b"\x1d\x28\x6b\x03\x00\x31\x43" + bytes([module_size]))  # taille du module
+    w.raw(b"\x1d\x28\x6b\x03\x00\x31\x45\x31")  # correction d'erreur M
+    w.raw(b"\x1d\x28\x6b" + bytes([store_len % 256, store_len // 256]) + b"\x31\x50\x30" + payload)
+    w.raw(b"\x1d\x28\x6b\x03\x00\x31\x51\x30")  # impression
+    w.raw(b"\n")
+    w.raw(b"\x1b\x61\x00")
+
+
+def _compose_fne_receipt(w, facture):
+    """Compose le reçu FNE (facture certifiée DGI), qui suit le reçu de caisse.
+
+    Mise en page partagée avec le PDF de repli : stock.fne_receipt.
+    """
+    from stock.fne_receipt import build_fne_receipt_elements
+
+    for element in build_fne_receipt_elements(facture, w.inner):
+        if element[0] == "qr":
+            _write_qr(w, element[1])
+            continue
+        _, text, align, style = element
+        w.write(
+            text,
+            align=align,
+            bold=style in ("title", "subtitle", "bold"),
+            double=style == "title",
+        )
+    w.feed_cut(10)
+
+
+def print_fne_receipt(facture, vid=None, pid=None):
+    vid, pid = resolve_vid_pid(vid, pid)
+    with _usb_printer_session(vid, pid) as w:
+        _compose_fne_receipt(w, facture)
+    time.sleep(0.5)
+
+
+def build_fne_receipt_bytes(facture) -> bytes:
+    """Reçu FNE au format ESC/POS, a envoyer par le navigateur (WebUSB)."""
+    sink, writer = _new_buffer_writer()
+    _compose_fne_receipt(writer, facture)
+    return bytes(sink.buffer)
+
+
 def _compose_order_slip(w, commande, panier_items):
     """Compose le BON DE COMMANDE (avant paiement) dans un writer.
 
@@ -444,6 +497,7 @@ def _compose_order_slip(w, commande, panier_items):
     from stock.receipt_layout import (
         build_receipt_item_rows,
         commande_date_label,
+        entreprise_ncc,
         panier_localite,
         remise_line,
         spaced_line,
@@ -451,6 +505,9 @@ def _compose_order_slip(w, commande, panier_items):
     )
 
     w.write("P&B Auto-Pieces", align="center", bold=True, double=True)
+    ncc = entreprise_ncc()
+    if ncc:
+        w.write(f"NCC : {ncc}", align="center", bold=True)
     w.write("*" * w.inner, align="center")
     w.write("BON DE COMMANDE", align="center", bold=True)
     w.write("(A presenter en caisse)", align="center")
@@ -541,10 +598,31 @@ def clear_session_printer(request):
     request.session.modified = True
 
 
+def impression_par_le_poste(request) -> bool:
+    """Le navigateur du poste imprime lui-même via WebUSB.
+
+    La caisse pose l'en-tête X-Impression-Poste quand une imprimante WebUSB est
+    autorisée. Le serveur ne doit alors rien imprimer : sur un poste où Django
+    tourne à côté de l'imprimante, chaque ticket sortirait en double.
+    """
+    return request is not None and request.headers.get("X-Impression-Poste") == "1"
+
+
 def print_receipt_for_request(request, commande, panier_items):
     """
     Imprime en utilisant l'imprimante en session, sinon scan auto, sinon défaut Epson.
     """
+    vid, pid = _printer_for_request(request)
+    print_receipt(commande, panier_items, vid=vid, pid=pid)
+
+
+def print_fne_receipt_for_request(request, facture):
+    """Reçu FNE sur l'imprimante USB du serveur (même résolution que le reçu)."""
+    vid, pid = _printer_for_request(request)
+    print_fne_receipt(facture, vid=vid, pid=pid)
+
+
+def _printer_for_request(request):
     stored = get_session_printer(request)
     if stored:
         vid, pid = stored["vid"], stored["pid"]
@@ -556,4 +634,4 @@ def print_receipt_for_request(request, commande, panier_items):
             set_session_printer(request, vid, pid, p)
         else:
             vid, pid = DEFAULT_VID, DEFAULT_PID
-    print_receipt(commande, panier_items, vid=vid, pid=pid)
+    return vid, pid

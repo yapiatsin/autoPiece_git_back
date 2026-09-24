@@ -4,11 +4,15 @@
 {% block title %}AUTO-PIECE — Caisse{% endblock title %}
 {% block page %}{% endblock page %}
 {% block extra_head %}
+<link rel="stylesheet" href="{% static 'apps/assets/css/mag-cmd-online-modal.css' %}">
 <link rel="stylesheet" href="{% static 'apps/assets/css/caisse.css' %}">
 {% endblock extra_head %}
 {% block main_content %}
     <div class="col-md-8 col-lg-8 p-2 mt-0 panier-page-col">
         <div class="card panier-page-card panier-page-card--catalog">
+            <div class="body caisse-stats-body">
+                {% include 'mag/partials/_kpi_row_caisse.html' %}
+            </div>
             <div class="body panier-catalog-search">
                 <label class="sr-only" for="searchInput">Rechercher un ticket</label>
                 <div class="piece-catalog-search" id="adv-search" role="search">
@@ -30,10 +34,10 @@
                     </button>
                 </div>
             </div>
-            <div class="body" style="background-color: #ffe9e95c;">
+            <div class="body caisse-paniers-body">
                 {% include 'mag/partials/_panier_no_valid_styles.html' %}
                 <div class="cwidget-scroll">
-                    <ul class="chat-widget m-r-5 clearfix" style="border-radius:18px; height: 450px;">
+                    <ul class="chat-widget m-r-5 clearfix caisse-paniers-scroll">
                         <div class="row clearfix piece-catalog-row" id="result-articles">
                             {% include 'mag/partials/_panier_no_valid.html' %}
                         </div>
@@ -120,6 +124,7 @@
                                                     title="Réimprimer le reçu de paiement">
                                                 <i class="fa fa-print"></i>
                                             </button>
+                                            {% include "mag/partials/_fne_actions.html" with btn_class="btn btn-sm btn-outline-secondary" %}
                                             {% if c.bon_paiement %}
                                                 <a href="{% url 'imprimer_bon_commande_vente' c.ticket.numero %}?format=pdf"
                                                    class="btn btn-sm btn-outline-secondary"
@@ -429,6 +434,15 @@
                 .catch(() => toastr.warning("Bon de commande non disponible pour ce ticket."));
         }
 
+        // Le poste imprime-t-il via WebUSB ? Le serveur s'abstient alors (voir webusb-printer.js).
+        function impressionHeaders() {
+            const printer = window.AutoPiecePrinter;
+            if (!printer || typeof printer.impressionHeaders !== 'function') {
+                return Promise.resolve({});
+            }
+            return printer.impressionHeaders().catch(() => ({}));
+        }
+
         function onCaisseFormSubmit(e) {
             const form = e.target;
             if (!form || form.id !== "form-valider-panier") return;
@@ -437,15 +451,16 @@
             if (btnValider) btnValider.disabled = true;
             const formData = new FormData(form);
             const csrf = (document.cookie.split('; ').find(c => c.startsWith('csrftoken=')) || '').split('=')[1];
-            fetch(form.action, {
+            impressionHeaders()
+            .then(extra => fetch(form.action, {
                 method: "POST",
                 body: formData,
                 credentials: "same-origin",
-                headers: {
+                headers: Object.assign({
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRFToken': csrf || '',
-                }
-            })
+                }, extra)
+            }))
             .then(r => r.json().then(data => ({ ok: r.ok, data })).catch(() => ({
                 ok: false,
                 data: { success: false, error: r.status === 403
@@ -481,8 +496,18 @@
                 reloadPanierList();
                 // Impression du reçu sur l'imprimante branchée sur ce poste.
                 // Le serveur ne peut pas le faire : il ne voit aucun périphérique.
+                // Le reçu FNE (facture certifiée DGI) suit le reçu de caisse.
+                const fne = data.fne;
                 if (data.ticket_numero && window.AutoPiecePrinter) {
-                    window.AutoPiecePrinter.autoPrintReceipt(data.ticket_numero);
+                    window.AutoPiecePrinter.autoPrintReceipt(data.ticket_numero).then(function () {
+                        if (fne && fne.certifiee) {
+                            return window.AutoPiecePrinter.autoPrintFneReceipt(data.ticket_numero);
+                        }
+                    });
+                }
+                if (fne) {
+                    if (fne.certifiee) toastr.info(fne.message);
+                    else toastr.warning(fne.message + " Relancez depuis la liste des ventes (bouton FNE).");
                 }
                 if (data.bon_commande_html) {
                     ouvrirModalBonCommande(data);
@@ -510,7 +535,10 @@
                     toastr.error("Délai de paiement GeniusPay dépassé. Vérifiez le ticket.");
                     return;
                 }
-                fetch(statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                impressionHeaders()
+                    .then(extra => fetch(statusUrl, {
+                        headers: Object.assign({ 'X-Requested-With': 'XMLHttpRequest' }, extra),
+                    }))
                     .then(r => r.json())
                     .then(data => {
                         if (data.failed) {

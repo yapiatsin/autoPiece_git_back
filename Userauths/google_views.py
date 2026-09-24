@@ -45,6 +45,8 @@ def _extract_credential(request):
 def _login_and_redirect(request, user, profile):
     google_auth.link_identity(user, profile)
     login(request, user, backend=AUTH_BACKEND)
+    from .session_control import claim_exclusive_session
+    claim_exclusive_session(request, user)
     request.session['show_ecom_order_guide'] = True
     response = _redirect_after_login(user, request)
     civilite = "Mme" if getattr(user, 'genre', '') == "Femme" else "Mr"
@@ -243,6 +245,8 @@ def google_otp_view(request):
     request.session.pop(SESSION_KEY, None)
     google_auth.link_identity(user, profile)
     login(request, user, backend=AUTH_BACKEND)
+    from .session_control import claim_exclusive_session
+    claim_exclusive_session(request, user)
     request.session['show_ecom_order_guide'] = True
     civilite = "Mme" if getattr(user, 'genre', '') == "Femme" else "Mr"
     messages.success(

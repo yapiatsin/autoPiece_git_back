@@ -456,7 +456,7 @@ def finaliser_encaissement_caisse(
         if request is not None:
             try:
                 from stock import printer_service
-                if printer_service.HAS_USB:
+                if printer_service.HAS_USB and not printer_service.impression_par_le_poste(request):
                     printer_service.print_receipt_for_request(request, commande, panier_items)
             except Exception as exc:
                 logger.warning('Impression thermique caisse: %s', exc)

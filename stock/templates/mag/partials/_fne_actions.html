@@ -1,0 +1,19 @@
+{# Boutons FNE d'une vente payée : réimpression du reçu certifié, ou (re)lance #}
+{# de la certification. Clics gérés par webusb-printer.js.                    #}
+{# Paramètre : btn_class (classes du bouton selon la page).                   #}
+{# fne_active (contexte vue) : permet aussi la 1re certification sans FactureFNE. #}
+{% if c.facture_fne.est_certifiee %}
+<button type="button"
+        class="{{ btn_class }} reprint-fne"
+        data-ticket="{{ c.ticket.numero }}"
+        title="Réimprimer le reçu FNE {{ c.facture_fne.reference }}">
+    <i class="fa fa-qrcode"></i>
+</button>
+{% elif c.facture_fne or fne_active|default:False %}
+<button type="button"
+        class="{{ btn_class }} certifier-fne{% if c.facture_fne %} text-danger{% endif %}"
+        data-ticket="{{ c.ticket.numero }}"
+        title="{% if c.facture_fne and c.facture_fne.erreur %}FNE non certifiée : {{ c.facture_fne.erreur }} — cliquer pour relancer{% else %}Certifier cette vente auprès de la FNE (DGI){% endif %}">
+    <i class="fa fa-refresh"></i> FNE
+</button>
+{% endif %}

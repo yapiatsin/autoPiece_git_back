@@ -19,6 +19,15 @@ RECEIPT_FOOTER_LINES = (
 )
 
 
+def entreprise_ncc() -> str:
+    """NCC de l'entreprise (FNE_NCC dans le .env), affiché sur tous les reçus."""
+    try:
+        from stock.fne import _env
+        return (_env('FNE_NCC') or '').strip()
+    except Exception:
+        return ''
+
+
 def caissier_label(commande) -> str:
     utilisateur = commande.utilisateur
     return utilisateur.username if utilisateur else "—"
@@ -81,6 +90,9 @@ def build_receipt_body_lines(commande, panier_items):
         lines.append((text, align))
 
     add("P&B Auto-Pieces", "center")
+    ncc = entreprise_ncc()
+    if ncc:
+        add(f"NCC : {ncc}", "center")
     add("*" * RECEIPT_INNER, "center")
     add("REÇU DE CAISSE", "center")
     add("*" * RECEIPT_INNER, "center")

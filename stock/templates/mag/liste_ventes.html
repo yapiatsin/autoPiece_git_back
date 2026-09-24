@@ -94,6 +94,7 @@
                                                     title="Réimprimer le reçu">
                                                 <i class="fa fa-print"></i>
                                             </button>
+                                            {% include "mag/partials/_fne_actions.html" with btn_class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon" %}
                                             {% if c.bon_paiement %}
                                             <a href="{% url 'imprimer_bon_commande_vente' c.ticket.numero %}?format=pdf"
                                                class="btn mag-cmd-btn mag-cmd-btn--ghost mag-cmd-btn--icon"

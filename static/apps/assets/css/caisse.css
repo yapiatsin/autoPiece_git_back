@@ -1,4 +1,4 @@
-/* Caisse â€” alignÃ© sur panier / proforma (panier-page.css + piece-catalog.css) */
+/* Caisse ?? aligné sur panier / proforma (panier-page.css + piece-catalog.css) */
 
 .panier-page-card--ventes {
     height: auto;
@@ -205,4 +205,265 @@
     cursor: not-allowed !important;
     transform: none !important;
     box-shadow: none !important;
+}
+
+/* Stats journalieres caissiere */
+.caisse-stats-body {
+    padding: 0.85rem 1rem 0.55rem !important;
+    background: linear-gradient(180deg, #fff7ed 0%, #fff 72%);
+    border-bottom: 1px solid #ffedd5;
+}
+
+.caisse-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.caisse-stats__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.caisse-stats__identity {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 0;
+}
+
+.caisse-stats__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid #fed7aa;
+    color: #ea580c;
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.08);
+    flex-shrink: 0;
+}
+
+.caisse-stats__eyebrow {
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #ea580c;
+}
+
+.caisse-stats__name {
+    margin: 0.1rem 0 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.caisse-stats__meta {
+    margin: 0.15rem 0 0;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.caisse-stats__date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #ffedd5;
+    color: #9a3412;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.caisse-stats__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.caisse-stat-card {
+    position: relative;
+    isolation: isolate;
+    min-height: 92px;
+    padding: 0.7rem 0.75rem 0.65rem;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid #eceff3;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.caisse-stat-card::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 0 48%;
+    pointer-events: none;
+    z-index: 0;
+    color: rgba(15, 23, 42, 0.06);
+    background-image: radial-gradient(currentColor 1px, transparent 1px);
+    background-size: 8px 8px;
+    mask-image: linear-gradient(90deg, transparent, #000 55%);
+}
+
+.caisse-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(249, 115, 22, 0.1);
+}
+
+.caisse-stat-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.caisse-stat-card__top {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+}
+
+.caisse-stat-card__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    background: #fff7ed;
+    color: #ea580c;
+    flex-shrink: 0;
+}
+
+.caisse-stat-card--tx .caisse-stat-card__icon { background: #eff6ff; color: #2563eb; }
+.caisse-stat-card--cash .caisse-stat-card__icon { background: #ecfdf5; color: #059669; }
+.caisse-stat-card--sales .caisse-stat-card__icon { background: #fff7ed; color: #ea580c; }
+.caisse-stat-card--remise .caisse-stat-card__icon { background: #fef2f2; color: #dc2626; }
+
+.caisse-stat-card__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #64748b;
+    line-height: 1.2;
+}
+
+.caisse-stat-card__value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #111827;
+    line-height: 1.1;
+    word-break: break-word;
+}
+
+.caisse-stat-card__hint {
+    margin-top: auto;
+    padding-top: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.caisse-stats__footer {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.caisse-stats__pill {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.4rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.caisse-stats__pill > i {
+    color: #f97316;
+    width: 18px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.caisse-stats__pill-label {
+    font-weight: 700;
+    color: #475569;
+}
+
+.caisse-stats__pill strong {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.caisse-stats__pill-amt {
+    width: 100%;
+    margin-left: 1.15rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.caisse-stats__pill--wait {
+    border-color: #ffedd5;
+    background: #fffbeb;
+}
+
+.caisse-stats__pill--wait > i {
+    color: #d97706;
+}
+
+.caisse-paniers-body {
+    background-color: #ffe9e95c;
+}
+
+.caisse-paniers-scroll {
+    border-radius: 18px;
+    height: 320px;
+}
+
+@media (max-width: 1199.98px) {
+    .caisse-stats__grid,
+    .caisse-stats__footer {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .caisse-stats__header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .caisse-stats__grid,
+    .caisse-stats__footer {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .caisse-stat-card__value {
+        font-size: 1.05rem;
+    }
 }

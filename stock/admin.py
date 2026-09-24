@@ -3,7 +3,7 @@ from .models import (
     Categorie, SousCategorie, Piece, PieceImage, Fournisseur, PanierItem, Panier, Ticket, Commande,
     MoyenPaiement, EntrePiece, Notification, StockLocal, TransfertStock,
     DemandeTransfert, LigneDemandeTransfert, BaremeTimbre, ParametreTVA, BonCommandePaiement,
-    GeniusPayPaiement,
+    GeniusPayPaiement, FactureFNE,
     TarifLivraison, PalierLivraison, BonLivraison,
 )
 
@@ -35,6 +35,37 @@ class GeniusPayPaiementAdmin(admin.ModelAdmin):
     list_filter = ['source', 'statut', 'payment_method', 'environment']
     search_fields = ['reference', 'commande__numero_commande']
     readonly_fields = ['reference', 'raw_response', 'metadata', 'date_creation', 'date_maj']
+
+
+@admin.register(FactureFNE)
+class FactureFNEAdmin(admin.ModelAdmin):
+    list_display = [
+        'reference', 'commande', 'statut', 'montant_ttc', 'montant_tva', 'timbre',
+        'environnement', 'tentatives', 'date_certification',
+    ]
+    list_filter = ['statut', 'environnement', 'alerte_sticker']
+    search_fields = ['reference', 'commande__numero_commande', 'commande__ticket__numero']
+    readonly_fields = [
+        'commande', 'reference', 'fne_invoice_id', 'ncc', 'url_verification',
+        'montant_ttc', 'montant_tva', 'timbre', 'etablissement', 'point_de_vente',
+        'environnement', 'alerte_sticker', 'solde_sticker', 'date_certification',
+        'tentatives', 'erreur', 'payload', 'raw_response', 'date_creation', 'date_maj',
+    ]
+    actions = ['relancer_certification']
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.action(description='Relancer la certification FNE')
+    def relancer_certification(self, request, queryset):
+        from stock.fne_service import certifier_commande
+
+        certifiees = 0
+        for facture in queryset.exclude(statut=FactureFNE.STATUT_CERTIFIEE).select_related('commande'):
+            resultat = certifier_commande(facture.commande, caissier=request.user)
+            if resultat is not None and resultat.est_certifiee:
+                certifiees += 1
+        self.message_user(request, f'{certifiees} facture(s) certifiée(s).')
 
 
 @admin.register(BaremeTimbre)
