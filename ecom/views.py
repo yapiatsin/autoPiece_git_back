@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.views.generic import TemplateView
 
@@ -69,6 +70,12 @@ from .services import (
     payer_commande_livreur,
     pieces_pour_catalogue,
     lignes_pieces_plus_commandees,
+    lignes_selection_accueil,
+    piece_ids_selection,
+    trier_selon_ids,
+    SELECTION_NOUVEAUTES,
+    SELECTION_TOP_MOIS,
+    SELECTIONS_BOUTIQUE,
     quantite_disponible_piece,
     queryset_categories_catalogue,
     queryset_panier_online_actif,
@@ -691,6 +698,13 @@ def localite_detail(request, local_code):
     return render(request, 'e_autopiece/vendor_details.html', ctx)
 
 
+def _query_sans(query, key):
+    """Querystring encodée sans ``key`` (lien « retirer ce filtre »)."""
+    copie = query.copy()
+    copie.pop(key, None)
+    return copie.urlencode()
+
+
 def shop(request):
     from django.core.paginator import Paginator
     local = get_local_from_session(request)
@@ -703,15 +717,30 @@ def shop(request):
 
     filter_local = get_local_from_code(request.GET.get('localite', '').strip()) or local
     qs = filtrer_pieces_boutique(request)
-    sort = request.GET.get('sort', 'designation')
+
+    # « Voir plus » de l'accueil : même sélection, calculée sur la même localité
+    selection = request.GET.get('selection', '').strip()
+    selection_ids = piece_ids_selection(selection, filter_local)
+    if selection_ids is None:
+        selection = ''
+    else:
+        qs = qs.filter(pk__in=selection_ids)
+
+    sort = request.GET.get('sort', '').strip()
     if sort == 'price_asc':
         qs = qs.order_by('prix_unitaire', 'designation')
     elif sort == 'price_desc':
         qs = qs.order_by('-prix_unitaire', 'designation')
+    elif selection and not sort:
+        qs = qs.order_by('designation')
     else:
+        sort = 'designation'
         qs = qs.order_by('designation')
 
-    shop_rows_all = lignes_catalogue_shop(list(qs), local, filter_local=filter_local)
+    pieces = list(qs)
+    if selection and not sort:
+        pieces = trier_selon_ids(pieces, selection_ids)
+    shop_rows_all = lignes_catalogue_shop(pieces, local, filter_local=filter_local)
     paginator = Paginator(shop_rows_all, 40)
     page_obj = paginator.get_page(request.GET.get('page'))
 
@@ -758,7 +787,10 @@ def shop(request):
             'prix_max': request.GET.get('prix_max', ''),
             'localite': request.GET.get('localite', ''),
             'sort': sort,
+            'selection': selection,
         },
+        'shop_selection_label': SELECTIONS_BOUTIQUE.get(selection, ''),
+        'shop_query_sans_selection': _query_sans(query, 'selection'),
         'shop_next_url': request.get_full_path(),
     })
     ctx.update(_geo_livraison_context(request))
@@ -1153,6 +1185,9 @@ def index(request):
             request.user, local, limit=MAX_VUES_RECENTES_INDEX,
         )
     pieces_plus_commandees_rows = lignes_pieces_plus_commandees(local)
+    shop_url = reverse('ecom_shop')
+    nouveautes_rows = lignes_selection_accueil(SELECTION_NOUVEAUTES, local)
+    top_mois_rows = lignes_selection_accueil(SELECTION_TOP_MOIS, local)
     # Après login client : ouvrir le guide même si le délai 15 min n’est pas écoulé
     force_order_guide = bool(request.session.pop('show_ecom_order_guide', False))
     if request.GET.get('order_guide') == '1':
@@ -1162,6 +1197,10 @@ def index(request):
         'cart_count': cart_count,
         'vues_recentes_rows': vues_recentes_rows,
         'pieces_plus_commandees_rows': pieces_plus_commandees_rows,
+        'nouveautes_rows': nouveautes_rows,
+        'nouveautes_url': f'{shop_url}?selection={SELECTION_NOUVEAUTES}',
+        'top_mois_rows': top_mois_rows,
+        'top_mois_url': f'{shop_url}?selection={SELECTION_TOP_MOIS}',
         'force_order_guide': force_order_guide,
     })
     return render(request, 'e_autopiece/index.html', ctx)
@@ -1174,6 +1213,11 @@ def select_local(request):
     set_local_in_session(request, local)
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'success': True, 'local': local.nom})
+    next_url = request.POST.get('next', '')
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
     return redirect('ecom_index')
 
 

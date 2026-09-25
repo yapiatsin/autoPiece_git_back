@@ -15,6 +15,7 @@
             <div class="col-xl-2 col-lg-12 pe-xl-3 pe-lg-2 rts-sticky-column-item ecom-shop-sidebar-col">
                 <div class="sidebar-filter-main theiaStickySidebar">
                     <form method="get" action="{% url 'ecom_shop' %}" id="ecom-shop-filter-form" class="ecom-auto-filter-form">
+                        {% if shop_filters.selection %}<input type="hidden" name="selection" value="{{ shop_filters.selection }}">{% endif %}
                         {% if shop_filters.q %}
                         <input type="hidden" name="q" value="{{ shop_filters.q }}">
                         {% endif %}
@@ -138,6 +139,15 @@
 
             <div class="col-xl-10 col-lg-12 ecom-shop-products-col" id="ecom-shop-results">
                 <div id="ecom-shop-sous-host" class="ecom-shop-sous-host" hidden></div>
+                {% if shop_selection_label %}
+                <div class="ecom-shop-selection-chip">
+                    <i class="fa-solid fa-filter" aria-hidden="true"></i>
+                    {% trans shop_selection_label %}
+                    <a href="{% url 'ecom_shop' %}{% if shop_query_sans_selection %}?{{ shop_query_sans_selection }}{% endif %}" aria-label="{% trans 'Retirer ce filtre' %}">
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </a>
+                </div>
+                {% endif %}
                 <div class="filter-select-area ecom-shop-filter-bar">
                     <div class="ecom-shop-toolbar">
                         <div class="top-filter ecom-shop-top-filter">
@@ -155,6 +165,7 @@
                             </span>
                             <div class="right-end">
                                 <form method="get" action="{% url 'ecom_shop' %}" id="ecom-shop-sort-form" class="ecom-shop-sort-form d-flex align-items-center gap-2 m-0">
+                                    {% if shop_filters.selection %}<input type="hidden" name="selection" value="{{ shop_filters.selection }}">{% endif %}
                                     {% if shop_filters.q %}
                                     <input type="hidden" name="q" value="{{ shop_filters.q }}">
                                     {% endif %}
@@ -169,6 +180,9 @@
                                     {% if shop_filters.localite %}<input type="hidden" name="localite" value="{{ shop_filters.localite }}">{% endif %}
                                     <span class="ecom-shop-sort-label">{% trans "Trier :" %}</span>
                                     <select name="sort" class="ecom-shop-ghost-select ecom-auto-filter-input" aria-label="{% trans 'Trier' %}">
+                                        {% if shop_filters.selection %}
+                                        <option value="" {% if not shop_filters.sort %}selected{% endif %}>{% if shop_filters.selection == 'nouveautes' %}{% trans "Plus récentes" %}{% else %}{% trans "Plus vendues" %}{% endif %}</option>
+                                        {% endif %}
                                         <option value="designation" {% if shop_filters.sort == 'designation' %}selected{% endif %}>{% trans "Nom A-Z" %}</option>
                                         <option value="price_asc" {% if shop_filters.sort == 'price_asc' %}selected{% endif %}>{% trans "Prix croissant" %}</option>
                                         <option value="price_desc" {% if shop_filters.sort == 'price_desc' %}selected{% endif %}>{% trans "Prix décroissant" %}</option>
@@ -194,6 +208,7 @@
                         </div>
 
                         <form method="get" action="{% url 'ecom_shop' %}" id="ecom-shop-top-selects" class="ecom-shop-top-selects ecom-auto-filter-form">
+                            {% if shop_filters.selection %}<input type="hidden" name="selection" value="{{ shop_filters.selection }}">{% endif %}
                             {% if shop_filters.q %}
                             <input type="hidden" name="q" value="{{ shop_filters.q }}">
                             {% endif %}

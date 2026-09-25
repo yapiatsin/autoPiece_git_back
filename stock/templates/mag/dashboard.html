@@ -212,12 +212,15 @@
                     return ds.data && ds.data.some(function (v) { return Number(v) > 0; });
                 });
             };
-            window.dashLineChartOptions = function (overrides) {
+            /* valueSuffix : unité affichée dans l'infobulle au survol (ex. ' frs', ' pièce(s)') */
+            window.dashLineChartOptions = function (overrides, valueSuffix) {
                 var base = {
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: { padding: { left: 0, right: 2, top: 0, bottom: 0 } },
                     animation: { duration: 800, easing: 'easeInOutQuart' },
+                    /* Survol n'importe où à la verticale d'un jour : point + valeur, sans viser le point */
+                    interaction: { mode: 'index', intersect: false },
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -239,6 +242,16 @@
                                 color: 'rgba(54, 53, 53, 0.66)',
                                 boxWidth: 8,
                                 padding: 6
+                            }
+                        },
+                        tooltip: {
+                            displayColors: false,
+                            padding: 8,
+                            callbacks: {
+                                label: function (ctx) {
+                                    var v = Number(ctx.parsed.y) || 0;
+                                    return ctx.dataset.label + ' : ' + v.toLocaleString('fr-FR') + (valueSuffix || '');
+                                }
                             }
                         }
                     }
@@ -383,11 +396,12 @@
                                             pointBorderColor: '#fff',
                                             tension: 0.35,
                                             fill: true,
-                                            pointRadius: chartLabelsAnnual.length > 20 ? 2 : 3,
+                                            pointRadius: 0,
                                             pointHoverRadius: 5,
+                                            pointHoverBorderWidth: 2,
                                         }]
                                     },
-                                    options: dashLineChartOptions()
+                                    options: dashLineChartOptions(null, ' frs')
                                 });
                             }
                         </script>
@@ -508,10 +522,14 @@
                                             backgroundColor: gradientQteAnnual,
                                             tension: 0.35,
                                             fill: true,
-                                            pointRadius: chartLabelsQte.length > 20 ? 2 : 3,
+                                            pointRadius: 0,
+                                            pointHoverRadius: 5,
+                                            pointHoverBorderWidth: 2,
+                                            pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                                            pointBorderColor: '#fff',
                                         }]
                                     },
-                                    options: dashLineChartOptions()
+                                    options: dashLineChartOptions(null, ' pièce(s)')
                                 });
                             }
                         </script>

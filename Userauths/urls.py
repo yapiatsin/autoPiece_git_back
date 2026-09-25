@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import *
 from .google_views import google_login_view, google_otp_view, google_otp_resend_view
+from .idle_timeout import session_keepalive
 
 urlpatterns = [
     path('', pbholdingsiteview, name='pbholdingsite'),
@@ -9,6 +10,7 @@ urlpatterns = [
     path('activation/<str:token>/', activate_account_view, name='activate-account'),
     path('renvoyer-activation/', resend_activation_view, name='resend-activation'),
     path('Deconnexion', Deconnexion, name='deconnexion'),
+    path('session/activite/', session_keepalive, name='session_keepalive'),
 
     # Connexion par compte Google : le navigateur poste le jeton d'identite,
     # le serveur le verifie puis connecte ou demande un code de liaison.

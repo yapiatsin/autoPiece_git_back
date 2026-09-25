@@ -1,4 +1,5 @@
 {% load static %}
+{% load idle_tags %}
 {% load permission_tags %}
 <!doctype html>
 <html lang="en">
@@ -33,20 +34,35 @@
     <link rel="stylesheet" href="{% static 'apps/assets/css/page-header.css' %}">
     <link rel="stylesheet" href="{% static 'apps/assets/css/appbases.css' %}">
     <!-- Thème ecom (couleurs / tables) — garder Font Awesome 4 pour les icônes staff -->
-    <link rel="stylesheet" href="{% static 'apps/assets/css/mag-ecom.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    {# Barlow : police du modal « Télécharger l'application », comme sur la boutique #}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="{% static 'apps/assets/css/mag-ecom.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'apps/assets/css/piece-catalog.css' %}">
     <link rel="stylesheet" href="{% static 'apps/assets/css/panier-page.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { corePlugins: { preflight: false } };
     </script>
     <script defer src="{% static 'apps/assets/js/mag-table-filter.js' %}"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.js"></script>
+    <script defer src="{% static 'apps/assets/js/mag-spa-nav.js' %}?v=8"></script>
     {% block extra_head %}{% endblock extra_head %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 
-<body data-theme="light" class="font-nunito h_menu mag-ecom-body">
+<body data-theme="light"
+      class="font-nunito h_menu mag-ecom-body"
+      hx-boost="true"
+      hx-target="#main-content"
+      hx-select="#main-content"
+      hx-swap="outerHTML show:window:top"
+      hx-push-url="true">
     {% if messages %}
     <div class="ecom-flash-stack" id="magFlashMessages" aria-live="polite" aria-atomic="true">
         {% for message in messages %}
@@ -221,7 +237,8 @@
                                                             {% for perm in menu_cat.permissions %}
                                                                 <li class="menu-item mag-nav-dropdown-item">
                                                                     <a href="{% url perm.url %}"
-                                                                       class="mag-nav-dropdown-link{% if request.resolver_match.url_name == perm.url %} is-active{% endif %}{% if perm.url == 'cmd_line' or perm.url == 'livraison_cmd_online' or perm.url == 'ecom_chat_inbox' %} js-ecom-nav-link{% endif %}">
+                                                                       class="mag-nav-dropdown-link{% if request.resolver_match.url_name == perm.url %} is-active{% endif %}{% if perm.url == 'cmd_line' or perm.url == 'livraison_cmd_online' or perm.url == 'ecom_chat_inbox' %} js-ecom-nav-link{% endif %}"
+                                                                       {% if perm.url == 'caissiere' or perm.url == 'paniers' or perm.url == 'ecom_chat_inbox' or perm.url == 'ecom_chat_history' %}hx-boost="false"{% endif %}>
                                                                         <span class="mag-nav-dropdown-icon{% if perm.url == 'cmd_line' or perm.url == 'livraison_cmd_online' or perm.url == 'ecom_chat_inbox' %} mag-nav-dropdown-icon--badge{% endif %}">
                                                                             <i class="{{ perm.menu_icon|default:'fa fa-angle-right' }}" aria-hidden="true"></i>
                                                                             {% if perm.url == 'cmd_line' %}
@@ -258,7 +275,7 @@
                                 </ul>
                             </div>
                             <div class="menu-foot mag-mobile-menu-footer">
-                                <a href="{% url 'deconnexion' %}" class="mag-mobile-menu-logout">
+                                <a href="{% url 'deconnexion' %}" class="mag-mobile-menu-logout" hx-boost="false">
                                     <i class="fa fa-sign-out" aria-hidden="true"></i>
                                     Déconnexion
                                 </a>
@@ -384,7 +401,7 @@
                                     Imprimante
                                 </a>
                                 <div class="nav-user-menu-divider"></div>
-                                <a href="{% url 'deconnexion' %}" class="nav-user-menu-item nav-user-menu-item--logout">
+                                <a href="{% url 'deconnexion' %}" class="nav-user-menu-item nav-user-menu-item--logout" hx-boost="false">
                                     <i class="fa fa-sign-out" aria-hidden="true"></i>
                                     Déconnexion
                                 </a>
@@ -417,17 +434,17 @@
                                 <div class="page-header-actions">
                                     {% block page_action_buttons %}{% endblock page_action_buttons %}
                                     {% if page_export_excel_url %}
-                                    <a href="{{ page_export_excel_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_excel_title|default:'Exporter en Excel' }}">
+                                    <a href="{{ page_export_excel_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_excel_title|default:'Exporter en Excel' }}" hx-boost="false">
                                         <i class="fa fa-file-excel-o"></i>
                                     </a>
                                     {% endif %}
                                     {% if page_export_pdf_url %}
-                                    <a href="{{ page_export_pdf_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_pdf_title|default:'Exporter en PDF' }}">
+                                    <a href="{{ page_export_pdf_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_pdf_title|default:'Exporter en PDF' }}" hx-boost="false">
                                         <i class="fa fa-file-pdf-o"></i>
                                     </a>
                                     {% endif %}
                                     {% if page_export_url and not page_export_excel_url %}
-                                    <a href="{{ page_export_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_title|default:'Télécharger' }}"{% if page_export_download %} download="{{ page_export_download }}"{% endif %}>
+                                    <a href="{{ page_export_url }}" class="btn btn-outline-secondary btn-sm" title="{{ page_export_title|default:'Télécharger' }}" hx-boost="false"{% if page_export_download %} download="{{ page_export_download }}"{% endif %}>
                                         <i class="fa fa-download"></i>
                                     </a>
                                     {% endif %}
@@ -462,11 +479,11 @@
                             </p>
                         </div>
                         <nav class="mag-copyright-actions" aria-label="Liens pied de page">
-                            <a href="{% url 'ecom_index' %}" class="mag-copyright-link" title="Boutique en ligne">
+                            <a href="{% url 'ecom_index' %}" class="mag-copyright-link" title="Boutique en ligne" hx-boost="false">
                                 <i class="fa fa-shopping-bag" aria-hidden="true"></i>
                                 <span>Boutique</span>
                             </a>
-                            <a href="{% url 'ecom_support' %}" class="mag-copyright-link" title="Support">
+                            <a href="{% url 'ecom_support' %}" class="mag-copyright-link" title="Support" hx-boost="false">
                                 <i class="fa fa-life-ring" aria-hidden="true"></i>
                                 <span>Support</span>
                             </a>
@@ -561,7 +578,7 @@
                     <i class="fa fa-lock" aria-hidden="true"></i>
                     <span>Profil &amp; mot de passe</span>
                 </a>
-                <a href="{% url 'ecom_index' %}" class="mag-settings-link">
+                <a href="{% url 'ecom_index' %}" class="mag-settings-link" hx-boost="false">
                     <i class="fa fa-shopping-bag" aria-hidden="true"></i>
                     <span>Boutique en ligne</span>
                 </a>
@@ -573,11 +590,11 @@
                     <i class="fa fa-truck" aria-hidden="true"></i>
                     <span>Livraisons en ligne</span>
                 </a>
-                <a href="javascript:void(0);" class="mag-settings-link" data-toggle="modal" data-target="#printerModal">
+                <a href="javascript:void(0);" class="mag-settings-link" data-toggle="modal" data-target="#printerModal" hx-boost="false">
                     <i class="fa fa-print" aria-hidden="true"></i>
                     <span>Imprimante</span>
                 </a>
-                <a href="{% url 'ecom_support' %}" class="mag-settings-link">
+                <a href="{% url 'ecom_support' %}" class="mag-settings-link" hx-boost="false">
                     <i class="fa fa-life-ring" aria-hidden="true"></i>
                     <span>Support</span>
                 </a>
@@ -585,7 +602,7 @@
         </div>
 
         <div class="mag-settings-footer">
-            <a href="{% url 'deconnexion' %}" class="mag-settings-logout">
+            <a href="{% url 'deconnexion' %}" class="mag-settings-logout" hx-boost="false">
                 <i class="fa fa-sign-out" aria-hidden="true"></i>
                 Déconnexion
             </a>
@@ -963,9 +980,13 @@
     </script>
     {# Client Pusher global — doit précéder extra_js #}
     {% include "mag/partials/_pusher_client_js.html" %}
-    {% block extra_js %}{% endblock extra_js %}
+    <div id="mag-page-scripts">
+        {% block extra_js %}{% endblock extra_js %}
+    </div>
     {# Modal de connexion d'imprimante USB (accessible depuis l'icône imprimante de la navbar) #}
     {% include 'mag/partials/_printer_modal.html' %}
     {% include 'mag/partials/_download_app_modal.html' %}
+    {# Déconnexion automatique après 30 min sans action #}
+    {% idle_logout_script %}
 </body>
 </html>

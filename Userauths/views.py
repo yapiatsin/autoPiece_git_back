@@ -563,6 +563,15 @@ def Deconnexion(request):
         from .session_control import clear_active_session
         clear_active_session(user)
     logout(request)
+
+    # Déconnexion automatique (static/apps/assets/js/idle-logout.js)
+    if request.GET.get('inactivite') == '1':
+        from .idle_timeout import MESSAGE_INACTIVITE
+        messages.warning(request, MESSAGE_INACTIVITE)
+        if role == 'client' and not is_superuser:
+            return redirect('ecom_index')
+        return redirect('connexion')
+
     messages.success(request, f'Vous êtes deconnecté {username}')
 
     # Clients → boutique ecom ; personnel magasin / admin → site holding

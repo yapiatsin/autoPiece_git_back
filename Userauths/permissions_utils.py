@@ -22,6 +22,7 @@ EXEMPT_URL_NAMES = frozenset({
     'activate-account',
     'resend-activation',
     'deconnexion',
+    'session_keepalive',
     'forgot',
     'otp',
     'request_email',

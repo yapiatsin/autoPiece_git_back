@@ -1,0 +1,137 @@
+{% load i18n %}
+{# Choix de la localité — s’ouvre à la fermeture du guide commande (client connecté) #}
+<div class="modal fade ecom-order-guide-modal ecom-local-choice-modal" id="ecomLocalChoiceModal" tabindex="-1"
+     aria-labelledby="ecomLocalChoiceModalLabel" aria-hidden="true"
+     data-has-local="{% if local_selectionne %}1{% else %}0{% endif %}">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content ecom-order-guide-content">
+            <button type="button" class="ecom-order-guide-skip" data-bs-dismiss="modal" aria-label="{% trans 'Fermer' %}">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+            <form method="post" action="{% url 'ecom_select_local' %}" class="ecom-order-guide-body"
+                  hx-boost="false" data-ecom-local-form data-badge-label="{% trans 'Actuelle' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" data-ecom-local-next>
+                <p class="ecom-order-guide-eyebrow">{% trans "Étape 1" %}</p>
+                <h2 class="ecom-order-guide-title" id="ecomLocalChoiceModalLabel">
+                    {% trans "Choisissez votre localité" %}
+                </h2>
+                <p class="ecom-order-guide-intro">
+                    {% trans "Sélectionnez l’agence la plus proche : le stock, les prix et votre panier s’adapteront à cette localité." %}
+                </p>
+                {% if localites %}
+                <div class="ecom-local-choice-list" role="radiogroup" aria-labelledby="ecomLocalChoiceModalLabel">
+                    {% for loc in localites %}
+                    <label class="ecom-local-choice-item">
+                        <input type="radio" name="local_id" value="{{ loc.code }}" required
+                               {% if local_selectionne and local_selectionne.code == loc.code %}checked{% endif %}>
+                        <span class="ecom-local-choice-icon" aria-hidden="true">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </span>
+                        <span class="ecom-local-choice-text">
+                            <strong>{{ loc.nom }}</strong>
+                            {% if loc.contact %}<small><i class="fa-solid fa-phone" aria-hidden="true"></i> {{ loc.contact }}</small>{% endif %}
+                        </span>
+                        {% if local_selectionne and local_selectionne.code == loc.code %}
+                        <span class="ecom-local-choice-badge">{% trans "Actuelle" %}</span>
+                        {% endif %}
+                        <span class="ecom-local-choice-check" aria-hidden="true">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="ecom-order-guide-actions">
+                    <a href="{% url 'ecom_localites' %}" class="rts-btn btn-primary border-only radious-sm">
+                        <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+                        {% trans "Voir sur la carte" %}
+                    </a>
+                    <button type="submit" class="rts-btn btn-primary radious-sm ecom-order-guide-actions-end">
+                        {% trans "Valider" %}
+                    </button>
+                </div>
+                {% else %}
+                <p class="ecom-local-choice-empty">{% trans "Aucune localité n’est disponible pour le moment." %}</p>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var modal = document.getElementById('ecomLocalChoiceModal');
+    if (!modal) return;
+    {# L'en-tête n'est pas rechargé par la navigation fluide : next doit suivre l'URL courante. #}
+    modal.addEventListener('show.bs.modal', function () {
+        var input = modal.querySelector('[data-ecom-local-next]');
+        if (input) input.value = window.location.pathname + window.location.search;
+    });
+
+    var form = modal.querySelector('[data-ecom-local-form]');
+    if (!form || !window.fetch) return;
+
+    function markCurrent(code) {
+        form.querySelectorAll('.ecom-local-choice-item').forEach(function (item) {
+            var radio = item.querySelector('input[name="local_id"]');
+            var badge = item.querySelector('.ecom-local-choice-badge');
+            var isCurrent = radio && radio.value === code;
+            if (isCurrent && !badge) {
+                badge = document.createElement('span');
+                badge.className = 'ecom-local-choice-badge';
+                badge.textContent = form.getAttribute('data-badge-label') || '';
+                item.querySelector('.ecom-local-choice-check').before(badge);
+            } else if (!isCurrent && badge) {
+                badge.remove();
+            }
+        });
+    }
+
+    function refreshPageContent() {
+        if (window.htmx && document.getElementById('ecom-main')) {
+            window.htmx.ajax('GET', window.location.pathname + window.location.search, {
+                target: '#ecom-main',
+                select: '#ecom-main',
+                swap: 'outerHTML',
+            });
+        }
+    }
+
+    form.addEventListener('submit', function (event) {
+        var checked = form.querySelector('input[name="local_id"]:checked');
+        if (!checked) return;
+        event.preventDefault();
+
+        var submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+            .then(function (resp) {
+                if (!resp.ok) throw new Error(resp.status);
+                return resp.json();
+            })
+            .then(function (data) {
+                if (!data || !data.success) throw new Error('select_local');
+                document.querySelectorAll('[data-ecom-local-label]').forEach(function (el) {
+                    el.textContent = data.local;
+                });
+                modal.setAttribute('data-has-local', '1');
+                markCurrent(checked.value);
+                if (window.bootstrap && bootstrap.Modal) {
+                    bootstrap.Modal.getOrCreateInstance(modal).hide();
+                }
+                refreshPageContent();
+            })
+            .catch(function () {
+                HTMLFormElement.prototype.submit.call(form);
+            })
+            .finally(function () {
+                if (submitBtn) submitBtn.disabled = false;
+            });
+    });
+})();
+</script>

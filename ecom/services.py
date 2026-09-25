@@ -4,7 +4,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Count, Prefetch, Q, Sum, Exists, OuterRef
+from datetime import timedelta
+
+from django.db.models import Count, Max, Prefetch, Q, Sum, Exists, OuterRef
 from django.utils import timezone
 
 from Userauths.models import CustomUser, LocalEntrepot
@@ -12,6 +14,7 @@ from stock.models import (
     Categorie,
     SousCategorie,
     Commande,
+    EntrePiece,
     MoyenPaiement,
     Notification,
     Panier,
@@ -395,6 +398,83 @@ def lignes_pieces_plus_commandees(
         if len(rows) >= limit:
             break
     return rows
+
+
+# Sélections de l'accueil, reprises telles quelles par « Voir plus » (/boutique/?selection=…)
+SELECTION_NOUVEAUTES = 'nouveautes'
+SELECTION_TOP_MOIS = 'top_mois'
+SELECTIONS_BOUTIQUE = {
+    SELECTION_NOUVEAUTES: 'Nouveautés de la semaine',
+    SELECTION_TOP_MOIS: 'Les plus vendues du mois',
+}
+NOUVEAUTE_JOURS = 7
+MAX_PIECES_SELECTION_ACCUEIL = 12
+
+
+def piece_ids_nouveautes(local: LocalEntrepot | None = None) -> list[int]:
+    """
+    Pièces entrées en stock (réception fournisseur) depuis moins de 7 jours,
+    de la plus récente à la plus ancienne. Les transferts entre localités ne
+    comptent pas : la pièce n'est pas nouvelle pour la boutique.
+    """
+    since = timezone.now() - timedelta(days=NOUVEAUTE_JOURS)
+    qs = EntrePiece.objects.filter(date__gte=since, origine_type='fournisseur')
+    if local is not None:
+        qs = qs.filter(local_entrepot=local)
+    rows = qs.values('piece_id').annotate(derniere=Max('date')).order_by('-derniere')
+    return [row['piece_id'] for row in rows]
+
+
+def piece_ids_top_mois() -> list[int]:
+    """
+    Pièces les plus vendues (paniers payés) depuis le 1er du mois en cours,
+    toutes agences confondues : une agence sans vente ce mois-ci voit quand même le classement.
+    """
+    debut_mois = timezone.localdate().replace(day=1)
+    qs = queryset_top_pieces_vendues(None).filter(
+        Q(panier__date_paie_panier__gte=debut_mois)
+        | Q(panier__date_paie_panier__isnull=True, panier__date_creation__gte=debut_mois)
+    )
+    rows = (
+        qs.values('piece_id')
+        .annotate(total_qte=Sum('quantite'))
+        .filter(total_qte__gt=0)
+        .order_by('-total_qte')
+    )
+    return [row['piece_id'] for row in rows if row.get('piece_id')]
+
+
+def piece_ids_selection(selection: str, local: LocalEntrepot | None = None) -> list[int] | None:
+    """IDs ordonnés d'une sélection connue, ``None`` si la sélection est inconnue."""
+    if selection == SELECTION_NOUVEAUTES:
+        return piece_ids_nouveautes(local)
+    if selection == SELECTION_TOP_MOIS:
+        return piece_ids_top_mois()
+    return None
+
+
+def trier_selon_ids(pieces, piece_ids: list[int]):
+    """Remet les pièces dans l'ordre de la sélection (récence ou ventes)."""
+    rang = {pid: i for i, pid in enumerate(piece_ids)}
+    return sorted(pieces, key=lambda p: rang.get(p.pk, len(rang)))
+
+
+def lignes_selection_accueil(
+    selection: str,
+    local: LocalEntrepot | None = None,
+    *,
+    limit: int = MAX_PIECES_SELECTION_ACCUEIL,
+):
+    """
+    Lignes carte d'une sélection de l'accueil : mêmes pièces, même ordre que
+    /boutique/?selection=… (pièces en stock dans au moins une agence).
+    """
+    piece_ids = piece_ids_selection(selection, local) or []
+    if not piece_ids:
+        return []
+    qs = queryset_pieces_toutes_localites().filter(pk__in=piece_ids)
+    pieces = trier_selon_ids(list(qs), piece_ids)[:limit]
+    return lignes_catalogue_shop(pieces, local)
 
 
 def _qs_pieces_menu_boutique():

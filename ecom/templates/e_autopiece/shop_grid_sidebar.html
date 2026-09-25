@@ -130,6 +130,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var sortSel = document.querySelector('#ecom-shop-sort-form select[name="sort"]');
         if (sortSel && sortSel.value) {
             params.set('sort', sortSel.value);
+        } else if (sortSel) {
+            /* Option vide = ordre de la sélection (plus récentes / plus vendues) */
+            params.delete('sort');
         }
         if (page && page > 1) {
             params.set('page', String(page));

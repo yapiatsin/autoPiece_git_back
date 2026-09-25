@@ -6,6 +6,7 @@ from django.db.models import Sum
 from django.urls import reverse
 
 from stock.models import PanierItem
+from Userauths.models import LocalEntrepot
 from stock.stock_local_service import get_prix_unitaire, total_panier_items
 
 from .models import FavoriPiece
@@ -131,6 +132,7 @@ def ecom_cart(request):
         'ecom_favoris_count': favoris_count,
         'ecom_favoris_ids': favoris_ids,
         'ecom_categories': queryset_categories_catalogue(),
+        'ecom_localites': LocalEntrepot.objects.all().order_by('nom'),
         'ecom_recherches_recentes': liste_recherches_recentes(request),
         'ecom_recherches_populaires': liste_recherches_populaires(),
     }

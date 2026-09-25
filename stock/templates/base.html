@@ -1,4 +1,5 @@
 {% load static %} 
+{% load idle_tags %}
 {% if user.is_authenticated %}
 
 <!DOCTYPE html>
@@ -597,6 +598,8 @@
         {%} %}
     </script> {% endcomment %}
 
+    {# Déconnexion automatique après 30 min sans action #}
+    {% idle_logout_script %}
 </body>
 
 </html>

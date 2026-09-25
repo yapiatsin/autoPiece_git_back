@@ -53,10 +53,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'Userauths.middleware.SingleSessionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Déconnexion après 30 min sans action (voir Userauths/idle_timeout.py)
+    'Userauths.middleware_idle.IdleTimeoutMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     # Middleware pour vérifier automatiquement les permissions personnalisées
     'Userauths.middleware.CustomPermissionMiddleware',
+    # Navigation fluide boutique : redirections hors boutique -> HX-Redirect
+    'ecom.middleware.HtmxRedirectMiddleware',
 ]
 
 REST_FRAMEWORK = {
@@ -214,6 +218,8 @@ _secure_cookies = config('SECURE_COOKIES', default=not DEBUG, cast=bool)
 SESSION_COOKIE_SECURE = _secure_cookies
 CSRF_COOKIE_SECURE = _secure_cookies
 SESSION_COOKIE_HTTPONLY = True
+# Déconnexion automatique après 30 minutes sans action de l'utilisateur
+IDLE_TIMEOUT_SECONDS = 30 * 60
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'

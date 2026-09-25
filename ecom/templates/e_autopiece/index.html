@@ -62,7 +62,13 @@
     </div>
 
     {% include 'e_autopiece/partials/_pieces_plus_commandees.html' %}
+    {% trans "Nouveautés de la semaine" as nouveautes_title %}
+    {% trans "Pièces entrées en stock ces 7 derniers jours" as nouveautes_hint %}
+    {% include 'e_autopiece/partials/_home_piece_rail.html' with rail_id='ecom-rail-nouveautes' rail_title=nouveautes_title rail_hint=nouveautes_hint rows=nouveautes_rows voir_plus_url=nouveautes_url %}
     {% include 'e_autopiece/partials/_index_map_catalogue_row.html' %}
+    {% trans "Les plus vendues du mois" as top_mois_title %}
+    {% trans "Classement des ventes de toutes nos agences depuis le 1er du mois" as top_mois_hint %}
+    {% include 'e_autopiece/partials/_home_piece_rail.html' with rail_id='ecom-rail-top-mois' rail_title=top_mois_title rail_hint=top_mois_hint rows=top_mois_rows voir_plus_url=top_mois_url %}
     
     {% include 'e_autopiece/partials/_vues_recentes.html' %}
         <!-- Vus récemment end -->
@@ -70,10 +76,9 @@
 
     {% endblock content %}
 
-{% block overlays %}
-{{ block.super }}
+{% block page_overlays %}
 {% include 'e_autopiece/partials/_order_guide_modal.html' %}
-{% endblock overlays %}
+{% endblock page_overlays %}
 
 {% block extra_js %}
 <script>
@@ -119,11 +124,26 @@
             return bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true });
         }
 
+        /* Client connecté : le choix de localité s'enchaîne à la fermeture du guide,
+           toujours juste après la connexion, ensuite seulement tant qu'aucune localité n'est choisie. */
+        var localEl = {% if user.is_authenticated %}document.getElementById('ecomLocalChoiceModal'){% else %}null{% endif %};
+        var pendingLocalChoice = false;
+
+        if (localEl) {
+            el.addEventListener('hidden.bs.modal', function () {
+                if (!pendingLocalChoice) return;
+                pendingLocalChoice = false;
+                bootstrap.Modal.getOrCreateInstance(localEl, { backdrop: true, keyboard: true }).show();
+            });
+        }
+
         function showGuide(force) {
             if (el.classList.contains('show')) return true;
+            if (localEl && localEl.classList.contains('show')) return true;
             if (!force && !canShow()) return true;
             var modal = getModal();
             if (!modal) return false;
+            pendingLocalChoice = !!localEl && (force || localEl.getAttribute('data-has-local') !== '1');
             modal.show();
             markShown();
             cleanGuideQuery();

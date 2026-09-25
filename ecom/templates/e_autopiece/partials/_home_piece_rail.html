@@ -1,0 +1,56 @@
+{% load i18n %}
+{# Rangée carrousel de l'accueil (bloc blanc, « Voir plus », flèches latérales, barre de défilement) #}
+{# Paramètres : rail_id, rail_title, rail_hint, rows, voir_plus_url #}
+{% if rows %}
+<section class="ecom-home-rail-section" id="{{ rail_id }}">
+    <div class="container">
+        <div class="ecom-home-rail">
+            <div class="ecom-home-rail__head">
+                <div class="ecom-home-rail__titles">
+                    <h2 class="ecom-home-rail__title">{{ rail_title }}</h2>
+                    {% if rail_hint %}<p class="ecom-home-rail__hint">{{ rail_hint }}</p>{% endif %}
+                </div>
+                <a href="{{ voir_plus_url }}" class="ecom-home-rail__more">
+                    {% trans "Voir plus" %}
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div class="ecom-home-rail__body">
+                <button type="button" class="ecom-home-rail__nav ecom-home-rail__nav--prev" aria-label="{% trans 'Précédent' %}">
+                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div class="swiper swiper-data ecom-home-rail__swiper" data-swiper='{
+                    "spaceBetween":16,
+                    "slidesPerView":5,
+                    "speed":500,
+                    "watchOverflow":true,
+                    "navigation":{
+                        "nextEl":"#{{ rail_id }} .ecom-home-rail__nav--next",
+                        "prevEl":"#{{ rail_id }} .ecom-home-rail__nav--prev"
+                    },
+                    "scrollbar":{"el":"#{{ rail_id }} .ecom-home-rail__scrollbar","draggable":true},
+                    "breakpoints":{
+                        "0":{"slidesPerView":1.3,"spaceBetween":12},
+                        "480":{"slidesPerView":2.2,"spaceBetween":12},
+                        "768":{"slidesPerView":3,"spaceBetween":16},
+                        "1140":{"slidesPerView":4,"spaceBetween":16},
+                        "1400":{"slidesPerView":5,"spaceBetween":16}
+                    }
+                }'>
+                    <div class="swiper-wrapper">
+                        {% for row in rows %}
+                        <div class="swiper-slide">
+                            {% include 'e_autopiece/partials/_piece_card_theme.html' with piece=row.piece prix_affiche=row.prix_affiche show_all_stocks=row.show_all_stocks quantite=row.quantite localite_code=row.localite_code localite_nom=row.localite_nom next_url=index_next_url|default:'/' hide_quantity=True col_class='ecom-swiper-piece-card' %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <button type="button" class="ecom-home-rail__nav ecom-home-rail__nav--next" aria-label="{% trans 'Suivant' %}">
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="swiper-scrollbar ecom-home-rail__scrollbar"></div>
+        </div>
+    </div>
+</section>
+{% endif %}

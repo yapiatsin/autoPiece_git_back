@@ -1,4 +1,5 @@
 {% load static %}
+{% load idle_tags %}
 {% load i18n %}
 <!DOCTYPE html>
 <html lang="fr">
@@ -20,12 +21,23 @@
     <link rel="stylesheet" href="{% static 'e_assets/css/fontawesome-fix.css' %}">
     <!-- en-tete fixe au scroll -->
     <link rel="stylesheet" href="{% static 'e_assets/css/sticky-header.css' %}">
-    <link rel="stylesheet" href="{% static 'e_assets/css/ecom-piece-card.css' %}">
+    <link rel="stylesheet" href="{% static 'e_assets/css/ecom-piece-card.css' %}?v=5">
     <link rel="stylesheet" href="{% static 'e_assets/css/contact-float.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.css">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    {# Navigation fluide : ecom-spa-nav.js AVANT htmx et sans defer (voir l'en-tête du fichier) #}
+    <script src="{% static 'e_assets/js/ecom-spa-nav.js' %}?v=1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.js"></script>
     {% block extra_css %}{% endblock extra_css %}
 </head>
 
-<body class="{% block body_class %}shop-main-h{% endblock body_class %}">
+<body class="{% block body_class %}shop-main-h{% endblock body_class %}"
+      hx-boost="true"
+      hx-target="#ecom-main"
+      hx-select="#ecom-main"
+      hx-swap="outerHTML show:window:top"
+      hx-push-url="true">
     {% if messages %}
         <div class="ecom-flash-stack" id="ecomFlashMessages" aria-live="polite" aria-atomic="true">
             {% for message in messages %}
@@ -122,39 +134,10 @@
                                     <li><a href="{% url 'ecom_account' %}">{% trans "My Account" %}</a></li>
                                     <li><a href="{% url 'ecom_wishlist' %}">{% trans "Wishlist" %}</a></li>
                                 </ul>
-                                <p class="para">{% trans "Nous livrons à votre quotidien de 7:00 à 22:00" %}</p>
+                                <a href="{% url 'ecom_privacy_policy' %}" class="btn-narrow">{% trans "Politique de confidentialite" %}</a>
                             </div>
                             <div class="nav-sm-left">
                                 <ul class="nav-h_top language">
-                                    <li class="category-hover-header language-hover ecom-lang-dropdown">
-                                        <a href="#" class="ecom-lang-trigger" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fa-solid fa-globe ecom-lang-trigger-icon" aria-hidden="true"></i>
-                                            <span class="ecom-lang-trigger-label">
-                                                {% if LANGUAGE_CODE == 'fr' %}Français{% endif %}
-                                            </span>
-                                            <i class="fa-solid fa-chevron-down ecom-lang-trigger-chevron" aria-hidden="true"></i>
-                                        </a>
-                                        <ul class="category-sub-menu ecom-lang-menu">
-                                            <li>
-                                                <form action="{% url 'set_language' %}" method="post" class="ecom-lang-form">{% csrf_token %}
-                                                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
-                                                    <button type="submit" name="language" value="fr"
-                                                            class="lang-switch-btn ecom-lang-option{% if LANGUAGE_CODE == 'fr' %} is-active{% endif %}">
-                                                        <span class="ecom-lang-flag" aria-hidden="true">FR</span>
-                                                        <span class="ecom-lang-name">Français</span>
-                                                        {% if LANGUAGE_CODE == 'fr' %}
-                                                            <i class="fa-solid fa-check ecom-lang-check" aria-hidden="true"></i>
-                                                        {% endif %}
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                    <li class="category-hover-header language-hover">
-                                        <a href="#">
-                                            FCFA
-                                        </a>
-                                    </li>
                                     <li><a href="{% url 'ecom_support' %}">{% trans "Support client" %}</a></li>
                                 </ul>
                             </div>
@@ -339,7 +322,12 @@
                             </div>
                             <!-- button-area -->
                             <div class="right-btn-area">
-                                <a href="{% url 'ecom_privacy_policy' %}" class="btn-narrow">{% trans "Politique de confidentialite" %}</a>
+                                <button type="button" class="btn-narrow ecom-local-trigger"
+                                        data-bs-toggle="modal" data-bs-target="#ecomLocalChoiceModal"
+                                        title="{% trans 'Changer de localité' %}">
+                                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                    <span data-ecom-local-label>{% if ecom_local %}{{ ecom_local.nom }}{% else %}{% trans "Choisir ma localité" %}{% endif %}</span>
+                                </button>
                                 <span class="ecom-origin-badge" title="{% trans "100% Pièces d'origine" %}">
                                     <img src="{% static 'e_assets/images/feature/orig.png' %}"
                                          alt="{% trans "100% Pièces d'origine" %}"
@@ -498,8 +486,15 @@
     </div>
     {% endblock header %}
 
+    <script>window.EcomSpaNav && EcomSpaNav.scopeBegin();</script>
+    <main id="ecom-main">
     {% block content %}
     {% endblock content %}
+    {# Modals propres à une page (guide, choix de localité…) : remplacés avec le contenu #}
+    <div id="ecom-page-overlays">{% block page_overlays %}{% endblock page_overlays %}</div>
+    </main>
+    <script>window.EcomSpaNav && EcomSpaNav.scopeEnd();</script>
+    {% include 'e_autopiece/partials/_localite_choice_modal.html' with localites=ecom_localites local_selectionne=ecom_local %}
     {% block footer %}
     <!-- rts footer one area start -->
     <div class="rts-footer-area pt--80 bg_light-1">
@@ -1211,7 +1206,13 @@
             });
         })();
     </script>
+    <script>window.EcomSpaNav && EcomSpaNav.scopeBegin();</script>
+    <div id="ecom-page-scripts">
     {% block extra_js %}{% endblock extra_js %}
+    </div>
+    <script>window.EcomSpaNav && EcomSpaNav.scopeEnd();</script>
     <!-- header style two End -->
+    {# Déconnexion automatique après 30 min sans action #}
+    {% idle_logout_script %}
 </body>
 </html>

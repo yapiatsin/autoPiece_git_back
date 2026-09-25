@@ -1,4 +1,4 @@
-/* Mag back-office — thème AUTO-PIECE ecom */
+/* Mag back-office â thÃ¨me AUTO-PIECE ecom */
 :root {
     --mag-primary: #f97316;
     --mag-primary-light: #fb923c;
@@ -24,7 +24,7 @@ body.mag-ecom-body {
     flex-direction: column;
 }
 
-/* Coque page : header + contenu + footer collés sur toute la hauteur */
+/* Coque page : header + contenu + footer collÃ©s sur toute la hauteur */
 body.mag-ecom-body > #wrapper {
     flex: 1 0 auto;
     display: flex;
@@ -72,7 +72,7 @@ body.mag-ecom-body > #wrapper {
     background: #fff;
 }
 
-/* Sidebar mail (catégories, pièces, historique) : visible hors mobile */
+/* Sidebar mail (catÃ©gories, piÃ¨ces, historique) : visible hors mobile */
 @media (min-width: 768px) {
     .mag-ecom-body .mail-inbox .mail-left.collapse,
     .mag-ecom-body .mail-inbox .mail-left.collapse:not(.show) {
@@ -304,7 +304,7 @@ body.mag-ecom-body > #wrapper {
     color: var(--mag-primary);
 }
 
-/* Periode filter modal — ecom colors */
+/* Periode filter modal â ecom colors */
 .btn-periode-filter {
     background: var(--dash-filter-bg) !important;
     border: none !important;
@@ -382,7 +382,7 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
     font-weight: 600;
 }
 
-/* Footer global — toujours en bas, même largeur que le header */
+/* Footer global â toujours en bas, mÃªme largeur que le header */
 .mag-copyright-area {
     position: relative;
     flex-shrink: 0;
@@ -575,10 +575,11 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
     }
 }
 
-/* Modal Download App (aligné base_ecom / ecom-piece-card) */
+/* Modal Download App : rendu identique à base_ecom. La boutique a html { font-size: 10px }
+   et la police Barlow ; le back-office est à 16px en Nunito, d'où des tailles en px ici. */
 .ecom-app-download-modal .modal-dialog {
     max-width: 860px;
-    margin: 1.25rem auto;
+    margin: 12.5px auto;
 }
 
 .ecom-app-download-content {
@@ -590,6 +591,7 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
     border-radius: 20px;
     background: #fff;
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+    font-family: "Barlow", "Nunito", sans-serif;
 }
 
 .ecom-app-download-close {
@@ -602,18 +604,22 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
     border: 0;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.92);
     color: #c2410c;
+    font-size: 16px;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
-.ecom-app-download-close:hover {
+.ecom-app-download-close:hover,
+.ecom-app-download-close:focus {
     background: #fff7ed;
     color: #9a3412;
+    outline: none;
     transform: scale(1.04);
 }
 
@@ -647,9 +653,10 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
 
 .ecom-app-download-eyebrow {
     margin: 0 0 10px;
-    color: #ea580c;
-    font-size: 1rem;
+    color: #ff8b00;
+    font-size: 10px;
     font-weight: 700;
+    line-height: 1.3;
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
@@ -657,7 +664,8 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
 .ecom-app-download-title {
     margin: 0 0 14px;
     color: #111827;
-    font-size: 2.05rem;
+    font-family: inherit;
+    font-size: 20.5px;
     font-weight: 800;
     line-height: 1.2;
 }
@@ -665,7 +673,7 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
 .ecom-app-download-text {
     margin: 0 0 24px;
     color: #374151;
-    font-size: 1.18rem;
+    font-size: 11.8px;
     line-height: 1.6;
 }
 
@@ -692,7 +700,7 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
 
 .ecom-app-store-link:hover {
     border-color: #fdba74;
-    box-shadow: 0 8px 18px rgba(249, 115, 22, 0.15);
+    box-shadow: 0 8px 18px rgba(255, 139, 0, 0.15);
     transform: translateY(-1px);
 }
 
@@ -707,7 +715,7 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
 .ecom-app-download-note {
     margin: 18px 0 0;
     color: #6b7280;
-    font-size: 1rem;
+    font-size: 10px;
     line-height: 1.45;
 }
 
@@ -729,15 +737,19 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
     }
 
     .ecom-app-download-title {
-        font-size: 1.75rem;
+        font-size: 17.5px;
     }
 
     .ecom-app-download-text {
-        font-size: 1.08rem;
+        font-size: 10.8px;
     }
 }
 
 @media only screen and (max-width: 767px) {
+    .ecom-app-download-modal .modal-dialog {
+        margin: 12.5px;
+    }
+
     .ecom-app-download-content {
         grid-template-columns: 1fr;
     }
@@ -757,15 +769,15 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
     }
 
     .ecom-app-download-eyebrow {
-        font-size: 0.92rem;
+        font-size: 9.2px;
     }
 
     .ecom-app-download-title {
-        font-size: 1.55rem;
+        font-size: 15.5px;
     }
 
     .ecom-app-download-text {
-        font-size: 1.08rem;
+        font-size: 10.8px;
     }
 
     .ecom-app-download-stores {
@@ -783,11 +795,11 @@ body.mag-ecom-body [id$="FilterModal"] .modal-title {
     }
 
     .ecom-app-download-note {
-        font-size: 0.95rem;
+        font-size: 9.5px;
     }
 }
 
-/* Panneau Paramètres (setting_div) */
+/* Panneau ParamÃ¨tres (setting_div) */
 body.mag-ecom-body.h_menu .setting_div.mag-settings-panel {
     width: 300px;
     right: -320px;
@@ -1052,7 +1064,7 @@ body.mag-ecom-body.h_menu .setting_div.mag-settings-panel.open {
     background: #fff7ed;
 }
 
-/* ── Sidebar mobile (même langage que panneau Paramètres) ── */
+/* ââ Sidebar mobile (mÃªme langage que panneau ParamÃ¨tres) ââ */
 body.mag-ecom-body.h_menu .mag-mobile-menu-user,
 body.mag-ecom-body.h_menu .mag-mobile-menu-section-title,
 body.mag-ecom-body.h_menu .mag-mobile-menu-header-text,
@@ -1067,7 +1079,7 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-header-spacer {
 }
 
 @media (max-width: 991px) {
-    /* —— Navbar mobile : Logo | cloche | avatar | menu —— */
+    /* ââ Navbar mobile : Logo | cloche | avatar | menu ââ */
     body.mag-ecom-body.h_menu header.header {
         padding: 0 !important;
         background: #fff !important;
@@ -1118,7 +1130,7 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-header-spacer {
         object-fit: contain;
     }
 
-    /* Rôle déjà dans le menu utilisateur / sidebar */
+    /* RÃ´le dÃ©jÃ  dans le menu utilisateur / sidebar */
     body.mag-ecom-body.h_menu header .desk-menu .header-nav-actions > li.nav-user-role {
         display: none !important;
     }
@@ -1154,7 +1166,7 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-header-spacer {
         list-style: none !important;
     }
 
-    /* Pas de caret Bootstrap à côté de la cloche / avatar */
+    /* Pas de caret Bootstrap Ã  cÃ´tÃ© de la cloche / avatar */
     body.mag-ecom-body.h_menu header .desk-menu .header-nav-actions .dropdown-toggle::after {
         display: none !important;
         content: none !important;
@@ -1382,7 +1394,7 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-header-spacer {
         right: auto !important;
     }
 
-    /* Navbar ne doit plus se superposer au panneau (comme Paramètres) */
+    /* Navbar ne doit plus se superposer au panneau (comme ParamÃ¨tres) */
     body.mag-ecom-body.h_menu.open-menu header,
     body.mag-ecom-body.h_menu.open-menu header {
         background: transparent !important;
@@ -1778,7 +1790,7 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-header-spacer {
         list-style: none !important;
     }
 
-    /* Liens sous-menu mobile = même carte que le dropdown navbar desktop */
+    /* Liens sous-menu mobile = mÃªme carte que le dropdown navbar desktop */
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children .sub-menu li > a,
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children .sub-menu li > a.mag-nav-dropdown-link {
         display: flex !important;
@@ -1933,9 +1945,9 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-header-spacer {
     }
 }
 
-/* Zones de livraison — aperçu */
+/* Zones de livraison â aperÃ§u */
 .zones-page {
-    display: block !important; /* annule row-deck flex qui réduit la largeur */
+    display: block !important; /* annule row-deck flex qui rÃ©duit la largeur */
     flex: 0 0 100%;
     width: 100% !important;
     max-width: 100% !important;
@@ -2309,7 +2321,7 @@ body.mag-ecom-body.h_menu .mag-mobile-menu-header-spacer {
     border-color: rgba(220, 53, 69, 0.55) !important;
 }
 
-/* Icônes du dropdown : rester dans le carré (annule h-menu.css absolute right) */
+/* IcÃ´nes du dropdown : rester dans le carrÃ© (annule h-menu.css absolute right) */
 body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children .sub-menu.mag-nav-dropdown li > a.mag-nav-dropdown-link .mag-nav-dropdown-icon > i,
 body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.menu-item-has-children .sub-menu.mag-nav-dropdown .mag-nav-dropdown-link .mag-nav-dropdown-icon > i,
 body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.menu-item-has-children .sub-menu.mag-nav-dropdown .mag-nav-dropdown-header-icon > i {
@@ -2322,7 +2334,7 @@ body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.me
     line-height: 1 !important;
 }
 
-/* ── Navbar : menus déroulants (Stocks, Interfaces, Listes…) ── */
+/* ââ Navbar : menus dÃ©roulants (Stocks, Interfaces, Listesâ¦) ââ */
 @media (min-width: 992px) {
     body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.mag-nav-item {
         position: relative;
@@ -2639,7 +2651,7 @@ body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.me
         transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
 
-    /* Annule h-menu.css qui place les <i> du sous-menu à droite */
+    /* Annule h-menu.css qui place les <i> du sous-menu Ã  droite */
     body.mag-ecom-body.h_menu header .desk-menu .menu-container .menu > li.menu-item-has-children .sub-menu.mag-nav-dropdown li > a.mag-nav-dropdown-link i,
     body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.menu-item-has-children .sub-menu.mag-nav-dropdown .mag-nav-dropdown-link i,
     body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.menu-item-has-children .sub-menu.mag-nav-dropdown .mag-nav-dropdown-header-icon i {
@@ -2678,7 +2690,7 @@ body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.me
     }
 }
 
-/* Mobile : panneau latéral — badges + cartes (aligné navbar) */
+/* Mobile : panneau latÃ©ral â badges + cartes (alignÃ© navbar) */
 @media (max-width: 991px) {
     body.mag-ecom-body.h_menu .mag-nav-dropdown-header {
         display: none !important;
@@ -2755,7 +2767,7 @@ body.mag-ecom-body.h_menu header .desk-menu .menu-header-container .menu > li.me
     }
 }
 
-/* Flash messages Django — mini modals (même style que ecom / pbholdingsite) */
+/* Flash messages Django â mini modals (mÃªme style que ecom / pbholdingsite) */
 body.mag-ecom-body .ecom-flash-stack {
     position: fixed;
     top: 12px;
@@ -2904,7 +2916,7 @@ body.mag-ecom-body .ecom-flash-toast--info .ecom-flash-toast-icon {
     }
 }
 
-/* ── Accès interdit (page + modal) ── */
+/* ââ AccÃ¨s interdit (page + modal) ââ */
 body.access-denied-standalone {
     min-height: 100vh;
     margin: 0;
@@ -3136,7 +3148,7 @@ body.modal-open .access-denied-page {
     filter: blur(1px);
 }
 
-/* Liste pièces — filtres sous-catégories */
+/* Liste piÃ¨ces â filtres sous-catÃ©gories */
 .piece-list-head {
     display: flex;
     flex-wrap: wrap;
@@ -3286,4 +3298,25 @@ body.modal-open .access-denied-page {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
     }
+}
+
+/* Navigation fluide (HTMX + NProgress) */
+#nprogress {
+  pointer-events: none;
+}
+#nprogress .bar {
+  background: #f97316 !important;
+  height: 3px !important;
+  z-index: 10310 !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px #f97316, 0 0 5px #f97316 !important;
+}
+#nprogress .spinner {
+  display: none !important;
+}
+html.mag-spa-loading #main-content {
+  opacity: 0.72;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
 }
